@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Spin } from 'antd';
 import { getDevList, getDevListDetail, getDevListStatuses, getDevListStats } from '../../api/development-list';
-import type { DevListItem, DevListStatus, DevListStats, DevListResponse } from './types';
+import type { DevListItem, DevListStatus, DevListStats } from './types';
 
 /* ── helpers ── */
 const Badge = ({ label, variant }: { label: string; variant: 'blue' | 'amber' | 'green' | 'red' | 'neutral' }) => {

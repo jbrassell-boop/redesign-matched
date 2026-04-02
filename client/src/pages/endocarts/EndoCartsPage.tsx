@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Drawer } from 'antd';
 import { QUOTES, CATALOG, MODELS, SALES_REPS, CATALOG_CATEGORIES } from './endoCartData';
-import type { EndoCartQuote, EndoCartFilters, CatalogPart, CartModel } from './types';
+import type { EndoCartFilters, CatalogPart, CartModel } from './types';
 
 /* ── helpers ─────────────────────────────────────────────────── */
 const fmtMoney = (n: number) =>

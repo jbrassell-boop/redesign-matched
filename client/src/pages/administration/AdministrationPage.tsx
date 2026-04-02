@@ -4,8 +4,8 @@ import {
   UserOutlined, LockOutlined, DollarOutlined, SettingOutlined,
   AuditOutlined, CarOutlined, CreditCardOutlined, GlobalOutlined,
   ShopOutlined, BankOutlined, ToolOutlined, OrderedListOutlined,
-  AppstoreOutlined, CalendarOutlined, TrophyOutlined, PercentageOutlined,
-  SearchOutlined, TeamOutlined, SafetyOutlined, TagsOutlined
+  AppstoreOutlined, CalendarOutlined, PercentageOutlined,
+  SearchOutlined, SafetyOutlined, TagsOutlined
 } from '@ant-design/icons';
 import {
   getAdminUsers, getSecurityGroups, getDeliveryMethods, getPaymentTerms,
