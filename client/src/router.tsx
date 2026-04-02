@@ -8,6 +8,7 @@ import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { DepartmentsPage } from './pages/departments/DepartmentsPage';
 import { InventoryPage } from './pages/inventory/InventoryPage';
 import { RepairsPage } from './pages/repairs/RepairsPage';
+import { QualityPage } from './pages/quality/QualityPage';
 
 export const router = createBrowserRouter([
   {
@@ -26,6 +27,7 @@ export const router = createBrowserRouter([
           { path: '/dashboard', element: <DashboardPage /> },
           { path: '/departments', element: <DepartmentsPage /> },
           { path: '/inventory', element: <InventoryPage /> },
+          { path: '/quality', element: <QualityPage /> },
           { path: '/repairs', element: <RepairsPage /> },
         ],
       },
