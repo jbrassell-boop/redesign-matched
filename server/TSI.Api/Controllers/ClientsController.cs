@@ -25,7 +25,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
 
         var where = new List<string>();
         if (!string.IsNullOrWhiteSpace(search))
-            where.Add("(c.sClientName1 LIKE @search OR c.sClientCity LIKE @search OR c.sClientState LIKE @search)");
+            where.Add("(c.sClientName1 LIKE @search OR c.sMailCity LIKE @search OR c.sMailState LIKE @search)");
         if (statusFilter == "active")
             where.Add("c.bActive = 1");
         else if (statusFilter == "inactive")
@@ -36,7 +36,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
         var countSql = $"SELECT COUNT(*) FROM tblClient c {whereClause}";
 
         var dataSql = $"""
-            SELECT c.lClientKey, c.sClientName1, c.sClientCity, c.sClientState,
+            SELECT c.lClientKey, c.sClientName1, c.sMailCity, c.sMailState,
                    ISNULL(c.bActive, 0) AS bActive,
                    (SELECT COUNT(*) FROM tblDepartment d WHERE d.lClientKey = c.lClientKey) AS DeptCount,
                    (SELECT COUNT(*) FROM tblRepair r
@@ -66,8 +66,8 @@ public class ClientsController(IConfiguration config) : ControllerBase
             clients.Add(new ClientListItem(
                 ClientKey: Convert.ToInt32(reader["lClientKey"]),
                 Name: reader["sClientName1"]?.ToString() ?? "",
-                City: reader["sClientCity"]?.ToString() ?? "",
-                State: reader["sClientState"]?.ToString() ?? "",
+                City: reader["sMailCity"]?.ToString() ?? "",
+                State: reader["sMailState"]?.ToString() ?? "",
                 IsActive: Convert.ToBoolean(reader["bActive"]),
                 DeptCount: Convert.ToInt32(reader["DeptCount"]),
                 OpenRepairs: Convert.ToInt32(reader["OpenRepairs"])
@@ -85,10 +85,10 @@ public class ClientsController(IConfiguration config) : ControllerBase
 
         const string sql = """
             SELECT c.lClientKey, c.sClientName1,
-                   c.sClientAddr1, c.sClientAddr2,
-                   c.sClientCity, c.sClientState, c.sClientZip,
-                   c.sClientPhone, c.sClientFax, c.sContactEMail,
-                   c.sClientContact, ISNULL(c.bActive, 0) AS bActive,
+                   c.sMailAddr1, c.sMailAddr2,
+                   c.sMailCity, c.sMailState, c.sMailZip,
+                   c.sPhoneVoice, c.sPhoneFAX,
+                   ISNULL(c.bActive, 0) AS bActive,
                    (SELECT COUNT(*) FROM tblDepartment d WHERE d.lClientKey = c.lClientKey) AS DeptCount,
                    (SELECT COUNT(*) FROM tblRepair r
                     JOIN tblDepartment d2 ON d2.lDepartmentKey = r.lDepartmentKey
@@ -109,15 +109,15 @@ public class ClientsController(IConfiguration config) : ControllerBase
         return Ok(new ClientDetail(
             ClientKey: Convert.ToInt32(reader["lClientKey"]),
             Name: reader["sClientName1"]?.ToString() ?? "",
-            Address1: reader["sClientAddr1"]?.ToString() ?? "",
-            Address2: reader["sClientAddr2"]?.ToString(),
-            City: reader["sClientCity"]?.ToString() ?? "",
-            State: reader["sClientState"]?.ToString() ?? "",
-            Zip: reader["sClientZip"]?.ToString() ?? "",
-            Phone: reader["sClientPhone"]?.ToString(),
-            Fax: reader["sClientFax"]?.ToString(),
-            Email: reader["sContactEMail"]?.ToString(),
-            ContactName: reader["sClientContact"]?.ToString(),
+            Address1: reader["sMailAddr1"]?.ToString() ?? "",
+            Address2: reader["sMailAddr2"]?.ToString(),
+            City: reader["sMailCity"]?.ToString() ?? "",
+            State: reader["sMailState"]?.ToString() ?? "",
+            Zip: reader["sMailZip"]?.ToString() ?? "",
+            Phone: reader["sPhoneVoice"]?.ToString(),
+            Fax: reader["sPhoneFAX"]?.ToString(),
+            Email: null,
+            ContactName: null,
             IsActive: Convert.ToBoolean(reader["bActive"]),
             DeptCount: Convert.ToInt32(reader["DeptCount"]),
             OpenRepairs: Convert.ToInt32(reader["OpenRepairs"])
