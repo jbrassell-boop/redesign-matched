@@ -1,0 +1,41 @@
+.data-table-wrap {
+  background: var(--card);
+  border: 1px solid var(--neutral-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+}
+
+.data-table-wrap .ant-table-thead > tr > th {
+  background: var(--neutral-50) !important;
+  color: var(--neutral-500) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 10px 12px !important;
+  border-bottom: 1px solid var(--neutral-200) !important;
+}
+
+.data-table-wrap .ant-table-tbody > tr > td {
+  padding: 10px 12px !important;
+  font-size: 13px !important;
+  border-bottom: 1px solid var(--neutral-200) !important;
+  color: var(--neutral-900);
+}
+
+.data-table-wrap .ant-table-tbody > tr:nth-child(even) > td {
+  background: var(--neutral-50);
+}
+
+.data-table-wrap .ant-table-tbody > tr:hover > td {
+  background: var(--primary-light) !important;
+  cursor: pointer;
+}
+
+.data-table-wrap .ant-table-cell-fix-left,
+.data-table-wrap .ant-table-cell-fix-right {
+  z-index: 3;
+}

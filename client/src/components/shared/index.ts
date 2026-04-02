@@ -8,3 +8,4 @@ export { TabBar } from './TabBar';
 export type { TabDef } from './TabBar';
 export { DetailHeader } from './DetailHeader';
 export { SplitLayout } from './SplitLayout';
+export { DataTable } from './DataTable';
