@@ -248,29 +248,31 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        padding: collapsed ? '14px 11px' : '14px 16px',
+        justifyContent: collapsed ? 'center' : 'flex-start',
+        padding: collapsed ? '10px' : '14px 16px',
         borderBottom: '1px solid var(--sidebar-lt)',
         flexShrink: 0,
-        position: 'relative',
         minHeight: 64,
-        gap: 10,
+        gap: collapsed ? 0 : 10,
       }}>
-        {/* Brand logo circle */}
-        <div style={{
-          width: 34,
-          height: 34,
-          borderRadius: '50%',
-          background: 'var(--primary)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-        }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" width="18" height="18">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 6v6l4 2"/>
-          </svg>
-        </div>
+        {/* Brand logo circle — hidden when collapsed so toggle is accessible */}
+        {!collapsed && (
+          <div style={{
+            width: 34,
+            height: 34,
+            borderRadius: '50%',
+            background: 'var(--primary)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" width="18" height="18">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+        )}
 
         {/* Company text — hidden when collapsed */}
         {!collapsed && (
@@ -304,19 +306,19 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
           onClick={() => onCollapse(!collapsed)}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           style={{
-            marginLeft: 'auto',
+            marginLeft: collapsed ? 0 : 'auto',
             background: 'none',
             border: 'none',
             borderRadius: 4,
             color: 'rgba(255,255,255,0.5)',
             cursor: 'pointer',
-            width: 24,
-            height: 24,
+            width: 32,
+            height: 32,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             flexShrink: 0,
-            padding: 4,
+            padding: 6,
           }}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
