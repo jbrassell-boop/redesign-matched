@@ -1,0 +1,43 @@
+.modal-shell .ant-modal-content {
+  padding: 0;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.modal-shell .ant-modal-header {
+  background: var(--primary);
+  padding: 14px 20px;
+  margin: 0;
+  border-radius: 0;
+}
+
+.modal-shell .ant-modal-title {
+  color: #fff !important;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.modal-shell .ant-modal-close {
+  color: rgba(255, 255, 255, 0.8);
+  top: 14px;
+  right: 16px;
+}
+
+.modal-shell .ant-modal-close:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.modal-shell .ant-modal-body {
+  padding: 16px 20px;
+}
+
+.modal-shell .ant-modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--neutral-200);
+}
+
+/* Danger variant */
+.modal-shell--danger .ant-modal-header {
+  background: var(--danger);
+}
