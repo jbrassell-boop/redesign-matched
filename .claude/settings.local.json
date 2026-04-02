@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "WebFetch(domain:api.anthropic.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(claude mcp:*)",
+      "Bash(az account:*)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\(''''mcpServers'''',{}\\), indent=2\\)\\)\")",
+      "Read(//c/Users/JoeBrassell/**)",
+      "Bash(python3 -c \":*)",
+      "Bash(mkdir -p /c/Projects/redesign-matched/.claude/review-approvals)",
+      "Bash(touch /c/Projects/redesign-matched/.claude/review-approvals/.gitkeep)",
+      "Bash(mkdir -p /c/Projects/redesign-matched/.claude/hooks)",
+      "Bash(chmod +x /c/Projects/redesign-matched/.claude/hooks/task-completed.sh)",
+      "Bash(bash .claude/hooks/task-completed.sh)",
+      "Bash(echo \"Exit code: $?\")"
+    ]
+  }
+}
