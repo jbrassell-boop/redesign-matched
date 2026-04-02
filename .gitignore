@@ -1,0 +1,21 @@
+# Node
+node_modules/
+dist/
+.env
+.env.local
+
+# .NET
+server/TSI.Api/bin/
+server/TSI.Api/obj/
+server/TSI.Api.Tests/bin/
+server/TSI.Api.Tests/obj/
+*.user
+.vs/
+
+# Secrets
+server/TSI.Api/appsettings.Development.json
+client/.env.local
+
+# General
+.DS_Store
+*.log
