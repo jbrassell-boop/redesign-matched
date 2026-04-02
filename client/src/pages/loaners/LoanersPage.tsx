@@ -6,6 +6,7 @@ import type { LoanerListItem, LoanerDetail, LoanerStats, LoanerRequest } from '.
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import { ExportButton } from '../../components/common/ExportButton';
+import { useBulkSelect } from '../../components/common/useBulkSelect';
 
 
 
@@ -507,6 +508,7 @@ export const LoanersPage = () => {
   const [statusFilter, setStatusFilter] = useState('All');
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState('loaners');
+  const bulk = useBulkSelect<number>();
   // Detail drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [detail, setDetail] = useState<LoanerDetail | null>(null);
@@ -626,20 +628,6 @@ export const LoanersPage = () => {
     { key: 'daysOut', label: 'Days', width: 70 },
     { key: 'trackingNumber', label: 'Tracking #', width: 130 },
   ];
-
-  const handleExportSelected = () => {
-    const selected = items.filter(i => bulk.isSelected(i.loanerTranKey));
-    if (!selected.length) return;
-    const headers = ['Work Order', 'Scope Type', 'Serial', 'Client', 'Department', 'Status', 'Date Out', 'Date In', 'Days Out', 'Tracking #'];
-    const rows = selected.map(i => [i.workOrder, i.scopeType, i.serial, i.client, i.dept, i.status, i.dateOut, i.dateIn, i.daysOut, i.trackingNumber]);
-    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'loaners-export.csv';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  };
 
   const colCount = columns.length + 1; // +1 for checkbox
 

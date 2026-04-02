@@ -83,7 +83,7 @@ export const CommandPalette = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   /* ── Global shortcut: Ctrl+K / Cmd+K ─────────────────────────────── */
   useEffect(() => {

@@ -1,4 +1,4 @@
-export const InspectionsTab = ({ repairKey }: { repairKey: number }) => (
+export const InspectionsTab = ({ repairKey: _repairKey }: { repairKey: number }) => (
   <div style={{ padding: '10px 14px' }}>
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
