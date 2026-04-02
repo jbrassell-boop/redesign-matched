@@ -24,8 +24,8 @@ function getCategoryLabel(category: string): string {
 function getCategoryColor(category: string): { bg: string; border: string; color: string } {
   const c = (category || '').toUpperCase();
   if (c === 'R') return { bg: 'var(--primary-light)', border: 'rgba(var(--primary-rgb),0.3)', color: 'var(--primary)' };
-  if (c === 'F') return { bg: '#F0FDF4', border: '#BBF7D0', color: 'var(--success)' };
-  if (c === 'C') return { bg: '#FFFBEB', border: '#FDE68A', color: 'var(--amber)' };
+  if (c === 'F') return { bg: 'var(--success-light)', border: 'var(--success-border)', color: 'var(--success)' };
+  if (c === 'C') return { bg: 'var(--purple-light)', border: 'rgba(var(--purple-rgb), 0.3)', color: 'var(--purple)' };
   return { bg: 'var(--neutral-100)', border: 'var(--neutral-200)', color: 'var(--muted)' };
 }
 
@@ -105,9 +105,9 @@ export const InventoryList = ({
                   : '2px solid transparent',
                 cursor: 'pointer',
                 background: isSelected
-                  ? '#FEF3C7'
+                  ? 'var(--amber-light)'
                   : item.isLowStock
-                  ? '#FFFBEB'
+                  ? 'var(--amber-subtle)'
                   : 'var(--card)',
                 transition: 'background 0.1s',
               }}
@@ -117,7 +117,7 @@ export const InventoryList = ({
               onMouseLeave={e => {
                 if (!isSelected)
                   (e.currentTarget as HTMLDivElement).style.background =
-                    item.isLowStock ? '#FFFBEB' : 'var(--card)';
+                    item.isLowStock ? 'var(--amber-subtle)' : 'var(--card)';
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>

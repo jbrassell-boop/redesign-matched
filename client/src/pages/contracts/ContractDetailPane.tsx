@@ -141,7 +141,7 @@ const ScopesTab = ({ contractKey }: { contractKey: number }) => {
         ].map(s => (
           <div key={s.label} style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--neutral-200)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 9.5, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{s.label}</div>
+            <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -265,7 +265,7 @@ const InvoicesTab = ({ contractKey, detail }: { contractKey: number; detail: Con
         ].map(s => (
           <div key={s.label} style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--neutral-200)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
             <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 9.5, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{s.label}</div>
+            <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{s.label}</div>
           </div>
         ))}
       </div>

@@ -37,8 +37,8 @@ export const DepartmentsList = ({ departments, loading, selectedKey, search, onS
               padding: '8px 12px',
               borderBottom: '1px solid var(--neutral-200)',
               cursor: 'pointer',
-              background: selectedKey === d.deptKey ? '#FEF3C7' : 'var(--card)',
-              borderLeft: selectedKey === d.deptKey ? '2px solid #F59E0B' : '2px solid transparent',
+              background: selectedKey === d.deptKey ? 'var(--amber-light)' : 'var(--card)',
+              borderLeft: selectedKey === d.deptKey ? '2px solid var(--amber)' : '2px solid transparent',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
@@ -46,8 +46,8 @@ export const DepartmentsList = ({ departments, loading, selectedKey, search, onS
               <span style={{
                 display: 'inline-flex', padding: '1px 6px', borderRadius: 9999,
                 fontSize: 10, fontWeight: 700,
-                background: d.isActive ? '#F0FDF4' : 'var(--neutral-100)',
-                border: `1px solid ${d.isActive ? '#BBF7D0' : 'var(--neutral-200)'}`,
+                background: d.isActive ? 'var(--success-light)' : 'var(--neutral-100)',
+                border: `1px solid ${d.isActive ? 'var(--success-border)' : 'var(--neutral-200)'}`,
                 color: d.isActive ? 'var(--success)' : 'var(--muted)',
               }}>
                 {d.isActive ? 'Active' : 'Inactive'}

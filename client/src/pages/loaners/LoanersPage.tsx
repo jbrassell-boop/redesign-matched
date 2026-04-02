@@ -169,7 +169,7 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
 };
 
 const activeTdStyle: React.CSSProperties = {
-  padding: '6px 8px', fontSize: 11.5, borderBottom: '1px solid var(--border)', verticalAlign: 'middle', color: 'var(--text)',
+  padding: '6px 8px', fontSize: 12, borderBottom: '1px solid var(--border)', verticalAlign: 'middle', color: 'var(--text)',
 };
 
 /* ═════════════════════════════════════════════════════════════ */
@@ -482,7 +482,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
 };
 
 const reqTdStyle: React.CSSProperties = {
-  padding: '6px 8px', fontSize: 11.5, borderBottom: '1px solid var(--border)', verticalAlign: 'middle', color: 'var(--text)',
+  padding: '6px 8px', fontSize: 12, borderBottom: '1px solid var(--border)', verticalAlign: 'middle', color: 'var(--text)',
 };
 
 /* ═════════════════════════════════════════════════════════════ */
@@ -816,7 +816,7 @@ export const LoanersPage = () => {
 
 /* ── Shared styles ─────────────────────────────────────────── */
 const tdStyle: React.CSSProperties = {
-  padding: '6px 8px', fontSize: 11.5, borderBottom: '1px solid var(--border)', verticalAlign: 'middle', color: 'var(--text)',
+  padding: '6px 8px', fontSize: 12, borderBottom: '1px solid var(--border)', verticalAlign: 'middle', color: 'var(--text)',
 };
 
 const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (

@@ -27,7 +27,7 @@ const CAT_BADGE: Record<string, { bg: string; border: string; color: string }> =
 };
 
 const Badge = ({ text, style }: { text: string; style: { bg: string; border: string; color: string } }) => (
-  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 10, fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap', background: style.bg, border: `1px solid ${style.border}`, color: style.color }}>{text}</span>
+  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', background: style.bg, border: `1px solid ${style.border}`, color: style.color }}>{text}</span>
 );
 
 /* ── Stat Chip ───────────────────────────────────────────────── */
@@ -95,12 +95,12 @@ const rowStyle = (idx: number, selected: boolean): React.CSSProperties => ({
   background: selected ? 'var(--primary-light)' : idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)',
   cursor: 'pointer',
 });
-const cellStyle: React.CSSProperties = { padding: '7px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const cellStyle: React.CSSProperties = { padding: '7px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
 
 /* ── Section Card (for drawer) ───────────────────────────────── */
 const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div style={{ background: 'var(--card)', border: '1px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
-    <div style={{ background: 'var(--neutral-50)', padding: '6px 12px', fontSize: 9.5, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{title}</div>
+    <div style={{ background: 'var(--neutral-50)', padding: '6px 12px', fontSize: 10, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{title}</div>
     <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>{children}</div>
   </div>
 );
@@ -449,7 +449,7 @@ export const EndoCartsPage = () => {
                       <td style={{ ...cellStyle, textAlign: 'center' }}>{m.componentCount}</td>
                       <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 700 }}>{fmtMoney(m.basePrice)}</td>
                       <td style={{ ...cellStyle, textAlign: 'center' }}>
-                        <button onClick={e => { e.stopPropagation(); setExpandedModel(k => k === m.lModelKey ? null : m.lModelKey); }} style={{ height: 24, padding: '0 10px', fontSize: 10.5, borderRadius: 4, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, background: 'var(--primary-light)', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <button onClick={e => { e.stopPropagation(); setExpandedModel(k => k === m.lModelKey ? null : m.lModelKey); }} style={{ height: 24, padding: '0 10px', fontSize: 11, borderRadius: 4, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, background: 'var(--primary-light)', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                           <IconExpand open={expandedModel === m.lModelKey} /> BOM
                         </button>
                       </td>
@@ -458,7 +458,7 @@ export const EndoCartsPage = () => {
                       <tr key={`bom-${m.lModelKey}`}>
                         <td colSpan={5} style={{ padding: 0, borderBottom: '1px solid var(--border)' }}>
                           <div style={{ padding: '8px 16px 12px 32px', background: 'var(--neutral-50)' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10.5 }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                               <thead>
                                 <tr>
                                   <th style={{ background: 'var(--primary-light)', padding: '4px 8px', fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', textAlign: 'left' }}>Part #</th>
@@ -688,7 +688,7 @@ export const EndoCartsPage = () => {
                   </FormGrid>
                 </SectionCard>
                 <SectionCard title="Notes">
-                  <span style={{ fontSize: 11.5, color: 'var(--text)', lineHeight: 1.5 }}>{selectedQuote.notes || '\u2014'}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>{selectedQuote.notes || '\u2014'}</span>
                 </SectionCard>
               </div>
             )}
@@ -698,7 +698,7 @@ export const EndoCartsPage = () => {
               <div style={{ flex: 1, overflow: 'auto', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <SectionCard title="Bill of Materials">
                   <div style={{ margin: '-10px -12px', padding: 0 }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10.5 }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                       <thead>
                         <tr>
                           <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left', borderBottom: '1px solid var(--neutral-200)' }}>Part #</th>
@@ -742,7 +742,7 @@ export const EndoCartsPage = () => {
 
             {/* Drawer Footer */}
             <div style={{ padding: '10px 18px', borderTop: '1.5px solid var(--border-dk)', background: 'var(--neutral-50)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-              <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Quote detail</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)' }}>Quote detail</span>
             </div>
           </div>
         )}

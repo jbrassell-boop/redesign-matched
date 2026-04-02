@@ -8,6 +8,16 @@
   --navy-rgb: 27, 58, 92;
   --success-rgb: 22, 163, 74;
   --muted-rgb: 107, 114, 128;
+  /* selection / status light backgrounds */
+  --amber-light: #FEF3C7;
+  --amber-border: #FDE68A;
+  --amber-subtle: #FFFBEB;
+  --success-light: #F0FDF4;
+  --success-border: #BBF7D0;
+  /* purple — used for Camera category */
+  --purple: #7C3AED;
+  --purple-light: #F5F3FF;
+  --purple-rgb: 124, 58, 237;
   --danger: #B71234;
   --red: #B71234;
   --success: #16A34A;
@@ -81,3 +91,12 @@ body {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--neutral-200); border-radius: 3px; }
+
+/* ── DENSITY TOGGLE — compact mode ── */
+[data-density="compact"] .tab-bar__item { padding: 6px 14px; font-size: var(--text-xs); }
+[data-density="compact"] .ant-table-cell { padding: 6px 10px !important; font-size: 11px; }
+[data-density="compact"] .stat-strip { gap: 0; }
+[data-density="compact"] .stat-strip__chip { padding: 4px 8px; }
+[data-density="compact"] .stat-strip__value { font-size: 14px; }
+[data-density="compact"] .detail-header { padding: 8px 14px; }
+[data-density="compact"] .section-card { padding: 10px 12px; }

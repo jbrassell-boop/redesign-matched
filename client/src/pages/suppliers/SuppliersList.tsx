@@ -44,8 +44,8 @@ export const SuppliersList = ({ suppliers, loading, selectedKey, search, onSearc
               padding: '8px 12px',
               borderBottom: '1px solid var(--neutral-200)',
               cursor: 'pointer',
-              background: selectedKey === s.supplierKey ? '#FEF3C7' : '#fff',
-              borderLeft: selectedKey === s.supplierKey ? '2px solid #F59E0B' : '2px solid transparent',
+              background: selectedKey === s.supplierKey ? 'var(--amber-light)' : 'var(--card)',
+              borderLeft: selectedKey === s.supplierKey ? '2px solid var(--amber)' : '2px solid transparent',
               transition: 'background 0.1s',
             }}
           >

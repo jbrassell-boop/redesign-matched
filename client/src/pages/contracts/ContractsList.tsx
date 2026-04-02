@@ -13,13 +13,13 @@ interface ContractsListProps {
 
 const statusStyle = (status: ContractListItem['status']): React.CSSProperties => {
   if (status === 'Active') return {
-    background: '#F0FDF4', border: '1px solid #BBF7D0', color: 'var(--success)',
+    background: 'rgba(var(--success-rgb), 0.1)', border: '1px solid rgba(var(--success-rgb), 0.3)', color: 'var(--success)',
   };
   if (status === 'Expiring') return {
-    background: '#FFFBEB', border: '1px solid #FDE68A', color: 'var(--warning)',
+    background: 'rgba(var(--amber-rgb), 0.1)', border: '1px solid rgba(var(--amber-rgb), 0.3)', color: 'var(--warning)',
   };
   return {
-    background: '#FEF2F2', border: '1px solid #FECACA', color: 'var(--danger)',
+    background: 'rgba(var(--danger-rgb), 0.1)', border: '1px solid rgba(var(--danger-rgb), 0.3)', color: 'var(--danger)',
   };
 };
 
@@ -70,13 +70,13 @@ export const ContractsList = ({ contracts, loading, selectedKey, search, onSearc
               </span>
               <span style={{
                 display: 'inline-flex', padding: '1px 7px', borderRadius: 9999,
-                fontSize: 9.5, fontWeight: 700, flexShrink: 0,
+                fontSize: 10, fontWeight: 700, flexShrink: 0,
                 ...statusStyle(c.status),
               }}>
                 {c.status.toUpperCase()}
               </span>
             </div>
-            <div style={{ fontSize: 10.5, color: 'var(--muted)', marginBottom: 1 }}>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 1 }}>
               {c.contractNumber || c.contractId || '—'}
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 2 }}>

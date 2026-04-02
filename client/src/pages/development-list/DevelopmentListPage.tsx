@@ -19,7 +19,7 @@ const statusVariant = (status: string): 'blue' | 'amber' | 'green' | 'red' | 'gr
 };
 
 const tdStyle: React.CSSProperties = {
-  padding: '6px 12px', fontSize: 11.5, borderBottom: '1px solid var(--border)', color: 'var(--text)', verticalAlign: 'middle',
+  padding: '6px 12px', fontSize: 12, borderBottom: '1px solid var(--border)', color: 'var(--text)', verticalAlign: 'middle',
 };
 
 const DETAIL_TABS: TabDef[] = [
@@ -96,7 +96,7 @@ export const DevelopmentListPage = () => {
           onChange={e => { setSearch(e.target.value); setPage(1); }}
           style={{
             height: 28, border: '1.5px solid var(--border-dk)', borderRadius: 4,
-            padding: '0 10px', fontSize: 11.5, fontFamily: 'inherit', color: 'var(--text)',
+            padding: '0 10px', fontSize: 12, fontFamily: 'inherit', color: 'var(--text)',
             background: 'var(--card)', outline: 'none', width: 200,
           }}
         />
@@ -114,7 +114,7 @@ export const DevelopmentListPage = () => {
           {statuses.map(s => <option key={s.statusId} value={s.statusId}>{s.status}</option>)}
         </select>
         <div style={{ flex: 1 }} />
-        <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>{totalCount} items</span>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }}>{totalCount} items</span>
       </div>
 
       {/* Stat Strip */}
@@ -193,7 +193,7 @@ export const DevelopmentListPage = () => {
                         <td style={{ ...tdStyle, whiteSpace: 'nowrap', fontSize: 11, color: 'var(--label)' }}>
                           {item.targetYear ? `${item.targetYear} Q${item.targetQuarter ?? '?'}` : ''}
                         </td>
-                        <td style={{ ...tdStyle, fontSize: 10.5, color: 'var(--muted)', whiteSpace: 'nowrap', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.assignee || ''}</td>
+                        <td style={{ ...tdStyle, fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.assignee || ''}</td>
                       </tr>
                     );
                   })}
@@ -235,7 +235,7 @@ export const DevelopmentListPage = () => {
               <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={{ opacity: 0.18 }}>
                 <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
               </svg>
-              <p style={{ fontSize: 11.5, fontWeight: 500 }}>Select an item to view details</p>
+              <p style={{ fontSize: 12, fontWeight: 500 }}>Select an item to view details</p>
             </div>
           ) : (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>

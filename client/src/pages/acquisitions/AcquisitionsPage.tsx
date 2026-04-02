@@ -134,7 +134,7 @@ export const AcquisitionsPage = () => {
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <DetailHeader
           title={`${tabLabel} Acquisitions`}
-          badges={<span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 12, fontSize: 10.5, fontWeight: 700, background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary-light)' }}>{total} records</span>}
+          badges={<span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary-light)' }}>{total} records</span>}
           actions={<Input prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />} placeholder="Search serial, model, client..." value={searchVal} onChange={e => { onSearch(e.target.value); onPage(1); }} style={{ height: 30, width: 240, fontSize: 11 }} allowClear />}
         />
         <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
@@ -169,7 +169,7 @@ export const AcquisitionsPage = () => {
           </table>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
-          <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{total}</strong></span>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{total}</strong></span>
           {totalPages > 1 && (
             <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
               <PgBtn disabled={currentPage <= 1} onClick={() => onPage(currentPage - 1)}>{'\u2039'}</PgBtn>
@@ -192,7 +192,7 @@ export const AcquisitionsPage = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <DetailHeader
         title="Sold Acquisitions"
-        badges={<span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 12, fontSize: 10.5, fontWeight: 700, background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary-light)' }}>{soldTotal} records</span>}
+        badges={<span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary-light)' }}>{soldTotal} records</span>}
         actions={<Input prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />} placeholder="Search serial, model, buyer..." value={soldSearch} onChange={e => { setSoldSearch(e.target.value); setSoldPage(1); }} style={{ height: 30, width: 240, fontSize: 11 }} allowClear />}
       />
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
@@ -223,7 +223,7 @@ export const AcquisitionsPage = () => {
         </table>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
-        <span style={{ fontSize: 10.5, color: 'var(--muted)' }}>Showing <strong style={{ color: 'var(--text)' }}>{soldItems.length}</strong> of <strong style={{ color: 'var(--text)' }}>{soldTotal}</strong></span>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }}>Showing <strong style={{ color: 'var(--text)' }}>{soldItems.length}</strong> of <strong style={{ color: 'var(--text)' }}>{soldTotal}</strong></span>
         {soldTotalPages > 1 && (
           <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
             <PgBtn disabled={soldPage <= 1} onClick={() => setSoldPage(p => p - 1)}>{'\u2039'}</PgBtn>
@@ -254,12 +254,12 @@ export const AcquisitionsPage = () => {
 
 /* ── Shared ───────────────────────────────────────────────── */
 const tdStyle: React.CSSProperties = {
-  padding: '7px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', color: 'var(--text)',
+  padding: '7px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', color: 'var(--text)',
 };
 
 const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (
   <button disabled={disabled} onClick={onClick} style={{
-    height: 24, minWidth: 24, padding: '0 8px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 10.5, fontFamily: 'inherit',
+    height: 24, minWidth: 24, padding: '0 8px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, fontFamily: 'inherit',
     cursor: disabled ? 'default' : 'pointer', fontWeight: active ? 600 : 400,
     background: active ? 'var(--navy)' : 'var(--card)', color: active ? 'var(--card)' : 'var(--muted)', opacity: disabled ? 0.4 : 1,
   }}>{children}</button>

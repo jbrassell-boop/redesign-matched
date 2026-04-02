@@ -186,7 +186,7 @@ export const OnsiteServicesPage = () => {
 
   const tdStyle: React.CSSProperties = {
     padding: '6px 10px',
-    fontSize: 11.5,
+    fontSize: 12,
     borderBottom: '1px solid var(--border)',
     whiteSpace: 'nowrap',
     overflow: 'hidden',

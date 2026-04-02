@@ -51,7 +51,7 @@ const MiniTable = ({ headers, children }: { headers: string[]; children: React.R
       <tr>
         {headers.map(h => (
           <th key={h} style={{
-            fontSize: 9.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
+            fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
             letterSpacing: '0.04em', padding: '4px 8px', borderBottom: '1.5px solid var(--border-dk)',
             textAlign: 'left',
           }}>{h}</th>
@@ -81,7 +81,7 @@ const StatRow = ({ label, value, icon, color }: { label: string; value: string; 
 );
 
 const tdStyle: React.CSSProperties = {
-  padding: '6px 8px', fontSize: 11.5, borderBottom: '1px solid var(--border)', color: 'var(--text)',
+  padding: '6px 8px', fontSize: 12, borderBottom: '1px solid var(--border)', color: 'var(--text)',
 };
 
 export const WorkspacePage = () => {
@@ -139,7 +139,7 @@ export const WorkspacePage = () => {
                   >
                     <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)', fontSize: 11 }}>{item.wo}</span></td>
                     <td style={tdStyle}>{item.client}</td>
-                    <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 10.5 }}>{item.scopeType}</td>
+                    <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 11 }}>{item.scopeType}</td>
                     <td style={{ ...tdStyle, textAlign: 'center' }}>
                       <StatusBadge status={`${item.daysIn}d / 7d`} variant={over ? 'red' : item.daysIn >= 6 ? 'amber' : 'blue'} />
                     </td>

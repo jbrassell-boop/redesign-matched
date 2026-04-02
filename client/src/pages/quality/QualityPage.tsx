@@ -542,30 +542,30 @@ export const QualityPage = () => {
                       onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
                     >
-                      <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         <span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>
                           {item.workOrderNumber}
                         </span>
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         <StatusBadge
                           status={item.inspectionType}
                           variant={item.inspectionType === 'D&I Intake' ? 'blue' : 'purple'}
                         />
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {item.clientName}
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--muted)' }}>
+                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--muted)' }}>
                         {item.scopeSN ?? '—'}
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--muted)' }}>
+                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--muted)' }}>
                         {item.technicianKey ?? '—'}
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--muted)' }}>
+                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--muted)' }}>
                         {item.inspectionDate}
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         <StatusBadge
                           status={item.result}
                           variant={item.result === 'Pass' ? 'green' : item.result === 'Fail' ? 'red' : 'amber'}
@@ -719,25 +719,25 @@ export const QualityPage = () => {
                     onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
                   >
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.ncrNumber}</span>
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.workOrderNumber}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.description}>{item.description}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.category}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.workOrderNumber}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.description}>{item.description}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.category}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)' }}>
                       <StatusBadge
                         status={item.severity}
                         variant={item.severity === 'Critical' ? 'red' : item.severity === 'Major' ? 'amber' : 'blue'}
                       />
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)' }}>
                       <StatusBadge
                         status={item.status}
                         variant={item.status === 'Open' ? 'red' : item.status === 'Under Review' ? 'amber' : 'gray'}
                       />
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.dateFiled}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.dateFiled}</td>
                   </tr>
                 ))}
               </tbody>
@@ -902,16 +902,16 @@ export const QualityPage = () => {
                     onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
                   >
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.reworkNumber}</span>
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.workOrderNumber}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.serialNumber}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.reason}>{item.reason}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.techName || '—'}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.originalComplete || '—'}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.reworkDue || '—'}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.workOrderNumber}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.serialNumber}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.reason}>{item.reason}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.techName || '—'}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.originalComplete || '—'}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.reworkDue || '—'}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)' }}>
                       <StatusBadge
                         status={item.status}
                         variant={item.status === 'Complete' ? 'green' : item.status === 'In Progress' ? 'blue' : 'amber'}
@@ -977,7 +977,7 @@ export const QualityPage = () => {
                     </div>
                     <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{report.title}</span>
                   </div>
-                  <div style={{ fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.5 }}>{report.desc}</div>
+                  <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>{report.desc}</div>
                 </div>
               ))}
             </div>

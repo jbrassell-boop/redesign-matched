@@ -4,60 +4,89 @@ import { SearchOutlined } from '@ant-design/icons';
 import { StatStrip } from '../../components/shared/StatStrip';
 import type { StatChipDef } from '../../components/shared/StatStrip';
 import { REPORTS, CATEGORIES } from './reportData';
+import { ReportBuilder, handleGenerate } from './ReportBuilder';
 import type { ReportDef } from './types';
 
 /* ── Report Card ─────────────────────────────────────────────── */
-const ReportCard = ({ report, favorited, onToggleFav }: { report: ReportDef; favorited: boolean; onToggleFav: () => void }) => (
-  <div style={{
-    background: 'var(--card)', border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '12px 14px',
-    display: 'flex', flexDirection: 'column', gap: 6, transition: 'box-shadow 0.15s, border-color 0.15s',
-  }}>
-    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-      <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--navy)' }}>{report.name}</span>
-      {report.extractOnly && (
-        <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'var(--neutral-50)', border: '1px solid var(--border)', color: 'var(--muted)', whiteSpace: 'nowrap' }}>EXTRACT</span>
+const ReportCard = ({ report, favorited, onToggleFav, paramOpen, onToggleParams, onGenerate }: {
+  report: ReportDef; favorited: boolean; onToggleFav: () => void;
+  paramOpen: boolean; onToggleParams: () => void; onGenerate: (id: string) => void;
+}) => {
+  const runLabel = report.extractOnly ? 'Extract' : 'Run';
+  return (
+    <div style={{
+      background: 'var(--card)', border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '12px 14px',
+      display: 'flex', flexDirection: 'column', gap: 6, transition: 'box-shadow 0.15s, border-color 0.15s',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{report.name}</span>
+        {report.extractOnly && (
+          <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'var(--neutral-50)', border: '1px solid var(--border)', color: 'var(--muted)', whiteSpace: 'nowrap' }}>EXTRACT</span>
+        )}
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>{report.desc}</div>
+      {report.lastRun != null && (
+        <div style={{ fontSize: 10, color: 'var(--muted)' }}>
+          {report.lastRun === 0 ? 'Just now' : `Last run: ${report.lastRun}d ago`}
+        </div>
+      )}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+        <button
+          onClick={onToggleFav}
+          style={{ background: 'none', border: 'none', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1, color: favorited ? 'var(--warning)' : 'var(--border-dk)', transition: 'color 0.15s' }}
+        >
+          {favorited ? '\u2605' : '\u2606'}
+        </button>
+        <button
+          onClick={onToggleParams}
+          style={{
+            height: 26, padding: '0 12px', border: 'none', borderRadius: 4, background: 'var(--navy)', color: 'var(--card)',
+            fontSize: 11, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', marginLeft: 'auto', transition: 'background 0.1s',
+          }}
+        >
+          {runLabel}
+        </button>
+      </div>
+      {paramOpen && (
+        <ReportBuilder
+          reportId={report.id}
+          paramType={report.params ?? 'default'}
+          extractOnly={report.extractOnly}
+          onGenerate={onGenerate}
+        />
       )}
     </div>
-    <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>{report.desc}</div>
-    {report.lastRun != null && (
-      <div style={{ fontSize: 10, color: 'var(--muted)' }}>Last run: {report.lastRun}d ago</div>
-    )}
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-      <button
-        onClick={onToggleFav}
-        style={{ background: 'none', border: 'none', fontSize: 16, cursor: 'pointer', padding: 0, lineHeight: 1, color: favorited ? 'var(--warning)' : 'var(--border-dk)', transition: 'color 0.15s' }}
-      >
-        {favorited ? '\u2605' : '\u2606'}
-      </button>
-      <button style={{
-        height: 26, padding: '0 12px', border: 'none', borderRadius: 4, background: 'var(--navy)', color: '#fff',
-        fontSize: 10.5, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', marginLeft: 'auto', transition: 'background 0.1s',
-      }}>
-        Run
-      </button>
-    </div>
-  </div>
-);
+  );
+};
 
 /* ── Category Section ────────────────────────────────────────── */
-const CategorySection = ({ category, reports, collapsed, onToggle, favorites, onToggleFav }: {
+const CategorySection = ({ category, reports, collapsed, onToggle, favorites, onToggleFav, openParamId, onToggleParams, onGenerate }: {
   category: string; reports: ReportDef[]; collapsed: boolean; onToggle: () => void;
   favorites: Set<string>; onToggleFav: (id: string) => void;
+  openParamId: string | null; onToggleParams: (id: string) => void; onGenerate: (id: string) => void;
 }) => (
   <div style={{ background: 'var(--card)', border: '1.5px solid var(--border-dk)', borderRadius: 8, overflow: 'hidden' }}>
     <div
       onClick={onToggle}
       style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--neutral-50)', cursor: 'pointer', userSelect: 'none', borderBottom: collapsed ? 'none' : '1px solid var(--border)', transition: 'background 0.1s' }}
     >
+      <span style={{ fontSize: 10, color: 'var(--muted)', transition: 'transform 0.2s', transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)', display: 'inline-block' }}>{'\u25B6'}</span>
       <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)', flex: 1 }}>{category}</span>
-      <span style={{ fontSize: 10, fontWeight: 700, background: 'var(--navy)', color: '#fff', padding: '1px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>{reports.length}</span>
-      <span style={{ fontSize: 10, color: 'var(--muted)', transition: 'transform 0.2s', transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>{'\u25BC'}</span>
+      <span style={{ fontSize: 10, fontWeight: 700, background: 'var(--navy)', color: 'var(--card)', padding: '1px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>{reports.length}</span>
     </div>
     {!collapsed && (
       <div style={{ padding: '12px 16px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
           {reports.map(r => (
-            <ReportCard key={r.id} report={r} favorited={favorites.has(r.id)} onToggleFav={() => onToggleFav(r.id)} />
+            <ReportCard
+              key={r.id}
+              report={r}
+              favorited={favorites.has(r.id)}
+              onToggleFav={() => onToggleFav(r.id)}
+              paramOpen={openParamId === r.id}
+              onToggleParams={() => onToggleParams(r.id)}
+              onGenerate={onGenerate}
+            />
           ))}
         </div>
       </div>
@@ -71,15 +100,31 @@ const CategorySection = ({ category, reports, collapsed, onToggle, favorites, on
 export const ReportsPage = () => {
   const [search, setSearch] = useState('');
   const [showFavsOnly, setShowFavsOnly] = useState(false);
-  const [favorites, setFavorites] = useState<Set<string>>(() => new Set(['repair-volume', 'outstanding-aging', 'stock-level', 'client-activity', 'mgmt-report']));
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('tsi_report_favorites');
+      return saved ? new Set(JSON.parse(saved)) : new Set(['repair-volume', 'outstanding-aging', 'stock-level', 'client-activity', 'mgmt-report']);
+    } catch { return new Set(['repair-volume', 'outstanding-aging', 'stock-level', 'client-activity', 'mgmt-report']); }
+  });
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [openParamId, setOpenParamId] = useState<string | null>(null);
 
   const toggleFav = (id: string) => {
     setFavorites(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
+      try { localStorage.setItem('tsi_report_favorites', JSON.stringify([...next])); } catch { /* noop */ }
       return next;
     });
+  };
+
+  const toggleParams = (id: string) => {
+    setOpenParamId(prev => prev === id ? null : id);
+  };
+
+  const onGenerate = (id: string) => {
+    setOpenParamId(null);
+    handleGenerate(id);
   };
 
   const toggleCollapse = (cat: string) => {
@@ -124,7 +169,7 @@ export const ReportsPage = () => {
         style={{
           height: 30, padding: '0 14px', border: '1.5px solid var(--border-dk)', borderRadius: 6, fontSize: 11,
           fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6,
-          background: showFavsOnly ? 'var(--navy)' : 'var(--card)', color: showFavsOnly ? '#fff' : 'var(--muted)',
+          background: showFavsOnly ? 'var(--navy)' : 'var(--card)', color: showFavsOnly ? 'var(--card)' : 'var(--muted)',
           borderColor: showFavsOnly ? 'var(--navy)' : 'var(--border-dk)', transition: 'all 0.15s',
         }}
       >
@@ -154,6 +199,9 @@ export const ReportsPage = () => {
               onToggle={() => toggleCollapse(cat)}
               favorites={favorites}
               onToggleFav={toggleFav}
+              openParamId={openParamId}
+              onToggleParams={toggleParams}
+              onGenerate={onGenerate}
             />
           );
         })}

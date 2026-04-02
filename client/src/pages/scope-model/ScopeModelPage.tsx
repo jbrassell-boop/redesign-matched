@@ -132,7 +132,7 @@ export const ScopeModelPage = () => {
       <StatChip label="Inactive" value={stats?.inactiveCount ?? 0} iconBg="rgba(var(--danger-rgb), 0.10)" iconColor="var(--danger)" valueColor="var(--danger)" active={isActive('', 'inactive')} onClick={() => chipFilter('', 'inactive')} icon={<IconInactive />} />
       <StatChip label="Flexible" value={stats?.flexible ?? 0} iconBg="rgba(var(--primary-rgb), 0.10)" iconColor="var(--primary)" valueColor="var(--primary)" active={isActive('F', '')} onClick={() => chipFilter('F', '')} icon={<IconFlex />} />
       <StatChip label="Rigid" value={stats?.rigid ?? 0} iconBg="rgba(var(--success-rgb), 0.10)" iconColor="var(--success)" valueColor="var(--success)" active={isActive('R', '')} onClick={() => chipFilter('R', '')} icon={<IconRigid />} />
-      <StatChip label="Camera" value={stats?.camera ?? 0} iconBg="#F5F3FF" iconColor="#7C3AED" valueColor="#7C3AED" active={isActive('C', '')} onClick={() => chipFilter('C', '')} icon={<IconCamera />} />
+      <StatChip label="Camera" value={stats?.camera ?? 0} iconBg="var(--purple-light)" iconColor="var(--purple)" valueColor="var(--purple)" active={isActive('C', '')} onClick={() => chipFilter('C', '')} icon={<IconCamera />} />
     </div>
   );
 
@@ -365,7 +365,7 @@ export const ScopeModelPage = () => {
 
 /* ── Shared ───────────────────────────────────────────────── */
 const tdStyle: React.CSSProperties = {
-  padding: '7px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', color: 'var(--text)',
+  padding: '7px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', color: 'var(--text)',
 };
 
 const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (

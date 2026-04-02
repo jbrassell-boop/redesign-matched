@@ -3,10 +3,10 @@ import { SearchOutlined } from '@ant-design/icons';
 import type { RepairListItem } from './types';
 
 const STATUS_COLORS: Record<string, string> = {
-  'Shipped': '#16A34A',
-  'Pending Ship': '#2E75B6',
-  'Pending QC': '#92400E',
-  'Cancelled': '#6B7280',
+  'Shipped': 'var(--success)',
+  'Pending Ship': 'var(--primary)',
+  'Pending QC': 'var(--amber)',
+  'Cancelled': 'var(--muted)',
 };
 
 interface RepairsListProps {
@@ -51,8 +51,8 @@ export const RepairsList = ({ repairs, loading, selectedKey, search, onSearchCha
               padding: '8px 12px',
               borderBottom: '1px solid var(--neutral-200)',
               cursor: 'pointer',
-              background: selectedKey === r.repairKey ? '#FEF3C7' : '#fff',
-              borderLeft: selectedKey === r.repairKey ? '2px solid #F59E0B' : '2px solid transparent',
+              background: selectedKey === r.repairKey ? 'var(--amber-light)' : 'var(--card)',
+              borderLeft: selectedKey === r.repairKey ? '2px solid var(--amber)' : '2px solid transparent',
               transition: 'background 0.1s',
             }}
           >

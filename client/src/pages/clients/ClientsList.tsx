@@ -37,8 +37,8 @@ export const ClientsList = ({ clients, loading, selectedKey, search, onSearchCha
               padding: '8px 12px',
               borderBottom: '1px solid var(--neutral-200)',
               cursor: 'pointer',
-              background: selectedKey === c.clientKey ? '#FEF3C7' : 'var(--card)',
-              borderLeft: selectedKey === c.clientKey ? '2px solid #F59E0B' : '2px solid transparent',
+              background: selectedKey === c.clientKey ? 'var(--amber-light)' : 'var(--card)',
+              borderLeft: selectedKey === c.clientKey ? '2px solid var(--amber)' : '2px solid transparent',
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
@@ -46,8 +46,8 @@ export const ClientsList = ({ clients, loading, selectedKey, search, onSearchCha
               <span style={{
                 display: 'inline-flex', padding: '1px 6px', borderRadius: 9999,
                 fontSize: 10, fontWeight: 700,
-                background: c.isActive ? '#F0FDF4' : 'var(--neutral-100)',
-                border: `1px solid ${c.isActive ? '#BBF7D0' : 'var(--neutral-200)'}`,
+                background: c.isActive ? 'var(--success-light)' : 'var(--neutral-100)',
+                border: `1px solid ${c.isActive ? 'var(--success-border)' : 'var(--neutral-200)'}`,
                 color: c.isActive ? 'var(--success)' : 'var(--muted)',
               }}>
                 {c.isActive ? 'Active' : 'Inactive'}
