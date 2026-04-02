@@ -1,7 +1,10 @@
-import { useState, useMemo, useCallback } from 'react';
-import { Drawer } from 'antd';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Drawer, Spin } from 'antd';
 import { QUOTES, CATALOG, MODELS, SALES_REPS, CATALOG_CATEGORIES } from './endoCartData';
-import type { EndoCartFilters, CatalogPart, CartModel } from './types';
+import { getEndoCartScopeInventory, getEndoCartServiceHistory } from '../../api/endocarts';
+import type { EndoCartFilters, CatalogPart, CartModel, EndoCartScopeItem, EndoCartServiceHistoryItem } from './types';
+import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
+import type { TabDef } from '../../components/shared';
 
 /* ── helpers ─────────────────────────────────────────────────── */
 const fmtMoney = (n: number) =>
@@ -14,20 +17,12 @@ const fmtDate = (d: string) => {
   return `${String(dt.getMonth() + 1).padStart(2, '0')}/${String(dt.getDate()).padStart(2, '0')}/${dt.getFullYear()}`;
 };
 
-const STATUS_BADGE: Record<string, { bg: string; border: string; color: string }> = {
-  Draft:     { bg: 'var(--warning-light, #FEF3C7)', border: 'var(--warning-border, #FDE68A)', color: 'var(--warning, #F59E0B)' },
-  Quoted:    { bg: 'var(--primary-light)', border: 'var(--border-dk)', color: 'var(--primary)' },
-  Approved:  { bg: 'var(--success-light, #F0FDF4)', border: 'var(--success-border, #BBF7D0)', color: 'var(--success)' },
-  Billed:    { bg: 'var(--primary-light)', border: 'var(--border-dk)', color: 'var(--primary)' },
-  Cancelled: { bg: 'var(--danger-light, #FEE2E2)', border: 'var(--danger-border, #FECACA)', color: 'var(--danger)' },
-};
-
 const CAT_BADGE: Record<string, { bg: string; border: string; color: string }> = {
   'Cart Frame': { bg: 'var(--primary-light)', border: 'var(--border-dk)', color: 'var(--primary)' },
-  Monitor:      { bg: 'var(--neutral-100, #F3F4F6)', border: 'var(--border-dk)', color: 'var(--navy)' },
-  Accessory:    { bg: 'var(--success-light, #F0FDF4)', border: 'var(--success-border, #BBF7D0)', color: 'var(--success)' },
-  Power:        { bg: 'var(--warning-light, #FEF3C7)', border: 'var(--warning-border, #FDE68A)', color: 'var(--warning, #F59E0B)' },
-  Cabling:      { bg: 'var(--danger-light, #FEE2E2)', border: 'var(--danger-border, #FECACA)', color: 'var(--danger)' },
+  Monitor:      { bg: 'var(--neutral-100)', border: 'var(--border-dk)', color: 'var(--navy)' },
+  Accessory:    { bg: 'rgba(var(--success-rgb), 0.1)', border: '1px solid rgba(var(--success-rgb), 0.3)', color: 'var(--success)' },
+  Power:        { bg: 'rgba(var(--amber-rgb), 0.1)', border: '1px solid rgba(var(--amber-rgb), 0.3)', color: 'var(--warning)' },
+  Cabling:      { bg: 'rgba(var(--danger-rgb), 0.1)', border: '1px solid rgba(var(--danger-rgb), 0.3)', color: 'var(--danger)' },
   Storage:      { bg: 'var(--neutral-50)', border: 'var(--border-dk)', color: 'var(--navy)' },
 };
 
@@ -73,7 +68,7 @@ const SegmentedControl = ({ items, value, onChange }: { items: { label: string; 
     {items.map(it => (
       <button key={it.value} onClick={() => onChange(it.value)} style={{
         height: 28, padding: '0 12px', border: 'none', fontSize: 11, fontWeight: it.value === value ? 700 : 500, fontFamily: 'inherit', cursor: 'pointer',
-        background: it.value === value ? 'var(--navy)' : 'var(--card)', color: it.value === value ? '#fff' : 'var(--muted)',
+        background: it.value === value ? 'var(--navy)' : 'var(--card)', color: it.value === value ? 'var(--card)' : 'var(--muted)',
         borderRight: '1px solid var(--border-dk)', transition: 'all 0.1s',
       }}>{it.label}</button>
     ))}
@@ -85,9 +80,9 @@ const ColHeader = ({ label, sortKey, currentSort, currentDir, onSort, style }: {
   label: string; sortKey: string; currentSort: string; currentDir: 'asc' | 'desc'; onSort: (k: string) => void; style?: React.CSSProperties;
 }) => (
   <th onClick={() => onSort(sortKey)} style={{
-    background: 'var(--neutral-50)', color: 'var(--neutral-500, #6B7280)', fontWeight: 700, padding: '9px 10px', textAlign: 'left',
+    background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'left',
     textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2,
-    cursor: 'pointer', whiteSpace: 'nowrap', borderRight: '1px solid rgba(180,200,220,0.3)', borderBottom: '1px solid var(--neutral-200)',
+    cursor: 'pointer', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)',
     userSelect: 'none', transition: 'background 0.1s', ...style,
   }}>
     {label}{' '}
@@ -97,7 +92,7 @@ const ColHeader = ({ label, sortKey, currentSort, currentDir, onSort, style }: {
 
 /* ── Table Row Style ─────────────────────────────────────────── */
 const rowStyle = (idx: number, selected: boolean): React.CSSProperties => ({
-  background: selected ? 'var(--primary-light)' : idx % 2 === 1 ? 'var(--row-alt, #F9FAFB)' : 'var(--card)',
+  background: selected ? 'var(--primary-light)' : idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)',
   cursor: 'pointer',
 });
 const cellStyle: React.CSSProperties = { padding: '7px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
@@ -110,18 +105,11 @@ const SectionCard = ({ title, children }: { title: string; children: React.React
   </div>
 );
 
-const Field = ({ label, value }: { label: string; value: string }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-    <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
-    <span style={{ fontSize: 11.5, color: 'var(--text, #1F2937)' }}>{value || '\u2014'}</span>
-  </div>
-);
-
 /* ════════════════════════════════════════════════════════════════
    MAIN PAGE
    ════════════════════════════════════════════════════════════════ */
 export const EndoCartsPage = () => {
-  const [activeTab, setActiveTab] = useState<'quotes' | 'catalog' | 'models'>('quotes');
+  const [activeTab, setActiveTab] = useState<'quotes' | 'catalog' | 'models' | 'scope-inventory' | 'service-history'>('quotes');
 
   /* ── Quotes state ─── */
   const [filters, setFilters] = useState<EndoCartFilters>({ status: '', rep: '', search: '' });
@@ -141,6 +129,21 @@ export const EndoCartsPage = () => {
   /* ── Models state ─── */
   const [modelSearch, setModelSearch] = useState('');
   const [expandedModel, setExpandedModel] = useState<number | null>(null);
+
+  /* ── Scope Inventory state (API) ─── */
+  const [scopeItems, setScopeItems] = useState<EndoCartScopeItem[]>([]);
+  const [scopeTotal, setScopeTotal] = useState(0);
+  const [scopeLoading, setScopeLoading] = useState(false);
+  const [scopeSearch, setScopeSearch] = useState('');
+  const [scopeTypeFilter, setScopeTypeFilter] = useState('');
+  const [scopePage, setScopePage] = useState(1);
+
+  /* ── Service History state (API) ─── */
+  const [serviceItems, setServiceItems] = useState<EndoCartServiceHistoryItem[]>([]);
+  const [serviceTotal, setServiceTotal] = useState(0);
+  const [serviceLoading, setServiceLoading] = useState(false);
+  const [serviceSearch, setServiceSearch] = useState('');
+  const [servicePage, setServicePage] = useState(1);
 
   /* ── Quotes pipeline ─── */
   const filtered = useMemo(() => {
@@ -197,11 +200,43 @@ export const EndoCartsPage = () => {
     return arr;
   }, [modelSearch]);
 
+  /* ── Scope Inventory loader ─── */
+  const loadScopeInventory = useCallback(async () => {
+    setScopeLoading(true);
+    try {
+      const res = await getEndoCartScopeInventory({ search: scopeSearch || undefined, rigidOrFlexible: scopeTypeFilter || undefined, page: scopePage, pageSize: 50 });
+      setScopeItems(res.items);
+      setScopeTotal(res.totalCount);
+    } catch { /* silently handle */ }
+    finally { setScopeLoading(false); }
+  }, [scopeSearch, scopeTypeFilter, scopePage]);
+
+  useEffect(() => {
+    if (activeTab === 'scope-inventory') { const t = setTimeout(() => loadScopeInventory(), scopeSearch ? 300 : 0); return () => clearTimeout(t); }
+  }, [activeTab, loadScopeInventory, scopeSearch]);
+
+  /* ── Service History loader ─── */
+  const loadServiceHistory = useCallback(async () => {
+    setServiceLoading(true);
+    try {
+      const res = await getEndoCartServiceHistory({ search: serviceSearch || undefined, page: servicePage, pageSize: 50 });
+      setServiceItems(res.items);
+      setServiceTotal(res.totalCount);
+    } catch { /* silently handle */ }
+    finally { setServiceLoading(false); }
+  }, [serviceSearch, servicePage]);
+
+  useEffect(() => {
+    if (activeTab === 'service-history') { const t = setTimeout(() => loadServiceHistory(), serviceSearch ? 300 : 0); return () => clearTimeout(t); }
+  }, [activeTab, loadServiceHistory, serviceSearch]);
+
   /* ── Tab bar ─── */
-  const tabs: { key: typeof activeTab; label: string }[] = [
+  const tabs: TabDef[] = [
     { key: 'quotes', label: 'Quotes' },
     { key: 'catalog', label: 'Catalog' },
     { key: 'models', label: 'Models' },
+    { key: 'scope-inventory', label: 'Scope Inventory' },
+    { key: 'service-history', label: 'Service History' },
   ];
 
   const statusSegments = [
@@ -213,16 +248,7 @@ export const EndoCartsPage = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
 
       {/* ── Sub-Tab Bar ─── */}
-      <div style={{ display: 'flex', borderBottom: '1px solid var(--neutral-200)', background: 'var(--neutral-50)', flexShrink: 0 }}>
-        {tabs.map(t => (
-          <div key={t.key} onClick={() => setActiveTab(t.key)} style={{
-            padding: '9px 18px', fontSize: 12, fontWeight: activeTab === t.key ? 700 : 500, cursor: 'pointer',
-            color: activeTab === t.key ? 'var(--primary)' : 'var(--muted)',
-            borderBottom: activeTab === t.key ? '2.5px solid var(--primary)' : '2.5px solid transparent',
-            marginBottom: -1.5, transition: 'all 0.12s',
-          }}>{t.label}</div>
-        ))}
-      </div>
+      <TabBar tabs={tabs} activeKey={activeTab} onChange={k => setActiveTab(k as typeof activeTab)} />
 
       {/* ════════════════════════════════════════════════════════ */}
       {/* QUOTES TAB                                              */}
@@ -236,13 +262,13 @@ export const EndoCartsPage = () => {
             <StatChip label="Draft" value={stats.draft} iconBg="rgba(var(--amber-rgb), 0.13)" iconColor="var(--warning)" valueColor="var(--warning)" icon={<IconPen />} active={chipFilter === 'Draft'} onClick={() => { setChipFilter(f => f === 'Draft' ? '' : 'Draft'); setPage(1); }} />
             <StatChip label="Quoted" value={stats.quoted} iconBg="rgba(var(--primary-rgb), 0.12)" iconColor="var(--primary)" valueColor="var(--primary)" icon={<IconChat />} active={chipFilter === 'Quoted'} onClick={() => { setChipFilter(f => f === 'Quoted' ? '' : 'Quoted'); setPage(1); }} />
             <StatChip label="Approved" value={stats.approved} iconBg="rgba(var(--success-rgb), 0.12)" iconColor="var(--success)" valueColor="var(--success)" icon={<IconCheck />} active={chipFilter === 'Approved'} onClick={() => { setChipFilter(f => f === 'Approved' ? '' : 'Approved'); setPage(1); }} />
-            <StatChip label="Billed" value={stats.billed} iconBg="rgba(101, 84, 192, 0.12)" iconColor="rgb(101, 84, 192)" valueColor="rgb(101, 84, 192)" icon={<IconDollar />} active={chipFilter === 'Billed'} onClick={() => { setChipFilter(f => f === 'Billed' ? '' : 'Billed'); setPage(1); }} />
+            <StatChip label="Billed" value={stats.billed} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconDollar />} active={chipFilter === 'Billed'} onClick={() => { setChipFilter(f => f === 'Billed' ? '' : 'Billed'); setPage(1); }} />
             <StatChip label="Pipeline Value" value={fmtMoneyShort(stats.pipelineValue)} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconTrend />} />
           </div>
 
           {/* Toolbar */}
           <div className="tsi-toolbar">
-            <button style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: '#fff', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New Quote
             </button>
@@ -293,7 +319,7 @@ export const EndoCartsPage = () => {
                     <td style={cellStyle}>{q.cartModel}</td>
                     <td style={{ ...cellStyle, textAlign: 'center' }}>{q.itemCount}</td>
                     <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 700 }}>{fmtMoney(q.total)}</td>
-                    <td style={cellStyle}><Badge text={q.status} style={STATUS_BADGE[q.status]} /></td>
+                    <td style={cellStyle}><StatusBadge status={q.status} /></td>
                     <td style={cellStyle}>{fmtDate(q.dateCreated)}</td>
                     <td style={cellStyle}>{fmtDate(q.dateQuoted)}</td>
                     <td style={cellStyle}>{q.salesRep}</td>
@@ -321,7 +347,7 @@ export const EndoCartsPage = () => {
                 {Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 5).map(p => (
                   <button key={p} onClick={() => setPage(p)} style={{
                     height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
-                    background: p === page ? 'var(--navy)' : 'var(--card)', color: p === page ? '#fff' : 'var(--muted)', fontWeight: p === page ? 600 : 400,
+                    background: p === page ? 'var(--navy)' : 'var(--card)', color: p === page ? 'var(--card)' : 'var(--muted)', fontWeight: p === page ? 600 : 400,
                   }}>{p}</button>
                 ))}
                 <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: page >= totalPages ? 0.4 : 1 }}>&raquo;</button>
@@ -337,7 +363,7 @@ export const EndoCartsPage = () => {
       {activeTab === 'catalog' && (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           <div className="tsi-toolbar">
-            <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: '#fff', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               Add Component
             </button>
@@ -361,17 +387,17 @@ export const EndoCartsPage = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  <th style={{ width: 100, background: 'var(--neutral-50)', color: 'var(--neutral-500, #6B7280)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Part #</th>
-                  <th style={{ background: 'var(--neutral-50)', color: 'var(--neutral-500, #6B7280)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Description</th>
-                  <th style={{ width: 90, background: 'var(--neutral-50)', color: 'var(--neutral-500, #6B7280)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Category</th>
-                  <th style={{ width: 90, background: 'var(--neutral-50)', color: 'var(--neutral-500, #6B7280)', fontWeight: 700, padding: '9px 10px', textAlign: 'right', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Unit Cost</th>
-                  <th style={{ width: 70, background: 'var(--neutral-50)', color: 'var(--neutral-500, #6B7280)', fontWeight: 700, padding: '9px 10px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Stock</th>
-                  <th style={{ width: 80, background: 'var(--neutral-50)', color: 'var(--neutral-500, #6B7280)', fontWeight: 700, padding: '9px 10px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Reorder Pt</th>
+                  <th style={{ width: 100, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Part #</th>
+                  <th style={{ background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Description</th>
+                  <th style={{ width: 90, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Category</th>
+                  <th style={{ width: 90, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'right', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Unit Cost</th>
+                  <th style={{ width: 70, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Stock</th>
+                  <th style={{ width: 80, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Reorder Pt</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredCatalog.map((p, idx) => (
-                  <tr key={p.partNum} style={{ background: idx % 2 === 1 ? 'var(--row-alt, #F9FAFB)' : 'var(--card)' }}>
+                  <tr key={p.partNum} style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)' }}>
                     <td style={{ ...cellStyle, fontWeight: 700, color: 'var(--navy)' }}>{p.partNum}</td>
                     <td style={cellStyle}>{p.desc}</td>
                     <td style={cellStyle}><Badge text={p.category} style={CAT_BADGE[p.category]} /></td>
@@ -392,7 +418,7 @@ export const EndoCartsPage = () => {
       {activeTab === 'models' && (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           <div className="tsi-toolbar">
-            <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: '#fff', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New Model
             </button>
@@ -407,17 +433,17 @@ export const EndoCartsPage = () => {
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
               <thead>
                 <tr>
-                  <th style={{ width: 160, background: 'var(--neutral-50)', color: 'var(--neutral-500, #6B7280)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Model Name</th>
-                  <th style={{ background: 'var(--neutral-50)', color: 'var(--neutral-500, #6B7280)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Description</th>
-                  <th style={{ width: 90, background: 'var(--neutral-50)', color: 'var(--neutral-500, #6B7280)', fontWeight: 700, padding: '9px 10px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Components</th>
-                  <th style={{ width: 100, background: 'var(--neutral-50)', color: 'var(--neutral-500, #6B7280)', fontWeight: 700, padding: '9px 10px', textAlign: 'right', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Base Price</th>
-                  <th style={{ width: 80, background: 'var(--neutral-50)', color: 'var(--neutral-500, #6B7280)', fontWeight: 700, padding: '9px 10px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Actions</th>
+                  <th style={{ width: 160, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Model Name</th>
+                  <th style={{ background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Description</th>
+                  <th style={{ width: 90, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Components</th>
+                  <th style={{ width: 100, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'right', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Base Price</th>
+                  <th style={{ width: 80, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredModels.map((m, idx) => (
                   <>
-                    <tr key={m.lModelKey} style={{ background: idx % 2 === 1 ? 'var(--row-alt, #F9FAFB)' : 'var(--card)', cursor: 'pointer' }} onClick={() => setExpandedModel(k => k === m.lModelKey ? null : m.lModelKey)}>
+                    <tr key={m.lModelKey} style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)', cursor: 'pointer' }} onClick={() => setExpandedModel(k => k === m.lModelKey ? null : m.lModelKey)}>
                       <td style={{ ...cellStyle, fontWeight: 700, color: 'var(--navy)' }}>{m.modelName}</td>
                       <td style={cellStyle}>{m.desc}</td>
                       <td style={{ ...cellStyle, textAlign: 'center' }}>{m.componentCount}</td>
@@ -467,6 +493,151 @@ export const EndoCartsPage = () => {
       )}
 
       {/* ════════════════════════════════════════════════════════ */}
+      {/* SCOPE INVENTORY TAB                                      */}
+      {/* ════════════════════════════════════════════════════════ */}
+      {activeTab === 'scope-inventory' && (
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <div className="tsi-toolbar">
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>Type</span>
+            <SegmentedControl
+              items={[{ label: 'All', value: '' }, { label: 'Flexible', value: 'F' }, { label: 'Rigid', value: 'R' }]}
+              value={scopeTypeFilter}
+              onChange={v => { setScopeTypeFilter(v); setScopePage(1); }}
+            />
+            <div style={{ position: 'relative', marginLeft: 'auto' }}>
+              <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
+              <input placeholder="Search serial#, type, client..." value={scopeSearch} onChange={e => { setScopeSearch(e.target.value); setScopePage(1); }} style={{
+                height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
+              }} />
+            </div>
+          </div>
+          {scopeLoading ? (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin /></div>
+          ) : (
+            <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                <thead>
+                  <tr>
+                    {[
+                      { label: 'Serial #', w: 120 }, { label: 'Scope Type', w: '20%' as string | number }, { label: 'Manufacturer', w: '14%' },
+                      { label: 'Client', w: '18%' }, { label: 'Department', w: '14%' }, { label: 'Type', w: 60 },
+                      { label: 'Status', w: 70 }, { label: 'Last Update', w: 95 },
+                    ].map(col => (
+                      <th key={col.label} style={{
+                        width: col.w, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px',
+                        textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2,
+                        borderBottom: '1px solid var(--neutral-200)',
+                      }}>{col.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {scopeItems.length === 0 ? (
+                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)' }}>No scopes found.</td></tr>
+                  ) : scopeItems.map((s, idx) => (
+                    <tr key={s.scopeKey} style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)' }}>
+                      <td style={{ ...cellStyle, fontWeight: 700, color: 'var(--navy)' }}>{s.serialNumber || '\u2014'}</td>
+                      <td style={cellStyle}>{s.scopeType}</td>
+                      <td style={cellStyle}>{s.manufacturer}</td>
+                      <td style={cellStyle}>{s.clientName}</td>
+                      <td style={cellStyle}>{s.departmentName}</td>
+                      <td style={cellStyle}>
+                        {s.rigidOrFlexible === 'F'
+                          ? <StatusBadge status="Flexible" />
+                          : s.rigidOrFlexible === 'R'
+                            ? <StatusBadge status="Scope" />
+                            : <span>{'\u2014'}</span>}
+                      </td>
+                      <td style={cellStyle}>
+                        <StatusBadge status={s.isDead ? 'Inactive' : 'Active'} />
+                      </td>
+                      <td style={cellStyle}>{s.lastUpdate || '\u2014'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {/* Footer */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' }}>
+            <span style={{ fontWeight: 500 }}>{scopeTotal} scope{scopeTotal !== 1 ? 's' : ''}</span>
+            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+              <button disabled={scopePage <= 1} onClick={() => setScopePage(p => p - 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: scopePage <= 1 ? 0.4 : 1 }}>&laquo;</button>
+              <span style={{ fontSize: 11, padding: '0 8px' }}>Page {scopePage}</span>
+              <button disabled={scopePage * 50 >= scopeTotal} onClick={() => setScopePage(p => p + 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: scopePage * 50 >= scopeTotal ? 0.4 : 1 }}>&raquo;</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════ */}
+      {/* SERVICE HISTORY TAB                                      */}
+      {/* ════════════════════════════════════════════════════════ */}
+      {activeTab === 'service-history' && (
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <div className="tsi-toolbar">
+            <div style={{ position: 'relative', marginLeft: 'auto' }}>
+              <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
+              <input placeholder="Search WO#, serial#, client..." value={serviceSearch} onChange={e => { setServiceSearch(e.target.value); setServicePage(1); }} style={{
+                height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
+              }} />
+            </div>
+          </div>
+          {serviceLoading ? (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin /></div>
+          ) : (
+            <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                <thead>
+                  <tr>
+                    {[
+                      { label: 'Work Order', w: 110 }, { label: 'Serial #', w: 110 }, { label: 'Scope Type', w: '16%' as string | number },
+                      { label: 'Client', w: '18%' }, { label: 'Status', w: 90 }, { label: 'Date In', w: 90 },
+                      { label: 'Date Out', w: 90 }, { label: 'Complaint', w: '20%' }, { label: 'Total', w: 90 },
+                    ].map(col => (
+                      <th key={col.label} style={{
+                        width: col.w, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px',
+                        textAlign: col.label === 'Total' ? 'right' : 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
+                        position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)',
+                      }}>{col.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {serviceItems.length === 0 ? (
+                    <tr><td colSpan={9} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)' }}>No repair history found.</td></tr>
+                  ) : serviceItems.map((r, idx) => (
+                    <tr key={r.repairKey} style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)' }}>
+                      <td style={{ ...cellStyle, fontWeight: 700, color: 'var(--navy)' }}>{r.workOrderNumber || '\u2014'}</td>
+                      <td style={cellStyle}>{r.serialNumber || '\u2014'}</td>
+                      <td style={cellStyle}>{r.scopeType}</td>
+                      <td style={cellStyle}>{r.clientName}</td>
+                      <td style={cellStyle}>
+                        <StatusBadge status={r.repairStatus} />
+                      </td>
+                      <td style={cellStyle}>{r.dateIn || '\u2014'}</td>
+                      <td style={cellStyle}>{r.dateOut || '\u2014'}</td>
+                      <td style={{ ...cellStyle, whiteSpace: 'normal', lineHeight: 1.3 }}>{r.complaint || '\u2014'}</td>
+                      <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 700 }}>{fmtMoney(r.totalCost)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {/* Footer */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' }}>
+            <span style={{ fontWeight: 500 }}>{serviceTotal} repair{serviceTotal !== 1 ? 's' : ''}</span>
+            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+              <button disabled={servicePage <= 1} onClick={() => setServicePage(p => p - 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: servicePage <= 1 ? 0.4 : 1 }}>&laquo;</button>
+              <span style={{ fontSize: 11, padding: '0 8px' }}>Page {servicePage}</span>
+              <button disabled={servicePage * 50 >= serviceTotal} onClick={() => setServicePage(p => p + 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: servicePage * 50 >= serviceTotal ? 0.4 : 1 }}>&raquo;</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════ */}
       {/* QUOTE DETAIL DRAWER                                     */}
       {/* ════════════════════════════════════════════════════════ */}
       <Drawer
@@ -478,41 +649,46 @@ export const EndoCartsPage = () => {
       >
         {selectedQuote && (
           <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            {/* Drawer Header */}
+            <DetailHeader
+              title={selectedQuote.quoteNum}
+              subtitle={selectedQuote.clientName}
+              badges={<StatusBadge status={selectedQuote.status} />}
+            />
             {/* Drawer Tabs */}
-            <div style={{ display: 'flex', borderBottom: '1.5px solid var(--border-dk)', background: 'var(--neutral-50)', flexShrink: 0 }}>
-              {['overview', 'bom', 'docs'].map(t => (
-                <div key={t} onClick={() => setDrawerTab(t)} style={{
-                  padding: '8px 14px', fontSize: 11.5, fontWeight: drawerTab === t ? 700 : 500, cursor: 'pointer',
-                  color: drawerTab === t ? 'var(--primary)' : 'var(--muted)',
-                  borderBottom: drawerTab === t ? '2px solid var(--primary)' : '2px solid transparent',
-                  marginBottom: -1.5, transition: 'all 0.12s',
-                }}>{t === 'overview' ? 'Overview' : t === 'bom' ? 'BOM Items' : 'Documents'}</div>
-              ))}
-            </div>
+            <TabBar
+              tabs={[
+                { key: 'overview', label: 'Overview' },
+                { key: 'bom', label: 'BOM Items' },
+                { key: 'docs', label: 'Documents' },
+              ]}
+              activeKey={drawerTab}
+              onChange={setDrawerTab}
+            />
 
             {/* Overview pane */}
             {drawerTab === 'overview' && (
               <div style={{ flex: 1, overflow: 'auto', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <SectionCard title="Quote Info">
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <FormGrid cols={2}>
                     <Field label="Quote #" value={selectedQuote.quoteNum} />
                     <Field label="Status" value={selectedQuote.status} />
                     <Field label="Client" value={selectedQuote.clientName} />
                     <Field label="Department" value={selectedQuote.deptName} />
                     <Field label="Cart Model" value={selectedQuote.cartModel} />
                     <Field label="Date Created" value={fmtDate(selectedQuote.dateCreated)} />
-                  </div>
+                  </FormGrid>
                 </SectionCard>
                 <SectionCard title="Settings & Payment">
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  <FormGrid cols={2}>
                     <Field label="Sales Rep" value={selectedQuote.salesRep} />
                     <Field label="Date Quoted" value={fmtDate(selectedQuote.dateQuoted)} />
                     <Field label="Subtotal" value={fmtMoney(selectedQuote.total)} />
                     <Field label="Grand Total" value={fmtMoney(selectedQuote.total)} />
-                  </div>
+                  </FormGrid>
                 </SectionCard>
                 <SectionCard title="Notes">
-                  <span style={{ fontSize: 11.5, color: 'var(--text, #1F2937)', lineHeight: 1.5 }}>{selectedQuote.notes || '\u2014'}</span>
+                  <span style={{ fontSize: 11.5, color: 'var(--text)', lineHeight: 1.5 }}>{selectedQuote.notes || '\u2014'}</span>
                 </SectionCard>
               </div>
             )}
@@ -525,11 +701,11 @@ export const EndoCartsPage = () => {
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 10.5 }}>
                       <thead>
                         <tr>
-                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500, #6B7280)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left', borderBottom: '1px solid var(--neutral-200)' }}>Part #</th>
-                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500, #6B7280)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left', borderBottom: '1px solid var(--neutral-200)' }}>Description</th>
-                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500, #6B7280)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center', borderBottom: '1px solid var(--neutral-200)' }}>Qty</th>
-                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500, #6B7280)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right', borderBottom: '1px solid var(--neutral-200)' }}>Unit Cost</th>
-                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500, #6B7280)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right', borderBottom: '1px solid var(--neutral-200)' }}>Line Total</th>
+                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left', borderBottom: '1px solid var(--neutral-200)' }}>Part #</th>
+                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left', borderBottom: '1px solid var(--neutral-200)' }}>Description</th>
+                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center', borderBottom: '1px solid var(--neutral-200)' }}>Qty</th>
+                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right', borderBottom: '1px solid var(--neutral-200)' }}>Unit Cost</th>
+                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right', borderBottom: '1px solid var(--neutral-200)' }}>Line Total</th>
                         </tr>
                       </thead>
                       <tbody>
