@@ -1,0 +1,32 @@
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--neutral-200);
+  background: var(--card);
+  flex-shrink: 0;
+}
+
+.detail-header__title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--primary-dark);
+}
+
+.detail-header__subtitle {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.detail-header__actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-header__meta {
+  font-size: 12px;
+  color: var(--muted);
+}
