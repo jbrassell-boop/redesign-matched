@@ -6,3 +6,4 @@ export { StatStrip } from './StatStrip';
 export type { StatChipDef, ChipColor } from './StatStrip';
 export { TabBar } from './TabBar';
 export type { TabDef } from './TabBar';
+export { DetailHeader } from './DetailHeader';
