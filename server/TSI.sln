@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSI.Api", "TSI.Api\TSI.Api.csproj", "{739A9898-0898-499E-97C2-E5C97C053F0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSI.Api.Tests", "TSI.Api.Tests\TSI.Api.Tests.csproj", "{FAF9EC2F-80E4-44B9-913E-00FDB1931B90}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{739A9898-0898-499E-97C2-E5C97C053F0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{739A9898-0898-499E-97C2-E5C97C053F0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{739A9898-0898-499E-97C2-E5C97C053F0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{739A9898-0898-499E-97C2-E5C97C053F0A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FAF9EC2F-80E4-44B9-913E-00FDB1931B90}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FAF9EC2F-80E4-44B9-913E-00FDB1931B90}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FAF9EC2F-80E4-44B9-913E-00FDB1931B90}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FAF9EC2F-80E4-44B9-913E-00FDB1931B90}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
