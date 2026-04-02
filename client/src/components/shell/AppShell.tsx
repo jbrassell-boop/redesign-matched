@@ -3,13 +3,24 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 
+const getInitialCollapsed = () => {
+  const pref = localStorage.getItem('tsi_sidebarCollapsed');
+  if (pref !== null) return pref === '1';
+  return window.innerWidth <= 1440;
+};
+
 export const AppShell = () => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(getInitialCollapsed);
+
+  const handleCollapse = (val: boolean) => {
+    localStorage.setItem('tsi_sidebarCollapsed', val ? '1' : '0');
+    setCollapsed(val);
+  };
   const sidebarWidth = collapsed ? 56 : 240;
 
   return (
     <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-      <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
+      <Sidebar collapsed={collapsed} onCollapse={handleCollapse} />
       <div style={{
         display: 'flex',
         flexDirection: 'column',
