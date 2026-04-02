@@ -2,28 +2,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { Spin } from 'antd';
 import { getDevList, getDevListDetail, getDevListStatuses, getDevListStats } from '../../api/development-list';
 import type { DevListItem, DevListStatus, DevListStats } from './types';
+import { StatusBadge } from '../../components/shared/StatusBadge';
+import { Field } from '../../components/shared/Field';
+import { TabBar } from '../../components/shared/TabBar';
+import type { TabDef } from '../../components/shared/TabBar';
 
 /* ── helpers ── */
-const Badge = ({ label, variant }: { label: string; variant: 'blue' | 'amber' | 'green' | 'red' | 'neutral' }) => {
-  const styles: Record<string, React.CSSProperties> = {
-    blue:    { background: 'rgba(var(--primary-rgb), 0.1)', color: 'var(--primary)', border: '1px solid rgba(var(--primary-rgb), 0.3)' },
-    amber:   { background: 'rgba(var(--amber-rgb), 0.1)', color: 'var(--warning)', border: '1px solid rgba(var(--amber-rgb), 0.3)' },
-    green:   { background: 'rgba(var(--success-rgb), 0.1)', color: 'var(--success)', border: '1px solid rgba(var(--success-rgb), 0.3)' },
-    red:     { background: 'rgba(var(--danger-rgb), 0.1)', color: 'var(--danger)', border: '1px solid rgba(var(--danger-rgb), 0.3)' },
-    neutral: { background: 'var(--neutral-100)', color: 'var(--neutral-500)', border: '1px solid var(--border)' },
-  };
-  return (
-    <span style={{ ...styles[variant], display: 'inline-flex', padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>
-      {label}
-    </span>
-  );
-};
-
-const statusVariant = (status: string): 'blue' | 'amber' | 'green' | 'red' | 'neutral' => {
+const statusVariant = (status: string): 'blue' | 'amber' | 'green' | 'red' | 'gray' => {
   const s = status.toLowerCase();
   if (s.includes('progress')) return 'amber';
   if (s.includes('complete') || s.includes('done')) return 'green';
-  if (s.includes('cancel')) return 'neutral';
+  if (s.includes('cancel')) return 'gray';
   if (s.includes('review')) return 'blue';
   if (s.includes('await') || s.includes('clarif')) return 'amber';
   return 'blue';
@@ -33,6 +22,11 @@ const tdStyle: React.CSSProperties = {
   padding: '6px 12px', fontSize: 11.5, borderBottom: '1px solid var(--border)', color: 'var(--text)', verticalAlign: 'middle',
 };
 
+const DETAIL_TABS: TabDef[] = [
+  { key: 'details', label: 'Details' },
+  { key: 'activity', label: 'Activity' },
+];
+
 export const DevelopmentListPage = () => {
   const [items, setItems] = useState<DevListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -41,7 +35,7 @@ export const DevelopmentListPage = () => {
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [detail, setDetail] = useState<DevListItem | null>(null);
-  const [detailTab, setDetailTab] = useState<'details' | 'activity'>('details');
+  const [detailTab, setDetailTab] = useState<string>('details');
 
   /* filters */
   const [search, setSearch] = useState('');
@@ -195,7 +189,7 @@ export const DevelopmentListPage = () => {
                       >
                         <td style={{ ...tdStyle, width: 42, textAlign: 'right', fontSize: 10, fontWeight: 700, color: 'var(--muted)' }}>{item.toDoId}</td>
                         <td style={{ ...tdStyle, maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--navy)' }}>{item.title}</td>
-                        <td style={tdStyle}><Badge label={item.status || 'Open'} variant={statusVariant(item.status)} /></td>
+                        <td style={tdStyle}><StatusBadge status={item.status || 'Open'} variant={statusVariant(item.status)} /></td>
                         <td style={{ ...tdStyle, whiteSpace: 'nowrap', fontSize: 11, color: 'var(--label)' }}>
                           {item.targetYear ? `${item.targetYear} Q${item.targetQuarter ?? '?'}` : ''}
                         </td>
@@ -253,45 +247,33 @@ export const DevelopmentListPage = () => {
                 <div style={{ flex: 1, fontSize: 12, fontWeight: 800, color: 'var(--navy)', lineHeight: 1.3, wordBreak: 'break-word' }}>
                   {detail.title}
                 </div>
-                <Badge label={detail.status || 'Open'} variant={statusVariant(detail.status)} />
+                <StatusBadge status={detail.status || 'Open'} variant={statusVariant(detail.status)} />
               </div>
 
               {/* Tabs */}
-              <div style={{
-                display: 'flex', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)',
-                flexShrink: 0, padding: '0 8px',
-              }}>
-                {(['details', 'activity'] as const).map(tab => (
-                  <div
-                    key={tab}
-                    onClick={() => setDetailTab(tab)}
-                    style={{
-                      padding: '7px 12px', fontSize: 11, fontWeight: detailTab === tab ? 700 : 500,
-                      color: detailTab === tab ? 'var(--primary)' : 'var(--muted)',
-                      cursor: 'pointer', borderBottom: detailTab === tab ? '2px solid var(--primary)' : '2px solid transparent',
-                      whiteSpace: 'nowrap', textTransform: 'capitalize',
-                    }}
-                  >{tab}</div>
-                ))}
-              </div>
+              <TabBar
+                tabs={DETAIL_TABS}
+                activeKey={detailTab}
+                onChange={setDetailTab}
+              />
 
               {/* Detail Body */}
               <div style={{ flex: 1, overflowY: 'auto', padding: 10 }}>
                 {detailTab === 'details' ? (
                   <>
-                    <DetailField label="Title" value={detail.title} />
-                    <DetailField label="Description / Item" value={detail.description || ''} multiline />
+                    <Field label="Title" value={detail.title} />
+                    <Field label="Description / Item" value={detail.description || ''} multiline />
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 8px' }}>
-                      <DetailField label="Status" value={detail.status} />
-                      <DetailField label="Assigned To" value={detail.assignee || ''} />
+                      <Field label="Status" value={detail.status} />
+                      <Field label="Assigned To" value={detail.assignee || ''} />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 8px' }}>
-                      <DetailField label="Target Year" value={detail.targetYear?.toString() || ''} />
-                      <DetailField label="Quarter" value={detail.targetQuarter ? `Q${detail.targetQuarter}` : ''} />
+                      <Field label="Target Year" value={detail.targetYear?.toString() || ''} />
+                      <Field label="Quarter" value={detail.targetQuarter ? `Q${detail.targetQuarter}` : ''} />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 8px' }}>
-                      <DetailField label="Request Date" value={detail.requestDate || ''} />
-                      <DetailField label="Completion Date" value={detail.completionDate || ''} />
+                      <Field label="Request Date" value={detail.requestDate || ''} />
+                      <Field label="Completion Date" value={detail.completionDate || ''} />
                     </div>
                   </>
                 ) : (
@@ -307,21 +289,3 @@ export const DevelopmentListPage = () => {
     </div>
   );
 };
-
-const DetailField = ({ label, value, multiline }: { label: string; value: string; multiline?: boolean }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, marginBottom: 7 }}>
-    <label style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</label>
-    {multiline ? (
-      <div style={{
-        minHeight: 60, border: '1.5px solid var(--border-dk)', borderRadius: 4, padding: '6px 8px',
-        fontSize: 11.5, color: 'var(--text)', background: 'var(--neutral-50)', whiteSpace: 'pre-wrap', lineHeight: 1.4,
-      }}>{value}</div>
-    ) : (
-      <div style={{
-        height: 28, border: '1.5px solid var(--border-dk)', borderRadius: 4, padding: '0 8px',
-        fontSize: 11.5, color: 'var(--text)', background: 'var(--neutral-50)',
-        display: 'flex', alignItems: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-      }}>{value}</div>
-    )}
-  </div>
-);
