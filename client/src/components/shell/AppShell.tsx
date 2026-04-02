@@ -1,24 +1,28 @@
 import { useState } from 'react';
-import { Layout } from 'antd';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
-
-const { Content } = Layout;
 
 export const AppShell = () => {
   const [collapsed, setCollapsed] = useState(false);
   const sidebarWidth = collapsed ? 56 : 240;
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
       <Sidebar collapsed={collapsed} onCollapse={setCollapsed} />
-      <Layout style={{ marginLeft: sidebarWidth, transition: 'margin-left 0.2s' }}>
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        overflow: 'hidden',
+        marginLeft: sidebarWidth,
+        transition: 'margin-left 0.2s ease',
+      }}>
         <Topbar sidebarCollapsed={collapsed} />
-        <Content style={{ marginTop: 64, minHeight: 'calc(100vh - 64px)', background: 'var(--bg)' }}>
+        <div style={{ flex: 1, overflow: 'auto', background: 'var(--bg)', marginTop: 64 }}>
           <Outlet />
-        </Content>
-      </Layout>
-    </Layout>
+        </div>
+      </div>
+    </div>
   );
 };
