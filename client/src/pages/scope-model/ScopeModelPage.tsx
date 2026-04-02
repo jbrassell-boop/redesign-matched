@@ -1,35 +1,31 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Spin, Select, Drawer, Tabs } from 'antd';
+import { Input, Spin, Select, Drawer } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { getScopeModels, getScopeModelDetail, getScopeModelStats, getManufacturers } from '../../api/scopeModels';
+import { RepairItemsTab } from './tabs/RepairItemsTab';
+import { MaxChargesTab } from './tabs/MaxChargesTab';
 import type { ScopeModelListItem, ScopeModelDetail, ScopeModelStats, Manufacturer } from './types';
+import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
+import type { TabDef } from '../../components/shared';
 
 /* ── Type label map ──────────────────────────────────────────── */
-const TYPE_MAP: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  F: { label: 'Flexible', color: 'var(--primary)', bg: 'var(--primary-light)', border: 'var(--border-dk)' },
-  R: { label: 'Rigid', color: 'var(--success)', bg: '#F0FDF4', border: '#BBF7D0' },
-  C: { label: 'Camera', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE' },
+const TYPE_LABEL: Record<string, string> = {
+  F: 'Flexible',
+  R: 'Rigid',
+  C: 'Camera',
+};
+
+const TYPE_VARIANT: Record<string, 'blue' | 'green' | 'purple'> = {
+  F: 'blue',
+  R: 'green',
+  C: 'purple',
 };
 
 const TypeBadge = ({ type }: { type: string }) => {
-  const t = TYPE_MAP[type] ?? { label: type || 'Unknown', color: 'var(--muted)', bg: 'var(--neutral-50)', border: 'var(--border)' };
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 9999, fontSize: 11, fontWeight: 700, lineHeight: 1.4, background: t.bg, border: `1px solid ${t.border}`, color: t.color }}>
-      {t.label}
-    </span>
-  );
+  const label = TYPE_LABEL[type] ?? (type || 'Unknown');
+  const variant = TYPE_VARIANT[type];
+  return <StatusBadge status={label} variant={variant} />;
 };
-
-const ActiveBadge = ({ active }: { active: boolean }) => (
-  <span style={{
-    display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 9999, fontSize: 11, fontWeight: 700, lineHeight: 1.4,
-    background: active ? '#F0FDF4' : '#FEF2F2',
-    border: `1px solid ${active ? '#BBF7D0' : '#FECACA'}`,
-    color: active ? 'var(--success)' : 'var(--danger)',
-  }}>
-    {active ? 'Active' : 'Inactive'}
-  </span>
-);
 
 /* ── Stat Chip ───────────────────────────────────────────────── */
 interface StatChipProps {
@@ -56,14 +52,6 @@ const StatChip = ({ label, value, iconBg, iconColor, valueColor, active, onClick
   </div>
 );
 
-/* ── Detail Field ────────────────────────────────────────────── */
-const Field = ({ label, value }: { label: string; value: string | number | null | undefined }) => (
-  <div style={{ marginBottom: 12 }}>
-    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 2 }}>{label}</div>
-    <div style={{ fontSize: 13, color: 'var(--text)', padding: '4px 8px', background: 'var(--neutral-50)', border: '1px solid var(--neutral-200)', borderRadius: 4, minHeight: 28 }}>{value || '\u2014'}</div>
-  </div>
-);
-
 /* ── SVG Icons ───────────────────────────────────────────────── */
 const IconTotal = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><rect x="2" y="2" width="12" height="12" rx="2" /><path d="M5 5h6M5 8h6M5 11h4" /></svg>;
 const IconActive = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><circle cx="8" cy="8" r="5.5" /><polyline points="5.5 8 7 10 10.5 6" /></svg>;
@@ -71,6 +59,15 @@ const IconInactive = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentC
 const IconFlex = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><path d="M4 12c0-4 2-6 4-8s4-1 4 1-2 4-4 6-4 3-4 5" /></svg>;
 const IconRigid = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><line x1="8" y1="2" x2="8" y2="14" /><line x1="5" y1="4" x2="11" y2="4" /><line x1="5" y1="12" x2="11" y2="12" /></svg>;
 const IconCamera = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><rect x="2" y="4" width="12" height="9" rx="1.5" /><circle cx="8" cy="8.5" r="2.5" /><path d="M5.5 4L6.5 2h3l1 2" /></svg>;
+
+/* ── Drawer Tabs ─────────────────────────────────────────────── */
+const DRAWER_TABS: TabDef[] = [
+  { key: 'specs',       label: 'Specifications' },
+  { key: 'repairItems', label: 'Repair Items' },
+  { key: 'maxCharges',  label: 'Max Charges' },
+  { key: 'inventory',   label: 'Inventory' },
+  { key: 'flags',       label: 'Flags' },
+];
 
 /* ═════════════════════════════════════════════════════════════ */
 /*  SCOPE MODEL PAGE                                            */
@@ -92,6 +89,7 @@ export const ScopeModelPage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [detail, setDetail] = useState<ScopeModelDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('specs');
 
   const loadData = useCallback(async (s: string, tf: string, sf: string, mk: number | null, p: number) => {
     setLoading(true);
@@ -117,6 +115,7 @@ export const ScopeModelPage = () => {
   const handleRowClick = async (item: ScopeModelListItem) => {
     setDrawerOpen(true);
     setDetailLoading(true);
+    setActiveTab('specs');
     try { setDetail(await getScopeModelDetail(item.scopeTypeKey)); } finally { setDetailLoading(false); }
   };
 
@@ -231,7 +230,7 @@ export const ScopeModelPage = () => {
               <td style={tdStyle}><TypeBadge type={item.type} /></td>
               <td style={tdStyle}>{item.manufacturer || '\u2014'}</td>
               <td style={tdStyle}>{item.category || '\u2014'}</td>
-              <td style={tdStyle}><ActiveBadge active={item.active} /></td>
+              <td style={tdStyle}><StatusBadge status={item.active ? 'Active' : 'Inactive'} /></td>
               <td style={tdStyle}>{item.insertTubeLength || '\u2014'}</td>
               <td style={tdStyle}>{item.insertTubeDiameter || '\u2014'}</td>
               <td style={tdStyle}>{item.fieldOfView || '\u2014'}</td>
@@ -263,15 +262,10 @@ export const ScopeModelPage = () => {
     </div>
   );
 
-  /* ── Drawer ──────────────────────────────────────────────── */
-  const specsTab = detail ? (
+  /* ── Drawer Content ──────────────────────────────────────── */
+  const specsContent = detail ? (
     <div style={{ padding: '16px 20px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--neutral-200)' }}>
-        <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--primary-dark)' }}>{detail.description}</span>
-        <TypeBadge type={detail.type} />
-        <ActiveBadge active={detail.active} />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
+      <FormGrid cols={2}>
         <Field label="Manufacturer" value={detail.manufacturer} />
         <Field label="Category" value={detail.category} />
         <Field label="Type ID" value={detail.typeId} />
@@ -284,7 +278,7 @@ export const ScopeModelPage = () => {
         <Field label="Direction of View" value={detail.directionOfView} />
         <Field label="Depth of Field" value={detail.depthOfField} />
         <Field label="Degree" value={detail.degree} />
-      </div>
+      </FormGrid>
 
       {/* Angulation Grid */}
       <div style={{ marginTop: 12, background: 'var(--neutral-50)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
@@ -301,15 +295,17 @@ export const ScopeModelPage = () => {
       </div>
 
       {/* Configuration */}
-      <div style={{ marginTop: 12, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
-        <Field label="Tube System" value={detail.tubeSystem} />
-        <Field label="Lens System" value={detail.lensSystem} />
-        <Field label="ID Band" value={detail.idBand} />
-        <Field label="Eye Cup Mount" value={detail.eyeCupMount} />
-        <Field label="Contract Cost" value={detail.contractCost != null ? `$${detail.contractCost.toFixed(2)}` : null} />
-        <Field label="Max Charge" value={detail.maxCharge != null ? `$${detail.maxCharge.toFixed(2)}` : null} />
-        <Field label="GL Account" value={detail.glAccount} />
-        <Field label="Last Updated" value={detail.lastUpdated} />
+      <div style={{ marginTop: 12 }}>
+        <FormGrid cols={2}>
+          <Field label="Tube System" value={detail.tubeSystem} />
+          <Field label="Lens System" value={detail.lensSystem} />
+          <Field label="ID Band" value={detail.idBand} />
+          <Field label="Eye Cup Mount" value={detail.eyeCupMount} />
+          <Field label="Contract Cost" value={detail.contractCost != null ? `$${detail.contractCost.toFixed(2)}` : null} />
+          <Field label="Max Charge" value={detail.maxCharge != null ? `$${detail.maxCharge.toFixed(2)}` : null} />
+          <Field label="GL Account" value={detail.glAccount} />
+          <Field label="Last Updated" value={detail.lastUpdated} />
+        </FormGrid>
       </div>
 
       {detail.notes && (
@@ -321,21 +317,27 @@ export const ScopeModelPage = () => {
     </div>
   ) : null;
 
-  const drawerContent = detailLoading ? (
+  const drawerBody = detailLoading ? (
     <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
-  ) : (
-    <Tabs
-      size="small"
-      style={{ height: '100%' }}
-      tabBarStyle={{ margin: 0, padding: '0 16px', background: '#fff', borderBottom: '1px solid var(--neutral-200)' }}
-      items={[
-        { key: 'specs', label: 'Specifications', children: specsTab },
-        { key: 'repairItems', label: 'Repair Items', children: <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>Repair Items coming soon</div> },
-        { key: 'inventory', label: 'Inventory', children: <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>Inventory coming soon</div> },
-        { key: 'flags', label: 'Flags', children: <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>Flags coming soon</div> },
-      ]}
-    />
-  );
+  ) : detail ? (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <DetailHeader
+        title={detail.description}
+        badges={
+          <>
+            <TypeBadge type={detail.type} />
+            <StatusBadge status={detail.active ? 'Active' : 'Inactive'} />
+          </>
+        }
+      />
+      <TabBar tabs={DRAWER_TABS} activeKey={activeTab} onChange={setActiveTab} />
+      {activeTab === 'specs'       && specsContent}
+      {activeTab === 'repairItems' && <RepairItemsTab scopeTypeKey={detail.scopeTypeKey} />}
+      {activeTab === 'maxCharges'  && <MaxChargesTab scopeTypeKey={detail.scopeTypeKey} />}
+      {activeTab === 'inventory'   && <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>Inventory coming soon</div>}
+      {activeTab === 'flags'       && <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>Flags coming soon</div>}
+    </div>
+  ) : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
@@ -355,7 +357,7 @@ export const ScopeModelPage = () => {
         }}
         closeIcon={<span style={{ color: '#fff' }}>&times;</span>}
       >
-        {drawerContent}
+        {drawerBody}
       </Drawer>
     </div>
   );
