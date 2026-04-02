@@ -3,8 +3,10 @@ import { AppShell } from './components/shell/AppShell';
 import { RouteGuard } from './components/common/RouteGuard';
 import { LoginPage } from './pages/login/LoginPage';
 import { ClientsPage } from './pages/clients/ClientsPage';
+import { ContractsPage } from './pages/contracts/ContractsPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { DepartmentsPage } from './pages/departments/DepartmentsPage';
+import { InventoryPage } from './pages/inventory/InventoryPage';
 import { RepairsPage } from './pages/repairs/RepairsPage';
 
 export const router = createBrowserRouter([
@@ -20,6 +22,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/', element: <DashboardPage /> },
           { path: '/clients', element: <ClientsPage /> },
+          { path: '/contracts', element: <ContractsPage /> },
           { path: '/dashboard', element: <DashboardPage /> },
           { path: '/departments', element: <DepartmentsPage /> },
           { path: '/repairs', element: <RepairsPage /> },
