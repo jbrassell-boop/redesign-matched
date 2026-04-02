@@ -35,5 +35,5 @@ jobs:
           action: upload
           app_location: client/dist
           output_location: ''
-          config_file_location: /
+          config_file_location: client/dist
           skip_app_build: true
