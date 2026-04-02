@@ -1,3 +1,8 @@
 export { StatusBadge } from './StatusBadge';
 export { Field } from './Field';
 export { FormGrid } from './FormGrid';
+export { SectionCard } from './SectionCard';
+export { StatStrip } from './StatStrip';
+export type { StatChipDef, ChipColor } from './StatStrip';
+export { TabBar } from './TabBar';
+export type { TabDef } from './TabBar';
