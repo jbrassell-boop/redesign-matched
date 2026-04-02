@@ -1,22 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { Dropdown } from 'antd';
+import type { MenuProps } from 'antd';
 import { getOutsourceValidation, getOutsourceStats } from '../../api/outsource-validation';
+import { SendToVendorModal } from './SendToVendorModal';
+import { ReceiveBackModal } from './ReceiveBackModal';
+import { ValidationChecklist } from './ValidationChecklist';
 import type { OutsourceListItem, OutsourceStats, OutsourceFilters } from './types';
-
-const StatusBadge = ({ status }: { status: string }) => {
-  const styles: Record<string, React.CSSProperties> = {
-    'At Vendor': { background: 'rgba(var(--primary-rgb), 0.1)', border: '1px solid rgba(var(--primary-rgb), 0.3)', color: 'var(--primary)' },
-    'Returned': { background: 'rgba(var(--success-rgb), 0.1)', border: '1px solid rgba(var(--success-rgb), 0.3)', color: 'var(--success)' },
-    'Validated': { background: 'rgba(var(--success-rgb), 0.1)', border: '1px solid rgba(var(--success-rgb), 0.3)', color: 'var(--success)' },
-    'Flagged': { background: 'rgba(var(--danger-rgb), 0.1)', border: '1px solid rgba(var(--danger-rgb), 0.3)', color: 'var(--danger)' },
-    'Pending Review': { background: 'rgba(var(--amber-rgb), 0.1)', border: '1px solid rgba(var(--amber-rgb), 0.3)', color: 'var(--warning)' },
-  };
-  const s = styles[status] ?? styles['At Vendor'];
-  return (
-    <span style={{ ...s, display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 10, fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap' }}>
-      {status}
-    </span>
-  );
-};
+import { StatusBadge } from '../../components/shared';
 
 interface StatChipProps {
   label: string;
@@ -101,6 +91,11 @@ export const OutsourceValidationPage = () => {
   const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
 
+  const [selectedItem, setSelectedItem] = useState<OutsourceListItem | null>(null);
+  const [sendOpen, setSendOpen] = useState(false);
+  const [receiveOpen, setReceiveOpen] = useState(false);
+  const [validateOpen, setValidateOpen] = useState(false);
+
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -127,6 +122,28 @@ export const OutsourceValidationPage = () => {
     }, delay);
     return () => { if (searchTimeout.current) clearTimeout(searchTimeout.current); };
   }, [search, statusFilter, dateFrom, dateTo, page, loadData]);
+
+  const reload = useCallback(() => {
+    loadData({ search, statusFilter, dateFrom, dateTo, page, pageSize: PAGE_SIZE });
+    getOutsourceStats().then(setStats);
+  }, [search, statusFilter, dateFrom, dateTo, page, loadData]);
+
+  const getRowMenuItems = (item: OutsourceListItem): MenuProps['items'] => {
+    const items: MenuProps['items'] = [];
+    if (item.status === 'At Vendor') {
+      items.push({ key: 'receive', label: 'Mark Returned', onClick: () => { setSelectedItem(item); setReceiveOpen(true); } });
+    }
+    if (item.status === 'Returned' || item.status === 'Pending Review') {
+      items.push({ key: 'validate', label: 'Validate / Flag', onClick: () => { setSelectedItem(item); setValidateOpen(true); } });
+    }
+    if (!item.vendorName) {
+      items.push({ key: 'send', label: 'Send to Vendor', onClick: () => { setSelectedItem(item); setSendOpen(true); } });
+    }
+    if (items.length === 0) {
+      items.push({ key: 'none', label: 'No actions available', disabled: true });
+    }
+    return items;
+  };
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
@@ -257,8 +274,8 @@ export const OutsourceValidationPage = () => {
                 const daysColor = item.daysOut > 30 ? 'var(--danger)' : item.daysOut > 14 ? 'var(--warning)' : 'var(--muted)';
                 const marginColor = item.marginDollar >= 0 ? 'var(--success)' : 'var(--danger)';
                 return (
+                  <Dropdown key={item.repairKey} menu={{ items: getRowMenuItems(item) }} trigger={['contextMenu']}>
                   <tr
-                    key={item.repairKey}
                     style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
@@ -276,6 +293,7 @@ export const OutsourceValidationPage = () => {
                     <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: marginColor }}>{item.marginPct}%</td>
                     <td style={tdStyle}><StatusBadge status={item.status} /></td>
                   </tr>
+                  </Dropdown>
                 );
               })
             )}
@@ -300,7 +318,7 @@ export const OutsourceValidationPage = () => {
             const pg = i + 1;
             return (
               <button key={pg} onClick={() => setPage(pg)}
-                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: page === pg ? 'var(--navy)' : 'var(--card)', color: page === pg ? '#fff' : 'var(--label)', fontSize: 11, fontWeight: page === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: page === pg ? 'var(--navy)' : 'var(--card)', color: page === pg ? 'var(--card)' : 'var(--label)', fontSize: 11, fontWeight: page === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {pg}
               </button>
             );
@@ -311,6 +329,25 @@ export const OutsourceValidationPage = () => {
           </button>
         </div>
       </div>
+
+      <SendToVendorModal
+        open={sendOpen}
+        item={selectedItem}
+        onClose={() => { setSendOpen(false); setSelectedItem(null); }}
+        onSent={() => { setSendOpen(false); setSelectedItem(null); reload(); }}
+      />
+      <ReceiveBackModal
+        open={receiveOpen}
+        item={selectedItem}
+        onClose={() => { setReceiveOpen(false); setSelectedItem(null); }}
+        onReceived={() => { setReceiveOpen(false); setSelectedItem(null); reload(); }}
+      />
+      <ValidationChecklist
+        open={validateOpen}
+        item={selectedItem}
+        onClose={() => { setValidateOpen(false); setSelectedItem(null); }}
+        onValidated={() => { setValidateOpen(false); setSelectedItem(null); reload(); }}
+      />
     </div>
   );
 };
