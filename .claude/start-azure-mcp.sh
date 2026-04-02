@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# Run in a dedicated terminal. Keeps Azure MCP server alive on port 5008.
-# Claude Code connects to it at http://localhost:5008
-echo "Starting Azure MCP server on port 5008..."
-npx -y @azure/mcp@latest server start --transport http --port 5008
+# Azure MCP runs via stdio — Claude Code spawns it automatically on session start.
+# No separate terminal needed. Configured in ~/.claude.json as user-scoped MCP server.
+#
+# To verify: claude mcp list
+# To test: ask Claude "List my Azure SQL databases"
+echo "Azure MCP is stdio-based — Claude Code manages it automatically."
+echo "Run: claude mcp list   to verify."
