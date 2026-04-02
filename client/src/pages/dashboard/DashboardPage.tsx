@@ -65,7 +65,7 @@ export const DashboardPage = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
       {/* Page header */}
-      <div style={{ padding: '12px 16px 8px', background: '#fff', borderBottom: '1px solid var(--neutral-200)' }}>
+      <div style={{ padding: '12px 16px 8px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' }}>
         <Title level={5} style={{ margin: 0, color: 'var(--primary-dark)' }}>Dashboard</Title>
       </div>
 

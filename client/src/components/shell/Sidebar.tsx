@@ -42,7 +42,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
       width={240}
       collapsedWidth={56}
       style={{
-        background: '#1E293B',
+        background: 'var(--sidebar)',
         height: '100vh',
         position: 'fixed',
         left: 0,
@@ -72,7 +72,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
         mode="inline"
         selectedKeys={[location.pathname]}
         items={menuItems}
-        style={{ background: '#1E293B', border: 'none', marginTop: 8 }}
+        style={{ background: 'var(--sidebar)', border: 'none', marginTop: 8 }}
       />
     </Sider>
   );

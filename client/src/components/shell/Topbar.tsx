@@ -20,7 +20,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
       left: sidebarWidth,
       right: 0,
       height: 64,
-      background: '#1E293B',
+      background: 'var(--topbar)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',

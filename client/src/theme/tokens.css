@@ -3,6 +3,11 @@
   --primary-dark: #1B3A5C;
   --primary-light: #E8F0FE;
   --primary-rgb: 46, 117, 182;
+  --danger-rgb: 183, 18, 52;
+  --amber-rgb: 245, 158, 11;
+  --navy-rgb: 27, 58, 92;
+  --success-rgb: 22, 163, 74;
+  --muted-rgb: 107, 114, 128;
   --danger: #B71234;
   --red: #B71234;
   --success: #16A34A;

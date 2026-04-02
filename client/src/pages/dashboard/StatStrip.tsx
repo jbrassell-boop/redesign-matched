@@ -5,17 +5,18 @@ interface Chip {
   id: string;
   label: string;
   getValue: (s: DashboardStats) => number;
-  iconColor: string;
+  iconColor: string;   // CSS var — used for icon dot + value
+  iconBg: string;      // rgba(var(--x-rgb), .13) — icon background, requires rgb token
   valueColor: string;
 }
 
 const CHIPS: Chip[] = [
-  { id: 'open', label: 'OPEN REPAIRS', getValue: s => s.openRepairs, iconColor: '#2E75B6', valueColor: 'var(--navy)' },
-  { id: 'urgent', label: 'URGENT', getValue: s => s.urgentRepairs, iconColor: '#B71234', valueColor: 'var(--danger)' },
-  { id: 'pendingQC', label: 'PENDING QC', getValue: s => s.pendingQC, iconColor: '#F59E0B', valueColor: 'var(--amber)' },
-  { id: 'pendingShip', label: 'PENDING SHIP', getValue: s => s.pendingShip, iconColor: '#1B3A5C', valueColor: 'var(--navy)' },
-  { id: 'completedToday', label: 'SHIPPED TODAY', getValue: s => s.completedToday, iconColor: '#16A34A', valueColor: 'var(--success)' },
-  { id: 'receivedToday', label: 'RECEIVED TODAY', getValue: s => s.receivedToday, iconColor: '#6B7280', valueColor: 'var(--muted)' },
+  { id: 'open',          label: 'OPEN REPAIRS',   getValue: s => s.openRepairs,    iconColor: 'var(--primary)', iconBg: 'rgba(var(--primary-rgb), 0.13)', valueColor: 'var(--navy)' },
+  { id: 'urgent',        label: 'URGENT',          getValue: s => s.urgentRepairs,  iconColor: 'var(--danger)',  iconBg: 'rgba(var(--danger-rgb),  0.13)', valueColor: 'var(--danger)' },
+  { id: 'pendingQC',     label: 'PENDING QC',      getValue: s => s.pendingQC,      iconColor: 'var(--amber)',   iconBg: 'rgba(var(--amber-rgb),   0.13)', valueColor: 'var(--amber)' },
+  { id: 'pendingShip',   label: 'PENDING SHIP',    getValue: s => s.pendingShip,    iconColor: 'var(--navy)',    iconBg: 'rgba(var(--navy-rgb),    0.13)', valueColor: 'var(--navy)' },
+  { id: 'completedToday',label: 'SHIPPED TODAY',   getValue: s => s.completedToday, iconColor: 'var(--success)', iconBg: 'rgba(var(--success-rgb), 0.13)', valueColor: 'var(--success)' },
+  { id: 'receivedToday', label: 'RECEIVED TODAY',  getValue: s => s.receivedToday,  iconColor: 'var(--muted)',   iconBg: 'rgba(var(--muted-rgb),   0.13)', valueColor: 'var(--muted)' },
 ];
 
 interface StatStripProps {
@@ -28,7 +29,7 @@ interface StatStripProps {
 export const StatStrip = ({ stats, loading, activeChip, onChipClick }: StatStripProps) => (
   <div style={{
     display: 'flex',
-    background: '#fff',
+    background: 'var(--card)',
     borderBottom: '1px solid var(--neutral-200)',
     borderTop: '1px solid var(--neutral-200)',
   }}>
@@ -44,7 +45,7 @@ export const StatStrip = ({ stats, loading, activeChip, onChipClick }: StatStrip
           padding: '10px 16px',
           borderRight: i < CHIPS.length - 1 ? '1px solid var(--neutral-200)' : 'none',
           cursor: 'pointer',
-          background: chip.id === activeChip ? 'var(--primary-light)' : '#fff',
+          background: chip.id === activeChip ? 'var(--primary-light)' : 'var(--card)',
           outline: chip.id === activeChip ? '2.5px solid var(--navy)' : 'none',
           outlineOffset: '-2.5px',
           transition: 'background 0.15s',
@@ -54,7 +55,7 @@ export const StatStrip = ({ stats, loading, activeChip, onChipClick }: StatStrip
           width: 24,
           height: 24,
           borderRadius: 4,
-          background: chip.iconColor + '22',
+          background: chip.iconBg,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

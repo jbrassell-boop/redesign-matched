@@ -32,14 +32,14 @@ export const LoginPage = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#1E293B',
+      background: 'var(--sidebar)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
     }}>
       <Card style={{ width: 380, borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.16)' }}>
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <Title level={4} style={{ margin: 0, color: '#1B3A5C' }}>Total Scope Inc.</Title>
+          <Title level={4} style={{ margin: 0, color: 'var(--primary-dark)' }}>Total Scope Inc.</Title>
           <Text type="secondary" style={{ fontSize: 13 }}>WinScope — Sign in</Text>
         </div>
 
@@ -59,7 +59,7 @@ export const LoginPage = () => {
               size="large"
               loading={loading}
               block
-              style={{ background: '#2E75B6', fontWeight: 600 }}
+              style={{ background: 'var(--primary)', fontWeight: 600 }}
             >
               Sign In
             </Button>
