@@ -45,7 +45,9 @@ redesign-matched/
 
 ---
 
-## Screens Built (Phases 1–3)
+## Screens Built (All Phases Complete)
+
+### Phase 1–3
 
 | Screen | Route | Status |
 |--------|-------|--------|
@@ -58,9 +60,26 @@ redesign-matched/
 | Inventory | /inventory | Complete — split-layout, Inventory + Sizes tabs wired |
 | Quality | /quality | Complete — full-width, QC Inspections tab wired |
 
-**Phase 4 screens not started**: Loaners, Financial, Suppliers, Scope Model, Instruments, Onsite Services, Acquisitions, Product Sale, Outsource Validation, Reports, Administration, Workspace, EndoCarts, Development List
+### Phase 4 (built 2026-04-02 via agent team)
 
-Nav items for all of the above exist in `client/src/components/shell/navItems.ts` but have no routes or pages yet.
+| Screen | Route | Status |
+|--------|-------|--------|
+| Loaners | /loaners | Complete — split-layout, tab stubs |
+| Financial | /financial | Complete — split-layout, tab stubs |
+| Suppliers | /suppliers | Complete — split-layout, tab stubs |
+| Scope Models | /scope-models | Complete — split-layout, tab stubs |
+| Instruments | /instruments | Complete — split-layout, tab stubs |
+| Onsite Services | /onsite-services | Complete — split-layout, tab stubs |
+| Acquisitions | /acquisitions | Complete — split-layout, tab stubs |
+| Product Sales | /product-sales | Complete — split-layout, tab stubs |
+| Outsource Validation | /outsource-validation | Complete — split-layout, tab stubs |
+| Reports | /reports | Complete — full-width layout |
+| Administration | /administration | Complete — full-width layout |
+| Workspace | /workspace | Complete — split-layout, tab stubs |
+| EndoCarts | /endocarts | Complete — split-layout, tab stubs |
+| Development List | /development-list | Complete — full-width layout |
+
+All nav items wired. Shell rewritten in plain CSS (no Ant Design Layout) to match reference design.
 
 ---
 
