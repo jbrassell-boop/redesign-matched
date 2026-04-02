@@ -1,4 +1,7 @@
-import { Drawer, Spin, Table, Tag } from 'antd';
+import { useState } from 'react';
+import { Drawer, Spin, Table } from 'antd';
+import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
+import type { TabDef } from '../../components/shared';
 import type { ProductSaleDetail } from './types';
 
 const fmt$ = (v: number) =>
@@ -10,21 +13,10 @@ const fmtDate = (d: string | null) => {
   return isNaN(dt.getTime()) ? '\u2014' : dt.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 };
 
-const STATUS_TAG: Record<string, string> = {
-  'Open': 'blue',
-  'Invoiced': 'green',
-  'Draft': 'gold',
-  'Quote Sent': 'purple',
-  'Cancelled': 'error',
-};
-
-interface FieldProps { label: string; value: string | number | null | undefined }
-const Field = ({ label, value }: FieldProps) => (
-  <div style={{ marginBottom: 12 }}>
-    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 2 }}>{label}</div>
-    <div style={{ fontSize: 13, color: 'var(--text)', padding: '4px 8px', background: 'var(--neutral-50)', border: '1px solid var(--neutral-200)', borderRadius: 4, minHeight: 28 }}>{value ?? '\u2014'}</div>
-  </div>
-);
+const TABS: TabDef[] = [
+  { key: 'details', label: 'Details' },
+  { key: 'items',   label: 'Line Items' },
+];
 
 interface Props {
   detail: ProductSaleDetail | null;
@@ -34,6 +26,8 @@ interface Props {
 }
 
 export const ProductSaleDetailPane = ({ detail, loading, open, onClose }: Props) => {
+  const [activeTab, setActiveTab] = useState('details');
+
   const lineItemColumns = [
     { title: 'Item', dataIndex: 'itemDescription', key: 'itemDescription' },
     { title: 'Size', dataIndex: 'sizeDescription', key: 'sizeDescription' },
@@ -54,14 +48,18 @@ export const ProductSaleDetailPane = ({ detail, loading, open, onClose }: Props)
     },
   ];
 
+  const tabs: TabDef[] = detail
+    ? TABS.map(t => t.key === 'items' ? { ...t, label: `Line Items (${detail.lineItems.length})` } : t)
+    : TABS;
+
   return (
     <Drawer
       title={
         detail ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{detail.invoiceNumber}</span>
-            <Tag color={STATUS_TAG[detail.status] ?? 'default'} style={{ color: '#fff', border: 'none' }}>{detail.status}</Tag>
-          </div>
+          <DetailHeader
+            title={detail.invoiceNumber}
+            badges={<StatusBadge status={detail.status} />}
+          />
         ) : 'Sale Detail'
       }
       placement="right"
@@ -70,7 +68,7 @@ export const ProductSaleDetailPane = ({ detail, loading, open, onClose }: Props)
       onClose={onClose}
       styles={{
         header: { background: 'var(--primary-dark)', borderBottom: 'none' },
-        body: { padding: '16px 20px' },
+        body: { padding: 0 },
       }}
     >
       {loading ? (
@@ -78,9 +76,9 @@ export const ProductSaleDetailPane = ({ detail, loading, open, onClose }: Props)
       ) : !detail ? (
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No sale selected</div>
       ) : (
-        <>
-          {/* Financial summary */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--neutral-200)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+          {/* Financial summary bar */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--neutral-200)', background: 'var(--neutral-50)' }}>
             {[
               { label: 'Subtotal', value: fmt$(detail.subTotal), color: 'var(--navy)' },
               { label: 'Tax', value: fmt$(detail.taxAmount), color: 'var(--muted)' },
@@ -94,61 +92,67 @@ export const ProductSaleDetailPane = ({ detail, loading, open, onClose }: Props)
             ))}
           </div>
 
-          {/* Order Info */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
-            <Field label="Client" value={detail.clientName} />
-            <Field label="Department" value={detail.departmentName} />
-            <Field label="Sales Rep" value={detail.salesRep} />
-            <Field label="Order Date" value={fmtDate(detail.orderDate)} />
-            <Field label="PO #" value={detail.purchaseOrder} />
-            <Field label="Tracking #" value={detail.trackingNumber} />
-            <Field label="Contact" value={detail.contactName} />
-            <Field label="Phone" value={detail.contactPhone} />
-          </div>
+          <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
 
-          {/* Addresses */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 8 }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bill To</div>
-              <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>
-                {detail.billName}<br />
-                {detail.billAddress}<br />
-                {detail.billCity}, {detail.billState} {detail.billZip}
-              </div>
-            </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ship To</div>
-              <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>
-                {detail.shipName}<br />
-                {detail.shipAddress}<br />
-                {detail.shipCity}, {detail.shipState} {detail.shipZip}
-              </div>
-            </div>
-          </div>
+          {activeTab === 'details' && (
+            <div style={{ padding: '12px 16px', overflowY: 'auto', flex: 1 }}>
+              {/* Order Info */}
+              <FormGrid cols={2}>
+                <Field label="Client" value={detail.clientName} />
+                <Field label="Department" value={detail.departmentName} />
+                <Field label="Sales Rep" value={detail.salesRep} />
+                <Field label="Order Date" value={fmtDate(detail.orderDate)} />
+                <Field label="PO #" value={detail.purchaseOrder} />
+                <Field label="Tracking #" value={detail.trackingNumber} />
+                <Field label="Contact" value={detail.contactName} />
+                <Field label="Phone" value={detail.contactPhone} />
+              </FormGrid>
 
-          {detail.notes && (
-            <div style={{ marginTop: 8 }}>
-              <Field label="Notes" value={detail.notes} />
+              {/* Addresses */}
+              <FormGrid cols={2} className="mt-2">
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bill To</div>
+                  <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>
+                    {detail.billName}<br />
+                    {detail.billAddress}<br />
+                    {detail.billCity}, {detail.billState} {detail.billZip}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ship To</div>
+                  <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>
+                    {detail.shipName}<br />
+                    {detail.shipAddress}<br />
+                    {detail.shipCity}, {detail.shipState} {detail.shipZip}
+                  </div>
+                </div>
+              </FormGrid>
+
+              {detail.notes && (
+                <div style={{ marginTop: 8 }}>
+                  <Field label="Notes" value={detail.notes} />
+                </div>
+              )}
             </div>
           )}
 
-          {/* Line items */}
-          {detail.lineItems.length > 0 && (
-            <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Line Items ({detail.lineItems.length})
-              </div>
-              <Table
-                dataSource={detail.lineItems}
-                columns={lineItemColumns}
-                rowKey="invoiceKey"
-                size="small"
-                pagination={false}
-                style={{ fontSize: 12 }}
-              />
+          {activeTab === 'items' && (
+            <div style={{ padding: '12px 16px', overflowY: 'auto', flex: 1 }}>
+              {detail.lineItems.length === 0 ? (
+                <div style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No line items</div>
+              ) : (
+                <Table
+                  dataSource={detail.lineItems}
+                  columns={lineItemColumns}
+                  rowKey="invoiceKey"
+                  size="small"
+                  pagination={false}
+                  style={{ fontSize: 12 }}
+                />
+              )}
             </div>
           )}
-        </>
+        </div>
       )}
     </Drawer>
   );

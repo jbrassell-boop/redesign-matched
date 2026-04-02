@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Select, Table, Tag } from 'antd';
+import { Input, Select, Table } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { getProductSales, getProductSaleDetail, getProductSaleStats } from '../../api/product-sales';
 import { ProductSaleDetailPane } from './ProductSaleDetailPane';
+import { StatusBadge } from '../../components/shared';
 import type { ProductSaleListItem, ProductSaleDetail, ProductSaleStats } from './types';
 
 const fmt$ = (v: number) =>
@@ -12,14 +13,6 @@ const fmtDate = (d: string | null) => {
   if (!d) return '\u2014';
   const dt = new Date(d);
   return isNaN(dt.getTime()) ? '\u2014' : dt.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-};
-
-const STATUS_TAG: Record<string, string> = {
-  'Open': 'blue',
-  'Invoiced': 'green',
-  'Draft': 'gold',
-  'Quote Sent': 'purple',
-  'Cancelled': 'error',
 };
 
 const STAT_CHIPS: {
@@ -135,7 +128,7 @@ export const ProductSalePage = () => {
       dataIndex: 'status',
       key: 'status',
       width: 100,
-      render: (v: string) => <Tag color={STATUS_TAG[v] ?? 'default'}>{v}</Tag>,
+      render: (v: string) => <StatusBadge status={v} />,
     },
     {
       title: 'Items',
