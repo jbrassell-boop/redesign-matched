@@ -23,6 +23,7 @@ import { WorkspacePage } from './pages/workspace/WorkspacePage';
 import { AdministrationPage } from './pages/administration/AdministrationPage';
 import { DevelopmentListPage } from './pages/development-list/DevelopmentListPage';
 import { EndoCartsPage } from './pages/endocarts/EndoCartsPage';
+import { ReceivingPage } from './pages/receiving/ReceivingPage';
 
 export const router = createBrowserRouter([
   {
@@ -57,6 +58,7 @@ export const router = createBrowserRouter([
           { path: '/administration', element: <AdministrationPage /> },
           { path: '/development-list', element: <DevelopmentListPage /> },
           { path: '/endocarts', element: <EndoCartsPage /> },
+          { path: '/receiving', element: <ReceivingPage /> },
         ],
       },
     ],

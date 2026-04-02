@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { ScopeModelDetail, ScopeModelListResponse, ScopeModelStats, ScopeModelsFilters, Manufacturer } from '../pages/scope-model/types';
+import type { ScopeModelDetail, ScopeModelListResponse, ScopeModelStats, ScopeModelsFilters, Manufacturer, ScopeTypeRepairItem, ScopeTypeDeptMaxCharge } from '../pages/scope-model/types';
 
 export const getScopeModels = async (filters: ScopeModelsFilters): Promise<ScopeModelListResponse> => {
   const { data } = await apiClient.get<ScopeModelListResponse>('/scope-models', {
@@ -27,5 +27,15 @@ export const getScopeModelStats = async (): Promise<ScopeModelStats> => {
 
 export const getManufacturers = async (): Promise<Manufacturer[]> => {
   const { data } = await apiClient.get<Manufacturer[]>('/scope-models/manufacturers');
+  return data;
+};
+
+export const getScopeModelRepairItems = async (id: number): Promise<ScopeTypeRepairItem[]> => {
+  const { data } = await apiClient.get<ScopeTypeRepairItem[]>(`/scope-models/${id}/repair-items`);
+  return data;
+};
+
+export const getScopeModelMaxCharges = async (id: number): Promise<ScopeTypeDeptMaxCharge[]> => {
+  const { data } = await apiClient.get<ScopeTypeDeptMaxCharge[]>(`/scope-models/${id}/max-charges`);
   return data;
 };

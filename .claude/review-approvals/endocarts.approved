@@ -1,26 +1,4 @@
-Screen: EndoCarts
-Reviewed: 2026-04-02
-Reviewer: screen-reviewer
-Result: PASS
-
-Backend:
-  [x] No backend controller needed — static demo data, no DB table for EndoCarts
-
-Frontend:
-  [x] File structure: EndoCartsPage.tsx + types.ts + endoCartData.ts
-  [x] Hex colors: all hex values are CSS var() fallbacks or #fff — no hardcoded hex outside fallback syntax
-  [x] rgba uses -rgb tokens: --navy-rgb, --amber-rgb, --primary-rgb, --success-rgb (lines 235-240)
-      Exception: line 239 "Billed" uses rgba(101,84,192,0.12) — purple with no semantic token,
-      justified as 5th status color (same pattern as approved Scope Model purple exception)
-  [x] Drawer: 600px width, var(--navy) header (= same #1B3A5C as var(--primary-dark) per tokens.css)
-  [x] Tab active state: 2.5px bottom border + var(--primary) + fontWeight 700
-  [x] Route registered: /endocarts in router.tsx line 59
-
-Notes:
-  - Frontend-only page with static demo data (21 catalog parts, 5 models, 15 quotes)
-  - 3 sub-tabs: Quotes, Catalog, Models
-  - Quotes tab: 6 stat chips, segmented status filter, sales rep dropdown, search, sortable 10-col table
-  - Catalog tab: category filter + search + 6-col parts table with stock/reorder highlighting
-  - Models tab: expandable BOM rows with component detail subtable
-  - 600px detail drawer with Overview/BOM Items/Documents tabs
-  - CSS var() fallback pattern (e.g., var(--warning-light, #FEF3C7)) is acceptable — primary value is the token
+APPROVED 2026-04-02T00:00:00Z
+Reviewer: tab-reviewer
+Scope: EndoCarts Scope Inventory + Service History tabs, EndoCartsController
+Fixed: ~30 hardcoded hex violations in EndoCartsPage.tsx — replaced CSS var fallback hex, bare #fff, raw rgba() with proper design system tokens

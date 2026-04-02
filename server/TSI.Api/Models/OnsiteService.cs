@@ -27,3 +27,20 @@ public record OnsiteServiceListResponse(
     IEnumerable<OnsiteServiceListItem> Items,
     int TotalCount
 );
+
+public record CreateOnsiteVisitRequest(
+    int ClientKey,
+    int DepartmentKey,
+    int TechnicianKey,
+    string VisitDate,
+    string? Location,
+    string? Po,
+    string? TruckNum,
+    string? PriceClass,
+    string? Notes
+);
+
+public record UpdateOnsiteStatusRequest(
+    string Status,
+    string? Notes
+);

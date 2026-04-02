@@ -1,0 +1,150 @@
+/* ── Paired Table — main + detail row pattern ──────────────────────── */
+
+.paired-table-wrap {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.paired-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+/* Header */
+.paired-table thead th {
+  background: var(--neutral-50);
+  color: var(--neutral-500);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 8px 12px;
+  text-align: left;
+  white-space: nowrap;
+  border-right: 1px solid var(--neutral-100);
+  border-bottom: 1px solid var(--neutral-200);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  user-select: none;
+}
+
+.paired-table thead th:last-child {
+  border-right: none;
+}
+
+.paired-table thead th:hover {
+  background: var(--neutral-100);
+}
+
+.paired-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* Sort indicators */
+.pt-sort {
+  margin-left: 3px;
+  opacity: 0.4;
+  font-size: 9px;
+  transition: opacity 0.1s;
+}
+
+.paired-table thead th.sorted .pt-sort {
+  opacity: 1;
+}
+
+/* Main row */
+.pt-row-main td {
+  padding: 6px 10px;
+  font-size: var(--text-sm);
+  border-bottom: none;
+  padding-bottom: 1px;
+  vertical-align: middle;
+  color: var(--neutral-900);
+}
+
+/* Paired zebra: every other PAIR gets alt bg.
+   Each pair = row-main + row-detail = 2 <tr> elements.
+   4n+1 pair = white, 4n+3 pair = neutral-50 */
+.paired-table tbody tr.pt-row-main:nth-child(4n+3),
+.paired-table tbody tr.pt-row-main:nth-child(4n+3) + tr.pt-row-detail {
+  background: var(--neutral-50);
+}
+
+.paired-table tbody tr.pt-row-main:nth-child(4n+1),
+.paired-table tbody tr.pt-row-main:nth-child(4n+1) + tr.pt-row-detail {
+  background: var(--card);
+}
+
+/* Hover: main row + following detail row */
+.paired-table tbody tr.pt-row-main:hover,
+.paired-table tbody tr.pt-row-main:hover + tr.pt-row-detail {
+  background: var(--primary-light);
+  cursor: pointer;
+}
+
+/* Urgent left border */
+.paired-table tbody tr.pt-urgent {
+  border-left: 3px solid var(--danger);
+}
+
+/* Selected row */
+.paired-table tbody tr.pt-selected td {
+  background: rgba(var(--primary-rgb), 0.08);
+}
+
+/* Detail row */
+.pt-row-detail td {
+  padding: 0 8px 4px 8px !important;
+  border-top: none !important;
+  border-bottom: 1px solid var(--neutral-200) !important;
+  font-size: 10px;
+  color: var(--neutral-500);
+  line-height: 1.3;
+  background: inherit;
+}
+
+.pt-row-detail:hover {
+  background: inherit !important;
+}
+
+/* Detail note (editable) */
+.pt-note {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-style: italic;
+  color: var(--danger);
+  cursor: pointer;
+  padding: 1px 4px;
+  border-radius: var(--radius-sm);
+  transition: background 0.1s;
+}
+
+.pt-note:hover {
+  background: var(--primary-light);
+  color: var(--neutral-700);
+}
+
+.pt-note-placeholder {
+  color: var(--neutral-200);
+  font-style: italic;
+  cursor: pointer;
+  padding: 1px 4px;
+}
+
+.pt-note-placeholder:hover {
+  color: var(--muted);
+}
+
+/* Loading / empty states */
+.pt-loading,
+.pt-empty {
+  padding: 40px !important;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+  border-bottom: 1px solid var(--neutral-200);
+}

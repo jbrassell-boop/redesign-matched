@@ -39,3 +39,43 @@ public record QualityStats(
     int ConditionalCount,
     double FirstPassYield
 );
+
+// ── NCR (tblISOComplaint) ────────────────────────────────────────────────────
+
+public record NcrListItem(
+    int IsoComplaintKey,
+    string NcrNumber,
+    int? RepairKey,
+    string WorkOrderNumber,
+    string Description,
+    string Category,
+    string Severity,
+    string Status,
+    string DateFiled,
+    string ClientName,
+    string DepartmentName
+);
+
+public record NcrListResponse(
+    IEnumerable<NcrListItem> Items,
+    int TotalCount
+);
+
+// ── Rework (tblRepair where sReworkReqd='Y') ────────────────────────────────
+
+public record ReworkListItem(
+    int RepairKey,
+    string ReworkNumber,
+    string WorkOrderNumber,
+    string SerialNumber,
+    string Reason,
+    string TechName,
+    string OriginalComplete,
+    string ReworkDue,
+    string Status
+);
+
+public record ReworkListResponse(
+    IEnumerable<ReworkListItem> Items,
+    int TotalCount
+);

@@ -46,3 +46,43 @@ export interface QualityFilters {
   page: number;
   pageSize: number;
 }
+
+// ── NCR ──────────────────────────────────────────────────────────────────────
+
+export interface NcrListItem {
+  isoComplaintKey: number;
+  ncrNumber: string;
+  repairKey: number | null;
+  workOrderNumber: string;
+  description: string;
+  category: string;
+  severity: string;
+  status: string;
+  dateFiled: string;
+  clientName: string;
+  departmentName: string;
+}
+
+export interface NcrListResponse {
+  items: NcrListItem[];
+  totalCount: number;
+}
+
+// ── Rework ───────────────────────────────────────────────────────────────────
+
+export interface ReworkListItem {
+  repairKey: number;
+  reworkNumber: string;
+  workOrderNumber: string;
+  serialNumber: string;
+  reason: string;
+  techName: string;
+  originalComplete: string;
+  reworkDue: string;
+  status: string;
+}
+
+export interface ReworkListResponse {
+  items: ReworkListItem[];
+  totalCount: number;
+}

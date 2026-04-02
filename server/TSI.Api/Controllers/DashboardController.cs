@@ -149,4 +149,673 @@ public class DashboardController(IConfiguration config) : ControllerBase
 
         return Ok(new DashboardRepairsResponse(repairs, totalCount));
     }
+
+    // ── Tasks sub-tab ──
+    [HttpGet("tasks")]
+    public async Task<IActionResult> GetTasks(
+        [FromQuery] string? search = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Stats query
+        const string statsSql = """
+            SELECT
+                SUM(CASE WHEN ts.TaskStatus NOT IN ('Request Fulfilled','Closed Duplicate','Request Declined') THEN 1 ELSE 0 END) AS [Open],
+                SUM(CASE WHEN ts.TaskStatus = 'Request Fulfilled' THEN 1 ELSE 0 END) AS Fulfilled,
+                SUM(CASE WHEN t.bFromPortal = 1 THEN 1 ELSE 0 END) AS FromPortal
+            FROM tblTasks t
+            OUTER APPLY (
+                SELECT TOP 1 h.lTaskStatusKey FROM tblTaskStatusHistory h
+                WHERE h.lTaskKey = t.lTaskKey ORDER BY h.dtTaskStatusDate DESC
+            ) lh
+            LEFT JOIN tblTaskStatuses ts ON ts.TaskStatusKey = lh.lTaskStatusKey
+            """;
+
+        await using var statsCmd = new SqlCommand(statsSql, conn);
+        await using var statsReader = await statsCmd.ExecuteReaderAsync();
+        int openCount = 0, fulfilledCount = 0, portalCount = 0;
+        if (await statsReader.ReadAsync())
+        {
+            openCount = statsReader["Open"] == DBNull.Value ? 0 : Convert.ToInt32(statsReader["Open"]);
+            fulfilledCount = statsReader["Fulfilled"] == DBNull.Value ? 0 : Convert.ToInt32(statsReader["Fulfilled"]);
+            portalCount = statsReader["FromPortal"] == DBNull.Value ? 0 : Convert.ToInt32(statsReader["FromPortal"]);
+        }
+        await statsReader.CloseAsync();
+
+        // Top type
+        const string topTypeSql = """
+            SELECT TOP 1 ISNULL(tt.sTaskType, 'Unknown') AS TaskType, COUNT(*) AS Cnt
+            FROM tblTasks t
+            LEFT JOIN tblTaskTypes tt ON tt.lTaskTypeKey = t.lTaskTypeKey
+            GROUP BY tt.sTaskType
+            ORDER BY Cnt DESC
+            """;
+        await using var topCmd = new SqlCommand(topTypeSql, conn);
+        await using var topReader = await topCmd.ExecuteReaderAsync();
+        string topTypeLabel = "Top Type";
+        int topTypeCount = 0;
+        if (await topReader.ReadAsync())
+        {
+            topTypeLabel = topReader["TaskType"]?.ToString() ?? "Top Type";
+            topTypeCount = Convert.ToInt32(topReader["Cnt"]);
+        }
+        await topReader.CloseAsync();
+
+        var where = new List<string>();
+        if (!string.IsNullOrWhiteSpace(search))
+            where.Add("""
+                (t.sTaskTitle LIKE @search
+                 OR ISNULL(c.sClientName1,'') LIKE @search
+                 OR ISNULL(d.sDepartmentName,'') LIKE @search
+                 OR ISNULL(tt.sTaskType,'') LIKE @search)
+                """);
+        var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
+
+        var countSql = $"""
+            SELECT COUNT(*)
+            FROM tblTasks t
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = t.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            LEFT JOIN tblTaskTypes tt ON tt.lTaskTypeKey = t.lTaskTypeKey
+            {whereClause}
+            """;
+
+        var dataSql = $"""
+            SELECT t.lTaskKey, t.sTaskTitle, t.dtTaskDate, ISNULL(t.bFromPortal,0) AS bFromPortal,
+                   ISNULL(c.sClientName1,'') AS sClientName1,
+                   ISNULL(d.sDepartmentName,'') AS sDepartmentName,
+                   ISNULL(tt.sTaskType,'') AS sTaskType,
+                   ISNULL(tp.sTaskPriority,'Normal') AS sTaskPriority,
+                   ISNULL(ts.TaskStatus,'Not Started') AS TaskStatus
+            FROM tblTasks t
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = t.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            LEFT JOIN tblTaskTypes tt ON tt.lTaskTypeKey = t.lTaskTypeKey
+            LEFT JOIN tblTaskPriorities tp ON tp.lTaskPriorityKey = t.lTaskPriorityKey
+            OUTER APPLY (
+                SELECT TOP 1 h.lTaskStatusKey FROM tblTaskStatusHistory h
+                WHERE h.lTaskKey = t.lTaskKey ORDER BY h.dtTaskStatusDate DESC
+            ) lh
+            LEFT JOIN tblTaskStatuses ts ON ts.TaskStatusKey = lh.lTaskStatusKey
+            {whereClause}
+            ORDER BY t.dtTaskDate DESC
+            OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
+            """;
+
+        await using var countCmd = new SqlCommand(countSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+        await using var dataCmd = new SqlCommand(dataSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
+        dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
+
+        await using var dataReader = await dataCmd.ExecuteReaderAsync();
+        var tasks = new List<DashboardTask>();
+        while (await dataReader.ReadAsync())
+        {
+            var dt = dataReader["dtTaskDate"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(dataReader["dtTaskDate"]);
+            tasks.Add(new DashboardTask(
+                TaskKey: Convert.ToInt32(dataReader["lTaskKey"]),
+                Title: dataReader["sTaskTitle"]?.ToString() ?? "",
+                Client: dataReader["sClientName1"]?.ToString() ?? "",
+                Dept: dataReader["sDepartmentName"]?.ToString() ?? "",
+                TaskType: dataReader["sTaskType"]?.ToString() ?? "",
+                Priority: dataReader["sTaskPriority"]?.ToString() ?? "Normal",
+                Status: dataReader["TaskStatus"]?.ToString() ?? "Not Started",
+                Date: dt?.ToString("MM/dd/yyyy") ?? "",
+                FromPortal: Convert.ToBoolean(dataReader["bFromPortal"])
+            ));
+        }
+
+        return Ok(new DashboardTasksResponse(tasks, totalCount,
+            new DashboardTaskStats(openCount, fulfilledCount, portalCount, topTypeCount, topTypeLabel)));
+    }
+
+    // ── Emails sub-tab ──
+    [HttpGet("emails")]
+    public async Task<IActionResult> GetEmails(
+        [FromQuery] string? search = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var where = new List<string>();
+        if (!string.IsNullOrWhiteSpace(search))
+            where.Add("""
+                (e.sFrom LIKE @search OR e.sTo LIKE @search
+                 OR e.sSubject LIKE @search
+                 OR ISNULL(et.sEmailType,'') LIKE @search)
+                """);
+        var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
+
+        var countSql = $"""
+            SELECT COUNT(*)
+            FROM tblEmails e
+            LEFT JOIN tblEmailTypes et ON et.lEmailTypeKey = e.lEmailTypeKey
+            {whereClause}
+            """;
+
+        var dataSql = $"""
+            SELECT e.lEmailKey, e.dtCreateDate, e.sFrom, e.sTo, e.sSubject,
+                   e.bIgnore, e.dtSentDate,
+                   ISNULL(et.sEmailType,'') AS sEmailType
+            FROM tblEmails e
+            LEFT JOIN tblEmailTypes et ON et.lEmailTypeKey = e.lEmailTypeKey
+            {whereClause}
+            ORDER BY e.dtCreateDate DESC
+            OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
+            """;
+
+        await using var countCmd = new SqlCommand(countSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+        await using var dataCmd = new SqlCommand(dataSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
+        dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
+
+        await using var dataReader = await dataCmd.ExecuteReaderAsync();
+        var emails = new List<DashboardEmail>();
+        int pending = 0, sent = 0;
+        var typeSet = new HashSet<string>();
+
+        while (await dataReader.ReadAsync())
+        {
+            var dtCreate = dataReader["dtCreateDate"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(dataReader["dtCreateDate"]);
+            var bIgnore = Convert.ToBoolean(dataReader["bIgnore"]);
+            var dtSent = dataReader["dtSentDate"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(dataReader["dtSentDate"]);
+            var status = bIgnore ? "Ignored" : dtSent != null ? "Sent" : "Pending";
+            var emailType = dataReader["sEmailType"]?.ToString() ?? "";
+            if (!string.IsNullOrEmpty(emailType)) typeSet.Add(emailType);
+            if (status == "Pending") pending++;
+            if (status == "Sent") sent++;
+
+            emails.Add(new DashboardEmail(
+                EmailKey: Convert.ToInt32(dataReader["lEmailKey"]),
+                Date: dtCreate?.ToString("MM/dd/yyyy") ?? "",
+                EmailType: emailType,
+                From: dataReader["sFrom"]?.ToString()?.Trim() ?? "",
+                To: dataReader["sTo"]?.ToString()?.Trim() ?? "",
+                Subject: dataReader["sSubject"]?.ToString()?.Trim() ?? "",
+                Status: status
+            ));
+        }
+
+        return Ok(new DashboardEmailsResponse(emails, totalCount,
+            new DashboardEmailStats(totalCount, pending, sent, typeSet.Count)));
+    }
+
+    // ── Shipping sub-tab ──
+    [HttpGet("shipping")]
+    public async Task<IActionResult> GetShipping(
+        [FromQuery] string? search = null,
+        [FromQuery] string? segment = "ready",
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var where = new List<string>();
+        if (segment == "ready")
+            where.Add("rs.sRepairStatus IN ('Complete','Pending Ship') AND r.sShipTrackingNumber IS NULL");
+        else if (segment == "today")
+            where.Add("r.sShipTrackingNumber IS NOT NULL AND CAST(r.dtShipDate AS DATE) = CAST(GETDATE() AS DATE)");
+        // segment == "all" -> shipped items, no extra filter on date
+        else if (segment == "all")
+            where.Add("r.sShipTrackingNumber IS NOT NULL");
+
+        if (!string.IsNullOrWhiteSpace(search))
+            where.Add("""
+                (r.sWorkOrderNumber LIKE @search
+                 OR ISNULL(s.sSerialNumber,'') LIKE @search
+                 OR ISNULL(c.sClientName1,'') LIKE @search
+                 OR ISNULL(r.sShipTrackingNumber,'') LIKE @search)
+                """);
+
+        var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
+
+        var countSql = $"""
+            SELECT COUNT(*)
+            FROM tblRepair r
+            LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            {whereClause}
+            """;
+
+        var dataSql = $"""
+            SELECT r.lRepairKey, r.sWorkOrderNumber, r.dtDateIn, r.dtShipDate,
+                   ISNULL(r.sShipTrackingNumber,'') AS sShipTrackingNumber,
+                   ISNULL(r.dblAmtShipping, 0) AS dblAmtShipping,
+                   ISNULL(rs.sRepairStatus,'') AS sRepairStatus,
+                   ISNULL(s.sSerialNumber,'') AS sSerialNumber,
+                   ISNULL(st.sScopeTypeDesc,'') AS sScopeTypeDesc,
+                   ISNULL(c.sClientName1,'') AS sClientName1,
+                   ISNULL(d.sDepartmentName,'') AS sDepartmentName
+            FROM tblRepair r
+            LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            {whereClause}
+            ORDER BY r.dtDateIn DESC
+            OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
+            """;
+
+        await using var countCmd = new SqlCommand(countSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+        await using var dataCmd = new SqlCommand(dataSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
+        dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
+
+        await using var dataReader = await dataCmd.ExecuteReaderAsync();
+        var shipments = new List<DashboardShipment>();
+        while (await dataReader.ReadAsync())
+        {
+            var dateIn = dataReader["dtDateIn"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(dataReader["dtDateIn"]);
+            var shipDate = dataReader["dtShipDate"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(dataReader["dtShipDate"]);
+            shipments.Add(new DashboardShipment(
+                RepairKey: Convert.ToInt32(dataReader["lRepairKey"]),
+                Wo: dataReader["sWorkOrderNumber"]?.ToString() ?? "",
+                Client: dataReader["sClientName1"]?.ToString() ?? "",
+                Dept: dataReader["sDepartmentName"]?.ToString() ?? "",
+                ScopeType: dataReader["sScopeTypeDesc"]?.ToString() ?? "",
+                Serial: dataReader["sSerialNumber"]?.ToString() ?? "",
+                Status: dataReader["sRepairStatus"]?.ToString() ?? "",
+                DateIn: dateIn?.ToString("MM/dd/yyyy") ?? "",
+                ShipDate: shipDate?.ToString("MM/dd/yyyy"),
+                TrackingNumber: dataReader["sShipTrackingNumber"]?.ToString(),
+                ShipCharge: dataReader["dblAmtShipping"] == DBNull.Value ? 0 : Convert.ToDecimal(dataReader["dblAmtShipping"])
+            ));
+        }
+        await dataReader.CloseAsync();
+
+        // Stats
+        const string shipStatsSql = """
+            SELECT
+                SUM(CASE WHEN rs.sRepairStatus IN ('Complete','Pending Ship') AND r.sShipTrackingNumber IS NULL THEN 1 ELSE 0 END) AS ReadyToShip,
+                SUM(CASE WHEN r.sShipTrackingNumber IS NOT NULL AND CAST(r.dtShipDate AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS ShippedToday,
+                SUM(CASE WHEN r.sShipTrackingNumber IS NOT NULL THEN ISNULL(r.dblAmtShipping,0) ELSE 0 END) AS TotalCharges
+            FROM tblRepair r
+            LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            """;
+        await using var shipStatsCmd = new SqlCommand(shipStatsSql, conn);
+        await using var shipStatsReader = await shipStatsCmd.ExecuteReaderAsync();
+        int readyToShip = 0, shippedToday = 0; decimal totalCharges = 0;
+        if (await shipStatsReader.ReadAsync())
+        {
+            readyToShip = shipStatsReader["ReadyToShip"] == DBNull.Value ? 0 : Convert.ToInt32(shipStatsReader["ReadyToShip"]);
+            shippedToday = shipStatsReader["ShippedToday"] == DBNull.Value ? 0 : Convert.ToInt32(shipStatsReader["ShippedToday"]);
+            totalCharges = shipStatsReader["TotalCharges"] == DBNull.Value ? 0 : Convert.ToDecimal(shipStatsReader["TotalCharges"]);
+        }
+
+        return Ok(new DashboardShippingResponse(shipments, totalCount,
+            new DashboardShippingStats(readyToShip, shippedToday, totalCharges)));
+    }
+
+    // ── Invoices sub-tab ──
+    [HttpGet("invoices")]
+    public async Task<IActionResult> GetInvoices(
+        [FromQuery] string? search = null,
+        [FromQuery] string? segment = "ready",
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var where = new List<string>();
+        if (segment == "ready")
+            where.Add("i.bInvoiceFinalized = 0");
+        else if (segment == "invoiced")
+            where.Add("i.bInvoiceFinalized = 1");
+
+        if (!string.IsNullOrWhiteSpace(search))
+            where.Add("""
+                (ISNULL(i.sInvoiceNumber,'') LIKE @search
+                 OR ISNULL(c.sClientName1,'') LIKE @search)
+                """);
+
+        var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
+
+        var countSql = $"""
+            SELECT COUNT(*)
+            FROM tblInvoice i
+            LEFT JOIN tblClient c ON c.lClientKey = i.lClientKey
+            {whereClause}
+            """;
+
+        var dataSql = $"""
+            SELECT i.lInvoiceKey, ISNULL(i.sInvoiceNumber,'') AS sInvoiceNumber,
+                   ISNULL(i.dblInvoiceAmount,0) AS dblInvoiceAmount,
+                   i.dtInvoiceDate, i.bInvoiceFinalized,
+                   ISNULL(c.sClientName1,'') AS sClientName1
+            FROM tblInvoice i
+            LEFT JOIN tblClient c ON c.lClientKey = i.lClientKey
+            {whereClause}
+            ORDER BY i.dtInvoiceDate DESC
+            OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
+            """;
+
+        await using var countCmd = new SqlCommand(countSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+        await using var dataCmd = new SqlCommand(dataSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
+        dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
+
+        await using var dataReader = await dataCmd.ExecuteReaderAsync();
+        var invoices = new List<DashboardInvoice>();
+        while (await dataReader.ReadAsync())
+        {
+            var dt = dataReader["dtInvoiceDate"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(dataReader["dtInvoiceDate"]);
+            var finalized = Convert.ToBoolean(dataReader["bInvoiceFinalized"]);
+            invoices.Add(new DashboardInvoice(
+                InvoiceKey: Convert.ToInt32(dataReader["lInvoiceKey"]),
+                InvoiceNumber: dataReader["sInvoiceNumber"]?.ToString() ?? "",
+                Wo: "",
+                Client: dataReader["sClientName1"]?.ToString() ?? "",
+                Dept: "",
+                Amount: dataReader["dblInvoiceAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(dataReader["dblInvoiceAmount"]),
+                Status: finalized ? "Finalized" : "Pending",
+                Date: dt?.ToString("MM/dd/yyyy") ?? "",
+                PaidDate: null
+            ));
+        }
+        await dataReader.CloseAsync();
+
+        // Stats
+        const string invStatsSql = """
+            SELECT
+                SUM(CASE WHEN i.bInvoiceFinalized = 0 THEN 1 ELSE 0 END) AS ReadyToInvoice,
+                SUM(CASE WHEN i.bInvoiceFinalized = 1 AND MONTH(i.dtInvoiceDate) = MONTH(GETDATE()) AND YEAR(i.dtInvoiceDate) = YEAR(GETDATE()) THEN 1 ELSE 0 END) AS InvoicedMonth,
+                SUM(ISNULL(i.dblInvoiceAmount, 0)) AS TotalAmount,
+                CASE WHEN COUNT(*) > 0 THEN SUM(ISNULL(i.dblInvoiceAmount,0)) / COUNT(*) ELSE 0 END AS AvgInvoice
+            FROM tblInvoice i
+            """;
+        await using var invStatsCmd = new SqlCommand(invStatsSql, conn);
+        await using var invStatsReader = await invStatsCmd.ExecuteReaderAsync();
+        int readyToInvoice = 0, invoicedMonth = 0; decimal invTotal = 0, invAvg = 0;
+        if (await invStatsReader.ReadAsync())
+        {
+            readyToInvoice = invStatsReader["ReadyToInvoice"] == DBNull.Value ? 0 : Convert.ToInt32(invStatsReader["ReadyToInvoice"]);
+            invoicedMonth = invStatsReader["InvoicedMonth"] == DBNull.Value ? 0 : Convert.ToInt32(invStatsReader["InvoicedMonth"]);
+            invTotal = invStatsReader["TotalAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(invStatsReader["TotalAmount"]);
+            invAvg = invStatsReader["AvgInvoice"] == DBNull.Value ? 0 : Convert.ToDecimal(invStatsReader["AvgInvoice"]);
+        }
+
+        return Ok(new DashboardInvoicesResponse(invoices, totalCount,
+            new DashboardInvoiceStats(readyToInvoice, invoicedMonth, invTotal, invAvg)));
+    }
+
+    // ── Flags sub-tab ──
+    [HttpGet("flags")]
+    public async Task<IActionResult> GetFlags(
+        [FromQuery] string? search = null,
+        [FromQuery] string? flagType = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var where = new List<string>();
+        if (!string.IsNullOrWhiteSpace(search))
+            where.Add("f.sFlag LIKE @search");
+        if (!string.IsNullOrWhiteSpace(flagType) && flagType != "All")
+            where.Add("ft.sFlagType = @flagType");
+        var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
+
+        var countSql = $"""
+            SELECT COUNT(*)
+            FROM tblFlags f
+            LEFT JOIN tblFlagTypes ft ON ft.lFlagTypeKey = f.lFlagTypeKey
+            {whereClause}
+            """;
+
+        var dataSql = $"""
+            SELECT f.lFlagKey, f.sFlag, f.lOwnerKey,
+                   ISNULL(ft.sFlagType,'') AS sFlagType
+            FROM tblFlags f
+            LEFT JOIN tblFlagTypes ft ON ft.lFlagTypeKey = f.lFlagTypeKey
+            {whereClause}
+            ORDER BY f.lFlagKey DESC
+            OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
+            """;
+
+        await using var countCmd = new SqlCommand(countSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        if (!string.IsNullOrWhiteSpace(flagType) && flagType != "All") countCmd.Parameters.AddWithValue("@flagType", flagType);
+        var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+        await using var dataCmd = new SqlCommand(dataSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        if (!string.IsNullOrWhiteSpace(flagType) && flagType != "All") dataCmd.Parameters.AddWithValue("@flagType", flagType);
+        dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
+        dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
+
+        await using var dataReader = await dataCmd.ExecuteReaderAsync();
+        var flags = new List<DashboardFlag>();
+        while (await dataReader.ReadAsync())
+        {
+            flags.Add(new DashboardFlag(
+                FlagKey: Convert.ToInt32(dataReader["lFlagKey"]),
+                FlagText: dataReader["sFlag"]?.ToString() ?? "",
+                FlagType: dataReader["sFlagType"]?.ToString() ?? "",
+                OwnerName: "",
+                OwnerKey: Convert.ToInt32(dataReader["lOwnerKey"])
+            ));
+        }
+        await dataReader.CloseAsync();
+
+        // Stats
+        const string flagStatsSql = """
+            SELECT
+                COUNT(*) AS Total,
+                SUM(CASE WHEN ft.sFlagType = 'Client' THEN 1 ELSE 0 END) AS Client,
+                SUM(CASE WHEN ft.sFlagType = 'Scope Type' THEN 1 ELSE 0 END) AS ScopeType,
+                SUM(CASE WHEN ft.sFlagType = 'Scope' THEN 1 ELSE 0 END) AS Scope,
+                SUM(CASE WHEN ft.sFlagType = 'Repair' THEN 1 ELSE 0 END) AS Repair
+            FROM tblFlags f
+            LEFT JOIN tblFlagTypes ft ON ft.lFlagTypeKey = f.lFlagTypeKey
+            """;
+        await using var flagStatsCmd = new SqlCommand(flagStatsSql, conn);
+        await using var flagStatsReader = await flagStatsCmd.ExecuteReaderAsync();
+        int fTotal = 0, fClient = 0, fScopeType = 0, fScope = 0, fRepair = 0;
+        if (await flagStatsReader.ReadAsync())
+        {
+            fTotal = flagStatsReader["Total"] == DBNull.Value ? 0 : Convert.ToInt32(flagStatsReader["Total"]);
+            fClient = flagStatsReader["Client"] == DBNull.Value ? 0 : Convert.ToInt32(flagStatsReader["Client"]);
+            fScopeType = flagStatsReader["ScopeType"] == DBNull.Value ? 0 : Convert.ToInt32(flagStatsReader["ScopeType"]);
+            fScope = flagStatsReader["Scope"] == DBNull.Value ? 0 : Convert.ToInt32(flagStatsReader["Scope"]);
+            fRepair = flagStatsReader["Repair"] == DBNull.Value ? 0 : Convert.ToInt32(flagStatsReader["Repair"]);
+        }
+
+        return Ok(new DashboardFlagsResponse(flags, totalCount,
+            new DashboardFlagStats(fTotal, fClient, fScopeType, fScope, fRepair)));
+    }
+
+    // ── Tech Bench sub-tab ──
+    [HttpGet("techbench")]
+    public async Task<IActionResult> GetTechBench(
+        [FromQuery] string? search = null,
+        [FromQuery] string? statusFilter = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var where = new List<string> { "rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced','Draft Invoice')" };
+        if (!string.IsNullOrWhiteSpace(search))
+            where.Add("""
+                (r.sWorkOrderNumber LIKE @search
+                 OR ISNULL(s.sSerialNumber,'') LIKE @search
+                 OR ISNULL(c.sClientName1,'') LIKE @search)
+                """);
+        if (!string.IsNullOrWhiteSpace(statusFilter))
+            where.Add("rs.sRepairStatus = @statusFilter");
+        var whereClause = "WHERE " + string.Join(" AND ", where);
+
+        var countSql = $"""
+            SELECT COUNT(*)
+            FROM tblRepair r
+            LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+            LEFT JOIN tblClient c ON c.lClientKey = (SELECT TOP 1 lClientKey FROM tblDepartment WHERE lDepartmentKey = r.lDepartmentKey)
+            {whereClause}
+            """;
+
+        var dataSql = $"""
+            SELECT r.lRepairKey, r.sWorkOrderNumber,
+                   ISNULL(s.sSerialNumber,'') AS sSerialNumber,
+                   ISNULL(st.sScopeTypeDesc,'') AS sScopeTypeDesc,
+                   ISNULL(c.sClientName1,'') AS sClientName1,
+                   DATEDIFF(day, r.dtDateIn, GETDATE()) AS DaysIn,
+                   ISNULL(rs.sRepairStatus,'') AS sRepairStatus,
+                   ISNULL(t.sTechName,'') AS sTechName
+            FROM tblRepair r
+            LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey
+            {whereClause}
+            ORDER BY DATEDIFF(day, r.dtDateIn, GETDATE()) DESC
+            OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
+            """;
+
+        await using var countCmd = new SqlCommand(countSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        if (!string.IsNullOrWhiteSpace(statusFilter)) countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
+        var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+        await using var dataCmd = new SqlCommand(dataSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        if (!string.IsNullOrWhiteSpace(statusFilter)) dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
+        dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
+        dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
+
+        await using var dataReader = await dataCmd.ExecuteReaderAsync();
+        var items = new List<DashboardTechBenchItem>();
+        while (await dataReader.ReadAsync())
+        {
+            items.Add(new DashboardTechBenchItem(
+                RepairKey: Convert.ToInt32(dataReader["lRepairKey"]),
+                Wo: dataReader["sWorkOrderNumber"]?.ToString() ?? "",
+                Serial: dataReader["sSerialNumber"]?.ToString() ?? "",
+                ScopeType: dataReader["sScopeTypeDesc"]?.ToString() ?? "",
+                Client: dataReader["sClientName1"]?.ToString() ?? "",
+                DaysIn: dataReader["DaysIn"] == DBNull.Value ? 0 : Convert.ToInt32(dataReader["DaysIn"]),
+                Status: dataReader["sRepairStatus"]?.ToString() ?? "",
+                Tech: dataReader["sTechName"]?.ToString()
+            ));
+        }
+        await dataReader.CloseAsync();
+
+        // Stats
+        const string tbStatsSql = """
+            SELECT
+                SUM(CASE WHEN r.lTechnicianKey IS NOT NULL AND rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced','Draft Invoice') THEN 1 ELSE 0 END) AS Assigned,
+                SUM(CASE WHEN rs.sRepairStatus = 'In Repair' THEN 1 ELSE 0 END) AS InRepair,
+                SUM(CASE WHEN rs.sRepairStatus IN ('On Hold','Parts Hold','Approval Hold') THEN 1 ELSE 0 END) AS OnHold,
+                SUM(CASE WHEN rs.sRepairStatus IN ('Complete','Shipped') AND CAST(r.dtShipDate AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS CompletedToday
+            FROM tblRepair r
+            LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            """;
+        await using var tbStatsCmd = new SqlCommand(tbStatsSql, conn);
+        await using var tbStatsReader = await tbStatsCmd.ExecuteReaderAsync();
+        int tbAssigned = 0, tbInRepair = 0, tbOnHold = 0, tbCompleted = 0;
+        if (await tbStatsReader.ReadAsync())
+        {
+            tbAssigned = tbStatsReader["Assigned"] == DBNull.Value ? 0 : Convert.ToInt32(tbStatsReader["Assigned"]);
+            tbInRepair = tbStatsReader["InRepair"] == DBNull.Value ? 0 : Convert.ToInt32(tbStatsReader["InRepair"]);
+            tbOnHold = tbStatsReader["OnHold"] == DBNull.Value ? 0 : Convert.ToInt32(tbStatsReader["OnHold"]);
+            tbCompleted = tbStatsReader["CompletedToday"] == DBNull.Value ? 0 : Convert.ToInt32(tbStatsReader["CompletedToday"]);
+        }
+
+        return Ok(new DashboardTechBenchResponse(items, totalCount,
+            new DashboardTechBenchStats(tbAssigned, tbInRepair, tbOnHold, tbCompleted)));
+    }
+
+    // ── Analytics sub-tab ──
+    [HttpGet("analytics")]
+    public async Task<IActionResult> GetAnalytics()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Stats
+        const string aStatsSql = """
+            SELECT
+                SUM(CASE WHEN rs.sRepairStatus NOT IN ('Shipped','Cancelled') THEN 1 ELSE 0 END) AS InHouse,
+                AVG(CASE WHEN rs.sRepairStatus = 'Shipped' THEN CAST(DATEDIFF(day, r.dtDateIn, r.dtShipDate) AS DECIMAL(10,1)) END) AS AvgTat,
+                COUNT(CASE WHEN rs.sRepairStatus = 'Shipped' AND MONTH(r.dtShipDate) = MONTH(GETDATE()) AND YEAR(r.dtShipDate) = YEAR(GETDATE()) THEN 1 END) AS Throughput
+            FROM tblRepair r
+            LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            """;
+        await using var aStatsCmd = new SqlCommand(aStatsSql, conn);
+        await using var aStatsReader = await aStatsCmd.ExecuteReaderAsync();
+        int inHouse = 0, throughput = 0; decimal avgTat = 0;
+        if (await aStatsReader.ReadAsync())
+        {
+            inHouse = aStatsReader["InHouse"] == DBNull.Value ? 0 : Convert.ToInt32(aStatsReader["InHouse"]);
+            avgTat = aStatsReader["AvgTat"] == DBNull.Value ? 0 : Convert.ToDecimal(aStatsReader["AvgTat"]);
+            throughput = aStatsReader["Throughput"] == DBNull.Value ? 0 : Convert.ToInt32(aStatsReader["Throughput"]);
+        }
+        await aStatsReader.CloseAsync();
+
+        // Top scope types by volume
+        const string metricsSql = """
+            SELECT TOP 20
+                   ISNULL(st.sScopeTypeDesc,'Unknown') AS ScopeType,
+                   COUNT(*) AS RepairCount,
+                   AVG(CASE WHEN rs.sRepairStatus = 'Shipped' THEN CAST(DATEDIFF(day, r.dtDateIn, r.dtShipDate) AS DECIMAL(10,1)) END) AS AvgTat,
+                   SUM(CASE WHEN rs.sRepairStatus NOT IN ('Shipped','Cancelled') THEN 1 ELSE 0 END) AS InProgress,
+                   SUM(CASE WHEN rs.sRepairStatus = 'Shipped' THEN 1 ELSE 0 END) AS Completed
+            FROM tblRepair r
+            LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            GROUP BY st.sScopeTypeDesc
+            ORDER BY COUNT(*) DESC
+            """;
+        await using var metricsCmd = new SqlCommand(metricsSql, conn);
+        await using var metricsReader = await metricsCmd.ExecuteReaderAsync();
+        var metrics = new List<DashboardAnalyticsMetric>();
+        int rank = 0;
+        while (await metricsReader.ReadAsync())
+        {
+            rank++;
+            metrics.Add(new DashboardAnalyticsMetric(
+                Rank: rank,
+                ScopeType: metricsReader["ScopeType"]?.ToString() ?? "",
+                RepairCount: Convert.ToInt32(metricsReader["RepairCount"]),
+                AvgTat: metricsReader["AvgTat"] == DBNull.Value ? 0 : Convert.ToDecimal(metricsReader["AvgTat"]),
+                InProgress: metricsReader["InProgress"] == DBNull.Value ? 0 : Convert.ToInt32(metricsReader["InProgress"]),
+                Completed: metricsReader["Completed"] == DBNull.Value ? 0 : Convert.ToInt32(metricsReader["Completed"])
+            ));
+        }
+
+        return Ok(new DashboardAnalyticsResponse(metrics,
+            new DashboardAnalyticsStats(inHouse, avgTat, 0, throughput)));
+    }
 }

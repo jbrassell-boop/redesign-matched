@@ -1,0 +1,4 @@
+APPROVED 2026-04-02T00:00:00Z
+Reviewer: tab-reviewer
+Scope: Quality 5 tabs (QC Inspections, NCR, CAPA Log, Rework Tracking, Reports) + QualityController
+Fixed: #fff -> var(--card) in pagination buttons, rgba(180,200,220,0.3) -> rgba(var(--primary-rgb), 0.15) in table headers

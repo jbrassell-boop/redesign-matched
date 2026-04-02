@@ -247,6 +247,84 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
         return Ok(list);
     }
 
+    [HttpGet("{id:int}/repair-items")]
+    public async Task<IActionResult> GetRepairItems(int id)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var sql = """
+            SELECT stri.lScopeTypeRepairItemKey, stri.lRepairItemKey,
+                   ISNULL(ri.sItemDescription, '') AS sItemDescription,
+                   td3.lMinutes AS MinutesL3,
+                   td2.lMinutes AS MinutesL2,
+                   td1.lMinutes AS MinutesL1,
+                   td3.lWarningMinutes AS WarningMinutes
+            FROM tblScopeTypeRepairItems stri
+            INNER JOIN tblRepairItem ri ON ri.lRepairItemKey = stri.lRepairItemKey
+            LEFT JOIN tblScopeTypeRepairItemTechDetails td3
+                ON td3.lScopeTypeRepairItemKey = stri.lScopeTypeRepairItemKey AND td3.lTechLevel = 3
+            LEFT JOIN tblScopeTypeRepairItemTechDetails td2
+                ON td2.lScopeTypeRepairItemKey = stri.lScopeTypeRepairItemKey AND td2.lTechLevel = 2
+            LEFT JOIN tblScopeTypeRepairItemTechDetails td1
+                ON td1.lScopeTypeRepairItemKey = stri.lScopeTypeRepairItemKey AND td1.lTechLevel = 1
+            WHERE stri.lScopeTypeKey = @id
+            ORDER BY ri.sItemDescription
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@id", id);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<ScopeTypeRepairItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new ScopeTypeRepairItem(
+                ScopeTypeRepairItemKey: Convert.ToInt32(reader["lScopeTypeRepairItemKey"]),
+                RepairItemKey: Convert.ToInt32(reader["lRepairItemKey"]),
+                ItemDescription: reader["sItemDescription"]?.ToString() ?? "",
+                MinutesL3: reader["MinutesL3"] == DBNull.Value ? null : Convert.ToInt32(reader["MinutesL3"]),
+                MinutesL2: reader["MinutesL2"] == DBNull.Value ? null : Convert.ToInt32(reader["MinutesL2"]),
+                MinutesL1: reader["MinutesL1"] == DBNull.Value ? null : Convert.ToInt32(reader["MinutesL1"]),
+                WarningMinutes: reader["WarningMinutes"] == DBNull.Value ? null : Convert.ToInt32(reader["WarningMinutes"])
+            ));
+        }
+        return Ok(items);
+    }
+
+    [HttpGet("{id:int}/max-charges")]
+    public async Task<IActionResult> GetMaxCharges(int id)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var sql = """
+            SELECT mc.lDepartmentKey, ISNULL(d.sDepartmentName, '') AS sDepartmentName,
+                   ISNULL(c.sCompanyName, '') AS sCompanyName, mc.nMaxCharge
+            FROM tblScopeTypeDepartmentMaxCharges mc
+            INNER JOIN tblDepartment d ON d.lDepartmentKey = mc.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            WHERE mc.lScopeTypeKey = @id
+            ORDER BY c.sCompanyName, d.sDepartmentName
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@id", id);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<ScopeTypeDeptMaxCharge>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new ScopeTypeDeptMaxCharge(
+                DepartmentKey: Convert.ToInt32(reader["lDepartmentKey"]),
+                DepartmentName: reader["sDepartmentName"]?.ToString() ?? "",
+                ClientName: reader["sCompanyName"]?.ToString() ?? "",
+                MaxCharge: reader["nMaxCharge"] == DBNull.Value ? null : Convert.ToDecimal(reader["nMaxCharge"])
+            ));
+        }
+        return Ok(items);
+    }
+
     private static void AddParams(SqlCommand cmd, string? search, string? typeFilter, string? statusFilter, int? manufacturerKey)
     {
         if (!string.IsNullOrWhiteSpace(search)) cmd.Parameters.AddWithValue("@search", $"%{search}%");

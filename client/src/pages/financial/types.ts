@@ -99,4 +99,9 @@ export interface HoldListResponse {
   totalCount: number;
 }
 
-export type FinancialTab = 'outstanding' | 'drafts' | 'hold' | 'payments' | 'atrisk' | 'trending';
+export type FinancialTab = 'outstanding' | 'drafts' | 'hold' | 'payments' | 'gl' | 'atrisk' | 'trending';
+
+export interface GLAccountItem {
+  accountNumber: string;
+  batchNumber: string;
+}

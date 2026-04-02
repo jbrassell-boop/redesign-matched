@@ -62,3 +62,92 @@ public record ContractStats(
     int Expired,
     double TotalACV
 );
+
+public record ContractDepartment(
+    int ContractDepartmentKey,
+    int DepartmentKey,
+    string DepartmentName,
+    DateTime? EffectiveDate,
+    DateTime? EndDate,
+    bool NonBillable,
+    string? PoNumber
+);
+
+public record ContractScope(
+    int ContractScopeKey,
+    int ScopeKey,
+    string SerialNumber,
+    string Model,
+    string Manufacturer,
+    string RigidOrFlexible,
+    DateTime? ScopeAdded,
+    DateTime? ScopeRemoved,
+    decimal Cost
+);
+
+public record ContractRepair(
+    int RepairKey,
+    string Wo,
+    string SerialNumber,
+    string Model,
+    string RepairType,
+    DateTime? DateIn,
+    string Status,
+    decimal Cost,
+    string Tech
+);
+
+public record ContractNote(
+    int NoteKey,
+    DateTime? NoteDate,
+    string Author,
+    string Note
+);
+
+public record ContractAmendment(
+    int AmendmentKey,
+    DateTime? AmendmentDate,
+    string Status,
+    decimal PreviousTotal,
+    decimal NewTotal,
+    decimal PreviousInvoiceAmount,
+    decimal NewInvoiceAmount,
+    int RemainingMonths
+);
+
+public record ContractAmendmentScope(
+    int AmendmentScopeKey,
+    int AmendmentKey,
+    string SerialNumber,
+    string Model,
+    string Manufacturer,
+    bool IsAdd,
+    decimal Cost,
+    DateTime? ChangeDate
+);
+
+public record ContractInvoice(
+    int InstallmentKey,
+    string InvoiceNumber,
+    DateTime? DateCreated,
+    DateTime? DateDue,
+    double Amount,
+    string Status
+);
+
+public record ContractDocument(
+    int DocumentKey,
+    string DocumentName,
+    string FileName,
+    DateTime? DocumentDate,
+    string CategoryType
+);
+
+public record ContractHealth(
+    decimal Revenue,
+    decimal Consumption,
+    decimal PercentConsumed,
+    decimal PercentTimeElapsed,
+    decimal Margin,
+    string Grade
+);

@@ -3,6 +3,18 @@ import { getContracts, getContract, getContractStats } from '../../api/contracts
 import { ContractsList } from './ContractsList';
 import { ContractDetailPane } from './ContractDetailPane';
 import type { ContractListItem, ContractDetail, ContractStats } from './types';
+import { ExportButton } from '../../components/common/ExportButton';
+
+const CONTRACT_EXPORT_COLS = [
+  { key: 'name', label: 'Client' },
+  { key: 'contractNumber', label: 'Contract #' },
+  { key: 'effectiveDate', label: 'Effective Date' },
+  { key: 'terminationDate', label: 'Termination Date' },
+  { key: 'totalAmount', label: 'Total Amount' },
+  { key: 'amtInvoiced', label: 'Invoiced' },
+  { key: 'scopeCount', label: 'Scopes' },
+  { key: 'status', label: 'Status' },
+];
 
 export const ContractsPage = () => {
   const [contracts, setContracts] = useState<ContractListItem[]>([]);
@@ -70,6 +82,7 @@ export const ContractsPage = () => {
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 10, color: 'var(--muted)' }}>{contracts.length} records</span>
+                <ExportButton data={contracts as unknown as Record<string, unknown>[]} columns={CONTRACT_EXPORT_COLS} filename="contracts-export" sheetName="Contracts" />
                 <button
                   onClick={() => setCollapsed(true)}
                   title="Collapse list"
@@ -103,7 +116,7 @@ export const ContractsPage = () => {
             title="Show contract list"
             style={{
               position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
-              zIndex: 10, width: 20, height: 48, background: 'var(--navy)', color: '#fff',
+              zIndex: 10, width: 20, height: 48, background: 'var(--navy)', color: 'var(--card)',
               border: 'none', borderRadius: '0 6px 6px 0', cursor: 'pointer',
               fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '2px 0 8px rgba(0,0,0,0.12)',

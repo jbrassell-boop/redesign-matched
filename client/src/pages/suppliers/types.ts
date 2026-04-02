@@ -88,3 +88,20 @@ export interface SupplierListResponse {
   items: SupplierListItem[];
   totalCount: number;
 }
+
+export interface SupplierInventoryItem {
+  supplierSizesKey: number;
+  itemDescription: string;
+  sizeDescription: string;
+  supplierPartNo: string;
+  unitCost: number;
+  isActive: boolean;
+}
+
+export interface SupplierDocument {
+  documentKey: number;
+  documentName: string;
+  fileName: string;
+  documentType: string;
+  documentDate: string | null;
+}

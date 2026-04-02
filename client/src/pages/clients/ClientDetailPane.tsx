@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Spin } from 'antd';
 import type { ClientDetail } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
@@ -6,13 +6,15 @@ import type { TabDef } from '../../components/shared';
 import { ContactsTab } from './tabs/ContactsTab';
 import { DepartmentsTab } from './tabs/DepartmentsTab';
 import { FlagsTab } from './tabs/FlagsTab';
+import { getClientContacts, getClientDepartments, getClientFlags } from '../../api/clients';
+import { useTabBadges } from '../../hooks/useTabBadges';
 
 interface ClientDetailPaneProps {
   detail: ClientDetail | null;
   loading: boolean;
 }
 
-const TABS: TabDef[] = [
+const BASE_TABS: TabDef[] = [
   { key: 'info',        label: 'Info' },
   { key: 'contacts',    label: 'Contacts' },
   { key: 'departments', label: 'Departments' },
@@ -21,6 +23,21 @@ const TABS: TabDef[] = [
 
 export const ClientDetailPane = ({ detail, loading }: ClientDetailPaneProps) => {
   const [activeTab, setActiveTab] = useState('info');
+
+  const ck = detail?.clientKey ?? 0;
+  const badgeCounts = useTabBadges(
+    ck ? {
+      contacts: () => getClientContacts(ck),
+      departments: () => getClientDepartments(ck),
+      flags: () => getClientFlags(ck),
+    } : {},
+    [ck],
+  );
+
+  const tabs = useMemo<TabDef[]>(
+    () => BASE_TABS.map(t => ({ ...t, badge: badgeCounts[t.key] ?? null })),
+    [badgeCounts],
+  );
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
   if (!detail) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Select a client to view details</div>;
@@ -55,7 +72,7 @@ export const ClientDetailPane = ({ detail, loading }: ClientDetailPaneProps) => 
         }
         meta={deptMeta}
       />
-      <TabBar tabs={TABS} activeKey={activeTab} onChange={setActiveTab} />
+      <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
       {activeTab === 'info'        && infoContent}
       {activeTab === 'contacts'    && <ContactsTab clientKey={detail.clientKey} />}
       {activeTab === 'departments' && <DepartmentsTab clientKey={detail.clientKey} />}

@@ -1,1 +1,4 @@
-APPROVED 2026-04-02T19:31:16Z
+APPROVED 2026-04-02T00:00:00Z
+Reviewer: tab-reviewer
+Scope: Loaners ActiveLoanersTab + RequestsTab + LoanersController
+Fixed: STATUS_STYLES hex -> rgba tokens, DaysChip hex -> rgba tokens, #fff -> var(--card), #92400E -> var(--amber), rgba(180,200,220) -> rgba(var(--primary-rgb))

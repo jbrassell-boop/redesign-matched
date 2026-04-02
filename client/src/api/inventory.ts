@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { InventoryListResponse, InventoryDetail, InventoryStats } from '../pages/inventory/types';
+import type { InventoryListResponse, InventoryDetail, InventoryStats, InventoryPurchaseOrder, InventorySupplierItem } from '../pages/inventory/types';
 
 export const getInventoryList = async (params: {
   search?: string;
@@ -25,5 +25,15 @@ export const getInventoryDetail = async (inventoryKey: number): Promise<Inventor
 
 export const getInventoryStats = async (): Promise<InventoryStats> => {
   const { data } = await apiClient.get<InventoryStats>('/inventory/stats');
+  return data;
+};
+
+export const getInventoryPurchaseOrders = async (inventoryKey: number): Promise<InventoryPurchaseOrder[]> => {
+  const { data } = await apiClient.get<InventoryPurchaseOrder[]>(`/inventory/${inventoryKey}/purchase-orders`);
+  return data;
+};
+
+export const getInventorySuppliers = async (inventoryKey: number): Promise<InventorySupplierItem[]> => {
+  const { data } = await apiClient.get<InventorySupplierItem[]>(`/inventory/${inventoryKey}/suppliers`);
   return data;
 };

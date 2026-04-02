@@ -90,3 +90,20 @@ public record SupplierListResponse(
     IEnumerable<SupplierListItem> Items,
     int TotalCount
 );
+
+public record SupplierInventoryItem(
+    int SupplierSizesKey,
+    string ItemDescription,
+    string SizeDescription,
+    string SupplierPartNo,
+    double UnitCost,
+    bool IsActive
+);
+
+public record SupplierDocument(
+    int DocumentKey,
+    string DocumentName,
+    string FileName,
+    string DocumentType,
+    string? DocumentDate
+);

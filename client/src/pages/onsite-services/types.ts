@@ -34,3 +34,15 @@ export interface OnsiteServiceFilters {
   page: number;
   pageSize: number;
 }
+
+export interface CreateOnsiteVisitRequest {
+  clientKey: number;
+  departmentKey: number;
+  technicianKey: number;
+  visitDate: string;
+  location?: string;
+  po?: string;
+  truckNum?: string;
+  priceClass?: string;
+  notes?: string;
+}

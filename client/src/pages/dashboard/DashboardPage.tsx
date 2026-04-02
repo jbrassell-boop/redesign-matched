@@ -97,9 +97,13 @@ export const DashboardPage = () => {
 
   const chips: StatChipDef[] = stats ? [
     { id: 'open', label: 'OPEN REPAIRS', value: stats.openRepairs, color: 'navy' },
-    { id: 'urgent', label: 'URGENT', value: stats.urgentRepairs, color: 'red' },
-    { id: 'pendingQC', label: 'PENDING QC', value: stats.pendingQC, color: 'amber' },
-    { id: 'pendingShip', label: 'PENDING SHIP', value: stats.pendingShip, color: 'navy' },
+    { id: 'urgent', label: 'URGENT', value: stats.urgentRepairs, color: 'red',
+      state: (stats.urgentRepairs ?? 0) > 0 ? 'alert' : 'normal',
+      tooltip: (stats.urgentRepairs ?? 0) > 0 ? `${stats.urgentRepairs} urgent repairs need attention` : undefined },
+    { id: 'pendingQC', label: 'PENDING QC', value: stats.pendingQC, color: 'amber',
+      state: (stats.pendingQC ?? 0) > 20 ? 'warn' : 'normal' },
+    { id: 'pendingShip', label: 'PENDING SHIP', value: stats.pendingShip, color: 'navy',
+      state: (stats.pendingShip ?? 0) > 20 ? 'warn' : 'normal' },
     { id: 'completedToday', label: 'SHIPPED TODAY', value: stats.completedToday, color: 'green' },
     { id: 'receivedToday', label: 'RECEIVED TODAY', value: stats.receivedToday, color: 'muted' },
   ] : [];

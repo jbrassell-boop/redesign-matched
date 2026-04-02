@@ -35,6 +35,7 @@ export interface RepairDetail {
   shipDate: string | null;
   trackingNumber: string | null;
   invoiceNumber: string | null;
+  notes: string | null;
 }
 
 export interface RepairListResponse {
@@ -47,4 +48,45 @@ export interface RepairsFilters {
   page: number;
   pageSize: number;
   statusFilter: string;
+}
+
+// ── Line Items (Workflow) ──
+export interface RepairLineItem {
+  tranKey: number;
+  approved: string;
+  itemCode: string;
+  description: string;
+  cause: string;
+  fixType: string;
+  amount: number;
+  tech: string;
+  comments: string;
+}
+
+// ── Scope History ──
+export interface RepairScopeHistory {
+  repairKey: number;
+  wo: string;
+  dateIn: string;
+  status: string;
+  scopeType: string;
+  client: string;
+  daysIn: number;
+  amount: number | null;
+}
+
+// ── Financials ──
+export interface RepairFinancials {
+  saleAmount: number;
+  tax: number;
+  invoiceTotal: number;
+  outsource: number;
+  shipping: number;
+  labor: number;
+  inventory: number;
+  gpo: number;
+  commission: number;
+  totalExpenses: number;
+  marginPct: number;
+  contractMargin: number;
 }

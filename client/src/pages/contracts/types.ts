@@ -60,3 +60,60 @@ export interface ContractStats {
   expired: number;
   totalACV: number;
 }
+
+export interface ContractScope {
+  contractScopeKey: number;
+  scopeKey: number;
+  serialNumber: string;
+  model: string;
+  manufacturer: string;
+  rigidOrFlexible: string;
+  scopeAdded: string | null;
+  scopeRemoved: string | null;
+  cost: number;
+}
+
+export interface ContractRepair {
+  repairKey: number;
+  wo: string;
+  serialNumber: string;
+  model: string;
+  repairType: string;
+  dateIn: string | null;
+  status: string;
+  cost: number;
+  tech: string;
+}
+
+export interface ContractInvoice {
+  installmentKey: number;
+  invoiceNumber: string;
+  dateCreated: string | null;
+  dateDue: string | null;
+  amount: number;
+  status: string;
+}
+
+export interface ContractNote {
+  noteKey: number;
+  noteDate: string | null;
+  author: string;
+  note: string;
+}
+
+export interface ContractDocument {
+  documentKey: number;
+  documentName: string;
+  fileName: string;
+  documentDate: string | null;
+  categoryType: string;
+}
+
+export interface ContractHealth {
+  revenue: number;
+  consumption: number;
+  percentConsumed: number;
+  percentTimeElapsed: number;
+  margin: number;
+  grade: string;
+}

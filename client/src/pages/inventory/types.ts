@@ -49,3 +49,26 @@ export interface InventoryStats {
   inactiveCount: number;
   lowStockCount: number;
 }
+
+export interface InventoryPurchaseOrder {
+  supplierPOKey: number;
+  poNumber: string;
+  supplierName: string;
+  poDate: string;
+  poTotal: number;
+  cancelled: boolean;
+  lineCount: number;
+  orderedQty: number;
+  receivedQty: number;
+}
+
+export interface InventorySupplierItem {
+  supplierSizesKey: number;
+  supplierKey: number;
+  supplierName: string;
+  sizeDescription: string;
+  partNumber: string;
+  unitCost: number;
+  orderMinimum: number;
+  isActive: boolean;
+}

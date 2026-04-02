@@ -29,3 +29,28 @@ export interface ClientListResponse {
   clients: ClientListItem[];
   totalCount: number;
 }
+
+export interface ClientContact {
+  contactKey: number;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  fax: string | null;
+  email: string | null;
+  isActive: boolean;
+}
+
+export interface ClientDepartment {
+  departmentKey: number;
+  name: string;
+  serviceLocation: string;
+  isActive: boolean;
+}
+
+export interface ClientFlag {
+  flagKey: number;
+  flagType: string;
+  flag: string;
+  visibleOnDI: boolean;
+  visibleOnBlank: boolean;
+}

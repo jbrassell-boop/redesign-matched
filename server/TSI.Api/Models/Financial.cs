@@ -100,3 +100,8 @@ public record HoldListResponse(
     IEnumerable<ClientOnHold> Items,
     int TotalCount
 );
+
+public record GLAccountItem(
+    string AccountNumber,
+    string BatchNumber
+);

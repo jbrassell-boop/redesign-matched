@@ -30,3 +30,20 @@ public record OutsourceListResponse(
     IEnumerable<OutsourceListItem> Items,
     int TotalCount
 );
+
+public record SendToVendorRequest(
+    int VendorKey,
+    double OutsourceCost,
+    string? TrackingNumber,
+    string? Notes
+);
+
+public record ReceiveBackRequest(
+    string? TrackingNumberReturn,
+    string? Notes
+);
+
+public record ValidationChecklistRequest(
+    string Status,
+    string? Notes
+);

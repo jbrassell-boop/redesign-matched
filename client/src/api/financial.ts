@@ -5,6 +5,7 @@ import type {
   PaymentListResponse,
   HoldListResponse,
   FinancialStats,
+  GLAccountItem,
 } from '../pages/financial/types';
 
 export const getInvoices = (params: {
@@ -40,6 +41,9 @@ export const getClientsOnHold = (params: {
   apiClient
     .get<HoldListResponse>('/financial/on-hold', { params })
     .then((r) => r.data);
+
+export const getGLAccounts = () =>
+  apiClient.get<GLAccountItem[]>('/financial/gl-accounts').then((r) => r.data);
 
 export const getFinancialStats = () =>
   apiClient.get<FinancialStats>('/financial/stats').then((r) => r.data);

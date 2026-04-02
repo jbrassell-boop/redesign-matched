@@ -32,6 +32,7 @@ export const navSections: NavSection[] = [
     key: 'operations',
     label: 'Operations',
     items: [
+      { key: 'receiving', label: 'Receiving', path: '/receiving' },
       { key: 'repairs', label: 'Repairs', path: '/repairs' },
       { key: 'instruments', label: 'Instrument Repair', path: '/instruments' },
       { key: 'endocarts', label: 'Carts', path: '/endocarts' },

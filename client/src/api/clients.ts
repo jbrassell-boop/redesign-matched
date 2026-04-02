@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { ClientListResponse, ClientDetail } from '../pages/clients/types';
+import type { ClientListResponse, ClientDetail, ClientContact, ClientDepartment, ClientFlag } from '../pages/clients/types';
 
 export const getClients = async (params: {
   search?: string;
@@ -20,5 +20,20 @@ export const getClients = async (params: {
 
 export const getClientDetail = async (clientKey: number): Promise<ClientDetail> => {
   const { data } = await apiClient.get<ClientDetail>(`/clients/${clientKey}`);
+  return data;
+};
+
+export const getClientContacts = async (clientKey: number): Promise<ClientContact[]> => {
+  const { data } = await apiClient.get<ClientContact[]>(`/clients/${clientKey}/contacts`);
+  return data;
+};
+
+export const getClientDepartments = async (clientKey: number): Promise<ClientDepartment[]> => {
+  const { data } = await apiClient.get<ClientDepartment[]>(`/clients/${clientKey}/departments`);
+  return data;
+};
+
+export const getClientFlags = async (clientKey: number): Promise<ClientFlag[]> => {
+  const { data } = await apiClient.get<ClientFlag[]>(`/clients/${clientKey}/flags`);
   return data;
 };

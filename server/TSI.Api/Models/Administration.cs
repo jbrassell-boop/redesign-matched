@@ -158,6 +158,59 @@ public record PricingListItem(
     bool IsActive
 );
 
+// ── System Settings ──
+public record SystemSettingItem(
+    int ConfigKey,
+    string Name,
+    bool? BoolValue,
+    string? StringValue,
+    int? IntValue,
+    decimal? DecimalValue
+);
+
+// ── Audit Log ──
+public record AuditLogItem(
+    int AuditKey,
+    DateTime Timestamp,
+    string UserName,
+    string Action,
+    string Module,
+    string Description,
+    string? IpAddress
+);
+
+public record AuditLogResponse(
+    List<AuditLogItem> Items,
+    int TotalCount
+);
+
+// ── Sales Rep Reassignment ──
+public record SalesRepOption(
+    int SalesRepKey,
+    string Name
+);
+
+public record SalesRepAssignment(
+    int DepartmentKey,
+    string ClientName,
+    string DepartmentName,
+    string? City,
+    string? State,
+    string? Zip,
+    string CurrentRep
+);
+
+// ── Bonus Pools ──
+public record BonusPoolItem(
+    int PoolKey,
+    string Name,
+    string? Period,
+    decimal? Target,
+    decimal? Actual,
+    decimal? PayoutPct,
+    bool IsActive
+);
+
 // ── Stats ──
 public record AdminStats(
     int ActiveUsers,

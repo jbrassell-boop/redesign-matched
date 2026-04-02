@@ -17,3 +17,53 @@ export const getRepairDetail = async (repairKey: number): Promise<RepairDetail> 
   const { data } = await apiClient.get<RepairDetail>(`/repairs/${repairKey}`);
   return data;
 };
+
+import type { RepairLineItem, RepairScopeHistory, RepairFinancials } from '../pages/repairs/types';
+
+export const getRepairLineItems = async (repairKey: number): Promise<RepairLineItem[]> => {
+  const { data } = await apiClient.get<RepairLineItem[]>(`/repairs/${repairKey}/lineitems`);
+  return data;
+};
+
+export const getRepairScopeHistory = async (repairKey: number): Promise<RepairScopeHistory[]> => {
+  const { data } = await apiClient.get<RepairScopeHistory[]>(`/repairs/${repairKey}/scopehistory`);
+  return data;
+};
+
+export const getRepairFinancials = async (repairKey: number): Promise<RepairFinancials> => {
+  const { data } = await apiClient.get<RepairFinancials>(`/repairs/${repairKey}/financials`);
+  return data;
+};
+
+export const updateRepairNotes = async (repairKey: number, notes: string): Promise<void> => {
+  await apiClient.patch(`/repairs/${repairKey}/notes`, { notes });
+};
+
+// ── Status Workflow ──
+
+export interface RepairStatusOption {
+  statusId: number;
+  statusName: string;
+  sortOrder: number | null;
+}
+
+export interface RepairStatusLogEntry {
+  logId: number;
+  statusName: string;
+  changedAt: string;
+  changedBy: string | null;
+}
+
+export const getRepairStatuses = async (): Promise<RepairStatusOption[]> => {
+  const { data } = await apiClient.get<RepairStatusOption[]>('/repairs/statuses');
+  return data;
+};
+
+export const updateRepairStatus = async (repairKey: number, statusId: number): Promise<void> => {
+  await apiClient.put(`/repairs/${repairKey}/status`, { statusId });
+};
+
+export const getRepairStatusHistory = async (repairKey: number): Promise<RepairStatusLogEntry[]> => {
+  const { data } = await apiClient.get<RepairStatusLogEntry[]>(`/repairs/${repairKey}/status-history`);
+  return data;
+};

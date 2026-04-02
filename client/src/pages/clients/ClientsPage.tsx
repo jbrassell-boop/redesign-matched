@@ -1,8 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getClients, getClientDetail } from '../../api/clients';
 import { ClientsList } from './ClientsList';
 import { ClientDetailPane } from './ClientDetailPane';
 import type { ClientListItem, ClientDetail } from './types';
+import { ExportButton } from '../../components/common/ExportButton';
+import { useKeyboardNav } from '../../hooks/useKeyboardNav';
+
+const CLIENT_EXPORT_COLS = [
+  { key: 'name', label: 'Name' },
+  { key: 'city', label: 'City' },
+  { key: 'state', label: 'State' },
+  { key: 'isActive', label: 'Active' },
+  { key: 'deptCount', label: 'Departments' },
+  { key: 'openRepairs', label: 'Open Repairs' },
+];
 
 export const ClientsPage = () => {
   const [clients, setClients] = useState<ClientListItem[]>([]);
@@ -38,12 +49,20 @@ export const ClientsPage = () => {
     }
   }, []);
 
+  const selectedIndex = useMemo(
+    () => clients.findIndex(c => c.clientKey === selectedKey),
+    [clients, selectedKey],
+  );
+
+  useKeyboardNav(clients, selectedIndex, handleSelect);
+
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
       <div style={{ width: 280, flexShrink: 0, borderRight: '1px solid var(--neutral-200)', background: 'var(--card)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary-dark)' }}>Clients</span>
           <span style={{ fontSize: 11, color: 'var(--muted)' }}>{clients.length} records</span>
+          <ExportButton data={clients as unknown as Record<string, unknown>[]} columns={CLIENT_EXPORT_COLS} filename="clients-export" sheetName="Clients" />
         </div>
         <ClientsList clients={clients} loading={loading} selectedKey={selectedKey} search={search} onSearchChange={setSearch} onSelect={handleSelect} />
       </div>

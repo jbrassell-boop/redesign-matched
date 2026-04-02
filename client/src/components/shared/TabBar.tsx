@@ -3,6 +3,7 @@ import './TabBar.css';
 export interface TabDef {
   key: string;
   label: string;
+  badge?: number | null;
 }
 
 interface TabBarProps {
@@ -22,6 +23,9 @@ export const TabBar = ({ tabs, activeKey, onChange, className }: TabBarProps) =>
         type="button"
       >
         {tab.label}
+        {tab.badge != null && tab.badge > 0 && (
+          <span className="tab-badge">{tab.badge}</span>
+        )}
       </button>
     ))}
   </div>

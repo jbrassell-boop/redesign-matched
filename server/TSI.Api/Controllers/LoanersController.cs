@@ -243,4 +243,128 @@ public class LoanersController(IConfiguration config) : ControllerBase
 
         return Ok(new LoanerStats(total, outCount, overdue, returned, declined, fillRate));
     }
+
+    [HttpGet("requests")]
+    public async Task<IActionResult> GetRequests(
+        [FromQuery] string? search = null,
+        [FromQuery] string? statusFilter = null)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var where = new List<string> { "r.bLoanerRequested = 1" };
+        if (!string.IsNullOrWhiteSpace(search))
+            where.Add("(r.sWorkOrderNumber LIKE @search OR s.sSerialNumber LIKE @search OR c.sClientName1 LIKE @search)");
+        if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "All")
+        {
+            if (statusFilter == "Fulfilled")
+                where.Add("r.sWasLoanerProduced = 'Yes'");
+            else if (statusFilter == "Pending")
+                where.Add("(r.sWasLoanerProduced IS NULL OR r.sWasLoanerProduced = '')");
+            else if (statusFilter == "Declined")
+                where.Add("r.sWasLoanerProduced = 'No'");
+        }
+
+        var whereClause = "WHERE " + string.Join(" AND ", where);
+
+        var sql = $"""
+            SELECT TOP 200
+                r.lRepairKey,
+                ISNULL(r.sWorkOrderNumber, '') AS sWorkOrderNumber,
+                ISNULL(s.sSerialNumber, '') AS sSerialNumber,
+                ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
+                ISNULL(c.sClientName1, '') AS sClientName1,
+                ISNULL(d.sDepartmentName, '') AS sDepartmentName,
+                r.dtDateIn,
+                ISNULL(r.sWasLoanerProduced, '') AS sWasLoanerProduced,
+                CASE
+                    WHEN r.sWasLoanerProduced = 'Yes' THEN 'Fulfilled'
+                    WHEN r.sWasLoanerProduced = 'No' THEN 'Declined'
+                    ELSE 'Pending'
+                END AS sRequestStatus
+            FROM tblRepair r
+            LEFT JOIN tblScope s ON r.lScopeKey = s.lScopeKey
+            LEFT JOIN tblScopeType st ON s.lScopeTypeKey = st.lScopeTypeKey
+            LEFT JOIN tblDepartment d ON r.lDepartmentKey = d.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            {whereClause}
+            ORDER BY r.dtDateIn DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) cmd.Parameters.AddWithValue("@search", $"%{search}%");
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var requests = new List<LoanerRequest>();
+        while (await reader.ReadAsync())
+        {
+            requests.Add(new LoanerRequest(
+                RepairKey: Convert.ToInt32(reader["lRepairKey"]),
+                WorkOrder: reader["sWorkOrderNumber"]?.ToString() ?? "",
+                SerialNumber: reader["sSerialNumber"]?.ToString() ?? "",
+                ScopeType: reader["sScopeTypeDesc"]?.ToString() ?? "",
+                Client: reader["sClientName1"]?.ToString() ?? "",
+                Department: reader["sDepartmentName"]?.ToString() ?? "",
+                DateRequested: reader["dtDateIn"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtDateIn"]),
+                LoanerProduced: reader["sWasLoanerProduced"]?.ToString() ?? "",
+                Status: reader["sRequestStatus"]?.ToString() ?? ""
+            ));
+        }
+
+        return Ok(requests);
+    }
+
+    [HttpPatch("requests/{repairKey:int}/fulfill")]
+    public async Task<IActionResult> FulfillRequest(int repairKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand(
+            "UPDATE tblRepair SET sWasLoanerProduced = 'Yes' WHERE lRepairKey = @id AND bLoanerRequested = 1", conn);
+        cmd.Parameters.AddWithValue("@id", repairKey);
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return rows > 0 ? Ok() : NotFound();
+    }
+
+    [HttpPatch("requests/{repairKey:int}/decline")]
+    public async Task<IActionResult> DeclineRequest(int repairKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand(
+            "UPDATE tblRepair SET sWasLoanerProduced = 'No' WHERE lRepairKey = @id AND bLoanerRequested = 1", conn);
+        cmd.Parameters.AddWithValue("@id", repairKey);
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return rows > 0 ? Ok() : NotFound();
+    }
+
+    [HttpPost("requests/bulk")]
+    public async Task<IActionResult> BulkUpdateRequests([FromBody] BulkLoanerRequestAction body)
+    {
+        if (body.RepairKeys.Count == 0)
+            return BadRequest("No repair keys provided");
+        if (body.Action != "fulfill" && body.Action != "decline")
+            return BadRequest("Action must be 'fulfill' or 'decline'");
+
+        var value = body.Action == "fulfill" ? "Yes" : "No";
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var paramList = new List<string>();
+        await using var cmd = new SqlCommand();
+        cmd.Connection = conn;
+        for (var i = 0; i < body.RepairKeys.Count; i++)
+        {
+            paramList.Add($"@k{i}");
+            cmd.Parameters.AddWithValue($"@k{i}", body.RepairKeys[i]);
+        }
+        cmd.Parameters.AddWithValue("@val", value);
+        cmd.CommandText = $"UPDATE tblRepair SET sWasLoanerProduced = @val WHERE bLoanerRequested = 1 AND lRepairKey IN ({string.Join(",", paramList)})";
+
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return Ok(new { updated = rows });
+    }
 }

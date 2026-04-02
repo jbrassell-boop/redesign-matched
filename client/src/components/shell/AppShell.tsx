@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+import { CommandPalette } from './CommandPalette';
 
 const getInitialCollapsed = () => {
   const pref = localStorage.getItem('tsi_sidebarCollapsed');
@@ -34,6 +35,7 @@ export const AppShell = () => {
           <Outlet />
         </div>
       </div>
+      <CommandPalette />
     </div>
   );
 };

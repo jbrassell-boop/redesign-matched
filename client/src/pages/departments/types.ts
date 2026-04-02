@@ -29,3 +29,17 @@ export interface DepartmentListResponse {
   departments: DepartmentListItem[];
   totalCount: number;
 }
+
+export interface DepartmentSubGroup {
+  subGroupKey: number;
+  name: string;
+}
+
+export interface DepartmentScope {
+  scopeKey: number;
+  serialNumber: string;
+  model: string;
+  manufacturer: string;
+  type: string;
+  category: string;
+}

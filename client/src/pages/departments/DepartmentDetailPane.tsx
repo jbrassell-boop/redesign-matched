@@ -1,17 +1,19 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Spin } from 'antd';
 import type { DepartmentDetail } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import { SubGroupsTab } from './tabs/SubGroupsTab';
 import { ScopesTab } from './tabs/ScopesTab';
+import { getDepartmentSubGroups, getDepartmentScopes } from '../../api/departments';
+import { useTabBadges } from '../../hooks/useTabBadges';
 
 interface DepartmentDetailPaneProps {
   detail: DepartmentDetail | null;
   loading: boolean;
 }
 
-const TABS: TabDef[] = [
+const BASE_TABS: TabDef[] = [
   { key: 'info',       label: 'Info' },
   { key: 'scopes',     label: 'Scopes' },
   { key: 'sub-groups', label: 'Sub-Groups' },
@@ -21,6 +23,20 @@ const TABS: TabDef[] = [
 
 export const DepartmentDetailPane = ({ detail, loading }: DepartmentDetailPaneProps) => {
   const [activeTab, setActiveTab] = useState('info');
+
+  const dk = detail?.deptKey ?? 0;
+  const badgeCounts = useTabBadges(
+    dk ? {
+      scopes: () => getDepartmentScopes(dk),
+      'sub-groups': () => getDepartmentSubGroups(dk),
+    } : {},
+    [dk],
+  );
+
+  const tabs = useMemo<TabDef[]>(
+    () => BASE_TABS.map(t => ({ ...t, badge: badgeCounts[t.key] ?? null })),
+    [badgeCounts],
+  );
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
   if (!detail) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Select a department to view details</div>;
@@ -55,7 +71,7 @@ export const DepartmentDetailPane = ({ detail, loading }: DepartmentDetailPanePr
         }
         meta={scopeMeta}
       />
-      <TabBar tabs={TABS} activeKey={activeTab} onChange={setActiveTab} />
+      <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
       {activeTab === 'info'       && infoContent}
       {activeTab === 'scopes'     && <ScopesTab deptKey={detail.deptKey} />}
       {activeTab === 'sub-groups' && <SubGroupsTab deptKey={detail.deptKey} />}

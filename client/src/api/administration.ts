@@ -36,5 +36,42 @@ export const getSalesTax = () =>
 export const getPricingLists = () =>
   apiClient.get('/administration/pricing-lists').then(r => r.data);
 
+export const getSettings = () =>
+  apiClient.get('/administration/settings').then(r => r.data);
+
+export const getAuditLog = (params: {
+  search?: string;
+  action?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  pageSize?: number;
+}) =>
+  apiClient.get('/administration/audit-log', { params }).then(r => r.data);
+
+export const getCreditLimits = () =>
+  apiClient.get('/administration/credit-limits').then(r => r.data);
+
+export const getReportingGroups = () =>
+  apiClient.get('/administration/reporting-groups').then(r => r.data);
+
+export const getStandardDepts = () =>
+  apiClient.get('/administration/standard-depts').then(r => r.data);
+
+export const getCleaningSystems = () =>
+  apiClient.get('/administration/cleaning-systems').then(r => r.data);
+
+export const getCountries = () =>
+  apiClient.get('/administration/countries').then(r => r.data);
+
+export const getSalesReps = (companyKey?: number) =>
+  apiClient.get('/administration/sales-reps', { params: companyKey ? { companyKey } : {} }).then(r => r.data);
+
+export const getSalesRepAssignments = (salesRepKey: number) =>
+  apiClient.get('/administration/sales-rep-assignments', { params: { salesRepKey } }).then(r => r.data);
+
+export const getBonusPools = (type: string = 'tech') =>
+  apiClient.get('/administration/bonus-pools', { params: { type } }).then(r => r.data);
+
 export const getAdminStats = () =>
   apiClient.get('/administration/stats').then(r => r.data);

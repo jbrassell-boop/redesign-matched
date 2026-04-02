@@ -320,6 +320,34 @@ public class FinancialController(IConfiguration config) : ControllerBase
         return Ok(new HoldListResponse(items, totalCount));
     }
 
+    [HttpGet("gl-accounts")]
+    public async Task<IActionResult> GetGLAccounts()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT DISTINCT GLAccount, sBatchNumber
+            FROM tblGP_InvoiceStaging
+            WHERE GLAccount IS NOT NULL AND GLAccount <> ''
+            ORDER BY GLAccount
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var items = new List<GLAccountItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new GLAccountItem(
+                AccountNumber: reader["GLAccount"]?.ToString() ?? "",
+                BatchNumber: reader["sBatchNumber"]?.ToString() ?? ""
+            ));
+        }
+
+        return Ok(items);
+    }
+
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {

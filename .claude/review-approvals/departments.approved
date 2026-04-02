@@ -1,0 +1,4 @@
+APPROVED 2026-04-02T00:00:00Z
+Reviewer: tab-reviewer
+Scope: 2 detail tabs (SubGroups, Scopes) + DepartmentsController
+Checks passed: zero hardcoded hex, rgba uses --name-rgb tokens, all tabs wired into DepartmentDetailPane, backend uses await using throughout, no EF Core

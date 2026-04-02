@@ -1,0 +1,2 @@
+APPROVED 2026-04-02T00:00:00Z
+Fixed: SuppliersTab.tsx lines 78-79 — replaced #F0FDF4/#BBF7D0 with rgba(var(--success-rgb)) tokens

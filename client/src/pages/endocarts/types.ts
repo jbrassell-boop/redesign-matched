@@ -61,3 +61,46 @@ export interface EndoCartFilters {
   rep: string;
   search: string;
 }
+
+export interface EndoCartScopeItem {
+  scopeKey: number;
+  serialNumber: string;
+  scopeType: string;
+  manufacturer: string;
+  clientName: string;
+  departmentName: string;
+  rigidOrFlexible: string;
+  isDead: boolean;
+  lastUpdate: string | null;
+}
+
+export interface EndoCartServiceHistoryItem {
+  repairKey: number;
+  workOrderNumber: string;
+  serialNumber: string;
+  scopeType: string;
+  clientName: string;
+  repairStatus: string;
+  dateIn: string | null;
+  dateOut: string | null;
+  complaint: string | null;
+  totalCost: number;
+}
+
+export interface EndoCartScopeInventoryResponse {
+  items: EndoCartScopeItem[];
+  totalCount: number;
+}
+
+export interface EndoCartServiceHistoryResponse {
+  items: EndoCartServiceHistoryItem[];
+  totalCount: number;
+}
+
+export interface EndoCartApiStats {
+  totalScopes: number;
+  activeScopes: number;
+  inactiveScopes: number;
+  totalRepairs: number;
+  recentRepairs: number;
+}

@@ -216,4 +216,257 @@ public class ContractsController(IConfiguration config) : ControllerBase
             CreateDate: reader["dtCreateDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtCreateDate"])
         ));
     }
+
+    [HttpGet("{contractKey:int}/scopes")]
+    public async Task<IActionResult> GetScopes(int contractKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT
+                cs.lContractScopeKey,
+                cs.lScopeKey,
+                ISNULL(s.sSerialNumber, '') AS sSerialNumber,
+                ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
+                ISNULL(m.sManufacturer, '') AS sManufacturer,
+                ISNULL(st.sRigidOrFlexible, '') AS sRigidOrFlexible,
+                cs.dtScopeAdded,
+                cs.dtScopeRemoved,
+                ISNULL(cs.nCost, 0) AS nCost
+            FROM tblContractScope cs
+            INNER JOIN tblScope s ON cs.lScopeKey = s.lScopeKey
+            LEFT JOIN tblScopeType st ON s.lScopeTypeKey = st.lScopeTypeKey
+            LEFT JOIN tblManufacturers m ON st.lManufacturerKey = m.lManufacturerKey
+            WHERE cs.lContractKey = @contractKey AND cs.dtScopeRemoved IS NULL
+            ORDER BY s.sSerialNumber
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@contractKey", contractKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var scopes = new List<ContractScope>();
+        while (await reader.ReadAsync())
+        {
+            scopes.Add(new ContractScope(
+                ContractScopeKey: Convert.ToInt32(reader["lContractScopeKey"]),
+                ScopeKey: Convert.ToInt32(reader["lScopeKey"]),
+                SerialNumber: reader["sSerialNumber"].ToString() ?? "",
+                Model: reader["sScopeTypeDesc"].ToString() ?? "",
+                Manufacturer: reader["sManufacturer"].ToString() ?? "",
+                RigidOrFlexible: reader["sRigidOrFlexible"].ToString() ?? "",
+                ScopeAdded: reader["dtScopeAdded"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtScopeAdded"]),
+                ScopeRemoved: reader["dtScopeRemoved"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtScopeRemoved"]),
+                Cost: reader["nCost"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["nCost"])
+            ));
+        }
+
+        return Ok(scopes);
+    }
+
+    [HttpGet("{contractKey:int}/repairs")]
+    public async Task<IActionResult> GetRepairs(int contractKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT
+                r.lRepairKey,
+                ISNULL(r.sWorkOrderNumber, '') AS sWorkOrderNumber,
+                ISNULL(s.sSerialNumber, '') AS sSerialNumber,
+                ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
+                ISNULL(rl.sRepairLevel, '') AS sRepairLevel,
+                r.dtDateIn,
+                ISNULL(rs.sRepairStatus, '') AS sRepairStatus,
+                ISNULL(r.dblNetTotal, 0) AS dblNetTotal,
+                ISNULL(t.sLastName, '') AS sTechName
+            FROM tblRepair r
+            INNER JOIN tblScope s ON r.lScopeKey = s.lScopeKey
+            LEFT JOIN tblScopeType st ON s.lScopeTypeKey = st.lScopeTypeKey
+            LEFT JOIN tblRepairStatuses rs ON r.lRepairStatusKey = rs.lRepairStatusKey
+            LEFT JOIN tblRepairLevels rl ON r.lRepairLevelKey = rl.lRepairLevelKey
+            LEFT JOIN tblTechnicians t ON r.lTechnicianKey = t.lTechnicianKey
+            WHERE r.lContractKey = @contractKey
+            ORDER BY r.dtDateIn DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@contractKey", contractKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var repairs = new List<ContractRepair>();
+        while (await reader.ReadAsync())
+        {
+            repairs.Add(new ContractRepair(
+                RepairKey: Convert.ToInt32(reader["lRepairKey"]),
+                Wo: reader["sWorkOrderNumber"].ToString() ?? "",
+                SerialNumber: reader["sSerialNumber"].ToString() ?? "",
+                Model: reader["sScopeTypeDesc"].ToString() ?? "",
+                RepairType: reader["sRepairLevel"].ToString() ?? "",
+                DateIn: reader["dtDateIn"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtDateIn"]),
+                Status: reader["sRepairStatus"].ToString() ?? "",
+                Cost: reader["dblNetTotal"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["dblNetTotal"]),
+                Tech: reader["sTechName"].ToString() ?? ""
+            ));
+        }
+
+        return Ok(repairs);
+    }
+
+    [HttpGet("{contractKey:int}/invoices")]
+    public async Task<IActionResult> GetInvoices(int contractKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT
+                ci.lInstallmentKey,
+                ISNULL(ci.sInvoiceNumber, '') AS sInvoiceNumber,
+                ci.dtDateCreate,
+                ci.dtDateDue,
+                ISNULL(ci.dblAmount, 0) AS dblAmount,
+                ISNULL(ci.sInvoiced, 'N') AS sInvoiced
+            FROM tblContractInstallment ci
+            WHERE ci.lContractKey = @contractKey
+            ORDER BY ci.dtDateDue DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@contractKey", contractKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var invoices = new List<ContractInvoice>();
+        while (await reader.ReadAsync())
+        {
+            var invoiced = reader["sInvoiced"].ToString();
+            invoices.Add(new ContractInvoice(
+                InstallmentKey: Convert.ToInt32(reader["lInstallmentKey"]),
+                InvoiceNumber: reader["sInvoiceNumber"].ToString() ?? "",
+                DateCreated: reader["dtDateCreate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtDateCreate"]),
+                DateDue: reader["dtDateDue"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtDateDue"]),
+                Amount: Convert.ToDouble(reader["dblAmount"]),
+                Status: invoiced == "Y" ? "Invoiced" : "Pending"
+            ));
+        }
+
+        return Ok(invoices);
+    }
+
+    [HttpGet("{contractKey:int}/notes")]
+    public async Task<IActionResult> GetNotes(int contractKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT
+                n.lNoteKey,
+                n.dtNoteDate,
+                ISNULL(e.sFirstName + ' ' + e.sLastName, 'System') AS sAuthor,
+                n.sNote
+            FROM tblNotes n
+            LEFT JOIN tblEmployee e ON n.lUserKey = e.lEmployeeKey
+            WHERE n.lOwnerKey = @contractKey
+            ORDER BY n.dtNoteDate DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@contractKey", contractKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var notes = new List<ContractNote>();
+        while (await reader.ReadAsync())
+        {
+            notes.Add(new ContractNote(
+                NoteKey: Convert.ToInt32(reader["lNoteKey"]),
+                NoteDate: reader["dtNoteDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtNoteDate"]),
+                Author: reader["sAuthor"].ToString() ?? "System",
+                Note: reader["sNote"].ToString() ?? ""
+            ));
+        }
+
+        return Ok(notes);
+    }
+
+    [HttpGet("{contractKey:int}/documents")]
+    public async Task<IActionResult> GetDocuments(int contractKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT
+                d.lDocumentKey,
+                d.sDocumentName,
+                ISNULL(d.sDocumentFileName, '') AS sDocumentFileName,
+                d.dtDocumentDate,
+                ISNULL(dct.sDocumentCategoryType, '') AS sDocumentCategoryType
+            FROM tblDocument d
+            LEFT JOIN tblDocumentCategoryType dct ON d.lDocumentCategoryTypeKey = dct.lDocumentCategoryTypeKey
+            WHERE d.lOwnerKey = @contractKey
+            ORDER BY d.dtDocumentDate DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@contractKey", contractKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var docs = new List<ContractDocument>();
+        while (await reader.ReadAsync())
+        {
+            docs.Add(new ContractDocument(
+                DocumentKey: Convert.ToInt32(reader["lDocumentKey"]),
+                DocumentName: reader["sDocumentName"].ToString() ?? "",
+                FileName: reader["sDocumentFileName"].ToString() ?? "",
+                DocumentDate: reader["dtDocumentDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtDocumentDate"]),
+                CategoryType: reader["sDocumentCategoryType"].ToString() ?? ""
+            ));
+        }
+
+        return Ok(docs);
+    }
+
+    [HttpGet("{contractKey:int}/health")]
+    public async Task<IActionResult> GetHealth(int contractKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT
+                ISNULL(rc.nRevenue, 0) AS nRevenue,
+                ISNULL(rc.nConsumption, 0) AS nConsumption,
+                ISNULL(rc.nPercentValueConsumedConsumption, 0) AS nPercentConsumed,
+                ISNULL(rc.nPercentTimeElapsed, 0) AS nPercentTimeElapsed
+            FROM tblContractReportCard rc
+            WHERE rc.lContractKey = @contractKey
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@contractKey", contractKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+            return Ok(new ContractHealth(0, 0, 0, 0, 0, "N/A"));
+
+        var revenue = Convert.ToDecimal(reader["nRevenue"]);
+        var consumption = Convert.ToDecimal(reader["nConsumption"]);
+        var percentConsumed = Convert.ToDecimal(reader["nPercentConsumed"]);
+        var percentTime = Convert.ToDecimal(reader["nPercentTimeElapsed"]);
+
+        var margin = revenue > 0 ? Math.Round((revenue - consumption) / revenue * 100, 1) : 0;
+        var grade = margin >= 70 ? "Healthy" : margin >= 40 ? "At Risk" : "Critical";
+
+        return Ok(new ContractHealth(
+            Revenue: revenue,
+            Consumption: consumption,
+            PercentConsumed: percentConsumed,
+            PercentTimeElapsed: percentTime,
+            Margin: margin,
+            Grade: grade
+        ));
+    }
 }

@@ -281,4 +281,83 @@ public class SuppliersController(IConfiguration config) : ControllerBase
             Carts: roleCounts.GetValueOrDefault("Carts", 0)
         ));
     }
+
+    [HttpGet("{id:int}/inventory")]
+    public async Task<IActionResult> GetSupplierInventory(int id)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT ss.lSupplierSizesKey, ss.sSupplierPartNo,
+                   ISNULL(ss.dblUnitCost, 0) AS dblUnitCost,
+                   ISNULL(ss.bActive, 1) AS bActive,
+                   ISNULL(isz.sSizeDescription, '') AS sSizeDescription,
+                   ISNULL(inv.sItemDescription, '') AS sItemDescription
+            FROM tblSupplierSizes ss
+                LEFT JOIN tblInventorySize isz ON isz.lInventorySizeKey = ss.lInventorySizeKey
+                LEFT JOIN tblInventory inv ON inv.lInventoryKey = isz.lInventoryKey
+            WHERE ss.lSupplierKey = @id
+            ORDER BY inv.sItemDescription, isz.sSizeDescription
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@id", id);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var items = new List<SupplierInventoryItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new SupplierInventoryItem(
+                SupplierSizesKey: Convert.ToInt32(reader["lSupplierSizesKey"]),
+                ItemDescription: reader["sItemDescription"]?.ToString() ?? "",
+                SizeDescription: reader["sSizeDescription"]?.ToString() ?? "",
+                SupplierPartNo: reader["sSupplierPartNo"]?.ToString() ?? "",
+                UnitCost: Convert.ToDouble(reader["dblUnitCost"]),
+                IsActive: Convert.ToBoolean(reader["bActive"])
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    [HttpGet("{id:int}/documents")]
+    public async Task<IActionResult> GetSupplierDocuments(int id)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT d.lDocumentKey, d.sDocumentName, d.sDocumentFileName,
+                   d.dtDocumentDate,
+                   ISNULL(dct.sDocumentCategoryType, '') AS sDocumentCategoryType
+            FROM tblDocument d
+                LEFT JOIN tblDocumentCategoryType dct
+                    ON dct.lDocumentCategoryTypeKey = d.lDocumentCategoryTypeKey
+            WHERE d.lOwnerKey = @id
+            ORDER BY d.dtDocumentDate DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@id", id);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var docs = new List<SupplierDocument>();
+        while (await reader.ReadAsync())
+        {
+            var docDate = reader["dtDocumentDate"] == DBNull.Value
+                ? null
+                : Convert.ToDateTime(reader["dtDocumentDate"]).ToString("MM/dd/yyyy");
+
+            docs.Add(new SupplierDocument(
+                DocumentKey: Convert.ToInt32(reader["lDocumentKey"]),
+                DocumentName: reader["sDocumentName"]?.ToString() ?? "",
+                FileName: reader["sDocumentFileName"]?.ToString() ?? "",
+                DocumentType: reader["sDocumentCategoryType"]?.ToString() ?? "",
+                DocumentDate: docDate
+            ));
+        }
+
+        return Ok(docs);
+    }
 }

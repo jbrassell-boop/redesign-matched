@@ -135,4 +135,83 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             Email: reader["sContactEMail"]?.ToString()
         ));
     }
+
+    [HttpGet("{deptKey:int}/sub-groups")]
+    public async Task<IActionResult> GetDepartmentSubGroups(int deptKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT sg.llSubGroupKey, sg.sSubGroup
+            FROM tblDepartmentSubGroups dsg
+                INNER JOIN tblSubGroups sg ON sg.llSubGroupKey = dsg.lSubGroupKey
+            WHERE dsg.lDepartmentKey = @deptKey
+            ORDER BY sg.sSubGroup
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@deptKey", deptKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var subGroups = new List<DepartmentSubGroup>();
+        while (await reader.ReadAsync())
+        {
+            subGroups.Add(new DepartmentSubGroup(
+                SubGroupKey: Convert.ToInt32(reader["llSubGroupKey"]),
+                Name: reader["sSubGroup"]?.ToString() ?? ""
+            ));
+        }
+
+        return Ok(subGroups);
+    }
+
+    [HttpGet("{deptKey:int}/scopes")]
+    public async Task<IActionResult> GetDepartmentScopes(int deptKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT s.lScopeKey, s.sSerialNumber,
+                   ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
+                   ISNULL(m.sManufacturer, '') AS sManufacturer,
+                   ISNULL(st.sRigidOrFlexible, '') AS sRigidOrFlexible,
+                   ISNULL(stc.sScopeTypeCategory, '') AS sScopeTypeCategory
+            FROM tblScope s
+                LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+                LEFT JOIN tblManufacturers m ON m.lManufacturerKey = st.lManufacturerKey
+                LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey
+            WHERE s.lDepartmentKey = @deptKey
+            ORDER BY s.sSerialNumber
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@deptKey", deptKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var scopes = new List<DepartmentScope>();
+        while (await reader.ReadAsync())
+        {
+            var rigidFlexible = reader["sRigidOrFlexible"]?.ToString() ?? "";
+            var typeLabel = rigidFlexible switch
+            {
+                "F" => "Flexible",
+                "R" => "Rigid",
+                "C" => "Camera",
+                _ => rigidFlexible
+            };
+
+            scopes.Add(new DepartmentScope(
+                ScopeKey: Convert.ToInt32(reader["lScopeKey"]),
+                SerialNumber: reader["sSerialNumber"]?.ToString() ?? "",
+                Model: reader["sScopeTypeDesc"]?.ToString() ?? "",
+                Manufacturer: reader["sManufacturer"]?.ToString() ?? "",
+                Type: typeLabel,
+                Category: reader["sScopeTypeCategory"]?.ToString() ?? ""
+            ));
+        }
+
+        return Ok(scopes);
+    }
 }

@@ -36,10 +36,70 @@ public record RepairDetail(
     decimal? AmountApproved,
     string? ShipDate,
     string? TrackingNumber,
-    string? InvoiceNumber
+    string? InvoiceNumber,
+    string? Notes
 );
+
+public record UpdateRepairNotesRequest(string Notes);
 
 public record RepairListResponse(
     IEnumerable<RepairListItem> Repairs,
     int TotalCount
+);
+
+// ── Repair line items (Workflow tab) ──
+public record RepairLineItem(
+    int TranKey,
+    string Approved,
+    string ItemCode,
+    string Description,
+    string Cause,
+    string FixType,
+    decimal Amount,
+    string Tech,
+    string Comments
+);
+
+// ── Scope History tab ──
+public record RepairScopeHistory(
+    int RepairKey,
+    string Wo,
+    string DateIn,
+    string Status,
+    string ScopeType,
+    string Client,
+    int DaysIn,
+    decimal? Amount
+);
+
+// ── Status workflow ──
+public record RepairStatusOption(
+    int StatusId,
+    string StatusName,
+    int? SortOrder
+);
+
+public record UpdateRepairStatusRequest(int StatusId);
+
+public record RepairStatusLogEntry(
+    int LogId,
+    string StatusName,
+    DateTime ChangedAt,
+    string? ChangedBy
+);
+
+// ── Financials tab ──
+public record RepairFinancials(
+    decimal SaleAmount,
+    decimal Tax,
+    decimal InvoiceTotal,
+    decimal Outsource,
+    decimal Shipping,
+    decimal Labor,
+    decimal Inventory,
+    decimal Gpo,
+    decimal Commission,
+    decimal TotalExpenses,
+    decimal MarginPct,
+    decimal ContractMargin
 );

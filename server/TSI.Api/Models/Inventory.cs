@@ -51,3 +51,26 @@ public record InventoryStats(
     int InactiveCount,
     int LowStockCount
 );
+
+public record InventoryPurchaseOrder(
+    int SupplierPOKey,
+    string PONumber,
+    string SupplierName,
+    string PODate,
+    double POTotal,
+    bool Cancelled,
+    int LineCount,
+    int OrderedQty,
+    int ReceivedQty
+);
+
+public record InventorySupplierItem(
+    int SupplierSizesKey,
+    int SupplierKey,
+    string SupplierName,
+    string SizeDescription,
+    string PartNumber,
+    double UnitCost,
+    int OrderMinimum,
+    bool IsActive
+);

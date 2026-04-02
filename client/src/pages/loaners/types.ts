@@ -62,3 +62,15 @@ export interface LoanersFilters {
   pageSize: number;
   statusFilter: string;
 }
+
+export interface LoanerRequest {
+  repairKey: number;
+  workOrder: string;
+  serialNumber: string;
+  scopeType: string;
+  client: string;
+  department: string;
+  dateRequested: string | null;
+  loanerProduced: string;
+  status: string;
+}

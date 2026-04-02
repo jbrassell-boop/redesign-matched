@@ -34,3 +34,26 @@
   border-bottom-color: var(--primary);
   font-weight: 600;
 }
+
+/* Tab badge count pill */
+.tab-bar__item {
+  position: relative;
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 5px;
+  margin-left: 6px;
+  background: var(--danger);
+  color: var(--card);
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: var(--radius-pill);
+  line-height: 1;
+  pointer-events: none;
+  vertical-align: middle;
+}

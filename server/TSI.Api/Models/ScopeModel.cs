@@ -68,3 +68,27 @@ public record ScopeModelListResponse(
     List<ScopeModelListItem> Items,
     int TotalCount
 );
+
+public record ScopeTypeRepairItem(
+    int ScopeTypeRepairItemKey,
+    int RepairItemKey,
+    string ItemDescription,
+    int? MinutesL3,
+    int? MinutesL2,
+    int? MinutesL1,
+    int? WarningMinutes
+);
+
+public record ScopeTypeDeptMaxCharge(
+    int DepartmentKey,
+    string DepartmentName,
+    string ClientName,
+    decimal? MaxCharge
+);
+
+public record ScopeTypeReportingGroupMaxCharge(
+    int SystemCodesKey,
+    string EffectiveDate,
+    string? EndDate,
+    decimal? MaxCharge
+);

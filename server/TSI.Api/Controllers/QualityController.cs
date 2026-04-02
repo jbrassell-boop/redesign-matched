@@ -214,6 +214,192 @@ public class QualityController(IConfiguration config) : ControllerBase
         return Ok(new QualityStats(total, pass, fail, conditional, fpy));
     }
 
+    // ── NCR (Non-Conformances from tblISOComplaint) ────────────────────────────
+
+    [HttpGet("ncr")]
+    public async Task<IActionResult> GetNcr(
+        [FromQuery] string? search = null,
+        [FromQuery] string? severity = null,
+        [FromQuery] string? status = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Status derived: Closed if dtFnlDispDate set, Under Review if dtEvalDate set, else Open
+        const string statusExpr = """
+            CASE
+              WHEN ic.dtFnlDispDate IS NOT NULL THEN 'Closed'
+              WHEN ic.dtEvalDate IS NOT NULL THEN 'Under Review'
+              ELSE 'Open'
+            END
+            """;
+
+        var where = new List<string>();
+        if (!string.IsNullOrWhiteSpace(search))
+            where.Add("(r.sWorkOrderNumber LIKE @search OR CAST(ic.lISOComplaintKey AS VARCHAR) LIKE @search OR ISNULL(ic.mComplaint, '') LIKE @search OR ISNULL(ic.sISONonConformance, '') LIKE @search)");
+        if (!string.IsNullOrWhiteSpace(status))
+            where.Add($"({statusExpr}) = @status");
+
+        var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
+
+        var countSql = $"""
+            SELECT COUNT(*)
+            FROM tblISOComplaint ic
+            LEFT JOIN tblRepair r ON r.lRepairKey = ic.lRepairKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            {whereClause}
+            """;
+
+        var dataSql = $"""
+            SELECT ic.lISOComplaintKey, ic.lRepairKey,
+                   ISNULL(r.sWorkOrderNumber, '') AS sWorkOrderNumber,
+                   ISNULL(CAST(ic.mComplaint AS NVARCHAR(500)), '') AS mComplaint,
+                   ISNULL(ic.sISOComplaint, '') AS sISOComplaint,
+                   ISNULL(ic.sISONonConformance, '') AS sISONonConformance,
+                   ic.dtDateReceived,
+                   ISNULL(c.sClientName1, '') AS sClientName1,
+                   ISNULL(d.sDepartmentName, '') AS sDepartmentName,
+                   {statusExpr} AS Status
+            FROM tblISOComplaint ic
+            LEFT JOIN tblRepair r ON r.lRepairKey = ic.lRepairKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            {whereClause}
+            ORDER BY ic.dtDateReceived DESC
+            OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
+            """;
+
+        await using var countCmd = new SqlCommand(countSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        if (!string.IsNullOrWhiteSpace(status)) countCmd.Parameters.AddWithValue("@status", status);
+        var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+        await using var dataCmd = new SqlCommand(dataSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        if (!string.IsNullOrWhiteSpace(status)) dataCmd.Parameters.AddWithValue("@status", status);
+        dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
+        dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
+
+        var items = new List<NcrListItem>();
+        await using var reader = await dataCmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            var key = Convert.ToInt32(reader["lISOComplaintKey"]);
+            var dateFiled = reader["dtDateReceived"] == DBNull.Value
+                ? ""
+                : Convert.ToDateTime(reader["dtDateReceived"]).ToString("MM/dd/yyyy");
+
+            // Category: sISOComplaint is a 1-char flag; map or fallback to "Quality"
+            var category = reader["sISOComplaint"]?.ToString()?.Trim();
+            category = string.IsNullOrEmpty(category) ? "Quality" : category;
+
+            items.Add(new NcrListItem(
+                IsoComplaintKey: key,
+                NcrNumber: $"ISO-{key:D4}",
+                RepairKey: reader["lRepairKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lRepairKey"]),
+                WorkOrderNumber: reader["sWorkOrderNumber"]?.ToString() ?? "",
+                Description: reader["mComplaint"]?.ToString() ?? "",
+                Category: category,
+                Severity: "Minor",
+                Status: reader["Status"]?.ToString() ?? "Open",
+                DateFiled: dateFiled,
+                ClientName: reader["sClientName1"]?.ToString() ?? "",
+                DepartmentName: reader["sDepartmentName"]?.ToString() ?? ""
+            ));
+        }
+
+        return Ok(new NcrListResponse(items, totalCount));
+    }
+
+    // ── Rework Tracking (tblRepair where sReworkReqd='Y') ───────────────────────
+
+    [HttpGet("rework")]
+    public async Task<IActionResult> GetRework(
+        [FromQuery] string? search = null,
+        [FromQuery] string? status = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Status: if dtDateOut set → Complete, else In Progress (rework already flagged via sReworkReqd='Y')
+        const string statusExpr = """
+            CASE
+              WHEN r.dtDateOut IS NOT NULL THEN 'Complete'
+              ELSE 'In Progress'
+            END
+            """;
+
+        var where = new List<string> { "r.sReworkReqd = 'Y'" };
+        if (!string.IsNullOrWhiteSpace(search))
+            where.Add("(r.sWorkOrderNumber LIKE @search OR s.sSerialNumber LIKE @search OR ISNULL(CAST(r.mCommentsRework AS NVARCHAR(500)), '') LIKE @search)");
+        if (!string.IsNullOrWhiteSpace(status))
+            where.Add($"({statusExpr}) = @status");
+
+        var whereClause = "WHERE " + string.Join(" AND ", where);
+
+        var countSql = $"""
+            SELECT COUNT(*)
+            FROM tblRepair r
+            LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+            {whereClause}
+            """;
+
+        var dataSql = $"""
+            SELECT r.lRepairKey,
+                   ISNULL(r.sWorkOrderNumber, '') AS sWorkOrderNumber,
+                   ISNULL(s.sSerialNumber, '') AS sSerialNumber,
+                   ISNULL(CAST(r.mCommentsRework AS NVARCHAR(500)), '') AS mCommentsRework,
+                   ISNULL(t.sTechName, '') AS sTechName,
+                   r.dtDateIn, r.dtDateOut,
+                   {statusExpr} AS Status
+            FROM tblRepair r
+            LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+            LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lReworkTech
+            {whereClause}
+            ORDER BY r.dtDateIn DESC
+            OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
+            """;
+
+        await using var countCmd = new SqlCommand(countSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        if (!string.IsNullOrWhiteSpace(status)) countCmd.Parameters.AddWithValue("@status", status);
+        var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+        await using var dataCmd = new SqlCommand(dataSql, conn);
+        if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        if (!string.IsNullOrWhiteSpace(status)) dataCmd.Parameters.AddWithValue("@status", status);
+        dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
+        dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
+
+        var items = new List<ReworkListItem>();
+        await using var reader = await dataCmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            var key = Convert.ToInt32(reader["lRepairKey"]);
+            var dateIn = reader["dtDateIn"] == DBNull.Value ? "" : Convert.ToDateTime(reader["dtDateIn"]).ToString("MM/dd/yyyy");
+            var dateOut = reader["dtDateOut"] == DBNull.Value ? "" : Convert.ToDateTime(reader["dtDateOut"]).ToString("MM/dd/yyyy");
+
+            items.Add(new ReworkListItem(
+                RepairKey: key,
+                ReworkNumber: $"RW-{key:D5}",
+                WorkOrderNumber: reader["sWorkOrderNumber"]?.ToString() ?? "",
+                SerialNumber: reader["sSerialNumber"]?.ToString() ?? "",
+                Reason: reader["mCommentsRework"]?.ToString() ?? "",
+                TechName: reader["sTechName"]?.ToString() ?? "",
+                OriginalComplete: dateIn,
+                ReworkDue: dateOut,
+                Status: reader["Status"]?.ToString() ?? "In Progress"
+            ));
+        }
+
+        return Ok(new ReworkListResponse(items, totalCount));
+    }
+
     private static void AddCommonParams(SqlCommand cmd, string? search, string? dateFrom, string? dateTo, string? resultFilter)
     {
         if (!string.IsNullOrWhiteSpace(search))

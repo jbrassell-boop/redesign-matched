@@ -80,3 +80,20 @@ export interface Manufacturer {
   key: number;
   name: string;
 }
+
+export interface ScopeTypeRepairItem {
+  scopeTypeRepairItemKey: number;
+  repairItemKey: number;
+  itemDescription: string;
+  minutesL3: number | null;
+  minutesL2: number | null;
+  minutesL1: number | null;
+  warningMinutes: number | null;
+}
+
+export interface ScopeTypeDeptMaxCharge {
+  departmentKey: number;
+  departmentName: string;
+  clientName: string;
+  maxCharge: number | null;
+}

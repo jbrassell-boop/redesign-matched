@@ -1,1 +1,2 @@
-APPROVED 2026-04-02T19:35:56Z
+APPROVED 2026-04-02T00:00:00Z
+Fixed: FinancialDetailPane.tsx lines 65,75 — replaced #fff with var(--card)

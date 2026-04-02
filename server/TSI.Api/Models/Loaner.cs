@@ -69,3 +69,20 @@ public record TaskLoanerItem(
     string DeptName,
     string ClientName
 );
+
+public record LoanerRequest(
+    int RepairKey,
+    string WorkOrder,
+    string SerialNumber,
+    string ScopeType,
+    string Client,
+    string Department,
+    DateTime? DateRequested,
+    string LoanerProduced,
+    string Status
+);
+
+public record BulkLoanerRequestAction(
+    List<int> RepairKeys,
+    string Action
+);

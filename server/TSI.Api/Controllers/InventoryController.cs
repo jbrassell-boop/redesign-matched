@@ -181,6 +181,96 @@ public class InventoryController(IConfiguration config) : ControllerBase
         ));
     }
 
+    [HttpGet("{inventoryKey:int}/purchase-orders")]
+    public async Task<IActionResult> GetPurchaseOrders(int inventoryKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var sql = """
+            SELECT po.lSupplierPOKey,
+                   ISNULL(po.sSupplierPONumber, '') AS sSupplierPONumber,
+                   ISNULL(s.sSupplierName, '') AS sSupplierName,
+                   po.dtDateOfPO,
+                   ISNULL(po.dblPOTotal, 0) AS dblPOTotal,
+                   ISNULL(po.bCancelled, 0) AS bCancelled,
+                   COUNT(pot.lSupplierPOTranKey) AS LineCount,
+                   ISNULL(SUM(pot.nOrderQuantity), 0) AS OrderedQty,
+                   ISNULL(SUM(pot.nReceivedQuantity), 0) AS ReceivedQty
+            FROM tblSupplierPO po
+            INNER JOIN tblSupplierPOTran pot ON pot.lSupplierPOKey = po.lSupplierPOKey
+            INNER JOIN tblSupplierSizes ss ON ss.lSupplierSizesKey = pot.lSupplierSizesKey
+            INNER JOIN tblInventorySize isz ON isz.lInventorySizeKey = ss.lInventorySizeKey
+            LEFT JOIN tblSupplier s ON s.lSupplierKey = po.lSupplierKey
+            WHERE isz.lInventoryKey = @inventoryKey
+            GROUP BY po.lSupplierPOKey, po.sSupplierPONumber, s.sSupplierName, po.dtDateOfPO, po.dblPOTotal, po.bCancelled
+            ORDER BY po.dtDateOfPO DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@inventoryKey", inventoryKey);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<InventoryPurchaseOrder>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new InventoryPurchaseOrder(
+                SupplierPOKey: Convert.ToInt32(reader["lSupplierPOKey"]),
+                PONumber: reader["sSupplierPONumber"]?.ToString() ?? "",
+                SupplierName: reader["sSupplierName"]?.ToString() ?? "",
+                PODate: reader["dtDateOfPO"] == DBNull.Value ? "" : Convert.ToDateTime(reader["dtDateOfPO"]).ToString("MM/dd/yyyy"),
+                POTotal: reader["dblPOTotal"] == DBNull.Value ? 0 : Convert.ToDouble(reader["dblPOTotal"]),
+                Cancelled: reader["bCancelled"] != DBNull.Value && Convert.ToBoolean(reader["bCancelled"]),
+                LineCount: Convert.ToInt32(reader["LineCount"]),
+                OrderedQty: Convert.ToInt32(reader["OrderedQty"]),
+                ReceivedQty: Convert.ToInt32(reader["ReceivedQty"])
+            ));
+        }
+        return Ok(items);
+    }
+
+    [HttpGet("{inventoryKey:int}/suppliers")]
+    public async Task<IActionResult> GetSuppliers(int inventoryKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var sql = """
+            SELECT ss.lSupplierSizesKey, ss.lSupplierKey,
+                   ISNULL(s.sSupplierName, '') AS sSupplierName,
+                   ISNULL(isz.sSizeDescription, '') AS sSizeDescription,
+                   ISNULL(ss.sSupplierPartNo, '') AS sSupplierPartNo,
+                   ISNULL(ss.dblUnitCost, 0) AS dblUnitCost,
+                   ISNULL(ss.nOrderMinimum, 0) AS nOrderMinimum,
+                   ISNULL(ss.bActive, 0) AS bActive
+            FROM tblSupplierSizes ss
+            INNER JOIN tblInventorySize isz ON isz.lInventorySizeKey = ss.lInventorySizeKey
+            LEFT JOIN tblSupplier s ON s.lSupplierKey = ss.lSupplierKey
+            WHERE isz.lInventoryKey = @inventoryKey
+            ORDER BY s.sSupplierName, isz.sSizeDescription
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@inventoryKey", inventoryKey);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<InventorySupplierItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new InventorySupplierItem(
+                SupplierSizesKey: Convert.ToInt32(reader["lSupplierSizesKey"]),
+                SupplierKey: Convert.ToInt32(reader["lSupplierKey"]),
+                SupplierName: reader["sSupplierName"]?.ToString() ?? "",
+                SizeDescription: reader["sSizeDescription"]?.ToString() ?? "",
+                PartNumber: reader["sSupplierPartNo"]?.ToString() ?? "",
+                UnitCost: Convert.ToDouble(reader["dblUnitCost"]),
+                OrderMinimum: Convert.ToInt32(reader["nOrderMinimum"]),
+                IsActive: reader["bActive"] != DBNull.Value && Convert.ToBoolean(reader["bActive"])
+            ));
+        }
+        return Ok(items);
+    }
+
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {

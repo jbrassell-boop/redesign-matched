@@ -31,3 +31,17 @@ public record DepartmentListResponse(
     IEnumerable<DepartmentListItem> Departments,
     int TotalCount
 );
+
+public record DepartmentSubGroup(
+    int SubGroupKey,
+    string Name
+);
+
+public record DepartmentScope(
+    int ScopeKey,
+    string SerialNumber,
+    string Model,
+    string Manufacturer,
+    string Type,
+    string Category
+);

@@ -1,0 +1,4 @@
+APPROVED 2026-04-02T00:00:00Z
+Reviewer: tab-reviewer
+Scope: 4 detail tabs (Workflow, Inspections, Financials, ScopeHistory) + RepairsController
+Checks passed: zero hardcoded hex, rgba uses --name-rgb tokens, all tabs wired into RepairDetailPane, backend uses await using throughout, no EF Core

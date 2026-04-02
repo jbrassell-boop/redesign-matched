@@ -37,6 +37,23 @@
   background: var(--primary-light);
 }
 
+.stat-chip--warn {
+  background: #FFFDF7;
+}
+
+.stat-chip--alert {
+  background: #FEF9F9;
+}
+
+.stat-chip--alert .stat-chip__value {
+  animation: pulse-alert 2s ease-in-out infinite;
+}
+
+@keyframes pulse-alert {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
 .stat-chip__icon {
   width: 24px;
   height: 24px;

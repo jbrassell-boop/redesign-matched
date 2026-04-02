@@ -22,3 +22,21 @@ export const getLoanerStats = async (): Promise<LoanerStats> => {
   const { data } = await apiClient.get<LoanerStats>('/loaners/stats');
   return data;
 };
+
+export const getLoanerRequests = async (params?: { search?: string; statusFilter?: string }) => {
+  const { data } = await apiClient.get('/loaners/requests', { params });
+  return data;
+};
+
+export const fulfillLoanerRequest = async (repairKey: number): Promise<void> => {
+  await apiClient.patch(`/loaners/requests/${repairKey}/fulfill`);
+};
+
+export const declineLoanerRequest = async (repairKey: number): Promise<void> => {
+  await apiClient.patch(`/loaners/requests/${repairKey}/decline`);
+};
+
+export const bulkUpdateLoanerRequests = async (repairKeys: number[], action: 'fulfill' | 'decline'): Promise<{ updated: number }> => {
+  const { data } = await apiClient.post('/loaners/requests/bulk', { repairKeys, action });
+  return data;
+};

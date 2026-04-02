@@ -31,3 +31,28 @@ public record ClientListResponse(
     IEnumerable<ClientListItem> Clients,
     int TotalCount
 );
+
+public record ClientContact(
+    int ContactKey,
+    string FirstName,
+    string LastName,
+    string? Phone,
+    string? Fax,
+    string? Email,
+    bool IsActive
+);
+
+public record ClientDepartment(
+    int DepartmentKey,
+    string Name,
+    string ServiceLocation,
+    bool IsActive
+);
+
+public record ClientFlag(
+    int FlagKey,
+    string FlagType,
+    string Flag,
+    bool VisibleOnDI,
+    bool VisibleOnBlank
+);

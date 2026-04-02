@@ -116,6 +116,78 @@ export interface PricingListItem {
   isActive: boolean;
 }
 
+export interface SystemSettingItem {
+  configKey: number;
+  name: string;
+  boolValue: boolean | null;
+  stringValue: string | null;
+  intValue: number | null;
+  decimalValue: number | null;
+}
+
+export interface AuditLogItem {
+  auditKey: number;
+  timestamp: string;
+  userName: string;
+  action: string;
+  module: string;
+  description: string;
+  ipAddress: string | null;
+}
+
+export interface AuditLogResponse {
+  items: AuditLogItem[];
+  totalCount: number;
+}
+
+export interface ReportingGroupItem {
+  groupKey: number;
+  groupName: string;
+  isActive: boolean;
+}
+
+export interface StandardDeptItem {
+  deptKey: number;
+  deptName: string;
+  isActive: boolean;
+}
+
+export interface CleaningSystemItem {
+  systemKey: number;
+  systemName: string;
+  isActive: boolean;
+}
+
+export interface CountryItem {
+  countryKey: number;
+  countryName: string;
+}
+
+export interface SalesRepOption {
+  salesRepKey: number;
+  name: string;
+}
+
+export interface SalesRepAssignment {
+  departmentKey: number;
+  clientName: string;
+  departmentName: string;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  currentRep: string;
+}
+
+export interface BonusPoolItem {
+  poolKey: number;
+  name: string;
+  period: string | null;
+  target: number | null;
+  actual: number | null;
+  payoutPct: number | null;
+  isActive: boolean;
+}
+
 export interface AdminStats {
   activeUsers: number;
   securityGroups: number;

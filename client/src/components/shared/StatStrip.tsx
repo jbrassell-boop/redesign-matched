@@ -2,12 +2,15 @@ import { Skeleton } from 'antd';
 import './StatStrip.css';
 
 export type ChipColor = 'navy' | 'blue' | 'green' | 'red' | 'amber' | 'purple' | 'muted';
+export type ChipState = 'normal' | 'warn' | 'alert';
 
 export interface StatChipDef {
   id: string;
   label: string;
   value: number | null;
   color: ChipColor;
+  state?: ChipState;
+  tooltip?: string;
 }
 
 interface StatStripProps {
@@ -21,10 +24,19 @@ export const StatStrip = ({ chips, loading, activeChip, onChipClick }: StatStrip
   <div className="stat-strip">
     {chips.map(chip => {
       const isActive = chip.id === activeChip;
+      const state = chip.state ?? 'normal';
+      const cls = [
+        'stat-chip',
+        isActive && 'stat-chip--active',
+        state === 'warn' && 'stat-chip--warn',
+        state === 'alert' && 'stat-chip--alert',
+      ].filter(Boolean).join(' ');
+
       return (
         <div
           key={chip.id}
-          className={`stat-chip${isActive ? ' stat-chip--active' : ''}`}
+          className={cls}
+          title={chip.tooltip}
           onClick={() => onChipClick?.(isActive ? 'all' : chip.id)}
         >
           <div className={`stat-chip__icon stat-chip__icon--${chip.color}`}>

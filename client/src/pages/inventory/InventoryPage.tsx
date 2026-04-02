@@ -3,6 +3,18 @@ import { getInventoryList, getInventoryDetail, getInventoryStats } from '../../a
 import { InventoryList } from './InventoryList';
 import { InventoryDetailPane } from './InventoryDetailPane';
 import type { InventoryListItem, InventoryDetail, InventoryStats } from './types';
+import { ExportButton } from '../../components/common/ExportButton';
+
+const INVENTORY_EXPORT_COLS = [
+  { key: 'description', label: 'Description' },
+  { key: 'category', label: 'Category' },
+  { key: 'currentLevel', label: 'Current Level' },
+  { key: 'minLevel', label: 'Min Level' },
+  { key: 'maxLevel', label: 'Max Level' },
+  { key: 'isActive', label: 'Active' },
+  { key: 'sizeCount', label: 'Sizes' },
+  { key: 'isLowStock', label: 'Low Stock' },
+];
 
 export const InventoryPage = () => {
   const [items, setItems] = useState<InventoryListItem[]>([]);
@@ -152,6 +164,13 @@ export const InventoryPage = () => {
           flexDirection: 'column',
           overflow: 'hidden',
         }}>
+          <div style={{ padding: '6px 10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--navy)' }}>Inventory</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 10, color: 'var(--muted)' }}>{totalCount} items</span>
+              <ExportButton data={items as unknown as Record<string, unknown>[]} columns={INVENTORY_EXPORT_COLS} filename="inventory-export" sheetName="Inventory" />
+            </div>
+          </div>
           <InventoryList
             items={items}
             loading={loading}

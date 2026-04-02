@@ -413,6 +413,347 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         return Ok(items);
     }
 
+    // ── System Settings ──
+    [HttpGet("settings")]
+    public async Task<IActionResult> GetSettings()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand(@"
+            SELECT lConfigurationKey, sConfigurationItem,
+                   bConfigurationValue, sConfigurationValue,
+                   lConfigurationValue, nConfigurationValue
+            FROM tblConfigurationItems
+            ORDER BY sConfigurationItem", conn);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<SystemSettingItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new SystemSettingItem(
+                reader.GetInt32(0),
+                reader.IsDBNull(1) ? "" : reader.GetString(1),
+                reader.IsDBNull(2) ? null : (bool?)reader.GetBoolean(2),
+                reader.IsDBNull(3) ? null : reader.GetString(3),
+                reader.IsDBNull(4) ? null : (int?)reader.GetInt32(4),
+                reader.IsDBNull(5) ? null : (decimal?)reader.GetDecimal(5)
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    // ── Audit Log ──
+    [HttpGet("audit-log")]
+    public async Task<IActionResult> GetAuditLog(
+        [FromQuery] string? search = null,
+        [FromQuery] string? action = null,
+        [FromQuery] string? dateFrom = null,
+        [FromQuery] string? dateTo = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var where = "WHERE 1=1";
+        if (!string.IsNullOrWhiteSpace(search))
+            where += " AND (u.sFirstName + ' ' + u.sLastName LIKE @search OR a.sDescription LIKE @search)";
+        if (!string.IsNullOrWhiteSpace(action))
+            where += " AND a.sAction = @action";
+        if (!string.IsNullOrWhiteSpace(dateFrom))
+            where += " AND a.dtTimestamp >= @dateFrom";
+        if (!string.IsNullOrWhiteSpace(dateTo))
+            where += " AND a.dtTimestamp < DATEADD(day, 1, @dateTo)";
+
+        var offset = (page - 1) * pageSize;
+
+        await using var countCmd = new SqlCommand(
+            $"SELECT COUNT(*) FROM tblAuditLog a LEFT JOIN tblUsers u ON a.lUserKey = u.lUserKey {where}", conn);
+        if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
+        if (!string.IsNullOrWhiteSpace(action)) countCmd.Parameters.AddWithValue("@action", action);
+        if (!string.IsNullOrWhiteSpace(dateFrom)) countCmd.Parameters.AddWithValue("@dateFrom", DateTime.Parse(dateFrom));
+        if (!string.IsNullOrWhiteSpace(dateTo)) countCmd.Parameters.AddWithValue("@dateTo", DateTime.Parse(dateTo));
+
+        int totalCount;
+        try { totalCount = (int)(await countCmd.ExecuteScalarAsync())!; }
+        catch { return Ok(new AuditLogResponse(new List<AuditLogItem>(), 0)); }
+
+        await using var cmd = new SqlCommand($@"
+            SELECT a.lAuditLogKey, a.dtTimestamp,
+                   ISNULL(u.sFirstName + ' ' + u.sLastName, 'System') AS UserName,
+                   a.sAction, a.sModule, a.sDescription, a.sIPAddress
+            FROM tblAuditLog a
+            LEFT JOIN tblUsers u ON a.lUserKey = u.lUserKey
+            {where}
+            ORDER BY a.dtTimestamp DESC
+            OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY", conn);
+        if (!string.IsNullOrWhiteSpace(search)) cmd.Parameters.AddWithValue("@search", $"%{search}%");
+        if (!string.IsNullOrWhiteSpace(action)) cmd.Parameters.AddWithValue("@action", action);
+        if (!string.IsNullOrWhiteSpace(dateFrom)) cmd.Parameters.AddWithValue("@dateFrom", DateTime.Parse(dateFrom));
+        if (!string.IsNullOrWhiteSpace(dateTo)) cmd.Parameters.AddWithValue("@dateTo", DateTime.Parse(dateTo));
+        cmd.Parameters.AddWithValue("@offset", offset);
+        cmd.Parameters.AddWithValue("@pageSize", pageSize);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<AuditLogItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new AuditLogItem(
+                reader.GetInt32(0),
+                reader.GetDateTime(1),
+                reader.IsDBNull(2) ? "System" : reader.GetString(2),
+                reader.IsDBNull(3) ? "" : reader.GetString(3),
+                reader.IsDBNull(4) ? "" : reader.GetString(4),
+                reader.IsDBNull(5) ? "" : reader.GetString(5),
+                reader.IsDBNull(6) ? null : reader.GetString(6)
+            ));
+        }
+
+        return Ok(new AuditLogResponse(items, totalCount));
+    }
+
+    // ── Credit Limits ──
+    [HttpGet("credit-limits")]
+    public async Task<IActionResult> GetCreditLimits()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand(@"
+            SELECT lSystemCodesKey, sItemText
+            FROM vwSysCodesCreditLimit
+            ORDER BY nOrdinal, sItemText", conn);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<CreditLimitItem>();
+        while (await reader.ReadAsync())
+        {
+            decimal amount = 0;
+            var text = reader.IsDBNull(1) ? "" : reader.GetString(1);
+            decimal.TryParse(text.Replace("$", "").Replace(",", "").Trim(), out amount);
+            items.Add(new CreditLimitItem(
+                reader.GetInt32(0),
+                amount
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    // ── Reporting Groups ──
+    [HttpGet("reporting-groups")]
+    public async Task<IActionResult> GetReportingGroups()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand(@"
+            SELECT lSystemCodesKey, sItemText,
+                   CASE WHEN cItemChar = 'A' THEN 1 ELSE 0 END AS IsActive
+            FROM vwSysCodesReportingGroup
+            ORDER BY nOrdinal, sItemText", conn);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<ReportingGroupItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new ReportingGroupItem(
+                reader.GetInt32(0),
+                reader.IsDBNull(1) ? "" : reader.GetString(1),
+                reader.GetInt32(2) == 1
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    // ── Standard Departments ──
+    [HttpGet("standard-depts")]
+    public async Task<IActionResult> GetStandardDepts()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand(@"
+            SELECT lSystemCodesKey, sItemText,
+                   CASE WHEN cItemChar = 'A' THEN 1 ELSE 0 END AS IsActive
+            FROM vwSysCodesStdDeptName
+            ORDER BY nOrdinal, sItemText", conn);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<StandardDeptItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new StandardDeptItem(
+                reader.GetInt32(0),
+                reader.IsDBNull(1) ? "" : reader.GetString(1),
+                reader.GetInt32(2) == 1
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    // ── Cleaning Systems ──
+    [HttpGet("cleaning-systems")]
+    public async Task<IActionResult> GetCleaningSystems()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand(@"
+            SELECT lSystemCodesKey, sItemText,
+                   CASE WHEN cItemChar = 'A' THEN 1 ELSE 0 END AS IsActive
+            FROM vwSysCodesDeptProfClean
+            ORDER BY nOrdinal, sItemText", conn);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<CleaningSystemItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new CleaningSystemItem(
+                reader.GetInt32(0),
+                reader.IsDBNull(1) ? "" : reader.GetString(1),
+                reader.GetInt32(2) == 1
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    // ── Countries ──
+    [HttpGet("countries")]
+    public async Task<IActionResult> GetCountries()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand(@"
+            SELECT ROW_NUMBER() OVER (ORDER BY lSortOrder, Country) AS RowNum, Country
+            FROM tblCountries
+            ORDER BY lSortOrder, Country", conn);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<CountryItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new CountryItem(
+                (int)reader.GetInt64(0),
+                reader.IsDBNull(1) ? "" : reader.GetString(1)
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    // ── Sales Reps (for reassignment dropdown) ──
+    [HttpGet("sales-reps")]
+    public async Task<IActionResult> GetSalesReps([FromQuery] int? companyKey = null)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var where = "";
+        if (companyKey.HasValue)
+            where = "WHERE sr.lCompanyKey = @companyKey";
+
+        await using var cmd = new SqlCommand($@"
+            SELECT sr.lSalesRepKey, sr.sRepFirst + ' ' + sr.sRepLast AS Name
+            FROM tblSalesRep sr
+            {where}
+            ORDER BY sr.sRepLast, sr.sRepFirst", conn);
+        if (companyKey.HasValue)
+            cmd.Parameters.AddWithValue("@companyKey", companyKey.Value);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<SalesRepOption>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new SalesRepOption(
+                reader.GetInt32(0),
+                reader.IsDBNull(1) ? "" : reader.GetString(1)
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    // ── Sales Rep Reassignment (accounts for a given rep) ──
+    [HttpGet("sales-rep-assignments")]
+    public async Task<IActionResult> GetSalesRepAssignments([FromQuery] int salesRepKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand(@"
+            SELECT d.lDepartmentKey,
+                   c.sClientName, d.sDepartmentName,
+                   d.sCity, d.sState, d.sZip,
+                   sr.sRepFirst + ' ' + sr.sRepLast AS CurrentRep
+            FROM tblSalesRepLink srl
+            INNER JOIN tblDepartment d ON srl.lDepartmentKey = d.lDepartmentKey
+            INNER JOIN tblClient c ON d.lClientKey = c.lClientKey
+            INNER JOIN tblSalesRep sr ON srl.lSalesRepKey = sr.lSalesRepKey
+            WHERE srl.lSalesRepKey = @salesRepKey
+            ORDER BY c.sClientName, d.sDepartmentName", conn);
+        cmd.Parameters.AddWithValue("@salesRepKey", salesRepKey);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<SalesRepAssignment>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new SalesRepAssignment(
+                reader.GetInt32(0),
+                reader.IsDBNull(1) ? "" : reader.GetString(1),
+                reader.IsDBNull(2) ? "" : reader.GetString(2),
+                reader.IsDBNull(3) ? null : reader.GetString(3),
+                reader.IsDBNull(4) ? null : reader.GetString(4),
+                reader.IsDBNull(5) ? null : reader.GetString(5),
+                reader.IsDBNull(6) ? "" : reader.GetString(6)
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    // ── Bonus Pools ──
+    [HttpGet("bonus-pools")]
+    public async Task<IActionResult> GetBonusPools([FromQuery] string type = "tech")
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var proc = type == "ops" ? "rptBonusPoolOps" : "rptBonusPoolTechs";
+
+        try
+        {
+            await using var cmd = new SqlCommand(proc, conn)
+            {
+                CommandType = System.Data.CommandType.StoredProcedure
+            };
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            var items = new List<BonusPoolItem>();
+            var idx = 0;
+            while (await reader.ReadAsync())
+            {
+                idx++;
+                var name = reader.FieldCount > 0 && !reader.IsDBNull(0) ? reader.GetValue(0)?.ToString() ?? "" : "";
+                items.Add(new BonusPoolItem(
+                    idx, name, null, null, null, null, true
+                ));
+            }
+
+            return Ok(items);
+        }
+        catch
+        {
+            return Ok(new List<BonusPoolItem>());
+        }
+    }
+
     // ── Stats ──
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()

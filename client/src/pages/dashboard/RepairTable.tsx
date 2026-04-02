@@ -1,7 +1,10 @@
-import { Table, Input } from 'antd';
+import { useState } from 'react';
+import { Table, Input, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import type { DashboardRepair, DashboardFilters } from './types';
+import { BulkActionBar } from '../../components/common/BulkActionBar';
+import { ExportButton } from '../../components/common/ExportButton';
 
 const STATUS_COLORS: Record<string, { bg: string; border: string; color: string }> = {
   'Shipped':      { bg: '#F0FDF4', border: '#BBF7D0', color: '#16A34A' },
@@ -137,50 +140,103 @@ interface RepairTableProps {
   onFiltersChange: (f: Partial<DashboardFilters>) => void;
 }
 
-export const RepairTable = ({ repairs, totalCount, loading, filters, onFiltersChange }: RepairTableProps) => (
-  <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-    {/* Toolbar */}
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      padding: '8px 16px',
-      background: '#fff',
-      borderBottom: '1px solid var(--neutral-200)',
-      gap: 8,
-    }}>
-      <Input
-        prefix={<SearchOutlined style={{ color: 'var(--muted)' }} />}
-        placeholder="Search repairs..."
-        value={filters.search}
-        onChange={e => onFiltersChange({ search: e.target.value, page: 1 })}
-        style={{ width: 260, height: 30, fontSize: 13 }}
-        allowClear
-      />
-      <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--muted)' }}>
-        {totalCount.toLocaleString()} records
-      </span>
-    </div>
+const EXPORT_COLS = [
+  { key: 'dateIn', label: 'Date In' },
+  { key: 'client', label: 'Client' },
+  { key: 'dept', label: 'Department' },
+  { key: 'wo', label: 'Work Order' },
+  { key: 'scopeType', label: 'Scope Type' },
+  { key: 'serial', label: 'Serial #' },
+  { key: 'daysIn', label: 'TAT' },
+  { key: 'status', label: 'Status' },
+  { key: 'dateApproved', label: 'Date Approved' },
+  { key: 'estDelivery', label: 'Est Delivery' },
+  { key: 'amountApproved', label: 'Approved $' },
+  { key: 'tech', label: 'Tech' },
+];
 
-    {/* Table */}
-    <Table<DashboardRepair>
-      dataSource={repairs}
-      columns={COLUMNS}
-      rowKey="repairKey"
-      loading={loading}
-      size="small"
-      scroll={{ x: 1200 }}
-      rowClassName={(row) => row.isUrgent ? 'urgent-row' : ''}
-      pagination={{
-        current: filters.page,
-        pageSize: filters.pageSize,
-        total: totalCount,
-        showSizeChanger: true,
-        pageSizeOptions: ['25', '50', '100'],
-        onChange: (page, pageSize) => onFiltersChange({ page, pageSize }),
-        style: { padding: '8px 16px', background: '#fff', borderTop: '1px solid var(--neutral-200)', margin: 0 },
-        showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`,
-      }}
-      style={{ flex: 1 }}
-    />
-  </div>
-);
+export const RepairTable = ({ repairs, totalCount, loading, filters, onFiltersChange }: RepairTableProps) => {
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+  const handleExportSelected = () => {
+    const selected = repairs.filter(r => selectedRowKeys.includes(r.repairKey));
+    if (!selected.length) return;
+    const headers = ['Date In', 'Client', 'Department', 'Work Order', 'Scope Type', 'Serial', 'TAT', 'Status', 'Approved $', 'Tech'];
+    const rows = selected.map(r => [r.dateIn, r.client, r.dept, r.wo, r.scopeType, r.serial, r.daysIn, r.status, r.amountApproved ?? '', r.tech ?? '']);
+    const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'repairs-export.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    message.success(`Exported ${selected.length} repairs`);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+      {/* Toolbar */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        padding: '8px 16px',
+        background: '#fff',
+        borderBottom: '1px solid var(--neutral-200)',
+        gap: 8,
+      }}>
+        <Input
+          prefix={<SearchOutlined style={{ color: 'var(--muted)' }} />}
+          placeholder="Search repairs..."
+          value={filters.search}
+          onChange={e => onFiltersChange({ search: e.target.value, page: 1 })}
+          style={{ width: 260, height: 30, fontSize: 13 }}
+          allowClear
+        />
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--muted)' }}>
+          {totalCount.toLocaleString()} records
+        </span>
+        <ExportButton
+          data={repairs as unknown as Record<string, unknown>[]}
+          columns={EXPORT_COLS}
+          filename="dashboard-repairs"
+          sheetName="Repairs"
+        />
+      </div>
+
+      {/* Table */}
+      <Table<DashboardRepair>
+        dataSource={repairs}
+        columns={COLUMNS}
+        rowKey="repairKey"
+        loading={loading}
+        size="small"
+        scroll={{ x: 1200 }}
+        rowClassName={(row) => row.isUrgent ? 'urgent-row' : ''}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: setSelectedRowKeys,
+          columnWidth: 36,
+        }}
+        pagination={{
+          current: filters.page,
+          pageSize: filters.pageSize,
+          total: totalCount,
+          showSizeChanger: true,
+          pageSizeOptions: ['25', '50', '100'],
+          onChange: (page, pageSize) => onFiltersChange({ page, pageSize }),
+          style: { padding: '8px 16px', background: '#fff', borderTop: '1px solid var(--neutral-200)', margin: 0 },
+          showTotal: (total, range) => `${range[0]}-${range[1]} of ${total}`,
+        }}
+        style={{ flex: 1 }}
+      />
+
+      <BulkActionBar
+        count={selectedRowKeys.length}
+        onClear={() => setSelectedRowKeys([])}
+        actions={[
+          { label: 'Export Selected', onClick: handleExportSelected },
+        ]}
+      />
+    </div>
+  );
+};

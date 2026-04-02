@@ -130,6 +130,100 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
         return Ok(new OutsourceListResponse(items, totalCount));
     }
 
+    [HttpGet("vendors")]
+    public async Task<IActionResult> GetVendors()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = "SELECT lVendorKey, ISNULL(sVendName1, '') AS sVendName1 FROM tblVendor WHERE sVendName1 IS NOT NULL ORDER BY sVendName1";
+        await using var cmd = new SqlCommand(sql, conn);
+        var list = new List<object>();
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            list.Add(new
+            {
+                vendorKey = Convert.ToInt32(reader["lVendorKey"]),
+                name = reader["sVendName1"]?.ToString() ?? ""
+            });
+        }
+        return Ok(list);
+    }
+
+    [HttpPut("{id}/send-to-vendor")]
+    public async Task<IActionResult> SendToVendor(int id, [FromBody] SendToVendorRequest req)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            UPDATE tblRepair
+            SET bOutsourced = 1,
+                lVendorKey = @vendorKey,
+                dblOutSourceCost = @cost,
+                sShipTrackingNumberVendor = @tracking
+            WHERE lRepairKey = @id
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@vendorKey", req.VendorKey);
+        cmd.Parameters.AddWithValue("@cost", req.OutsourceCost);
+        cmd.Parameters.AddWithValue("@tracking", (object?)req.TrackingNumber ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@id", id);
+
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return Ok(new { updated = rows > 0 });
+    }
+
+    [HttpPut("{id}/receive-back")]
+    public async Task<IActionResult> ReceiveBack(int id, [FromBody] ReceiveBackRequest req)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            UPDATE tblRepair
+            SET dtDateOut = GETDATE(),
+                sShipTrackingNumberVendorIn = @trackingReturn
+            WHERE lRepairKey = @id AND bOutsourced = 1
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@trackingReturn", (object?)req.TrackingNumberReturn ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@id", id);
+
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return Ok(new { updated = rows > 0 });
+    }
+
+    [HttpPut("{id}/validate")]
+    public async Task<IActionResult> Validate(int id, [FromBody] ValidationChecklistRequest req)
+    {
+        // Validation status is tracked via lRepairStatusID convention:
+        // We use a simple notes-based approach since there's no dedicated validation column
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Store validation note and update repair notes
+        const string sql = """
+            UPDATE tblRepair
+            SET sRepairNotes = CASE
+                WHEN sRepairNotes IS NULL THEN @note
+                ELSE sRepairNotes + CHAR(13) + CHAR(10) + @note
+                END
+            WHERE lRepairKey = @id AND bOutsourced = 1
+            """;
+
+        var note = $"[VALIDATION {req.Status.ToUpper()} {DateTime.UtcNow:yyyy-MM-dd}] {req.Notes ?? ""}".Trim();
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@note", note);
+        cmd.Parameters.AddWithValue("@id", id);
+
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return Ok(new { updated = rows > 0, status = req.Status });
+    }
+
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
