@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Select, Table, Tag } from 'antd';
+import { Input, Select, Table } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import {
   getInvoices,
   getInvoiceDetail,
   getPayments,
   getClientsOnHold,
+  getGLAccounts,
   getFinancialStats,
 } from '../../api/financial';
 import { FinancialDetailPane } from './FinancialDetailPane';
+import { TabBar, StatusBadge } from '../../components/shared';
+import type { TabDef } from '../../components/shared';
 import type {
   InvoiceListItem,
   InvoicePaymentItem,
@@ -16,6 +19,7 @@ import type {
   InvoiceDetail,
   FinancialStats,
   FinancialTab,
+  GLAccountItem,
 } from './types';
 
 const fmt$ = (v: number) =>
@@ -37,11 +41,12 @@ const fmtDate = (d: string | null) => {
       });
 };
 
-const TABS: { key: FinancialTab; label: string }[] = [
+const TABS: TabDef[] = [
   { key: 'outstanding', label: 'Outstanding Invoices' },
   { key: 'drafts', label: 'Drafts' },
   { key: 'hold', label: 'Clients on Hold' },
   { key: 'payments', label: 'Invoice Payments' },
+  { key: 'gl', label: 'GL Accounts' },
   { key: 'atrisk', label: 'At Risk' },
   { key: 'trending', label: 'Trending' },
 ];
@@ -79,6 +84,7 @@ export const FinancialPage = () => {
   const [paymentTotal, setPaymentTotal] = useState(0);
   const [holds, setHolds] = useState<ClientOnHold[]>([]);
   const [holdTotal, setHoldTotal] = useState(0);
+  const [glAccounts, setGlAccounts] = useState<GLAccountItem[]>([]);
 
   // Detail drawer
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceDetail | null>(null);
@@ -114,6 +120,9 @@ export const FinancialPage = () => {
         const res = await getClientsOnHold({ page, pageSize });
         setHolds(res.items);
         setHoldTotal(res.totalCount);
+      } else if (activeTab === 'gl') {
+        const res = await getGLAccounts();
+        setGlAccounts(res);
       }
     } catch {
       // silent
@@ -127,8 +136,8 @@ export const FinancialPage = () => {
     return () => clearTimeout(timer);
   }, [loadData, search]);
 
-  const handleTabChange = (tab: FinancialTab) => {
-    setActiveTab(tab);
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab as FinancialTab);
     setSearch('');
     setStatusFilter('');
     setPage(1);
@@ -158,15 +167,6 @@ export const FinancialPage = () => {
       case 'rev': return fmt$(stats.revenueMTD);
       default: return '\u2014';
     }
-  };
-
-  const statusBadge = (status: string) => {
-    const s = status.toLowerCase();
-    if (s.includes('paid') && !s.includes('un')) return <Tag color="success">Paid</Tag>;
-    if (s.includes('overdue') || s.includes('past')) return <Tag color="error">Overdue</Tag>;
-    if (s.includes('draft')) return <Tag color="default">Draft</Tag>;
-    if (s.includes('current')) return <Tag color="success">Current</Tag>;
-    return <Tag color="warning">Unpaid</Tag>;
   };
 
   const outstandingColumns = [
@@ -230,7 +230,7 @@ export const FinancialPage = () => {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      render: (v: string) => statusBadge(v),
+      render: (v: string) => <StatusBadge status={v} />,
     },
     {
       title: '',
@@ -281,7 +281,7 @@ export const FinancialPage = () => {
     {
       title: 'Status',
       key: 'status',
-      render: () => <Tag color="default">Draft</Tag>,
+      render: () => <StatusBadge status="Draft" />,
     },
     {
       title: '',
@@ -337,38 +337,17 @@ export const FinancialPage = () => {
     { title: 'Reason', dataIndex: 'reason', key: 'reason' },
   ];
 
+  const glColumns = [
+    { title: 'Account #', dataIndex: 'accountNumber', key: 'accountNumber', render: (v: string) => <span style={{ fontWeight: 600 }}>{v}</span> },
+    { title: 'Batch Number', dataIndex: 'batchNumber', key: 'batchNumber', render: (v: string) => v || '\u2014' },
+  ];
+
   const showFilters = activeTab === 'outstanding' || activeTab === 'drafts' || activeTab === 'payments';
 
   return (
     <div style={{ height: 'calc(100vh - 64px)', overflow: 'auto', background: 'var(--bg)' }}>
       {/* Subnav tabs */}
-      <div style={{
-        display: 'flex',
-        background: 'var(--neutral-50)',
-        borderBottom: '1px solid var(--neutral-200)',
-        padding: '0 16px',
-        overflowX: 'auto',
-      }}>
-        {TABS.map((t) => (
-          <div
-            key={t.key}
-            onClick={() => handleTabChange(t.key)}
-            style={{
-              padding: '10px 16px',
-              fontSize: 12,
-              fontWeight: activeTab === t.key ? 700 : 500,
-              color: activeTab === t.key ? 'var(--primary)' : 'var(--muted)',
-              cursor: 'pointer',
-              borderBottom: activeTab === t.key ? '2px solid var(--primary)' : '2px solid transparent',
-              marginBottom: -2,
-              whiteSpace: 'nowrap',
-              transition: 'all 0.12s',
-            }}
-          >
-            {t.label}
-          </div>
-        ))}
-      </div>
+      <TabBar tabs={TABS} activeKey={activeTab} onChange={handleTabChange} />
 
       <div style={{ padding: '16px 20px' }}>
         {/* Stat strip */}
@@ -450,6 +429,20 @@ export const FinancialPage = () => {
                 />
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'gl' && (
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 16px rgba(var(--primary-rgb), 0.06)' }}>
+            <Table
+              dataSource={glAccounts}
+              columns={glColumns}
+              rowKey="accountNumber"
+              loading={loading}
+              size="small"
+              pagination={{ pageSize: 50, showSizeChanger: true, pageSizeOptions: ['25', '50', '100'] }}
+              style={{ fontSize: 12 }}
+            />
           </div>
         )}
 

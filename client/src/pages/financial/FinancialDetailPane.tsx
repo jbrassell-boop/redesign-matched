@@ -1,5 +1,6 @@
 import { Drawer, Spin, Table } from 'antd';
 import type { InvoiceDetail } from './types';
+import { Field, FormGrid, StatusBadge } from '../../components/shared';
 
 const fmt$ = (v: number) =>
   '$' +
@@ -15,21 +16,6 @@ const fmtDate = (d: string | null) => {
     ? '\u2014'
     : dt.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 };
-
-interface FieldProps {
-  label: string;
-  value: string | number | null | undefined;
-}
-const Field = ({ label, value }: FieldProps) => (
-  <div style={{ marginBottom: 12 }}>
-    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 2 }}>
-      {label}
-    </div>
-    <div style={{ fontSize: 13, color: 'var(--text)', padding: '4px 8px', background: 'var(--neutral-50)', border: '1px solid var(--neutral-200)', borderRadius: 4, minHeight: 28 }}>
-      {value ?? '\u2014'}
-    </div>
-  </div>
-);
 
 interface Props {
   detail: InvoiceDetail | null;
@@ -62,20 +48,10 @@ export const FinancialDetailPane = ({ detail, loading, open, onClose }: Props) =
       title={
         detail ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>
+            <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--card)' }}>
               Invoice {detail.invoiceNumber}
             </span>
-            <span style={{
-              display: 'inline-flex',
-              padding: '2px 8px',
-              borderRadius: 9999,
-              fontSize: 11,
-              fontWeight: 700,
-              background: detail.status === 'Paid' ? 'rgba(var(--success-rgb), 0.2)' : detail.status === 'Overdue' ? 'rgba(var(--danger-rgb), 0.2)' : 'rgba(255,255,255,0.2)',
-              color: '#fff',
-            }}>
-              {detail.status}
-            </span>
+            <StatusBadge status={detail.status} />
           </div>
         ) : 'Invoice Detail'
       }
@@ -115,7 +91,7 @@ export const FinancialDetailPane = ({ detail, loading, open, onClose }: Props) =
           </div>
 
           {/* Fields grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
+          <FormGrid cols={2}>
             <Field label="Client" value={detail.clientName} />
             <Field label="PO #" value={detail.purchaseOrder} />
             <Field label="Terms" value={detail.paymentTerms} />
@@ -127,7 +103,7 @@ export const FinancialDetailPane = ({ detail, loading, open, onClose }: Props) =
             <Field label="Sales Rep" value={detail.salesRep} />
             <Field label="Shipping" value={fmt$(detail.shippingAmount)} />
             <Field label="Tax" value={fmt$(detail.taxAmount)} />
-          </div>
+          </FormGrid>
 
           {/* Bill To / Ship To */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 8 }}>
