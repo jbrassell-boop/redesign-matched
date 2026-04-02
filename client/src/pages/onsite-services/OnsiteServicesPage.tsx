@@ -1,21 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getOnsiteServices, getOnsiteServiceStats } from '../../api/onsite-services';
+import { QuoteModal } from './QuoteModal';
+import { CompleteServiceModal } from './CompleteServiceModal';
+import { StatusBadge } from '../../components/shared';
 import type { OnsiteServiceListItem, OnsiteServiceStats, OnsiteServiceFilters } from './types';
-
-const StatusBadge = ({ status }: { status: string }) => {
-  const styles: Record<string, React.CSSProperties> = {
-    Draft: { background: 'rgba(var(--amber-rgb), 0.1)', border: '1px solid rgba(var(--amber-rgb), 0.3)', color: 'var(--warning)' },
-    Submitted: { background: 'rgba(var(--primary-rgb), 0.1)', border: '1px solid rgba(var(--primary-rgb), 0.3)', color: 'var(--primary)' },
-    Invoiced: { background: 'rgba(var(--success-rgb), 0.1)', border: '1px solid rgba(var(--success-rgb), 0.3)', color: 'var(--success)' },
-    Void: { background: 'rgba(var(--danger-rgb), 0.1)', border: '1px solid rgba(var(--danger-rgb), 0.3)', color: 'var(--danger)' },
-  };
-  const s = styles[status] ?? styles.Draft;
-  return (
-    <span style={{ ...s, display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 10, fontSize: 10.5, fontWeight: 600, whiteSpace: 'nowrap' }}>
-      {status}
-    </span>
-  );
-};
 
 interface StatChipProps {
   label: string;
@@ -115,6 +103,9 @@ export const OnsiteServicesPage = () => {
   const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
   const [chipFilter, setChipFilter] = useState('');
+  const [quoteOpen, setQuoteOpen] = useState(false);
+  const [completeOpen, setCompleteOpen] = useState(false);
+  const [selectedVisit, setSelectedVisit] = useState<OnsiteServiceListItem | null>(null);
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -141,6 +132,11 @@ export const OnsiteServicesPage = () => {
       loadData({ search, statusFilter, dateFrom, dateTo, page, pageSize: PAGE_SIZE });
     }, delay);
     return () => { if (searchTimeout.current) clearTimeout(searchTimeout.current); };
+  }, [search, statusFilter, dateFrom, dateTo, page, loadData]);
+
+  const reload = useCallback(() => {
+    loadData({ search, statusFilter, dateFrom, dateTo, page, pageSize: PAGE_SIZE });
+    getOnsiteServiceStats().then(setStats);
   }, [search, statusFilter, dateFrom, dateTo, page, loadData]);
 
   const handleChipFilter = (status: string) => {
@@ -275,6 +271,30 @@ export const OnsiteServicesPage = () => {
         flexShrink: 0,
         flexWrap: 'wrap',
       }}>
+        <button
+          onClick={() => setQuoteOpen(true)}
+          style={{
+            height: 30,
+            padding: '0 14px',
+            fontSize: 12,
+            fontWeight: 700,
+            fontFamily: 'inherit',
+            background: 'var(--navy)',
+            color: 'var(--card)',
+            border: 'none',
+            borderRadius: 6,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+          }}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={13} height={13}>
+            <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          New Visit
+        </button>
+        <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
         <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
           Status
         </span>
@@ -398,6 +418,7 @@ export const OnsiteServicesPage = () => {
                   style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
+                  onClick={() => { setSelectedVisit(item); setCompleteOpen(true); }}
                 >
                   <td style={tdStyle}>
                     <span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{item.invoiceNum}</span>
@@ -457,7 +478,7 @@ export const OnsiteServicesPage = () => {
                   height: 26, minWidth: 26, padding: '0 6px',
                   border: '1px solid var(--border-dk)', borderRadius: 4,
                   background: page === pg ? 'var(--navy)' : 'var(--card)',
-                  color: page === pg ? '#fff' : 'var(--label)',
+                  color: page === pg ? 'var(--card)' : 'var(--label)',
                   fontSize: 11, fontWeight: page === pg ? 600 : 400,
                   cursor: 'pointer', fontFamily: 'inherit',
                 }}
@@ -481,6 +502,18 @@ export const OnsiteServicesPage = () => {
           </button>
         </div>
       </div>
+
+      <QuoteModal
+        open={quoteOpen}
+        onClose={() => setQuoteOpen(false)}
+        onCreated={() => { setQuoteOpen(false); reload(); }}
+      />
+      <CompleteServiceModal
+        open={completeOpen}
+        visit={selectedVisit}
+        onClose={() => { setCompleteOpen(false); setSelectedVisit(null); }}
+        onUpdated={() => { setCompleteOpen(false); setSelectedVisit(null); reload(); }}
+      />
     </div>
   );
 };
