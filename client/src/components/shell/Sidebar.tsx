@@ -255,7 +255,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
         minHeight: 64,
         gap: 10,
       }}>
-        {/* TSI initials circle */}
+        {/* Brand logo circle */}
         <div style={{
           width: 34,
           height: 34,
@@ -265,12 +265,11 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
-          color: '#fff',
-          fontWeight: 700,
-          fontSize: 11,
-          letterSpacing: '0.04em',
         }}>
-          TSI
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" width="18" height="18">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+          </svg>
         </div>
 
         {/* Company text — hidden when collapsed */}
@@ -305,24 +304,26 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
           onClick={() => onCollapse(!collapsed)}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           style={{
-            marginLeft: collapsed ? 'auto' : undefined,
-            background: 'rgba(255,255,255,0.08)',
+            marginLeft: 'auto',
+            background: 'none',
             border: 'none',
             borderRadius: 4,
-            color: 'var(--sidebar-text)',
+            color: 'rgba(255,255,255,0.5)',
             cursor: 'pointer',
-            width: 22,
-            height: 22,
+            width: 24,
+            height: 24,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 14,
             flexShrink: 0,
-            padding: 0,
-            lineHeight: 1,
+            padding: 4,
           }}
         >
-          {collapsed ? '›' : '‹'}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
         </button>
       </div>
 

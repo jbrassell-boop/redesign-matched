@@ -22,7 +22,6 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
   const { username, logout } = useAuth();
   const sidebarWidth = sidebarCollapsed ? 56 : 240;
 
-  // Derive initials from username
   const initials = username
     ? username.slice(0, 2).toUpperCase()
     : 'U';
@@ -40,36 +39,18 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      padding: '0 20px',
+      padding: '0 24px',
       zIndex: 199,
       transition: 'left 0.2s ease',
       boxSizing: 'border-box',
     }}>
-      {/* Left: avatar + welcome text */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{
-          width: 32,
-          height: 32,
-          borderRadius: 8,
-          background: 'rgba(255,255,255,0.15)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#fff',
-          fontSize: 12,
-          fontWeight: 700,
-          flexShrink: 0,
-          letterSpacing: '0.03em',
-        }}>
-          {initials}
-        </div>
-        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13 }}>
-          Welcome back, <strong style={{ color: '#fff' }}>{username ?? 'User'}</strong>
-        </span>
+      {/* Left: logo image */}
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+        <img src="/logo-white.png" alt="Total Scope, Inc." style={{ height: 48 }} />
       </div>
 
       {/* Right: controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>
         {/* Work Orders button */}
         <button style={{
           height: 30,
@@ -85,50 +66,65 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
           alignItems: 'center',
           gap: 5,
         }}>
-          Work Orders
+          + Work Orders
           <ChevronDownIcon />
         </button>
 
-        {/* Service location select */}
+        <span style={{ opacity: 0.4 }}>|</span>
+
+        {/* Service location */}
+        <span style={{ whiteSpace: 'nowrap' }}>Service Location</span>
         <select style={{
-          height: 32,
-          padding: '0 10px',
-          borderRadius: 6,
-          border: '1.5px solid rgba(255,255,255,0.3)',
+          height: 28,
+          padding: '0 8px',
+          borderRadius: 5,
+          border: '1px solid rgba(255,255,255,0.25)',
           background: 'rgba(255,255,255,0.12)',
           color: '#fff',
           fontSize: 12,
           cursor: 'pointer',
           outline: 'none',
-          appearance: 'none',
-          WebkitAppearance: 'none',
         }}>
-          <option value="upper-chichester" style={{ color: '#111', background: '#fff' }}>Upper Chichester</option>
-          <option value="nashville" style={{ color: '#111', background: '#fff' }}>Nashville</option>
+          <option value="1" style={{ color: '#111', background: '#fff' }}>Upper Chichester</option>
+          <option value="2" style={{ color: '#111', background: '#fff' }}>Nashville</option>
         </select>
 
-        {/* Connected indicator */}
-        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>
-          Connected
+        {/* User avatar + welcome */}
+        <div style={{
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          background: 'rgba(255,255,255,0.15)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: '#fff',
+          fontSize: 13,
+          fontWeight: 700,
+          flexShrink: 0,
+          letterSpacing: '0.03em',
+        }}>
+          {initials}
+        </div>
+        <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, whiteSpace: 'nowrap' }}>
+          Welcome back, <strong style={{ color: '#fff' }}>{username ?? 'User'}</strong>
         </span>
 
-        {/* Sign out button */}
+        {/* Sign out */}
         <button
           onClick={logout}
-          title="Sign out"
           style={{
-            background: 'none',
-            border: 'none',
-            color: 'rgba(255,255,255,0.5)',
+            background: 'rgba(255,255,255,0.15)',
+            border: '1px solid rgba(255,255,255,0.25)',
+            color: '#fff',
+            padding: '4px 10px',
+            borderRadius: 5,
+            fontSize: 11,
             cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 4,
-            borderRadius: 4,
+            fontFamily: 'inherit',
           }}
         >
-          <SignOutIcon />
+          Sign Out
         </button>
       </div>
     </div>
