@@ -64,18 +64,14 @@ Nav items for all of the above exist in `client/src/components/shell/navItems.ts
 
 ---
 
-## CRITICAL: Azure SQL is empty
+## Azure SQL — Migration Complete (2026-04-02)
 
-All tables have schema but no data. BACPAC import brought structure only. Run the BCP migration to populate:
+All 18 tables migrated with full production data. Migration ran in ~41 minutes, 18/18 succeeded.
 
-```powershell
-.\scripts\migrate-data.ps1 -AzurePassword "get from Azure Portal → App Service → Environment variables → ConnectionStrings__DefaultConnection"
-```
-
-Re-run one table: `.\scripts\migrate-data.ps1 -AzurePassword "p@ss" -Tables "tblRepair" -SkipTruncate`
+Re-run one table if needed: `.\scripts\migrate-data.ps1 -AzurePassword "p@ss" -Tables "tblRepair" -SkipTruncate`
 Reuse exports: `.\scripts\migrate-data.ps1 -AzurePassword "p@ss" -SkipExport`
 
-**Migration tables (3 tiers, 19 tables):**
+**Migration tables (3 tiers, 18 tables):**
 - Tier 1 (lookups): tblRepairStatuses, tblServiceLocations, tblRepairLevels, tblDeliveryMethod, tblRepairReasons, tblPaymentTerms, tblPricingCategory, tblManufacturers, tblScopeTypeCategories
 - Tier 2 (core): tblSalesRep, tblScopeType, tblClient, tblTechnicians, tblDepartment, tblScope, tblRepairItem
 - Tier 3 (txn): tblRepair, tblRepairItemTran
