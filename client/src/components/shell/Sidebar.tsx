@@ -56,14 +56,14 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
         height: 64,
         display: 'flex',
         alignItems: 'center',
-        padding: collapsed ? '0 16px' : '0 20px',
+        padding: collapsed ? '0 12px' : '0 16px',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
         flexShrink: 0,
       }}>
-        {!collapsed && (
-          <span style={{ color: '#fff', fontWeight: 800, fontSize: 15, letterSpacing: '-0.02em' }}>
-            Total Scope
-          </span>
+        {collapsed ? (
+          <img src="/logo-white.png" alt="TSI" style={{ width: 32, height: 32, objectFit: 'contain' }} />
+        ) : (
+          <img src="/logo-white.png" alt="Total Scope Inc." style={{ height: 36, maxWidth: 180, objectFit: 'contain' }} />
         )}
       </div>
 
