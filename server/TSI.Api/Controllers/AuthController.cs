@@ -21,8 +21,9 @@ public class AuthController(IConfiguration config, JwtService jwtService) : Cont
         await conn.OpenAsync();
 
         const string sql = """
-            SELECT sUserName, sPassword, sRole
-            FROM tblUser
+            SELECT sUserName, sUserPassword, sUserFullName, sEmailAddress,
+                   sSupervisor, sISOManager, sISOQAReviewer, lUserKey
+            FROM tblUsers
             WHERE sUserName = @username
               AND bActive = 1
             """;
@@ -35,14 +36,14 @@ public class AuthController(IConfiguration config, JwtService jwtService) : Cont
         if (!await reader.ReadAsync())
             return Unauthorized(new { message = "Invalid credentials." });
 
-        var storedPassword = reader["sPassword"]?.ToString() ?? "";
-        var role = reader["sRole"]?.ToString() ?? "User";
+        var storedPassword = reader["sUserPassword"]?.ToString() ?? "";
+        var role = (reader["sSupervisor"]?.ToString() == "1") ? "Admin" : "User";
 
         if (storedPassword != request.Password)
             return Unauthorized(new { message = "Invalid credentials." });
 
         var token = jwtService.GenerateToken(request.Username, role);
-        var expiryHours = int.Parse(config["Jwt:ExpiryHours"] ?? "8");
+        var expiryHours = int.Parse(config["JWT:ExpiryHours"] ?? "8");
 
         return Ok(new LoginResponse(
             Token: token,
