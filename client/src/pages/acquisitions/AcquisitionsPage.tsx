@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Spin, Tabs } from 'antd';
+import { Input, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { getAcquisitions, getAcquisitionsSold, getAcquisitionStats } from '../../api/acquisitions';
+import { DetailHeader, TabBar } from '../../components/shared';
+import type { TabDef } from '../../components/shared';
 import type { AcquisitionListItem, AcquisitionSoldItem, AcquisitionStats } from './types';
 
 /* ── Stat Chip ───────────────────────────────────────────────── */
@@ -36,6 +38,12 @@ const IconSold = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor
 const IconDollar = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><line x1="8" y1="1.5" x2="8" y2="14.5" /><path d="M11 4.5H6.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H5" /></svg>;
 
 const fmtCurrency = (n: number) => n > 0 ? `$${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : '$0';
+
+const TABS: TabDef[] = [
+  { key: 'inhouse', label: 'In-House' },
+  { key: 'consigned', label: 'Consigned' },
+  { key: 'sold', label: 'Sold' },
+];
 
 /* ═════════════════════════════════════════════════════════════ */
 /*  ACQUISITIONS PAGE                                           */
@@ -101,7 +109,7 @@ export const AcquisitionsPage = () => {
   const statStrip = (
     <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' }}>
       <StatChip label="In-House" value={stats?.inHouse ?? 0} iconBg="rgba(var(--primary-rgb), 0.10)" iconColor="var(--primary)" valueColor="var(--navy)" active={activeTab === 'inhouse'} onClick={() => setActiveTab('inhouse')} icon={<IconInHouse />} />
-      <StatChip label="Consigned" value={stats?.consigned ?? 0} iconBg="rgba(var(--amber-rgb), 0.10)" iconColor="#92400E" valueColor="#92400E" active={activeTab === 'consigned'} onClick={() => setActiveTab('consigned')} icon={<IconConsigned />} />
+      <StatChip label="Consigned" value={stats?.consigned ?? 0} iconBg="rgba(var(--amber-rgb), 0.10)" iconColor="var(--amber)" valueColor="var(--amber)" active={activeTab === 'consigned'} onClick={() => setActiveTab('consigned')} icon={<IconConsigned />} />
       <StatChip label="Sold" value={stats?.sold ?? 0} iconBg="rgba(var(--success-rgb), 0.10)" iconColor="var(--success)" valueColor="var(--success)" active={activeTab === 'sold'} onClick={() => setActiveTab('sold')} icon={<IconSold />} />
       <StatChip label="In-House Value" value={fmtCurrency(stats?.inHouseValue ?? 0)} iconBg="rgba(var(--navy-rgb), 0.10)" iconColor="var(--navy)" valueColor="var(--navy)" active={false} onClick={() => setActiveTab('inhouse')} icon={<IconDollar />} />
       <StatChip label="Sold Revenue" value={fmtCurrency(stats?.soldRevenue ?? 0)} iconBg="rgba(var(--success-rgb), 0.10)" iconColor="var(--success)" valueColor="var(--success)" active={false} onClick={() => setActiveTab('sold')} icon={<IconDollar />} />
@@ -124,18 +132,17 @@ export const AcquisitionsPage = () => {
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{tabLabel} Acquisitions</span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 12, fontSize: 10.5, fontWeight: 700, background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary-light)' }}>{total} records</span>
-          <div style={{ flex: 1 }} />
-          <Input prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />} placeholder={`Search serial, model, client...`} value={searchVal} onChange={e => { onSearch(e.target.value); onPage(1); }} style={{ height: 30, width: 240, fontSize: 11 }} allowClear />
-        </div>
+        <DetailHeader
+          title={`${tabLabel} Acquisitions`}
+          badges={<span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 12, fontSize: 10.5, fontWeight: 700, background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary-light)' }}>{total} records</span>}
+          actions={<Input prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />} placeholder="Search serial, model, client..." value={searchVal} onChange={e => { onSearch(e.target.value); onPage(1); }} style={{ height: 30, width: 240, fontSize: 11 }} allowClear />}
+        />
         <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1000 }}>
             <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
               <tr>
                 {cols.map(col => (
-                  <th key={col.key} style={{ background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px', textAlign: col.key === 'cost' ? 'right' : 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(180,200,220,0.3)', borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 10, width: col.width }}>
+                  <th key={col.key} style={{ background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px', textAlign: col.key === 'cost' ? 'right' : 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 10, width: col.width }}>
                     {col.label}
                   </th>
                 ))}
@@ -147,7 +154,7 @@ export const AcquisitionsPage = () => {
               ) : items.length === 0 ? (
                 <tr><td colSpan={cols.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No acquisition records found</td></tr>
               ) : items.map((item, idx) => (
-                <tr key={item.scopeKey} style={{ cursor: 'pointer', background: idx % 2 === 0 ? '#fff' : 'var(--neutral-50)' }} onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }} onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? '#fff' : 'var(--neutral-50)'; }}>
+                <tr key={item.scopeKey} style={{ cursor: 'pointer', background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }} onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }} onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}>
                   <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.serial || '\u2014'}</span></td>
                   <td style={tdStyle}>{item.scopeType || '\u2014'}</td>
                   <td style={tdStyle}>{item.poNumber || '\u2014'}</td>
@@ -183,18 +190,17 @@ export const AcquisitionsPage = () => {
   const soldTotalPages = Math.max(1, Math.ceil(soldTotal / pageSize));
   const soldTable = (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>Sold Acquisitions</span>
-        <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 12, fontSize: 10.5, fontWeight: 700, background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary-light)' }}>{soldTotal} records</span>
-        <div style={{ flex: 1 }} />
-        <Input prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />} placeholder="Search serial, model, buyer..." value={soldSearch} onChange={e => { setSoldSearch(e.target.value); setSoldPage(1); }} style={{ height: 30, width: 240, fontSize: 11 }} allowClear />
-      </div>
+      <DetailHeader
+        title="Sold Acquisitions"
+        badges={<span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 12, fontSize: 10.5, fontWeight: 700, background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary-light)' }}>{soldTotal} records</span>}
+        actions={<Input prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />} placeholder="Search serial, model, buyer..." value={soldSearch} onChange={e => { setSoldSearch(e.target.value); setSoldPage(1); }} style={{ height: 30, width: 240, fontSize: 11 }} allowClear />}
+      />
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
           <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
             <tr>
               {[{ l: 'Serial #', w: 130 }, { l: 'Model', w: 200 }, { l: 'Client', w: 180 }, { l: 'Sale Date', w: 110 }, { l: 'Sale Price', w: 110 }, { l: 'Buyer', w: 160 }].map(col => (
-                <th key={col.l} style={{ background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px', textAlign: col.l === 'Sale Price' ? 'right' : 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(180,200,220,0.3)', borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 10, width: col.w }}>{col.l}</th>
+                <th key={col.l} style={{ background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px', textAlign: col.l === 'Sale Price' ? 'right' : 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 10, width: col.w }}>{col.l}</th>
               ))}
             </tr>
           </thead>
@@ -204,7 +210,7 @@ export const AcquisitionsPage = () => {
             ) : soldItems.length === 0 ? (
               <tr><td colSpan={6} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No sold records found</td></tr>
             ) : soldItems.map((item, idx) => (
-              <tr key={item.scopeKey} style={{ cursor: 'pointer', background: idx % 2 === 0 ? '#fff' : 'var(--neutral-50)' }} onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }} onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? '#fff' : 'var(--neutral-50)'; }}>
+              <tr key={item.scopeKey} style={{ cursor: 'pointer', background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }} onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }} onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}>
                 <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.serial || '\u2014'}</span></td>
                 <td style={tdStyle}>{item.scopeType || '\u2014'}</td>
                 <td style={tdStyle}>{item.client || '\u2014'}</td>
@@ -236,18 +242,12 @@ export const AcquisitionsPage = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
       {statStrip}
-      <Tabs
-        activeKey={activeTab}
-        onChange={setActiveTab}
-        size="small"
-        style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
-        tabBarStyle={{ margin: 0, padding: '0 20px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' }}
-        items={[
-          { key: 'inhouse', label: 'In-House', children: renderAcqTable(inHouseItems, inHouseLoading, inHouseTotal, inHouseSearch, setInHouseSearch, inHousePage, setInHousePage, 'In-House') },
-          { key: 'consigned', label: 'Consigned', children: renderAcqTable(consignedItems, consignedLoading, consignedTotal, consignedSearch, setConsignedSearch, consignedPage, setConsignedPage, 'Consigned') },
-          { key: 'sold', label: 'Sold', children: soldTable },
-        ]}
-      />
+      <TabBar tabs={TABS} activeKey={activeTab} onChange={setActiveTab} />
+      <div style={{ flex: 1, overflow: 'hidden' }}>
+        {activeTab === 'inhouse' && renderAcqTable(inHouseItems, inHouseLoading, inHouseTotal, inHouseSearch, setInHouseSearch, inHousePage, setInHousePage, 'In-House')}
+        {activeTab === 'consigned' && renderAcqTable(consignedItems, consignedLoading, consignedTotal, consignedSearch, setConsignedSearch, consignedPage, setConsignedPage, 'Consigned')}
+        {activeTab === 'sold' && soldTable}
+      </div>
     </div>
   );
 };
@@ -261,6 +261,6 @@ const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactN
   <button disabled={disabled} onClick={onClick} style={{
     height: 24, minWidth: 24, padding: '0 8px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 10.5, fontFamily: 'inherit',
     cursor: disabled ? 'default' : 'pointer', fontWeight: active ? 600 : 400,
-    background: active ? 'var(--navy)' : 'var(--card)', color: active ? '#fff' : 'var(--muted)', opacity: disabled ? 0.4 : 1,
+    background: active ? 'var(--navy)' : 'var(--card)', color: active ? 'var(--card)' : 'var(--muted)', opacity: disabled ? 0.4 : 1,
   }}>{children}</button>
 );
