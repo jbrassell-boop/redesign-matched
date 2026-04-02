@@ -1,0 +1,11 @@
+.form-grid {
+  display: grid;
+  gap: 8px 12px;
+}
+
+.form-grid--2 { grid-template-columns: 1fr 1fr; }
+.form-grid--3 { grid-template-columns: 1fr 1fr 1fr; }
+.form-grid--4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+.form-grid .span-2 { grid-column: span 2; }
+.form-grid .span-3 { grid-column: span 3; }

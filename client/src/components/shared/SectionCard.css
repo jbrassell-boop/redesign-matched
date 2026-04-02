@@ -1,0 +1,25 @@
+.section-card {
+  background: var(--card);
+  border: 1px solid var(--border-dk);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.section-card__head {
+  background: var(--neutral-50);
+  color: var(--primary);
+  padding: 7px 14px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-card__body {
+  padding: 10px 14px;
+  background: #fff;
+}
