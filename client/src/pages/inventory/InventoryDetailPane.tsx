@@ -1,41 +1,15 @@
-import { Tabs, Spin, Table } from 'antd';
+import { useState } from 'react';
+import { Spin, Table } from 'antd';
+import { PurchaseOrdersTab } from './tabs/PurchaseOrdersTab';
+import { SuppliersTab } from './tabs/SuppliersTab';
 import type { InventoryDetail } from './types';
+import { Field, FormGrid, StatusBadge, DetailHeader, TabBar, SectionCard } from '../../components/shared';
+import type { TabDef } from '../../components/shared';
 
 interface InventoryDetailPaneProps {
   detail: InventoryDetail | null;
   loading: boolean;
 }
-
-interface FieldProps {
-  label: string;
-  value: string | number | boolean | null | undefined;
-}
-
-const Field = ({ label, value }: FieldProps) => (
-  <div style={{ marginBottom: 12 }}>
-    <div style={{
-      fontSize: 10,
-      fontWeight: 700,
-      textTransform: 'uppercase',
-      color: 'var(--muted)',
-      letterSpacing: '0.05em',
-      marginBottom: 2,
-    }}>
-      {label}
-    </div>
-    <div style={{
-      fontSize: 13,
-      color: 'var(--text)',
-      padding: '4px 8px',
-      background: 'var(--neutral-50)',
-      border: '1px solid var(--neutral-200)',
-      borderRadius: 4,
-      minHeight: 28,
-    }}>
-      {value === null || value === undefined ? '—' : String(value)}
-    </div>
-  </div>
-);
 
 function getCategoryLabel(category: string): string {
   const c = (category || '').toUpperCase();
@@ -102,7 +76,16 @@ function StatChip({
   );
 }
 
+const TABS: TabDef[] = [
+  { key: 'inventory',       label: 'Inventory' },
+  { key: 'sizes',           label: 'Sizes' },
+  { key: 'purchase-orders', label: 'Purchase Orders' },
+  { key: 'suppliers',       label: 'Suppliers' },
+];
+
 export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProps) => {
+  const [activeTab, setActiveTab] = useState('inventory');
+
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
   if (!detail) return (
     <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
@@ -115,63 +98,25 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
 
   const inventoryTab = (
     <div style={{ padding: '16px 20px' }}>
-      {/* Item info panel */}
-      <div style={{
-        border: '1px solid var(--border-dk)',
-        borderRadius: 8,
-        marginBottom: 14,
-        overflow: 'hidden',
-        boxShadow: 'var(--shadow-card)',
-      }}>
-        <div style={{
-          background: 'var(--neutral-50)',
-          borderBottom: '1px solid var(--border-dk)',
-          padding: '6px 12px',
-          fontSize: 9.5,
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
-          color: 'var(--navy)',
-        }}>
-          Item Details
-        </div>
-        <div style={{ background: 'var(--card)', padding: '14px 16px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
-            <div style={{ gridColumn: 'span 2' }}>
-              <Field label="Description" value={detail.description} />
-            </div>
-            <Field label="Category" value={getCategoryLabel(detail.category)} />
-            <Field label="Status" value={detail.isActive ? 'Active' : 'Inactive'} />
-            <Field label="Current Level" value={detail.currentLevel} />
-            <Field label="Min Level" value={detail.minLevel} />
-            <Field label="Max Level" value={detail.maxLevel} />
-            <Field label="Sizes" value={detail.sizes.length} />
-            <Field label="Created" value={formatDate(detail.createDate)} />
-            <Field label="Last Updated" value={formatDate(detail.lastUpdate)} />
+      <SectionCard title="Item Details">
+        <FormGrid cols={2}>
+          <div style={{ gridColumn: 'span 2' }}>
+            <Field label="Description" value={detail.description} />
           </div>
-        </div>
-      </div>
+          <Field label="Category" value={getCategoryLabel(detail.category)} />
+          <Field label="Status" value={detail.isActive ? 'Active' : 'Inactive'} />
+          <Field label="Current Level" value={detail.currentLevel} />
+          <Field label="Min Level" value={detail.minLevel} />
+          <Field label="Max Level" value={detail.maxLevel} />
+          <Field label="Sizes" value={detail.sizes.length} />
+          <Field label="Created" value={formatDate(detail.createDate)} />
+          <Field label="Last Updated" value={formatDate(detail.lastUpdate)} />
+        </FormGrid>
+      </SectionCard>
 
-      {/* Flags panel */}
-      <div style={{
-        border: '1px solid var(--border-dk)',
-        borderRadius: 8,
-        overflow: 'hidden',
-        boxShadow: 'var(--shadow-card)',
-      }}>
-        <div style={{
-          background: 'var(--neutral-50)',
-          borderBottom: '1px solid var(--border-dk)',
-          padding: '6px 12px',
-          fontSize: 9.5,
-          fontWeight: 700,
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
-          color: 'var(--navy)',
-        }}>
-          Flags
-        </div>
-        <div style={{ background: 'var(--card)', padding: '14px 16px', display: 'flex', gap: 24 }}>
+      <div style={{ marginTop: 14 }}>
+      <SectionCard title="Flags">
+        <div style={{ display: 'flex', gap: 24 }}>
           {[
             { label: 'No Count Adjustment', value: detail.noCountAdjustment },
             { label: 'Not Used by Repair', value: detail.notUsedByRepair },
@@ -197,6 +142,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
             </div>
           ))}
         </div>
+      </SectionCard>
       </div>
     </div>
   );
@@ -283,18 +229,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
                 key: 'isActive',
                 width: 70,
                 render: (v: boolean) => (
-                  <span style={{
-                    display: 'inline-flex',
-                    padding: '1px 6px',
-                    borderRadius: 9999,
-                    fontSize: 10,
-                    fontWeight: 700,
-                    background: v ? '#F0FDF4' : 'var(--neutral-100)',
-                    border: `1px solid ${v ? '#BBF7D0' : 'var(--neutral-200)'}`,
-                    color: v ? 'var(--success)' : 'var(--muted)',
-                  }}>
-                    {v ? 'Active' : 'Inactive'}
-                  </span>
+                  <StatusBadge status={v ? 'Active' : 'Inactive'} />
                 ),
               },
             ]}
@@ -306,57 +241,19 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg)' }}>
-      {/* Item header */}
-      <div style={{
-        background: 'var(--card)',
-        borderBottom: '1px solid var(--border)',
-        padding: '10px 16px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        flexWrap: 'wrap',
-      }}>
-        <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--primary-dark)' }}>{detail.description}</span>
-        <span style={{
-          background: 'var(--bg)',
-          border: '1px solid var(--border)',
-          borderRadius: 4,
-          padding: '2px 8px',
-          fontSize: 11,
-          fontWeight: 700,
-          color: 'var(--steel)',
-        }}>
-          #{detail.inventoryKey}
-        </span>
-        <span style={{
-          display: 'inline-flex',
-          padding: '2px 8px',
-          borderRadius: 9999,
-          fontSize: 11,
-          fontWeight: 700,
-          background: detail.isActive ? '#F0FDF4' : 'var(--neutral-100)',
-          border: `1px solid ${detail.isActive ? '#BBF7D0' : 'var(--neutral-200)'}`,
-          color: detail.isActive ? 'var(--success)' : 'var(--muted)',
-        }}>
-          {detail.isActive ? 'Active' : 'Inactive'}
-        </span>
-        {(isLow || isAtMin) && (
-          <span style={{
-            display: 'inline-flex',
-            padding: '2px 8px',
-            borderRadius: 9999,
-            fontSize: 11,
-            fontWeight: 700,
-            background: '#FFFBEB',
-            border: '1px solid #FDE68A',
-            color: 'var(--amber)',
-          }}>
-            {isLow ? 'Low Stock' : 'At Minimum'}
-          </span>
-        )}
-      </div>
+      <DetailHeader
+        title={detail.description}
+        subtitle={`#${detail.inventoryKey}`}
+        badges={
+          <>
+            <StatusBadge status={detail.isActive ? 'Active' : 'Inactive'} />
+            {isLow && <StatusBadge status="Low Stock" variant="amber" />}
+            {!isLow && isAtMin && <StatusBadge status="At Minimum" variant="amber" />}
+          </>
+        }
+      />
 
-      {/* Stat strip */}
+      {/* Per-item stat strip */}
       <div style={{
         display: 'flex',
         background: 'var(--card)',
@@ -399,60 +296,12 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
         />
       </div>
 
-      {/* Tabs */}
+      <TabBar tabs={TABS} activeKey={activeTab} onChange={setActiveTab} />
       <div style={{ flex: 1, overflow: 'auto' }}>
-        <Tabs
-          size="small"
-          tabBarStyle={{
-            margin: 0,
-            padding: '0 16px',
-            background: 'var(--card)',
-            borderBottom: '1px solid var(--neutral-200)',
-          }}
-          items={[
-            { key: 'inventory', label: 'Inventory', children: inventoryTab },
-            {
-              key: 'sizes',
-              label: (
-                <span>
-                  Sizes
-                  {detail.sizes.length > 0 && (
-                    <span style={{
-                      background: 'var(--navy)',
-                      color: '#fff',
-                      fontSize: 9,
-                      fontWeight: 700,
-                      padding: '1px 5px',
-                      borderRadius: 8,
-                      marginLeft: 4,
-                    }}>
-                      {detail.sizes.length}
-                    </span>
-                  )}
-                </span>
-              ),
-              children: sizesTab,
-            },
-            {
-              key: 'purchase-orders',
-              label: 'Purchase Orders',
-              children: (
-                <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>
-                  Purchase orders coming soon
-                </div>
-              ),
-            },
-            {
-              key: 'suppliers',
-              label: 'Suppliers',
-              children: (
-                <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>
-                  Suppliers coming soon
-                </div>
-              ),
-            },
-          ]}
-        />
+        {activeTab === 'inventory'       && inventoryTab}
+        {activeTab === 'sizes'           && sizesTab}
+        {activeTab === 'purchase-orders' && <PurchaseOrdersTab inventoryKey={detail.inventoryKey} />}
+        {activeTab === 'suppliers'       && <SuppliersTab inventoryKey={detail.inventoryKey} />}
       </div>
     </div>
   );
