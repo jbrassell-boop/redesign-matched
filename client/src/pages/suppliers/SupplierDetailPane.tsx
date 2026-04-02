@@ -1,17 +1,10 @@
-import { Tabs, Spin, Switch } from 'antd';
+import { useState } from 'react';
+import { Spin, Switch } from 'antd';
+import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
+import type { TabDef } from '../../components/shared';
+import { InventorySuppliedTab } from './tabs/InventorySuppliedTab';
+import { DocumentsTab } from './tabs/DocumentsTab';
 import type { SupplierDetail } from './types';
-
-interface FieldProps { label: string; value: string | number | null | undefined; }
-const Field = ({ label, value }: FieldProps) => (
-  <div style={{ marginBottom: 10 }}>
-    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 2 }}>
-      {label}
-    </div>
-    <div style={{ fontSize: 12, color: 'var(--text)', padding: '4px 8px', background: 'var(--neutral-50)', border: '1px solid var(--neutral-200)', borderRadius: 4, minHeight: 26 }}>
-      {value ?? '\u2014'}
-    </div>
-  </div>
-);
 
 const ToggleField = ({ label, value }: { label: string; value: boolean }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
@@ -43,17 +36,34 @@ interface SupplierDetailPaneProps {
   loading: boolean;
 }
 
+const TABS: TabDef[] = [
+  { key: 'main', label: 'Main' },
+  { key: 'pos',  label: "Recent PO's" },
+  { key: 'inv',  label: 'Inventory Supplied' },
+  { key: 'docs', label: 'Documents' },
+];
+
+const SectionLabel = ({ title }: { title: string }) => (
+  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.05em', paddingBottom: 4, borderBottom: '1px solid var(--neutral-200)', marginBottom: 8 }}>
+    {title}
+  </div>
+);
+
 export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps) => {
+  const [activeTab, setActiveTab] = useState('main');
+
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
   if (!detail) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Select a supplier to view details</div>;
+
+  const tabs: TabDef[] = TABS.map(t =>
+    t.key === 'pos' ? { ...t, label: `Recent PO's (${detail.recentPos.length})` } : t
+  );
 
   const contactTab = (
     <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
       {/* Left column — Contact Info */}
       <div style={{ width: 280, flexShrink: 0, overflowY: 'auto', padding: '12px 14px', borderRight: '1px solid var(--neutral-200)' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.05em', paddingBottom: 4, borderBottom: '1px solid var(--neutral-200)', marginBottom: 8 }}>
-          Contact Information
-        </div>
+        <SectionLabel title="Contact Information" />
         <Field label="Supplier Name" value={detail.name} />
         <Field label="Address Line 1" value={detail.shipAddr1} />
         <Field label="Address Line 2" value={detail.shipAddr2} />
@@ -66,8 +76,8 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
         <Field label="Contact" value={[detail.contactFirst, detail.contactLast].filter(Boolean).join(' ') || null} />
         <Field label="Email" value={detail.email} />
 
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.05em', paddingBottom: 4, borderBottom: '1px solid var(--neutral-200)', marginBottom: 8, marginTop: 16 }}>
-          Billing
+        <div style={{ marginTop: 16 }}>
+          <SectionLabel title="Billing" />
         </div>
         <Field label="Bill Email Name" value={detail.billEmailName} />
         <Field label="Bill Email" value={detail.billEmail} />
@@ -78,9 +88,7 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
 
       {/* Right column — Roles & Settings */}
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.05em', paddingBottom: 4, borderBottom: '1px solid var(--neutral-200)', marginBottom: 8 }}>
-          Supplier Roles
-        </div>
+        <SectionLabel title="Supplier Roles" />
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
           <RoleChip label="Parts" active={detail.roles.includes('Parts')} />
           <RoleChip label="Repair" active={detail.roles.includes('Repair')} />
@@ -88,21 +96,17 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
           <RoleChip label="Carts" active={detail.roles.includes('Carts')} />
         </div>
 
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.05em', paddingBottom: 4, borderBottom: '1px solid var(--neutral-200)', marginBottom: 8 }}>
-          Settings
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginBottom: 16 }}>
+        <SectionLabel title="Settings" />
+        <FormGrid cols={2}>
           <Field label="Min Order $" value={detail.orderMinimum != null ? `$${detail.orderMinimum.toFixed(2)}` : null} />
           <Field label="GP Vendor ID" value={detail.gpId} />
           <Field label="Default PO Type" value={detail.supplierPoType} />
           <Field label="Part # Prefix" value={detail.partNumberPrefix} />
           <Field label="Additional PO Cost" value={detail.additionalPoDescriptionCostPerUnit != null ? `$${detail.additionalPoDescriptionCostPerUnit.toFixed(2)}` : null} />
           <Field label="Supplier Link" value={detail.supplierKeyLink?.toString()} />
-        </div>
+        </FormGrid>
 
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.05em', paddingBottom: 4, borderBottom: '1px solid var(--neutral-200)', marginBottom: 8 }}>
-          Options
-        </div>
+        <SectionLabel title="Options" />
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 20px', marginBottom: 16 }}>
           <ToggleField label="Active" value={detail.isActive} />
           <ToggleField label="Dashboard - Open Inv." value={detail.showOnDashboard} />
@@ -117,9 +121,7 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
 
         {(detail.additionalPoDescription || detail.comments) && (
           <>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.05em', paddingBottom: 4, borderBottom: '1px solid var(--neutral-200)', marginBottom: 8 }}>
-              Notes
-            </div>
+            <SectionLabel title="Notes" />
             {detail.additionalPoDescription && <Field label="Additional PO Description" value={detail.additionalPoDescription} />}
             {detail.comments && <Field label="Notes" value={detail.comments} />}
           </>
@@ -154,16 +156,7 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
                 <td style={{ padding: '6px 8px', color: 'var(--text)' }}>{po.date ?? '\u2014'}</td>
                 <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 600 }}>${po.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
                 <td style={{ padding: '6px 8px' }}>
-                  <span style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    padding: '1px 6px',
-                    borderRadius: 3,
-                    background: po.status === 'Open' ? 'rgba(var(--success-rgb), 0.1)' : po.status === 'Cancelled' ? 'rgba(var(--danger-rgb), 0.1)' : 'rgba(var(--muted-rgb), 0.1)',
-                    color: po.status === 'Open' ? 'var(--success)' : po.status === 'Cancelled' ? 'var(--danger)' : 'var(--muted)',
-                  }}>
-                    {po.status}
-                  </span>
+                  <StatusBadge status={po.status} />
                 </td>
                 <td style={{ padding: '6px 8px', color: 'var(--muted)' }}>{po.poType ?? '\u2014'}</td>
               </tr>
@@ -176,70 +169,48 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Header */}
-      <div style={{
-        background: 'var(--neutral-50)',
-        borderBottom: '1px solid var(--neutral-200)',
-        padding: '6px 12px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-      }}>
-        <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--navy)' }}>{detail.name}</span>
-        {detail.shipCity && <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 500 }}>{detail.shipCity}, {detail.shipState}</span>}
-        {detail.gpId && (
-          <span style={{
-            background: 'var(--neutral-50)',
-            border: '1px solid var(--border)',
-            borderRadius: 4,
-            padding: '2px 8px',
-            fontSize: 10,
-            fontWeight: 700,
-            color: 'var(--muted)',
-            fontFamily: 'monospace',
-          }}>
-            {detail.gpId}
-          </span>
-        )}
-        <div style={{ display: 'flex', gap: 4, marginLeft: 6 }}>
-          {detail.roles.map(r => (
-            <span key={r} style={{
-              fontSize: 9,
-              fontWeight: 600,
-              padding: '2px 6px',
-              borderRadius: 3,
-              background: 'rgba(var(--primary-rgb), 0.1)',
-              color: 'var(--primary)',
-            }}>
-              {r}
-            </span>
-          ))}
-        </div>
-        <div style={{ flex: 1 }} />
-        <span style={{
-          fontSize: 10,
-          fontWeight: 700,
-          padding: '2px 8px',
-          borderRadius: 9999,
-          background: detail.isActive ? 'rgba(var(--success-rgb), 0.1)' : 'rgba(var(--danger-rgb), 0.1)',
-          color: detail.isActive ? 'var(--success)' : 'var(--danger)',
-        }}>
-          {detail.isActive ? 'Active' : 'Inactive'}
-        </span>
-      </div>
-
-      {/* Tabs */}
-      <Tabs
-        size="small"
-        style={{ flex: 1, display: 'flex', flexDirection: 'column' }}
-        tabBarStyle={{ margin: 0, padding: '0 16px', background: '#fff', borderBottom: '1px solid var(--neutral-200)' }}
-        items={[
-          { key: 'main', label: 'Main', children: contactTab },
-          { key: 'pos', label: `Recent PO's (${detail.recentPos.length})`, children: posTab },
-          { key: 'inv', label: 'Inventory Supplied', children: <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>Inventory supplied coming soon</div> },
-          { key: 'docs', label: 'Documents', children: <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>Documents coming soon</div> },
-        ]}
+      <DetailHeader
+        title={detail.name}
+        subtitle={detail.shipCity ? `${detail.shipCity}, ${detail.shipState}` : undefined}
+        badges={
+          <>
+            {detail.gpId && (
+              <span style={{
+                background: 'var(--neutral-50)',
+                border: '1px solid var(--border)',
+                borderRadius: 4,
+                padding: '2px 8px',
+                fontSize: 10,
+                fontWeight: 700,
+                color: 'var(--muted)',
+                fontFamily: 'monospace',
+              }}>
+                {detail.gpId}
+              </span>
+            )}
+            <div style={{ display: 'flex', gap: 4, marginLeft: 6 }}>
+              {detail.roles.map(r => (
+                <span key={r} style={{
+                  fontSize: 9,
+                  fontWeight: 600,
+                  padding: '2px 6px',
+                  borderRadius: 3,
+                  background: 'rgba(var(--primary-rgb), 0.1)',
+                  color: 'var(--primary)',
+                }}>
+                  {r}
+                </span>
+              ))}
+            </div>
+            <StatusBadge status={detail.isActive ? 'Active' : 'Inactive'} />
+          </>
+        }
       />
+      <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
+      {activeTab === 'main' && contactTab}
+      {activeTab === 'pos'  && posTab}
+      {activeTab === 'inv'  && <InventorySuppliedTab supplierKey={detail.supplierKey} />}
+      {activeTab === 'docs' && <DocumentsTab supplierKey={detail.supplierKey} />}
     </div>
   );
 };
