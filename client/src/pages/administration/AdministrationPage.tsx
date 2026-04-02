@@ -1,21 +1,30 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Table, Input, Select, Drawer, Tag } from 'antd';
+import { Table, Input, Select, Drawer } from 'antd';
 import {
-  UserOutlined, LockOutlined, DollarOutlined, SettingOutlined,
+  UserOutlined, DollarOutlined, SettingOutlined,
   AuditOutlined, CarOutlined, CreditCardOutlined, GlobalOutlined,
   ShopOutlined, BankOutlined, ToolOutlined, OrderedListOutlined,
   AppstoreOutlined, CalendarOutlined, PercentageOutlined,
-  SearchOutlined, SafetyOutlined, TagsOutlined
+  SearchOutlined, SafetyOutlined, TagsOutlined, SwapOutlined,
+  ExperimentOutlined, FileTextOutlined, TeamOutlined, TrophyOutlined
 } from '@ant-design/icons';
+import { StatStrip, TabBar, StatusBadge } from '../../components/shared';
+import type { StatChipDef, TabDef as SharedTabDef } from '../../components/shared';
 import {
   getAdminUsers, getSecurityGroups, getDeliveryMethods, getPaymentTerms,
   getScopeCategories, getDistributors, getCompanies, getRepairReasons,
-  getRepairStatuses, getHolidays, getSalesTax, getPricingLists, getAdminStats
+  getRepairStatuses, getHolidays, getSalesTax, getPricingLists, getAdminStats,
+  getSettings, getAuditLog, getCreditLimits, getReportingGroups,
+  getStandardDepts, getCleaningSystems, getCountries, getSalesReps,
+  getSalesRepAssignments, getBonusPools
 } from '../../api/administration';
 import type {
   AdminUserItem, SecurityGroupItem, DeliveryMethodItem, PaymentTermsItem,
   ScopeCategoryItem, DistributorItem, CompanyItem, RepairReasonItem,
-  RepairStatusItem, HolidayItem, SalesTaxItem, PricingListItem, AdminStats
+  RepairStatusItem, HolidayItem, SalesTaxItem, PricingListItem, AdminStats,
+  SystemSettingItem, AuditLogItem, CreditLimitItem, ReportingGroupItem,
+  StandardDeptItem, CleaningSystemItem, CountryItem, SalesRepOption,
+  SalesRepAssignment, BonusPoolItem
 } from './types';
 
 const categories = [
@@ -25,26 +34,34 @@ const categories = [
   { key: 'hr-finance', label: 'HR & Finance', color: 'var(--warning)' },
 ];
 
-interface TabDef {
+interface AdminTabDef {
   key: string;
   label: string;
   icon: React.ReactNode;
   category: string;
 }
 
-const tabs: TabDef[] = [
+const tabs: AdminTabDef[] = [
   { key: 'users', label: 'Staff & Users', icon: <UserOutlined />, category: 'users-security' },
   { key: 'security', label: 'Security Groups', icon: <SafetyOutlined />, category: 'users-security' },
   { key: 'pricing', label: 'Pricing Lists', icon: <TagsOutlined />, category: 'users-security' },
+  { key: 'settings', label: 'System Settings', icon: <SettingOutlined />, category: 'users-security' },
+  { key: 'audit', label: 'Audit Log', icon: <AuditOutlined />, category: 'users-security' },
   { key: 'delivery', label: 'Delivery Methods', icon: <CarOutlined />, category: 'business-config' },
   { key: 'payterms', label: 'Payment Terms', icon: <CreditCardOutlined />, category: 'business-config' },
   { key: 'distributors', label: 'Distributors', icon: <ShopOutlined />, category: 'business-config' },
   { key: 'companies', label: 'Companies', icon: <BankOutlined />, category: 'business-config' },
+  { key: 'creditlimits', label: 'Credit Limits', icon: <DollarOutlined />, category: 'business-config' },
+  { key: 'countries', label: 'Countries', icon: <GlobalOutlined />, category: 'business-config' },
   { key: 'scopecat', label: 'Scope Categories', icon: <AppstoreOutlined />, category: 'product-repair' },
   { key: 'reasons', label: 'Repair Reasons', icon: <ToolOutlined />, category: 'product-repair' },
   { key: 'statuses', label: 'Repair Statuses', icon: <OrderedListOutlined />, category: 'product-repair' },
-  { key: 'countries', label: 'Countries', icon: <GlobalOutlined />, category: 'business-config' },
+  { key: 'reportgroups', label: 'Reporting Groups', icon: <TeamOutlined />, category: 'product-repair' },
+  { key: 'stddepts', label: 'Standard Depts', icon: <FileTextOutlined />, category: 'product-repair' },
+  { key: 'cleaningsys', label: 'Cleaning Systems', icon: <ExperimentOutlined />, category: 'product-repair' },
+  { key: 'salesreassign', label: 'Sales Rep Reassignment', icon: <SwapOutlined />, category: 'hr-finance' },
   { key: 'holidays', label: 'Holidays', icon: <CalendarOutlined />, category: 'hr-finance' },
+  { key: 'bonuspools', label: 'Bonus Pools', icon: <TrophyOutlined />, category: 'hr-finance' },
   { key: 'salestax', label: 'Sales Tax Config', icon: <PercentageOutlined />, category: 'hr-finance' },
 ];
 
@@ -71,6 +88,21 @@ export function AdministrationPage() {
   const [holidays, setHolidays] = useState<HolidayItem[]>([]);
   const [salesTax, setSalesTax] = useState<SalesTaxItem[]>([]);
   const [pricingLists, setPricingLists] = useState<PricingListItem[]>([]);
+  const [settings, setSettings] = useState<SystemSettingItem[]>([]);
+  const [auditItems, setAuditItems] = useState<AuditLogItem[]>([]);
+  const [auditTotal, setAuditTotal] = useState(0);
+  const [auditPage, setAuditPage] = useState(1);
+  const [auditAction, setAuditAction] = useState('');
+  const [creditLimits, setCreditLimits] = useState<CreditLimitItem[]>([]);
+  const [reportingGroups, setReportingGroups] = useState<ReportingGroupItem[]>([]);
+  const [standardDepts, setStandardDepts] = useState<StandardDeptItem[]>([]);
+  const [cleaningSystems, setCleaningSystems] = useState<CleaningSystemItem[]>([]);
+  const [countries, setCountries] = useState<CountryItem[]>([]);
+  const [salesReps, setSalesReps] = useState<SalesRepOption[]>([]);
+  const [selectedFromRep, setSelectedFromRep] = useState<number | undefined>();
+  const [reassignments, setReassignments] = useState<SalesRepAssignment[]>([]);
+  const [bonusPools, setBonusPools] = useState<BonusPoolItem[]>([]);
+  const [bonusPoolType, setBonusPoolType] = useState('tech');
 
   // Drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -122,8 +154,40 @@ export function AdministrationPage() {
       case 'salestax':
         getSalesTax().then(setSalesTax).catch(() => {});
         break;
+      case 'settings':
+        getSettings().then(setSettings).catch(() => {});
+        break;
+      case 'audit':
+        getAuditLog({ search: search || undefined, action: auditAction || undefined, page: auditPage, pageSize: 50 })
+          .then((r: any) => { setAuditItems(r.items); setAuditTotal(r.totalCount); })
+          .catch(() => {});
+        break;
+      case 'creditlimits':
+        getCreditLimits().then(setCreditLimits).catch(() => {});
+        break;
+      case 'reportgroups':
+        getReportingGroups().then(setReportingGroups).catch(() => {});
+        break;
+      case 'stddepts':
+        getStandardDepts().then(setStandardDepts).catch(() => {});
+        break;
+      case 'cleaningsys':
+        getCleaningSystems().then(setCleaningSystems).catch(() => {});
+        break;
+      case 'countries':
+        getCountries().then(setCountries).catch(() => {});
+        break;
+      case 'salesreassign':
+        getSalesReps().then(setSalesReps).catch(() => {});
+        if (selectedFromRep) {
+          getSalesRepAssignments(selectedFromRep).then(setReassignments).catch(() => {});
+        }
+        break;
+      case 'bonuspools':
+        getBonusPools(bonusPoolType).then(setBonusPools).catch(() => {});
+        break;
     }
-  }, [search, userPage, scopeTypeFilter, distribActiveFilter]);
+  }, [search, userPage, scopeTypeFilter, distribActiveFilter, auditPage, auditAction, selectedFromRep, bonusPoolType]);
 
   useEffect(() => {
     loadTabData(activeTab);
@@ -145,13 +209,11 @@ export function AdministrationPage() {
   };
 
   const statusBadge = (active: boolean) => (
-    <span className={active ? 'tsi-badge tsi-badge-success' : 'tsi-badge tsi-badge-neutral'}>
-      {active ? 'Active' : 'Inactive'}
-    </span>
+    <StatusBadge status={active ? 'Active' : 'Inactive'} />
   );
 
   const defaultBadge = (isDefault: boolean) =>
-    isDefault ? <span className="tsi-badge tsi-badge-info">Default</span> : <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>;
+    isDefault ? <StatusBadge status="Default" variant="blue" /> : <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>;
 
   // ── Column definitions ──
   const userColumns = [
@@ -239,7 +301,7 @@ export function AdministrationPage() {
     { title: 'Holiday Name', dataIndex: 'holidayName', key: 'holidayName', width: 200 },
     { title: 'Date', dataIndex: 'holidayDate', key: 'holidayDate', width: 120, render: (v: string | null) => v ? new Date(v).toLocaleDateString() : '—' },
     { title: 'Day', dataIndex: 'dayOfWeek', key: 'dayOfWeek', width: 80, render: (v: string | null) => v || '—' },
-    { title: 'Recurring', dataIndex: 'isRecurring', key: 'isRecurring', width: 90, render: (v: boolean) => v ? <Tag color="blue">Yes</Tag> : <span style={{ color: 'var(--muted)', fontSize: 12 }}>No</span> },
+    { title: 'Recurring', dataIndex: 'isRecurring', key: 'isRecurring', width: 90, render: (v: boolean) => v ? <StatusBadge status="Yes" /> : <span style={{ color: 'var(--muted)', fontSize: 12 }}>No</span> },
     { title: 'Active', dataIndex: 'isActive', key: 'isActive', width: 90, render: statusBadge },
   ];
 
@@ -248,7 +310,77 @@ export function AdministrationPage() {
     { title: 'State', dataIndex: 'stateName', key: 'stateName', width: 200 },
     { title: 'Rate %', dataIndex: 'rate', key: 'rate', width: 100, render: (v: number | null) => v != null ? `${v.toFixed(3)}%` : '—' },
     { title: 'Effective Date', dataIndex: 'effectiveDate', key: 'effectiveDate', width: 140, render: (v: string | null) => v ? new Date(v).toLocaleDateString() : '—' },
-    { title: 'Taxable', dataIndex: 'isTaxable', key: 'isTaxable', width: 90, render: (v: boolean) => v ? <Tag color="green">Yes</Tag> : <Tag>No</Tag> },
+    { title: 'Taxable', dataIndex: 'isTaxable', key: 'isTaxable', width: 90, render: (v: boolean) => v ? <StatusBadge status="Yes" /> : <StatusBadge status="No" /> },
+  ];
+
+  const settingsColumns = [
+    { title: 'Setting', dataIndex: 'name', key: 'name', width: 260 },
+    { title: 'Value', key: 'value', render: (_: any, r: SystemSettingItem) => {
+      if (r.boolValue !== null) return r.boolValue ? <StatusBadge status="Active" /> : <StatusBadge status="Inactive" />;
+      if (r.stringValue) return r.stringValue;
+      if (r.intValue !== null) return r.intValue;
+      if (r.decimalValue !== null) return r.decimalValue;
+      return '—';
+    }},
+  ];
+
+  const auditColumns = [
+    { title: 'Timestamp', dataIndex: 'timestamp', key: 'timestamp', width: 150, render: (v: string) => new Date(v).toLocaleString() },
+    { title: 'User', dataIndex: 'userName', key: 'userName', width: 140 },
+    { title: 'Action', dataIndex: 'action', key: 'action', width: 80, render: (v: string) => {
+      const variantMap: Record<string, 'blue' | 'green' | 'amber' | 'red' | 'gray'> = { Login: 'blue', Create: 'green', Update: 'amber', Delete: 'red' };
+      return <StatusBadge status={v} variant={variantMap[v] ?? 'gray'} />;
+    }},
+    { title: 'Module', dataIndex: 'module', key: 'module', width: 110 },
+    { title: 'Description', dataIndex: 'description', key: 'description', width: 280 },
+    { title: 'IP Address', dataIndex: 'ipAddress', key: 'ipAddress', width: 120, render: (v: string | null) => v || '—' },
+  ];
+
+  const creditColumns = [
+    { title: '#', key: 'idx', width: 80, render: (_: any, __: any, i: number) => i + 1 },
+    { title: 'Credit Limit Amount', dataIndex: 'amount', key: 'amount', render: (v: number) => `$${v.toLocaleString()}` },
+  ];
+
+  const reportGroupColumns = [
+    { title: '#', key: 'idx', width: 80, render: (_: any, __: any, i: number) => i + 1 },
+    { title: 'Group Name', dataIndex: 'groupName', key: 'groupName' },
+    { title: 'Active', dataIndex: 'isActive', key: 'isActive', width: 90, render: statusBadge },
+  ];
+
+  const stdDeptColumns = [
+    { title: '#', key: 'idx', width: 80, render: (_: any, __: any, i: number) => i + 1 },
+    { title: 'Department Name', dataIndex: 'deptName', key: 'deptName' },
+    { title: 'Active', dataIndex: 'isActive', key: 'isActive', width: 90, render: statusBadge },
+  ];
+
+  const cleanSysColumns = [
+    { title: '#', key: 'idx', width: 80, render: (_: any, __: any, i: number) => i + 1 },
+    { title: 'System Name', dataIndex: 'systemName', key: 'systemName' },
+    { title: 'Active', dataIndex: 'isActive', key: 'isActive', width: 90, render: statusBadge },
+  ];
+
+  const countryColumns = [
+    { title: '#', dataIndex: 'countryKey', key: 'countryKey', width: 80 },
+    { title: 'Country Name', dataIndex: 'countryName', key: 'countryName' },
+  ];
+
+  const reassignColumns = [
+    { title: 'Client', dataIndex: 'clientName', key: 'clientName', width: 180 },
+    { title: 'Department', dataIndex: 'departmentName', key: 'departmentName', width: 180 },
+    { title: 'City', dataIndex: 'city', key: 'city', width: 180, render: (v: string | null) => v || '—' },
+    { title: 'State', dataIndex: 'state', key: 'state', width: 60, render: (v: string | null) => v || '—' },
+    { title: 'Zip', dataIndex: 'zip', key: 'zip', width: 80, render: (v: string | null) => v || '—' },
+    { title: 'Current Rep', dataIndex: 'currentRep', key: 'currentRep', width: 140 },
+  ];
+
+  const bonusPoolColumns = [
+    { title: '#', dataIndex: 'poolKey', key: 'poolKey', width: 80 },
+    { title: 'Name', dataIndex: 'name', key: 'name', width: 180 },
+    { title: 'Period', dataIndex: 'period', key: 'period', width: 120, render: (v: string | null) => v || '—' },
+    { title: 'Target', dataIndex: 'target', key: 'target', width: 120, render: (v: number | null) => v != null ? `$${v.toLocaleString()}` : '—' },
+    { title: 'Actual', dataIndex: 'actual', key: 'actual', width: 120, render: (v: number | null) => v != null ? `$${v.toLocaleString()}` : '—' },
+    { title: 'Payout %', dataIndex: 'payoutPct', key: 'payoutPct', width: 100, render: (v: number | null) => v != null ? `${v}%` : '—' },
+    { title: 'Active', dataIndex: 'isActive', key: 'isActive', width: 90, render: statusBadge },
   ];
 
   const renderTabContent = () => {
@@ -293,36 +425,83 @@ export function AdministrationPage() {
       case 'salestax':
         return <Table dataSource={salesTax} columns={taxColumns} rowKey="taxKey" size="small" pagination={false}
           onRow={(r) => ({ onClick: () => openDrawer(`Tax: ${r.stateName || r.stateCode}`, r), style: { cursor: 'pointer' } })} />;
+      case 'settings':
+        return <Table dataSource={settings} columns={settingsColumns} rowKey="configKey" size="small" pagination={false}
+          onRow={(r) => ({ onClick: () => openDrawer(`Setting: ${r.name}`, r), style: { cursor: 'pointer' } })} />;
+      case 'audit':
+        return <Table dataSource={auditItems} columns={auditColumns} rowKey="auditKey" size="small"
+          pagination={{ current: auditPage, total: auditTotal, pageSize: 50, onChange: setAuditPage, showSizeChanger: false, size: 'small' }}
+          onRow={(r) => ({ onClick: () => openDrawer(`Audit: ${r.action} — ${r.module}`, r), style: { cursor: 'pointer' } })} />;
+      case 'creditlimits':
+        return <Table dataSource={creditLimits} columns={creditColumns} rowKey="limitKey" size="small" pagination={false}
+          onRow={(r) => ({ onClick: () => openDrawer(`Credit Limit: $${r.amount.toLocaleString()}`, r), style: { cursor: 'pointer' } })} />;
+      case 'reportgroups':
+        return <Table dataSource={reportingGroups} columns={reportGroupColumns} rowKey="groupKey" size="small" pagination={false}
+          onRow={(r) => ({ onClick: () => openDrawer(`Reporting Group: ${r.groupName}`, r), style: { cursor: 'pointer' } })} />;
+      case 'stddepts':
+        return <Table dataSource={standardDepts} columns={stdDeptColumns} rowKey="deptKey" size="small" pagination={false}
+          onRow={(r) => ({ onClick: () => openDrawer(`Standard Dept: ${r.deptName}`, r), style: { cursor: 'pointer' } })} />;
+      case 'cleaningsys':
+        return <Table dataSource={cleaningSystems} columns={cleanSysColumns} rowKey="systemKey" size="small" pagination={false}
+          onRow={(r) => ({ onClick: () => openDrawer(`Cleaning System: ${r.systemName}`, r), style: { cursor: 'pointer' } })} />;
+      case 'countries':
+        return <Table dataSource={countries} columns={countryColumns} rowKey="countryKey" size="small" pagination={false}
+          onRow={(r) => ({ onClick: () => openDrawer(`Country: ${r.countryName}`, r), style: { cursor: 'pointer' } })} />;
+      case 'salesreassign':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0' }}>
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--label)' }}>Previous Rep</span>
+              <Select
+                value={selectedFromRep}
+                onChange={(v) => { setSelectedFromRep(v); if (v) getSalesRepAssignments(v).then(setReassignments).catch(() => {}); else setReassignments([]); }}
+                style={{ width: 200 }}
+                placeholder="Select Rep..."
+                allowClear
+                options={salesReps.map(r => ({ value: r.salesRepKey, label: r.name }))}
+              />
+            </div>
+            <Table dataSource={reassignments} columns={reassignColumns} rowKey="departmentKey" size="small" pagination={false} />
+          </div>
+        );
+      case 'bonuspools':
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <div style={{ padding: '10px 0' }}>
+              <Select
+                value={bonusPoolType}
+                onChange={(v) => { setBonusPoolType(v); }}
+                style={{ width: 200 }}
+                options={[
+                  { value: 'tech', label: 'Tech Bonus Pool' },
+                  { value: 'ops', label: 'Ops Bonus Pool' },
+                ]}
+              />
+            </div>
+            <Table dataSource={bonusPools} columns={bonusPoolColumns} rowKey="poolKey" size="small" pagination={false}
+              onRow={(r) => ({ onClick: () => openDrawer(`Bonus Pool: ${r.name}`, r), style: { cursor: 'pointer' } })} />
+          </div>
+        );
       default:
         return <div style={{ padding: 24, color: 'var(--muted)', fontSize: 13 }}>Select a tab</div>;
     }
   };
 
-  const statChips: { label: string; value: number; color: string; icon: React.ReactNode }[] = stats ? [
-    { label: 'Active Users', value: stats.activeUsers, color: 'var(--primary)', icon: <UserOutlined /> },
-    { label: 'Security Groups', value: stats.securityGroups, color: 'var(--navy)', icon: <LockOutlined /> },
-    { label: 'Pricing Lists', value: stats.pricingLists, color: 'var(--success)', icon: <DollarOutlined /> },
-    { label: 'Audit 24h', value: stats.auditEntries24h, color: 'var(--warning)', icon: <AuditOutlined /> },
-    { label: 'Locked', value: stats.lockedAccounts, color: 'var(--danger)', icon: <SettingOutlined /> },
+  const statChips: StatChipDef[] = stats ? [
+    { id: 'users', label: 'Active Users', value: stats.activeUsers, color: 'blue' },
+    { id: 'groups', label: 'Security Groups', value: stats.securityGroups, color: 'navy' },
+    { id: 'pricing', label: 'Pricing Lists', value: stats.pricingLists, color: 'green' },
+    { id: 'audit', label: 'Audit 24h', value: stats.auditEntries24h, color: 'amber' },
+    { id: 'locked', label: 'Locked', value: stats.lockedAccounts, color: 'red', state: stats.lockedAccounts > 0 ? 'alert' : 'normal' },
   ] : [];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
       {/* Stat Strip */}
-      <div className="tsi-stat-strip">
-        {statChips.map(s => (
-          <div className="tsi-stat-chip" key={s.label}>
-            <div className="tsi-stat-icon" style={{ background: `rgba(var(--primary-rgb), 0.1)`, color: s.color }}>{s.icon}</div>
-            <div>
-              <div className="tsi-stat-value" style={{ color: s.color }}>{s.value}</div>
-              <div className="tsi-stat-label">{s.label}</div>
-            </div>
-          </div>
-        ))}
-      </div>
+      <StatStrip chips={statChips} loading={!stats} />
 
       {/* Category Pills */}
-      <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: '#fff', borderBottom: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--border)' }}>
         {categories.map(c => (
           <button
             key={c.key}
@@ -331,7 +510,7 @@ export function AdministrationPage() {
               padding: '5px 14px',
               borderRadius: 9999,
               border: activeCategory === c.key ? `2px solid ${c.color}` : '1px solid var(--border)',
-              background: activeCategory === c.key ? `rgba(var(--primary-rgb), 0.06)` : '#fff',
+              background: activeCategory === c.key ? `rgba(var(--primary-rgb), 0.06)` : 'var(--card)',
               color: activeCategory === c.key ? c.color : 'var(--muted)',
               fontSize: 12,
               fontWeight: activeCategory === c.key ? 700 : 500,
@@ -344,33 +523,11 @@ export function AdministrationPage() {
       </div>
 
       {/* Tab Bar */}
-      <div style={{ display: 'flex', gap: 0, background: '#fff', borderBottom: '1px solid var(--border)', overflowX: 'auto' }}>
-        {visibleTabs.map(t => {
-          const isActive = t.key === activeTab;
-          return (
-            <button
-              key={t.key}
-              onClick={() => { setActiveTab(t.key); setSearch(''); }}
-              style={{
-                padding: '8px 16px',
-                background: 'transparent',
-                border: 'none',
-                borderBottom: isActive ? '2px solid var(--primary)' : '2px solid transparent',
-                color: isActive ? 'var(--primary)' : 'var(--muted)',
-                fontWeight: isActive ? 700 : 500,
-                fontSize: 12,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {t.icon} {t.label}
-            </button>
-          );
-        })}
-      </div>
+      <TabBar
+        tabs={visibleTabs.map((t): SharedTabDef => ({ key: t.key, label: t.label }))}
+        activeKey={activeTab}
+        onChange={(key) => { setActiveTab(key); setSearch(''); }}
+      />
 
       {/* Toolbar */}
       <div className="tsi-toolbar">
@@ -409,6 +566,20 @@ export function AdministrationPage() {
             ]}
           />
         )}
+        {activeTab === 'audit' && (
+          <Select
+            value={auditAction}
+            onChange={v => { setAuditAction(v); }}
+            style={{ width: 140, height: 30 }}
+            options={[
+              { value: '', label: 'All Actions' },
+              { value: 'Login', label: 'Login' },
+              { value: 'Create', label: 'Create' },
+              { value: 'Update', label: 'Update' },
+              { value: 'Delete', label: 'Delete' },
+            ]}
+          />
+        )}
       </div>
 
       {/* Table Area */}
@@ -422,7 +593,7 @@ export function AdministrationPage() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         width={600}
-        styles={{ header: { background: 'var(--primary-dark)', color: '#fff' }, body: { padding: 0 } }}
+        styles={{ header: { background: 'var(--primary-dark)', color: 'var(--card)' }, body: { padding: 0 } }}
       >
         {drawerRecord && (
           <div style={{ padding: 20 }}>
