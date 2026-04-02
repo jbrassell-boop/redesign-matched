@@ -1,63 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getQualityInspections, getQualityStats } from '../../api/quality';
-import type { QualityInspectionListItem, QualityStats, QualityFilters } from './types';
-
-// ── Badge helpers ──────────────────────────────────────────────────────────────
-
-const ResultBadge = ({ result }: { result: string }) => {
-  const styles: Record<string, React.CSSProperties> = {
-    Pass: {
-      background: '#F0FDF4',
-      border: '1px solid #BBF7D0',
-      color: 'var(--success)',
-    },
-    Fail: {
-      background: '#FEF2F2',
-      border: '1px solid #FECACA',
-      color: 'var(--danger)',
-    },
-    Conditional: {
-      background: '#FFFBEB',
-      border: '1px solid #FDE68A',
-      color: '#92400E',
-    },
-  };
-  const s = styles[result] ?? styles.Conditional;
-  return (
-    <span style={{
-      ...s,
-      display: 'inline-flex',
-      alignItems: 'center',
-      padding: '2px 8px',
-      borderRadius: 'var(--radius-pill)',
-      fontSize: 11,
-      fontWeight: 700,
-      lineHeight: 1.4,
-    }}>
-      {result}
-    </span>
-  );
-};
-
-const TypeBadge = ({ type }: { type: string }) => {
-  const isDI = type === 'D&I Intake';
-  return (
-    <span style={{
-      background: isDI ? '#EFF6FF' : 'rgba(var(--navy-rgb), 0.08)',
-      border: `1px solid ${isDI ? '#BFDBFE' : 'rgba(var(--navy-rgb), 0.2)'}`,
-      color: isDI ? 'var(--primary)' : 'var(--navy)',
-      display: 'inline-flex',
-      alignItems: 'center',
-      padding: '2px 8px',
-      borderRadius: 'var(--radius-pill)',
-      fontSize: 11,
-      fontWeight: 700,
-      lineHeight: 1.4,
-    }}>
-      {type}
-    </span>
-  );
-};
+import { getQualityInspections, getQualityStats, getQualityNcr, getQualityRework } from '../../api/quality';
+import type { QualityInspectionListItem, QualityStats, QualityFilters, NcrListItem, ReworkListItem } from './types';
+import { StatusBadge } from '../../components/shared/StatusBadge';
+import { TabBar } from '../../components/shared/TabBar';
+import type { TabDef } from '../../components/shared/TabBar';
 
 // ── Stat Strip ─────────────────────────────────────────────────────────────────
 
@@ -158,38 +104,20 @@ const IconDownload = () => (
   </svg>
 );
 
-// ── Coming Soon placeholder ────────────────────────────────────────────────────
-
-const ComingSoon = ({ label }: { label: string }) => (
-  <div style={{
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'column',
-    gap: 8,
-    color: 'var(--muted)',
-    padding: 40,
-  }}>
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={36} height={36} style={{ opacity: 0.2 }}>
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <line x1="9" y1="9" x2="15" y2="9" />
-      <line x1="9" y1="12" x2="15" y2="12" />
-      <line x1="9" y1="15" x2="13" y2="15" />
-    </svg>
-    <div style={{ fontSize: 13, fontWeight: 500 }}>{label} — Coming Soon</div>
-    <div style={{ fontSize: 11 }}>This module is under construction.</div>
-  </div>
-);
-
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 50;
-const TABS = ['QC Inspections', 'Non-Conformances', 'CAPA Log', 'Rework Tracking', 'Reports'] as const;
-type Tab = typeof TABS[number];
+
+const TABS: TabDef[] = [
+  { key: 'QC Inspections', label: 'QC Inspections' },
+  { key: 'Non-Conformances', label: 'Non-Conformances' },
+  { key: 'CAPA Log', label: 'CAPA Log' },
+  { key: 'Rework Tracking', label: 'Rework Tracking' },
+  { key: 'Reports', label: 'Reports' },
+];
 
 export const QualityPage = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('QC Inspections');
+  const [activeTab, setActiveTab] = useState('QC Inspections');
   const [stats, setStats] = useState<QualityStats | null>(null);
   const [inspections, setInspections] = useState<QualityInspectionListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -203,6 +131,22 @@ export const QualityPage = () => {
   const [resultFilter, setResultFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [chipFilter, setChipFilter] = useState('');
+
+  // NCR state
+  const [ncrItems, setNcrItems] = useState<NcrListItem[]>([]);
+  const [ncrTotal, setNcrTotal] = useState(0);
+  const [ncrLoading, setNcrLoading] = useState(false);
+  const [ncrSearch, setNcrSearch] = useState('');
+  const [ncrStatusFilter, setNcrStatusFilter] = useState('');
+  const [ncrPage, setNcrPage] = useState(1);
+
+  // Rework state
+  const [reworkItems, setReworkItems] = useState<ReworkListItem[]>([]);
+  const [reworkTotal, setReworkTotal] = useState(0);
+  const [reworkLoading, setReworkLoading] = useState(false);
+  const [reworkSearch, setReworkSearch] = useState('');
+  const [reworkStatusFilter, setReworkStatusFilter] = useState('');
+  const [reworkPage, setReworkPage] = useState(1);
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -233,6 +177,51 @@ export const QualityPage = () => {
     }, delay);
     return () => { if (searchTimeout.current) clearTimeout(searchTimeout.current); };
   }, [search, dateFrom, dateTo, resultFilter, page, loadInspections]);
+
+  // NCR data loading
+  const loadNcr = useCallback(async () => {
+    setNcrLoading(true);
+    try {
+      const result = await getQualityNcr({
+        search: ncrSearch || undefined,
+        status: ncrStatusFilter || undefined,
+        page: ncrPage,
+        pageSize: PAGE_SIZE,
+      });
+      setNcrItems(result.items);
+      setNcrTotal(result.totalCount);
+    } finally {
+      setNcrLoading(false);
+    }
+  }, [ncrSearch, ncrStatusFilter, ncrPage]);
+
+  useEffect(() => {
+    if (activeTab === 'Non-Conformances') loadNcr();
+  }, [activeTab, loadNcr]);
+
+  // Rework data loading
+  const loadRework = useCallback(async () => {
+    setReworkLoading(true);
+    try {
+      const result = await getQualityRework({
+        search: reworkSearch || undefined,
+        status: reworkStatusFilter || undefined,
+        page: reworkPage,
+        pageSize: PAGE_SIZE,
+      });
+      setReworkItems(result.items);
+      setReworkTotal(result.totalCount);
+    } finally {
+      setReworkLoading(false);
+    }
+  }, [reworkSearch, reworkStatusFilter, reworkPage]);
+
+  useEffect(() => {
+    if (activeTab === 'Rework Tracking') loadRework();
+  }, [activeTab, loadRework]);
+
+  const ncrTotalPages = Math.max(1, Math.ceil(ncrTotal / PAGE_SIZE));
+  const reworkTotalPages = Math.max(1, Math.ceil(reworkTotal / PAGE_SIZE));
 
   const handleChipFilter = (result: string) => {
     const next = result === chipFilter ? '' : result;
@@ -355,36 +344,11 @@ export const QualityPage = () => {
       </div>
 
       {/* ── Subnav Tab Bar ── */}
-      <div style={{
-        display: 'flex',
-        background: 'var(--neutral-50)',
-        borderBottom: '1px solid var(--neutral-200)',
-        flexShrink: 0,
-        padding: '0 14px',
-      }}>
-        {TABS.map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            style={{
-              padding: '9px 16px',
-              fontSize: 12,
-              fontWeight: activeTab === tab ? 700 : 500,
-              color: activeTab === tab ? 'var(--primary)' : 'var(--muted)',
-              cursor: 'pointer',
-              border: 'none',
-              background: 'transparent',
-              borderBottom: `2.5px solid ${activeTab === tab ? 'var(--primary)' : 'transparent'}`,
-              marginBottom: -1.5,
-              fontFamily: 'inherit',
-              transition: 'all 0.12s',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+      <TabBar
+        tabs={TABS}
+        activeKey={activeTab}
+        onChange={setActiveTab}
+      />
 
       {/* ── Tab Content ── */}
 
@@ -486,9 +450,6 @@ export const QualityPage = () => {
                 fontSize: 11,
                 fontFamily: 'inherit',
                 outline: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: '10px center',
                 background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
               }}
             />
@@ -547,7 +508,7 @@ export const QualityPage = () => {
                         top: 0,
                         zIndex: 2,
                         whiteSpace: 'nowrap',
-                        borderRight: '1px solid rgba(180,200,220,0.3)',
+                        borderRight: '1px solid rgba(var(--primary-rgb), 0.15)',
                         borderBottom: '1px solid var(--neutral-200)',
                         userSelect: 'none',
                       }}
@@ -587,7 +548,10 @@ export const QualityPage = () => {
                         </span>
                       </td>
                       <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        <TypeBadge type={item.inspectionType} />
+                        <StatusBadge
+                          status={item.inspectionType}
+                          variant={item.inspectionType === 'D&I Intake' ? 'blue' : 'purple'}
+                        />
                       </td>
                       <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {item.clientName}
@@ -602,7 +566,10 @@ export const QualityPage = () => {
                         {item.inspectionDate}
                       </td>
                       <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        <ResultBadge result={item.result} />
+                        <StatusBadge
+                          status={item.result}
+                          variant={item.result === 'Pass' ? 'green' : item.result === 'Fail' ? 'red' : 'amber'}
+                        />
                       </td>
                     </tr>
                   ))
@@ -657,7 +624,7 @@ export const QualityPage = () => {
                       border: '1px solid var(--border-dk)',
                       borderRadius: 4,
                       background: page === pg ? 'var(--navy)' : 'var(--card)',
-                      color: page === pg ? '#fff' : 'var(--label)',
+                      color: page === pg ? 'var(--card)' : 'var(--label)',
                       fontSize: 11,
                       fontWeight: page === pg ? 600 : 400,
                       cursor: 'pointer',
@@ -693,26 +660,328 @@ export const QualityPage = () => {
       )}
 
       {activeTab === 'Non-Conformances' && (
-        <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-          <ComingSoon label="Non-Conformances" />
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          {/* Toolbar */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
+            background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
+            <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              {(['', 'Open', 'Under Review', 'Closed'] as const).map((v, i) => (
+                <button key={v} onClick={() => { setNcrStatusFilter(v); setNcrPage(1); }}
+                  style={{ ...segBtnStyle(ncrStatusFilter === v), borderRight: i < 3 ? '1px solid var(--border-dk)' : 'none' }}>
+                  {v || 'All'}
+                </button>
+              ))}
+            </div>
+            <input type="text" value={ncrSearch} onChange={e => { setNcrSearch(e.target.value); setNcrPage(1); }}
+              placeholder="Search NCR#, WO#, description..."
+              style={{
+                marginLeft: 'auto', height: 30, width: 240, border: '1.5px solid var(--border-dk)', borderRadius: 6,
+                padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
+                background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
+              }}
+            />
+          </div>
+
+          {/* Table */}
+          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+              <thead>
+                <tr>
+                  {[
+                    { label: 'NCR#', width: 90 },
+                    { label: 'WO#', width: 90 },
+                    { label: 'Description', width: 220 },
+                    { label: 'Category', width: 100 },
+                    { label: 'Severity', width: 90 },
+                    { label: 'Status', width: 110 },
+                    { label: 'Date Filed', width: 100 },
+                  ].map(col => (
+                    <th key={col.label} style={{
+                      width: col.width, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700,
+                      padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
+                      position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap',
+                      borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', userSelect: 'none',
+                    }}>{col.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {ncrLoading ? (
+                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>Loading...</td></tr>
+                ) : ncrItems.length === 0 ? (
+                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No non-conformances match current filters</td></tr>
+                ) : ncrItems.map((item, idx) => (
+                  <tr key={item.isoComplaintKey}
+                    style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
+                  >
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.ncrNumber}</span>
+                    </td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.workOrderNumber}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.description}>{item.description}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.category}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)' }}>
+                      <StatusBadge
+                        status={item.severity}
+                        variant={item.severity === 'Critical' ? 'red' : item.severity === 'Major' ? 'amber' : 'blue'}
+                      />
+                    </td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)' }}>
+                      <StatusBadge
+                        status={item.status}
+                        variant={item.status === 'Open' ? 'red' : item.status === 'Under Review' ? 'amber' : 'gray'}
+                      />
+                    </td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.dateFiled}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px',
+            background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)',
+          }}>
+            <span style={{ fontWeight: 500 }}>{ncrTotal.toLocaleString()} records</span>
+            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+              <button disabled={ncrPage <= 1} onClick={() => setNcrPage(p => p - 1)}
+                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: ncrPage <= 1 ? 'default' : 'pointer', opacity: ncrPage <= 1 ? 0.4 : 1, fontFamily: 'inherit' }}>
+                &#8249;
+              </button>
+              {Array.from({ length: Math.min(ncrTotalPages, 7) }, (_, i) => {
+                const pg = i + 1;
+                return (
+                  <button key={pg} onClick={() => setNcrPage(pg)}
+                    style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: ncrPage === pg ? 'var(--navy)' : 'var(--card)', color: ncrPage === pg ? 'var(--card)' : 'var(--label)', fontSize: 11, fontWeight: ncrPage === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    {pg}
+                  </button>
+                );
+              })}
+              <button disabled={ncrPage >= ncrTotalPages} onClick={() => setNcrPage(p => p + 1)}
+                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: ncrPage >= ncrTotalPages ? 'default' : 'pointer', opacity: ncrPage >= ncrTotalPages ? 0.4 : 1, fontFamily: 'inherit' }}>
+                &#8250;
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {activeTab === 'CAPA Log' && (
-        <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-          <ComingSoon label="CAPA Log" />
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          {/* Toolbar */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
+            background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Type</span>
+            <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              {['All', 'Corrective', 'Preventive'].map((v, i) => (
+                <button key={v} style={{ ...segBtnStyle(i === 0), borderRight: i < 2 ? '1px solid var(--border-dk)' : 'none' }}>{v}</button>
+              ))}
+            </div>
+            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
+            <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              {['All', 'Open', 'In Progress', 'Completed', 'Overdue'].map((v, i) => (
+                <button key={v} style={{ ...segBtnStyle(i === 0), borderRight: i < 4 ? '1px solid var(--border-dk)' : 'none' }}>{v}</button>
+              ))}
+            </div>
+            <input type="text" placeholder="Search CAPA#, NCR ref, description..." readOnly
+              style={{
+                marginLeft: 'auto', height: 30, width: 260, border: '1.5px solid var(--border-dk)', borderRadius: 6,
+                padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
+                background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
+              }}
+            />
+          </div>
+
+          {/* Table */}
+          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+              <thead>
+                <tr>
+                  {[
+                    { label: 'CAPA#', width: 90 },
+                    { label: 'NCR Ref', width: 90 },
+                    { label: 'Type', width: 100 },
+                    { label: 'Description', width: 220 },
+                    { label: 'Owner', width: 120 },
+                    { label: 'Due Date', width: 100 },
+                    { label: 'Status', width: 100 },
+                  ].map(col => (
+                    <th key={col.label} style={{
+                      width: col.width, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700,
+                      padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
+                      position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap',
+                      borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', userSelect: 'none',
+                    }}>{col.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No CAPA records found. CAPA tracking will be available when linked to NCR records.</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px',
+            background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)',
+          }}>
+            <span style={{ fontWeight: 500 }}>0 records</span>
+          </div>
         </div>
       )}
 
       {activeTab === 'Rework Tracking' && (
-        <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-          <ComingSoon label="Rework Tracking" />
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          {/* Toolbar */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
+            background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
+          }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
+            <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+              {(['', 'In Progress', 'Complete'] as const).map((v, i) => (
+                <button key={v || 'all'} onClick={() => { setReworkStatusFilter(v); setReworkPage(1); }}
+                  style={{ ...segBtnStyle(reworkStatusFilter === v), borderRight: i < 2 ? '1px solid var(--border-dk)' : 'none' }}>
+                  {v || 'All'}
+                </button>
+              ))}
+            </div>
+            <input type="text" value={reworkSearch} onChange={e => { setReworkSearch(e.target.value); setReworkPage(1); }}
+              placeholder="Search RW#, WO#, Serial#..."
+              style={{
+                marginLeft: 'auto', height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6,
+                padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
+                background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
+              }}
+            />
+          </div>
+
+          {/* Table */}
+          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+              <thead>
+                <tr>
+                  {[
+                    { label: 'RW#', width: 80 },
+                    { label: 'WO#', width: 90 },
+                    { label: 'Serial#', width: 120 },
+                    { label: 'Reason', width: 210 },
+                    { label: 'Tech', width: 120 },
+                    { label: 'Original Complete', width: 110 },
+                    { label: 'Rework Due', width: 100 },
+                    { label: 'Status', width: 100 },
+                  ].map(col => (
+                    <th key={col.label} style={{
+                      width: col.width, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700,
+                      padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
+                      position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap',
+                      borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', userSelect: 'none',
+                    }}>{col.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {reworkLoading ? (
+                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>Loading...</td></tr>
+                ) : reworkItems.length === 0 ? (
+                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No rework records match current filters</td></tr>
+                ) : reworkItems.map((item, idx) => (
+                  <tr key={item.repairKey}
+                    style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
+                  >
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.reworkNumber}</span>
+                    </td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.workOrderNumber}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.serialNumber}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.reason}>{item.reason}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.techName || '—'}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.originalComplete || '—'}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.reworkDue || '—'}</td>
+                    <td style={{ padding: '6px 10px', fontSize: 11.5, borderBottom: '1px solid var(--border)' }}>
+                      <StatusBadge
+                        status={item.status}
+                        variant={item.status === 'Complete' ? 'green' : item.status === 'In Progress' ? 'blue' : 'amber'}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Footer */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px',
+            background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)',
+          }}>
+            <span style={{ fontWeight: 500 }}>{reworkTotal.toLocaleString()} records</span>
+            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+              <button disabled={reworkPage <= 1} onClick={() => setReworkPage(p => p - 1)}
+                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: reworkPage <= 1 ? 'default' : 'pointer', opacity: reworkPage <= 1 ? 0.4 : 1, fontFamily: 'inherit' }}>
+                &#8249;
+              </button>
+              {Array.from({ length: Math.min(reworkTotalPages, 7) }, (_, i) => {
+                const pg = i + 1;
+                return (
+                  <button key={pg} onClick={() => setReworkPage(pg)}
+                    style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: reworkPage === pg ? 'var(--navy)' : 'var(--card)', color: reworkPage === pg ? 'var(--card)' : 'var(--label)', fontSize: 11, fontWeight: reworkPage === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    {pg}
+                  </button>
+                );
+              })}
+              <button disabled={reworkPage >= reworkTotalPages} onClick={() => setReworkPage(p => p + 1)}
+                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: reworkPage >= reworkTotalPages ? 'default' : 'pointer', opacity: reworkPage >= reworkTotalPages ? 0.4 : 1, fontFamily: 'inherit' }}>
+                &#8250;
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       {activeTab === 'Reports' && (
-        <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-          <ComingSoon label="Reports" />
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+          <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+              {[
+                { title: 'Inspection Summary', desc: 'Pass/Fail/Conditional breakdown by period', icon: <IconShield /> },
+                { title: 'First-Pass Yield Trend', desc: 'FPY percentage over last 12 months', icon: <IconCheckDouble /> },
+                { title: 'NCR Aging Report', desc: 'Open non-conformances by age bucket', icon: <IconWarn /> },
+                { title: 'CAPA Effectiveness', desc: 'Closure rates and recurrence analysis', icon: <IconCheck /> },
+                { title: 'Rework Rate by Technician', desc: 'Rework frequency per tech over time', icon: <IconX /> },
+                { title: 'Cost of Poor Quality', desc: 'COPQ trends including rework and scrap costs', icon: <IconDollar /> },
+              ].map(report => (
+                <div key={report.title} style={{
+                  background: 'var(--card)', border: '1px solid var(--neutral-200)', borderRadius: 'var(--radius-lg)',
+                  padding: 18, cursor: 'pointer', transition: 'box-shadow 0.15s',
+                }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(var(--navy-rgb), 0.1)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = ''; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(var(--navy-rgb), 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--navy)' }}>
+                      {report.icon}
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{report.title}</span>
+                  </div>
+                  <div style={{ fontSize: 11.5, color: 'var(--muted)', lineHeight: 1.5 }}>{report.desc}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
