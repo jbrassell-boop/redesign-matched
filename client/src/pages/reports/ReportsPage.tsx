@@ -1,27 +1,10 @@
 import { useState, useMemo } from 'react';
 import { Input } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import { StatStrip } from '../../components/shared/StatStrip';
+import type { StatChipDef } from '../../components/shared/StatStrip';
 import { REPORTS, CATEGORIES } from './reportData';
 import type { ReportDef } from './types';
-
-/* ── Stat Chip (non-clickable) ───────────────────────────────── */
-const StatChip = ({ label, value, iconBg, iconColor, valueColor, icon }: {
-  label: string; value: number; iconBg: string; iconColor: string; valueColor: string; icon: React.ReactNode;
-}) => (
-  <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 8, background: 'var(--card)' }}>
-    <span style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: iconBg, color: iconColor }}>{icon}</span>
-    <span style={{ display: 'flex', flexDirection: 'column' }}>
-      <span style={{ fontSize: 18, fontWeight: 800, color: valueColor, lineHeight: 1.2 }}>{value}</span>
-      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{label}</span>
-    </span>
-  </div>
-);
-
-/* ── SVG Icons ───────────────────────────────────────────────── */
-const IconReport = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14,2 14,8 20,8" /></svg>;
-const IconStar = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>;
-const IconRecent = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /></svg>;
-const IconScheduled = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 14, height: 14 }}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>;
 
 /* ── Report Card ─────────────────────────────────────────────── */
 const ReportCard = ({ report, favorited, onToggleFav }: { report: ReportDef; favorited: boolean; onToggleFav: () => void }) => (
@@ -118,15 +101,12 @@ export const ReportsPage = () => {
 
   const recentCount = REPORTS.filter(r => r.lastRun != null).length;
 
-  /* ── Stat Strip ──────────────────────────────────────────── */
-  const statStrip = (
-    <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' }}>
-      <StatChip label="Reports Available" value={REPORTS.length} iconBg="rgba(var(--navy-rgb), 0.10)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconReport />} />
-      <StatChip label="Favorites" value={favorites.size} iconBg="rgba(var(--amber-rgb), 0.10)" iconColor="#92400E" valueColor="#92400E" icon={<IconStar />} />
-      <StatChip label="Recently Run" value={recentCount} iconBg="rgba(var(--success-rgb), 0.10)" iconColor="var(--success)" valueColor="var(--success)" icon={<IconRecent />} />
-      <StatChip label="Scheduled" value={3} iconBg="rgba(var(--primary-rgb), 0.10)" iconColor="var(--primary)" valueColor="var(--primary)" icon={<IconScheduled />} />
-    </div>
-  );
+  const chips: StatChipDef[] = [
+    { id: 'available', label: 'Reports Available', value: REPORTS.length, color: 'navy' },
+    { id: 'favorites', label: 'Favorites',         value: favorites.size,  color: 'amber' },
+    { id: 'recent',    label: 'Recently Run',       value: recentCount,     color: 'green' },
+    { id: 'scheduled', label: 'Scheduled',          value: 3,               color: 'blue' },
+  ];
 
   /* ── Toolbar ─────────────────────────────────────────────── */
   const toolbar = (
@@ -159,7 +139,7 @@ export const ReportsPage = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
-      {statStrip}
+      <StatStrip chips={chips} />
       {toolbar}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16, background: 'var(--bg)' }}>
         {CATEGORIES.map(cat => {
