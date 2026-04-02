@@ -9,6 +9,22 @@ namespace TSI.Api.Controllers;
 [Route("api/auth")]
 public class AuthController(IConfiguration config, JwtService jwtService) : ControllerBase
 {
+    // Temporary diagnostic — remove after confirming column names
+    [HttpGet("schema")]
+    public async Task<IActionResult> GetSchema()
+    {
+        var connectionString = config.GetConnectionString("DefaultConnection")!;
+        await using var conn = new SqlConnection(connectionString);
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand(
+            "SELECT COLUMN_NAME, DATA_TYPE, CHARACTER_MAXIMUM_LENGTH FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'tblUsers' ORDER BY ORDINAL_POSITION", conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var cols = new List<object>();
+        while (await reader.ReadAsync())
+            cols.Add(new { col = reader["COLUMN_NAME"], type = reader["DATA_TYPE"], len = reader["CHARACTER_MAXIMUM_LENGTH"] });
+        return Ok(cols);
+    }
+
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
