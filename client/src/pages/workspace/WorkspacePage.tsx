@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Spin } from 'antd';
 import { getWorkspaceData } from '../../api/workspace';
+import { StatusBadge, DetailHeader } from '../../components/shared';
 import type { WorkspaceData } from './types';
 
 const fmtMoney = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -61,20 +62,6 @@ const MiniTable = ({ headers, children }: { headers: string[]; children: React.R
   </table>
 );
 
-const Badge = ({ label, variant }: { label: string; variant: 'blue' | 'amber' | 'red' | 'green' }) => {
-  const styles: Record<string, React.CSSProperties> = {
-    blue: { background: 'rgba(var(--primary-rgb), 0.1)', color: 'var(--primary)', border: '1px solid rgba(var(--primary-rgb), 0.3)' },
-    amber: { background: 'rgba(var(--amber-rgb), 0.1)', color: 'var(--warning)', border: '1px solid rgba(var(--amber-rgb), 0.3)' },
-    red: { background: 'rgba(var(--danger-rgb), 0.1)', color: 'var(--danger)', border: '1px solid rgba(var(--danger-rgb), 0.3)' },
-    green: { background: 'rgba(var(--success-rgb), 0.1)', color: 'var(--success)', border: '1px solid rgba(var(--success-rgb), 0.3)' },
-  };
-  return (
-    <span style={{ ...styles[variant], display: 'inline-flex', padding: '1px 6px', borderRadius: 8, fontSize: 9.5, fontWeight: 600 }}>
-      {label}
-    </span>
-  );
-};
-
 const StatRow = ({ label, value, icon, color }: { label: string; value: string; icon: string; color?: string }) => (
   <div style={{
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -119,14 +106,10 @@ export const WorkspacePage = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'auto', background: 'var(--bg)' }}>
       {/* Toolbar */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px',
-        background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)',
-        flexShrink: 0, position: 'sticky', top: 0, zIndex: 10,
-      }}>
-        <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--navy)' }}>My Workspace</span>
-        <span style={{ fontSize: 11, color: 'var(--muted)', marginLeft: 6 }}>{getGreeting()}</span>
-      </div>
+      <DetailHeader
+        title="My Workspace"
+        subtitle={getGreeting()}
+      />
 
       {/* Widget Grid */}
       <div style={{
@@ -158,9 +141,9 @@ export const WorkspacePage = () => {
                     <td style={tdStyle}>{item.client}</td>
                     <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 10.5 }}>{item.scopeType}</td>
                     <td style={{ ...tdStyle, textAlign: 'center' }}>
-                      <Badge label={`${item.daysIn}d / 7d`} variant={over ? 'red' : item.daysIn >= 6 ? 'amber' : 'blue'} />
+                      <StatusBadge status={`${item.daysIn}d / 7d`} variant={over ? 'red' : item.daysIn >= 6 ? 'amber' : 'blue'} />
                     </td>
-                    <td style={tdStyle}><Badge label={item.status} variant="blue" /></td>
+                    <td style={tdStyle}><StatusBadge status={item.status} /></td>
                   </tr>
                 );
               })}
@@ -187,7 +170,7 @@ export const WorkspacePage = () => {
                   <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)', fontSize: 11 }}>{item.wo}</span></td>
                   <td style={tdStyle}>{item.client}</td>
                   <td style={tdStyle}>
-                    <Badge label={`${item.daysIn}d / ${item.sla}d`} variant={item.daysIn > item.sla ? 'red' : 'amber'} />
+                    <StatusBadge status={`${item.daysIn}d / ${item.sla}d`} variant={item.daysIn > item.sla ? 'red' : 'amber'} />
                   </td>
                 </tr>
               ))}
@@ -219,7 +202,7 @@ export const WorkspacePage = () => {
                   <td style={tdStyle}>{item.client}</td>
                   <td style={tdStyle}>{item.expirationDate}</td>
                   <td style={tdStyle}>
-                    <Badge label={`${item.daysUntil}d`} variant={item.daysUntil <= 21 ? 'red' : 'amber'} />
+                    <StatusBadge status={`${item.daysUntil}d`} variant={item.daysUntil <= 21 ? 'red' : 'amber'} />
                   </td>
                 </tr>
               ))}
