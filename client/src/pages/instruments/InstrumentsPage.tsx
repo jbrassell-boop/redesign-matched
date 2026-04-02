@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Select, Table, Tag } from 'antd';
+import { Input, Select, Table } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import {
   getInstrumentRepairs,
@@ -9,6 +9,8 @@ import {
   getInstrumentStats,
 } from '../../api/instruments';
 import { RepairDrawer, CatalogDrawer } from './InstrumentsDetailPane';
+import { TabBar, StatusBadge } from '../../components/shared';
+import type { TabDef } from '../../components/shared';
 import type {
   InstrumentRepairListItem,
   InstrumentRepairDetail,
@@ -27,21 +29,11 @@ const fmtDate = (d: string | null) => {
   return isNaN(dt.getTime()) ? '\u2014' : dt.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 };
 
-const TABS: { key: InstrumentTab; label: string }[] = [
+const TABS: TabDef[] = [
   { key: 'repairs', label: 'Instrument Repairs' },
   { key: 'quotes', label: 'Instrument Quotes' },
   { key: 'catalog', label: 'Instrument Catalog' },
 ];
-
-const STATUS_COLORS: Record<string, string> = {
-  'Received': 'blue',
-  'In Progress': 'gold',
-  'Outsourced': 'purple',
-  'On Hold': 'orange',
-  'Complete': 'green',
-  'Completed': 'green',
-  'Invoiced': 'green',
-};
 
 const STAT_CHIPS: {
   key: string;
@@ -126,8 +118,8 @@ export const InstrumentsPage = () => {
     return () => clearTimeout(timer);
   }, [loadData, search]);
 
-  const handleTabChange = (tab: InstrumentTab) => {
-    setActiveTab(tab);
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab as InstrumentTab);
     setSearch('');
     setStatusFilter('');
     setTypeFilter('');
@@ -219,7 +211,7 @@ export const InstrumentsPage = () => {
       dataIndex: 'status',
       key: 'status',
       width: 110,
-      render: (v: string) => <Tag color={STATUS_COLORS[v] ?? 'default'}>{v}</Tag>,
+      render: (v: string) => <StatusBadge status={v} />,
     },
     {
       title: '',
@@ -297,7 +289,7 @@ export const InstrumentsPage = () => {
       dataIndex: 'isActive',
       key: 'isActive',
       width: 80,
-      render: (v: boolean) => <Tag color={v ? 'success' : 'default'}>{v ? 'Active' : 'Inactive'}</Tag>,
+      render: (v: boolean) => <StatusBadge status={v ? 'Active' : 'Inactive'} />,
     },
     {
       title: '',
@@ -326,49 +318,18 @@ export const InstrumentsPage = () => {
   return (
     <div style={{ height: 'calc(100vh - 64px)', overflow: 'auto', background: 'var(--bg)' }}>
       {/* Page tabs */}
-      <div style={{
-        display: 'flex',
-        background: 'var(--neutral-50)',
-        borderBottom: '1px solid var(--neutral-200)',
-        padding: '0 16px',
-        flexShrink: 0,
-      }}>
-        {TABS.map((t) => (
-          <div
-            key={t.key}
-            onClick={() => handleTabChange(t.key)}
-            style={{
-              padding: '10px 18px',
-              fontSize: 12,
-              fontWeight: activeTab === t.key ? 700 : 600,
-              color: activeTab === t.key ? 'var(--primary)' : 'var(--muted)',
-              cursor: 'pointer',
-              borderBottom: activeTab === t.key ? '2px solid var(--primary)' : '2px solid transparent',
-              marginBottom: -2,
-              transition: 'all 0.12s',
-              userSelect: 'none' as const,
-            }}
-          >
-            {t.label}
-            {t.key === 'catalog' && catalogTotal > 0 && (
-              <span style={{
-                background: 'var(--navy)',
-                color: '#fff',
-                fontSize: 9,
-                fontWeight: 700,
-                padding: '1px 5px',
-                borderRadius: 7,
-                marginLeft: 4,
-              }}>
-                {catalogTotal.toLocaleString()}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
+      <TabBar
+        tabs={TABS.map(t =>
+          t.key === 'catalog' && catalogTotal > 0
+            ? { ...t, label: `${t.label} (${catalogTotal.toLocaleString()})` }
+            : t
+        )}
+        activeKey={activeTab}
+        onChange={handleTabChange}
+      />
 
       <div style={{ padding: '16px 20px' }}>
-        {/* Stat strip — only for repairs tab */}
+        {/* Stat strip — only for repairs/quotes tab */}
         {(activeTab === 'repairs' || activeTab === 'quotes') && (
           <div style={{
             display: 'flex',
@@ -474,18 +435,88 @@ export const InstrumentsPage = () => {
           )}
         </div>
 
-        {/* Quotes placeholder */}
+        {/* Quotes table — shows repair orders in quote-centric view */}
         {activeTab === 'quotes' && (
-          <div style={{
-            padding: 40,
-            textAlign: 'center',
-            color: 'var(--muted)',
-            fontSize: 13,
-            background: 'var(--card)',
-            borderRadius: 12,
-            border: '1px solid var(--border)',
-          }}>
-            Instrument Quotes — coming soon
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 16px rgba(var(--primary-rgb), 0.06)' }}>
+            <Table
+              dataSource={repairs}
+              columns={[
+                {
+                  title: 'Quote #',
+                  dataIndex: 'orderNumber',
+                  key: 'orderNumber',
+                  width: 120,
+                  render: (v: string) => <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{v}</span>,
+                },
+                { title: 'Client', dataIndex: 'clientName', key: 'clientName', width: 180 },
+                { title: 'Department', dataIndex: 'departmentName', key: 'departmentName' },
+                {
+                  title: 'Date',
+                  dataIndex: 'dateReceived',
+                  key: 'dateReceived',
+                  width: 90,
+                  render: (v: string | null) => <span style={{ color: 'var(--muted)' }}>{fmtDate(v)}</span>,
+                },
+                {
+                  title: 'Items',
+                  dataIndex: 'itemCount',
+                  key: 'itemCount',
+                  width: 55,
+                  align: 'center' as const,
+                },
+                {
+                  title: 'Total',
+                  dataIndex: 'totalValue',
+                  key: 'totalValue',
+                  width: 100,
+                  align: 'right' as const,
+                  render: (v: number) => <span style={{ fontWeight: 600, color: 'var(--navy)' }}>{fmt$(v)}</span>,
+                  sorter: (a: InstrumentRepairListItem, b: InstrumentRepairListItem) => a.totalValue - b.totalValue,
+                },
+                {
+                  title: 'Status',
+                  dataIndex: 'status',
+                  key: 'status',
+                  width: 120,
+                  render: (v: string) => <StatusBadge status={v} />,
+                },
+                {
+                  title: '',
+                  key: 'actions',
+                  width: 70,
+                  render: (_: unknown, r: InstrumentRepairListItem) => (
+                    <button
+                      onClick={() => handleViewRepair(r.repairKey)}
+                      style={{
+                        padding: '3px 10px',
+                        fontSize: 11,
+                        fontWeight: 600,
+                        border: '1px solid var(--border)',
+                        borderRadius: 4,
+                        background: 'var(--card)',
+                        color: 'var(--primary)',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      View
+                    </button>
+                  ),
+                },
+              ]}
+              rowKey="repairKey"
+              loading={loading}
+              size="small"
+              pagination={{
+                current: page,
+                pageSize,
+                total: repairTotal,
+                showSizeChanger: true,
+                pageSizeOptions: ['25', '50', '100'],
+                onChange: (p, ps) => { setPage(p); setPageSize(ps); },
+                showTotal: (total, range) => `Showing ${range[0]}\u2013${range[1]} of ${total.toLocaleString()}`,
+              }}
+              style={{ fontSize: 12 }}
+            />
           </div>
         )}
 

@@ -1,5 +1,6 @@
-import { Drawer, Spin, Table, Tag } from 'antd';
+import { Drawer, Spin, Table } from 'antd';
 import type { InstrumentRepairDetail, InstrumentCatalogDetail } from './types';
+import { Field, FormGrid, StatusBadge, DetailHeader } from '../../components/shared';
 
 const fmt$ = (v: number) =>
   '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -8,24 +9,6 @@ const fmtDate = (d: string | null) => {
   if (!d) return '\u2014';
   const dt = new Date(d);
   return isNaN(dt.getTime()) ? '\u2014' : dt.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-};
-
-interface FieldProps { label: string; value: string | number | null | undefined }
-const Field = ({ label, value }: FieldProps) => (
-  <div style={{ marginBottom: 12 }}>
-    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 2 }}>{label}</div>
-    <div style={{ fontSize: 13, color: 'var(--text)', padding: '4px 8px', background: 'var(--neutral-50)', border: '1px solid var(--neutral-200)', borderRadius: 4, minHeight: 28 }}>{value ?? '\u2014'}</div>
-  </div>
-);
-
-const STATUS_COLORS: Record<string, string> = {
-  'Received': 'blue',
-  'In Progress': 'gold',
-  'Outsourced': 'purple',
-  'On Hold': 'orange',
-  'Complete': 'green',
-  'Completed': 'green',
-  'Invoiced': 'green',
 };
 
 interface RepairDrawerProps {
@@ -50,9 +33,9 @@ export const RepairDrawer = ({ detail, loading, open, onClose }: RepairDrawerPro
       dataIndex: 'approved',
       key: 'approved',
       render: (v: string | null) => {
-        if (v === 'Y') return <Tag color="success">Yes</Tag>;
-        if (v === 'N') return <Tag color="error">No</Tag>;
-        if (v === 'P') return <Tag color="warning">Pending</Tag>;
+        if (v === 'Y') return <StatusBadge status="Yes" variant="green" />;
+        if (v === 'N') return <StatusBadge status="No" variant="red" />;
+        if (v === 'P') return <StatusBadge status="Pending" variant="amber" />;
         return <span style={{ color: 'var(--muted)' }}>\u2014</span>;
       },
     },
@@ -64,10 +47,10 @@ export const RepairDrawer = ({ detail, loading, open, onClose }: RepairDrawerPro
     <Drawer
       title={
         detail ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>Order {detail.orderNumber}</span>
-            <Tag color={STATUS_COLORS[detail.status] ?? 'default'} style={{ color: '#fff', border: 'none' }}>{detail.status}</Tag>
-          </div>
+          <DetailHeader
+            title={`Order ${detail.orderNumber}`}
+            badges={<StatusBadge status={detail.status} />}
+          />
         ) : 'Repair Detail'
       }
       placement="right"
@@ -108,7 +91,7 @@ export const RepairDrawer = ({ detail, loading, open, onClose }: RepairDrawerPro
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
+          <FormGrid cols={2}>
             <Field label="Client" value={detail.clientName} />
             <Field label="Department" value={detail.departmentName} />
             <Field label="PO #" value={detail.purchaseOrder} />
@@ -116,7 +99,7 @@ export const RepairDrawer = ({ detail, loading, open, onClose }: RepairDrawerPro
             <Field label="Received" value={fmtDate(detail.dateReceived)} />
             <Field label="Due" value={fmtDate(detail.dateDue)} />
             <Field label="Completed" value={fmtDate(detail.dateCompleted)} />
-          </div>
+          </FormGrid>
 
           {detail.notes && (
             <div style={{ marginTop: 8 }}>
@@ -156,12 +139,10 @@ export const CatalogDrawer = ({ detail, loading, open, onClose }: CatalogDrawerP
   <Drawer
     title={
       detail ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 16, fontWeight: 800, color: '#fff' }}>{detail.itemDescription}</span>
-          <Tag color={detail.isActive ? 'success' : 'default'} style={{ color: '#fff', border: 'none' }}>
-            {detail.isActive ? 'Active' : 'Inactive'}
-          </Tag>
-        </div>
+        <DetailHeader
+          title={detail.itemDescription}
+          badges={<StatusBadge status={detail.isActive ? 'Active' : 'Inactive'} />}
+        />
       ) : 'Instrument Detail'
     }
     placement="right"
@@ -179,7 +160,7 @@ export const CatalogDrawer = ({ detail, loading, open, onClose }: CatalogDrawerP
       <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No instrument selected</div>
     ) : (
       <>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px' }}>
+        <FormGrid cols={2}>
           <Field label="Description" value={detail.itemDescription} />
           <Field label="TSI Code" value={detail.tsiCode} />
           <Field label="Type" value={detail.rigidOrFlexible === 'R' ? 'Rigid' : detail.rigidOrFlexible === 'F' ? 'Flexible' : detail.rigidOrFlexible} />
@@ -190,12 +171,12 @@ export const CatalogDrawer = ({ detail, loading, open, onClose }: CatalogDrawerP
           <Field label="Premier Product ID" value={detail.productIdPremier} />
           <Field label="Diameter Type" value={detail.diameterType} />
           <Field label="Major Repair" value={detail.isMajorRepair ? 'Yes' : 'No'} />
-        </div>
+        </FormGrid>
 
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginTop: 16, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           Costs & Time
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
+        <FormGrid cols={3}>
           {[
             { label: 'Avg Material', value: fmt$(detail.avgCostMaterial), color: 'var(--navy)' },
             { label: 'Avg Labor', value: fmt$(detail.avgCostLabor), color: 'var(--navy)' },
@@ -209,7 +190,7 @@ export const CatalogDrawer = ({ detail, loading, open, onClose }: CatalogDrawerP
               <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 2 }}>{card.label}</div>
             </div>
           ))}
-        </div>
+        </FormGrid>
       </>
     )}
   </Drawer>
