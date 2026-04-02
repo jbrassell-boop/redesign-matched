@@ -1,0 +1,27 @@
+Screen: Product Sale
+Reviewed: 2026-04-02
+Reviewer: screen-reviewer
+Result: PASS
+
+Backend:
+  [x] Controller pattern: [ApiController], [Route("api/product-sales")], [Authorize], IConfiguration ctor
+  [x] await using: SqlConnection, SqlCommand, SqlDataReader throughout GetList, GetDetail, GetStats
+  [x] Pagination: OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY (line 60)
+  [x] No EF Core: raw SqlClient throughout
+  [x] Stats endpoint: [HttpGet("stats")] with CASE-based aggregates for status counts + revenue
+  [x] Detail endpoint: [HttpGet("{id:int}")] with line items from tblProductSaleInvoiceDetail
+  [x] Record models: 5 records (ProductSaleListItem, ProductSaleDetail, ProductSaleLineItem, ProductSaleStats, ProductSaleListResponse)
+
+Frontend:
+  [x] File structure: ProductSalePage.tsx + ProductSaleDetailPane.tsx + types.ts + api/product-sales.ts
+  [x] Zero hardcoded hex violations: only #fff in drawer header (no token equivalent)
+  [x] rgba uses -rgb tokens: --navy-rgb, --primary-rgb, --success-rgb, --amber-rgb, --danger-rgb (lines 34-40, 268)
+  [x] Drawer: 600px width, var(--primary-dark) header background
+  [x] Route registered: /product-sale in router.tsx line 49
+
+Notes:
+  - Status derived from date fields (dtInvoiceDate, dtCanceledDate, dtQuoteDate) via DeriveStatus helper
+  - Post-filter by status in-memory (acceptable since status is derived, not a DB column)
+  - 7 KPI stat chips with interactive filter clicking
+  - Ant Design Table with built-in pagination
+  - Detail drawer includes financial summary, addresses, notes, and line items table

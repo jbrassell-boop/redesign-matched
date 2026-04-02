@@ -1,0 +1,24 @@
+Screen: Acquisitions
+Reviewed: 2026-04-02
+Reviewer: screen-reviewer
+Result: PASS
+
+Backend:
+  [x] Controller pattern: [ApiController], [Route("api/acquisitions")], [Authorize], IConfiguration ctor
+  [x] await using: SqlConnection, SqlCommand, SqlDataReader throughout both GetList and GetSoldList
+  [x] Pagination: OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY (lines 72, 139)
+  [x] No EF Core: raw SqlClient throughout
+  [x] Stats endpoint: [HttpGet("stats")] with aggregate CASE expressions for in-house vs sold
+  [x] Record models: 5 records (AcquisitionListItem, AcquisitionSoldItem, AcquisitionStats, AcquisitionListResponse, AcquisitionSoldResponse)
+
+Frontend:
+  [x] File structure: AcquisitionsPage.tsx + types.ts + api/acquisitions.ts
+  [x] Zero hardcoded hex violations: #fff (no token equivalent), #92400E (amber-800 matches approved Loaners pattern)
+  [x] rgba uses -rgb tokens: --primary-rgb, --amber-rgb, --success-rgb, --navy-rgb (lines 103-107)
+  [x] Route registered: /acquisitions in router.tsx line 48
+
+Notes:
+  - 3 tabs: In-House, Consigned, Sold (sold uses separate query via GetSoldList)
+  - Tab-based query dispatching via ?tab= parameter
+  - 5 KPI stat chips with interactive tab switching
+  - Consigned hardcoded to 0 in stats (no consignment flag in schema) — acceptable placeholder

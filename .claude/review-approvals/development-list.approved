@@ -1,0 +1,29 @@
+Screen: Development List
+Reviewed: 2026-04-02
+Reviewer: screen-reviewer
+Result: PASS
+
+Backend:
+  [x] Controller pattern: [ApiController], [Route("api/development-list")], [Authorize], IConfiguration ctor
+  [x] await using: SqlConnection, SqlCommand, SqlDataReader throughout all 4 endpoints
+  [x] Pagination: OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY (line 57)
+  [x] No EF Core: raw SqlClient throughout
+  [x] Stats endpoint: [HttpGet("stats")] with CASE-based status aggregates via LIKE patterns
+  [x] Detail endpoint: [HttpGet("{id:int}")] for single item
+  [x] Statuses endpoint: [HttpGet("statuses")] from tblToDoStatuses
+  [x] Record models: 4 records (DevListItem, DevListStatus, DevListStats, DevListResponse)
+
+Frontend:
+  [x] File structure: DevelopmentListPage.tsx + types.ts + api/development-list.ts
+  [x] Zero hardcoded hex colors — all colors use CSS variables
+  [x] rgba uses -rgb tokens: Badge (lines 9-12) --primary-rgb, --amber-rgb, --success-rgb, --danger-rgb
+  [x] Selected row: borderLeft 2px solid var(--amber) + var(--warning-bg) background
+  [x] Tab active state: 2px bottom border + var(--primary) + fontWeight 700
+  [x] Route registered: /development-list in router.tsx line 57
+
+Notes:
+  - Split layout: left table list + right 310px detail panel with Details/Activity tabs
+  - DB tables: tblToDoList, tblToDoStatuses, tblUsers (JOIN for assignee)
+  - 6 stat chips inline: Total, Pending, In Progress, Awaiting, Completed, Review
+  - Status filter via dropdown populated from /statuses endpoint
+  - Target year/quarter displayed as "2026 Q2" format

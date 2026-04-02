@@ -1,0 +1,23 @@
+Screen: Reports
+Reviewed: 2026-04-02
+Reviewer: screen-reviewer
+Result: PASS
+
+Backend:
+  [x] No backend controller needed — static report catalog page
+  [x] All 73 report definitions stored in reportData.ts with 9 categories
+
+Frontend:
+  [x] File structure: ReportsPage.tsx + types.ts + reportData.ts
+  [x] Zero hardcoded hex violations: #fff (no token equivalent), #92400E (amber-800 matching approved pattern)
+  [x] rgba uses -rgb tokens: --navy-rgb, --amber-rgb, --success-rgb, --primary-rgb (lines 124-127)
+  [x] Route registered: /reports in router.tsx line 52
+
+Notes:
+  - Static catalog page — no API calls, no controller
+  - 4 stat chips (Reports Available, Favorites, Recently Run, Scheduled)
+  - Search filters across name, description, and category
+  - Show Favorites Only toggle with 5 seeded defaults
+  - 9 collapsible category sections with 3-column card grid
+  - Report cards show name, description, extract badge, last-run info, star toggle, Run button
+  - 73 reports match HTML reference catalog

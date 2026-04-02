@@ -1,0 +1,29 @@
+Screen: Administration
+Reviewed: 2026-04-02
+Reviewer: screen-reviewer
+Result: PASS
+
+Backend:
+  [x] Controller pattern: [ApiController], [Route("api/administration")], [Authorize], IConfiguration ctor
+  [x] await using: SqlConnection, SqlCommand, SqlDataReader throughout all 13 endpoints + stats
+  [x] Pagination: OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY on users endpoint (line 49)
+  [x] No EF Core: raw SqlClient throughout
+  [x] Stats endpoint: [HttpGet("stats")] with subquery counts for users, groups, pricing, locked
+  [x] Record models: 17 records in Administration.cs
+
+Frontend:
+  [x] File structure: AdministrationPage.tsx + types.ts + api/administration.ts
+  [x] Zero hardcoded hex violations: only #fff (no token equivalent)
+  [x] rgba uses -rgb tokens: stat strip (line 315), category pills (line 334)
+  [x] Drawer: 600px width, var(--primary-dark) header background
+  [x] Tab active state: 2px bottom border + var(--primary) + fontWeight 700
+  [x] Route registered: /administration in router.tsx line 55
+
+Notes:
+  - Full-width tabbed layout with 4 category pill groups
+  - 13 sub-tabs: Users, Security Groups, Pricing Lists, Delivery Methods, Payment Terms,
+    Scope Categories, Distributors, Companies, Repair Reasons, Repair Statuses, Holidays, Sales Tax, Countries
+  - 5 KPI stat chips (Active Users, Security Groups, Pricing Lists, Audit 24h, Locked)
+  - Generic key-value drawer for record detail
+  - Scope Categories and Distributors have additional filter controls
+  - Uses tsi-badge CSS classes for status badges (consistent with design system)

@@ -1,0 +1,27 @@
+Screen: Workspace
+Reviewed: 2026-04-02
+Reviewer: screen-reviewer
+Result: PASS
+
+Backend:
+  [x] Controller pattern: [ApiController], [Route("api/workspace")], [Authorize], IConfiguration ctor
+  [x] await using: SqlConnection, SqlCommand, SqlDataReader throughout all widget queries
+  [x] No EF Core: raw SqlClient throughout
+  [x] Record models: 8 records (WorkspaceData, RepairQueueWidget, RepairQueueItem, OverdueWidget, OverdueItem, InvoicesWidget, ContractsWidget, ContractExpiringItem)
+  [x] No pagination needed — dashboard with TOP 5 queries (appropriate)
+  [x] Single GET endpoint returns all widget data (appropriate for dashboard)
+
+Frontend:
+  [x] File structure: WorkspacePage.tsx + types.ts + api/workspace.ts
+  [x] Zero hardcoded hex colors — all colors use CSS variables
+  [x] rgba uses -rgb tokens: Badge (lines 66-69), WidgetCard shadow (line 19)
+  [x] Route registered: /workspace in router.tsx line 53
+
+Notes:
+  - Dashboard/widget layout with 3-column grid
+  - 6 widgets: Repair Queue (span 2), My Tasks (placeholder), Overdue/At Risk, Outstanding Invoices, Contracts Expiring, Quick Links
+  - Repair Queue aggregates from tblRepair + tblRepairStatuses with status LIKE patterns
+  - Overdue widget: repairs >7 days without ship date
+  - Invoices widget: outstanding/past-due/this-month aggregates
+  - Contracts widget: tblContract expiring within 60 days (with graceful SqlException catch)
+  - Greeting changes by time of day

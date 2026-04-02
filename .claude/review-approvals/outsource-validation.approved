@@ -1,0 +1,23 @@
+Screen: Outsource Validation
+Reviewed: 2026-04-02
+Reviewer: screen-reviewer
+Result: PASS
+
+Backend:
+  [x] Controller pattern: [ApiController], [Route("api/outsource-validation")], [Authorize], IConfiguration ctor
+  [x] await using: SqlConnection (line 25), SqlCommand (lines 74, 88), SqlDataReader (line 96), stats commands (lines 152, 172)
+  [x] Pagination: OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY (line 71)
+  [x] No EF Core: raw SqlClient throughout
+  [x] Stats endpoint: [HttpGet("stats")] with aggregate query + top vendor subquery
+  [x] Record models: OutsourceListItem, OutsourceStats, OutsourceListResponse
+
+Frontend:
+  [x] File structure: OutsourceValidationPage.tsx + types.ts + api/outsource-validation.ts
+  [x] Zero hardcoded hex: only #fff (no token equivalent, matches reference pattern)
+  [x] rgba uses -rgb tokens: StatusBadge (lines 7-11), StatChip (lines 177-182)
+  [x] Route registered: /outsource-validation in router.tsx line 45
+
+Notes:
+  - Status filter applied in-memory (post-SQL) since status is derived from dtDateOut presence
+  - Full-width table layout with 12 columns, stat strip, segmented status control
+  - Margin and days-out coloring uses rgba -rgb tokens correctly
