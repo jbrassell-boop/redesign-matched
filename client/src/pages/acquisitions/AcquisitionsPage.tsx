@@ -75,6 +75,24 @@ export const AcquisitionsPage = () => {
 
   const pageSize = 50;
 
+  // Detail drawer state
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detail, setDetail] = useState<AcquisitionDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+
+  const handleRowClick = async (scopeKey: number) => {
+    setDetailOpen(true);
+    setDetailLoading(true);
+    try {
+      const d = await getAcquisitionDetail(scopeKey);
+      setDetail(d);
+    } catch {
+      message.error('Failed to load acquisition detail');
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
   useEffect(() => { getAcquisitionStats().then(setStats).catch(() => {}); }, []);
 
   const loadInHouse = useCallback(async (s: string, p: number) => {
@@ -154,7 +172,7 @@ export const AcquisitionsPage = () => {
               ) : items.length === 0 ? (
                 <tr><td colSpan={cols.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No acquisition records found</td></tr>
               ) : items.map((item, idx) => (
-                <tr key={item.scopeKey} style={{ cursor: 'pointer', background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }} onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }} onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}>
+                <tr key={item.scopeKey} style={{ cursor: 'pointer', background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }} onClick={() => handleRowClick(item.scopeKey)} onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }} onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}>
                   <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.serial || '\u2014'}</span></td>
                   <td style={tdStyle}>{item.scopeType || '\u2014'}</td>
                   <td style={tdStyle}>{item.poNumber || '\u2014'}</td>
@@ -210,7 +228,7 @@ export const AcquisitionsPage = () => {
             ) : soldItems.length === 0 ? (
               <tr><td colSpan={6} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No sold records found</td></tr>
             ) : soldItems.map((item, idx) => (
-              <tr key={item.scopeKey} style={{ cursor: 'pointer', background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }} onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }} onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}>
+              <tr key={item.scopeKey} style={{ cursor: 'pointer', background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }} onClick={() => handleRowClick(item.scopeKey)} onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }} onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}>
                 <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.serial || '\u2014'}</span></td>
                 <td style={tdStyle}>{item.scopeType || '\u2014'}</td>
                 <td style={tdStyle}>{item.client || '\u2014'}</td>
@@ -239,6 +257,8 @@ export const AcquisitionsPage = () => {
     </div>
   );
 
+  const fmt$ = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2 });
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
       {statStrip}
@@ -248,6 +268,60 @@ export const AcquisitionsPage = () => {
         {activeTab === 'consigned' && renderAcqTable(consignedItems, consignedLoading, consignedTotal, consignedSearch, setConsignedSearch, consignedPage, setConsignedPage, 'Consigned')}
         {activeTab === 'sold' && soldTable}
       </div>
+
+      {/* Detail Drawer */}
+      <Drawer
+        open={detailOpen}
+        onClose={() => { setDetailOpen(false); setDetail(null); }}
+        placement="right"
+        width={600}
+        title={detail ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontWeight: 700, color: 'var(--card)', fontSize: 14 }}>{detail.serial || 'Acquisition Detail'}</span>
+            <StatusBadge status={detail.isSold ? 'Sold' : 'In-House'} />
+          </div>
+        ) : 'Acquisition Detail'}
+        styles={{
+          header: { background: 'var(--primary-dark)', borderBottom: 'none', color: 'var(--card)' },
+          body: { padding: 0 },
+        }}
+      >
+        {detailLoading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+        ) : !detail ? (
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>No detail available</div>
+        ) : (
+          <div style={{ padding: '16px 20px' }}>
+            {/* Cost banner */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 16px', borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--navy)' }}>{fmt$(detail.cost)}</div>
+                <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Acquisition Cost</div>
+              </div>
+            </div>
+            <FormGrid cols={2}>
+              <Field label="Serial #" value={detail.serial} />
+              <Field label="Type" value={detail.flexOrRigid || '\u2014'} />
+              <Field label="Scope Model" value={detail.scopeType} />
+              <Field label="Manufacturer" value={detail.manufacturer || '\u2014'} />
+              <Field label="Client" value={detail.client || '\u2014'} />
+              <Field label="Department" value={detail.dept || '\u2014'} />
+              <Field label="Supplier" value={detail.supplier || '\u2014'} />
+              <Field label="PO Number" value={detail.poNumber || '\u2014'} />
+              <Field label="PO Date" value={detail.poDate || '\u2014'} />
+              <Field label="Date Received" value={detail.dateReceived || '\u2014'} />
+            </FormGrid>
+            {detail.comment && (
+              <div style={{ marginTop: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Comments</div>
+                <div style={{ fontSize: 12, color: 'var(--text)', background: 'var(--neutral-50)', borderRadius: 6, padding: '10px 12px', border: '1px solid var(--border)' }}>
+                  {detail.comment}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Drawer>
     </div>
   );
 };

@@ -174,6 +174,108 @@ const activeTdStyle: React.CSSProperties = {
 };
 
 /* ═════════════════════════════════════════════════════════════ */
+/*  SCOPE NEEDS TAB                                             */
+/* ═════════════════════════════════════════════════════════════ */
+
+const ScopeNeedsTab = () => {
+  const [items, setItems] = useState<LoanerScopeNeedItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    getLoanerScopeNeeds()
+      .then(setItems)
+      .catch(() => { message.error('Failed to load scope needs'); })
+      .finally(() => setLoading(false));
+  }, []);
+
+  const cols = [
+    { key: 'scopeType', label: 'Scope Type', width: 200 },
+    { key: 'clientName', label: 'Client', width: 180 },
+    { key: 'deptName', label: 'Department', width: 160 },
+    { key: 'repairsInProgress', label: 'Repairs In Progress', width: 140, align: 'center' as const },
+    { key: 'avgTat', label: 'Avg TAT (days)', width: 120, align: 'center' as const },
+    { key: 'estimatedNeedDate', label: 'Est. Need Date', width: 120 },
+  ];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' }}>
+        <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+          Scope types currently in repair with loaner requests — estimated need dates based on average turnaround time.
+        </span>
+        <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>
+          <strong style={{ color: 'var(--text)' }}>{items.length}</strong> scope types
+        </div>
+      </div>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 920 }}>
+          <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
+            <tr>
+              {cols.map(col => (
+                <th key={col.key} style={{
+                  background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 600, padding: '8px 10px',
+                  textAlign: col.align || 'left', whiteSpace: 'nowrap',
+                  borderRight: '1px solid rgba(var(--primary-rgb), 0.15)',
+                  borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em',
+                  textTransform: 'uppercase', fontSize: 10, width: col.width,
+                }}>
+                  {col.label}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={cols.length} style={{ textAlign: 'center', padding: 24 }}><Spin size="small" /></td></tr>
+            ) : items.length === 0 ? (
+              <tr><td colSpan={cols.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No active loaner-requested repairs in progress</td></tr>
+            ) : items.map((item, idx) => (
+              <tr
+                key={`${item.scopeType}-${item.deptName}-${idx}`}
+                style={{ background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}
+              >
+                <td style={needsTdStyle}><span style={{ fontWeight: 600, color: 'var(--navy)' }}>{item.scopeType}</span></td>
+                <td style={needsTdStyle}>{item.clientName || '\u2014'}</td>
+                <td style={needsTdStyle}>{item.deptName || '\u2014'}</td>
+                <td style={{ ...needsTdStyle, textAlign: 'center' }}>
+                  <span style={{
+                    display: 'inline-block', padding: '1px 8px', borderRadius: 4,
+                    fontSize: 11, fontWeight: 700, fontFamily: 'monospace',
+                    background: item.repairsInProgress >= 3
+                      ? 'rgba(var(--danger-rgb), 0.1)'
+                      : item.repairsInProgress >= 2
+                        ? 'rgba(var(--amber-rgb), 0.1)'
+                        : 'rgba(var(--success-rgb), 0.1)',
+                    color: item.repairsInProgress >= 3
+                      ? 'var(--danger)'
+                      : item.repairsInProgress >= 2
+                        ? 'var(--amber)'
+                        : 'var(--success)',
+                  }}>
+                    {item.repairsInProgress}
+                  </span>
+                </td>
+                <td style={{ ...needsTdStyle, textAlign: 'center', fontFamily: 'monospace', fontWeight: 600 }}>
+                  {item.avgTat.toFixed(1)}d
+                </td>
+                <td style={{ ...needsTdStyle, color: 'var(--muted)' }}>{item.estimatedNeedDate}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
+
+const needsTdStyle: React.CSSProperties = {
+  padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', verticalAlign: 'middle', color: 'var(--text)',
+};
+
+/* ═════════════════════════════════════════════════════════════ */
 /*  REQUESTS TAB                                                */
 /* ═════════════════════════════════════════════════════════════ */
 
@@ -769,7 +871,7 @@ export const LoanersPage = () => {
       case 'active':
         return <ActiveLoanersTab onRowClick={handleRowClick} />;
       case 'needs':
-        return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Scope Needs coming soon</div>;
+        return <ScopeNeedsTab />;
       case 'requests':
         return <RequestsTab onRequestUpdated={loadStats} />;
       default:
