@@ -25,7 +25,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
 
         var where = new List<string>();
         if (!string.IsNullOrWhiteSpace(search))
-            where.Add("(d.sDepartmentName LIKE @search OR c.sClientName1 LIKE @search)");
+            where.Add("(d.sDepartmentName LIKE @search OR c.sClientName1 LIKE @search OR d.sMailZip LIKE @search OR d.sShipZip LIKE @search)");
         if (clientKey.HasValue)
             where.Add("d.lClientKey = @clientKey");
 

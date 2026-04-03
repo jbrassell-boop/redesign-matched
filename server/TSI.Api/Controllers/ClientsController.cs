@@ -25,7 +25,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
 
         var where = new List<string>();
         if (!string.IsNullOrWhiteSpace(search))
-            where.Add("(c.sClientName1 LIKE @search OR c.sMailCity LIKE @search OR c.sMailState LIKE @search)");
+            where.Add("(c.sClientName1 LIKE @search OR c.sMailCity LIKE @search OR c.sMailState LIKE @search OR c.sMailZip LIKE @search)");
         if (statusFilter == "active")
             where.Add("c.bActive = 1");
         else if (statusFilter == "inactive")
