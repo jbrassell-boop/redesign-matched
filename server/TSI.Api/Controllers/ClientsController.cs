@@ -37,13 +37,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
 
         var dataSql = $"""
             SELECT c.lClientKey, c.sClientName1, c.sMailCity, c.sMailState,
-                   ISNULL(c.bActive, 0) AS bActive,
-                   (SELECT COUNT(*) FROM tblDepartment d WHERE d.lClientKey = c.lClientKey) AS DeptCount,
-                   (SELECT COUNT(*) FROM tblRepair r
-                    JOIN tblDepartment d2 ON d2.lDepartmentKey = r.lDepartmentKey
-                    JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
-                    WHERE d2.lClientKey = c.lClientKey
-                      AND rs.sRepairStatus NOT IN ('Shipped','Cancelled')) AS OpenRepairs
+                   ISNULL(c.bActive, 0) AS bActive
             FROM tblClient c
             {whereClause}
             ORDER BY c.sClientName1
@@ -68,9 +62,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
                 Name: reader["sClientName1"]?.ToString() ?? "",
                 City: reader["sMailCity"]?.ToString() ?? "",
                 State: reader["sMailState"]?.ToString() ?? "",
-                IsActive: Convert.ToBoolean(reader["bActive"]),
-                DeptCount: Convert.ToInt32(reader["DeptCount"]),
-                OpenRepairs: Convert.ToInt32(reader["OpenRepairs"])
+                IsActive: Convert.ToBoolean(reader["bActive"])
             ));
         }
 

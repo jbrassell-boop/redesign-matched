@@ -54,10 +54,6 @@ export const DepartmentsList = ({ departments, loading, selectedKey, search, onS
               </span>
             </div>
             <div style={{ fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.clientName}</div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 2 }}>
-              <span style={{ fontSize: 10, color: 'var(--muted)' }}>{d.scopeCount} scope{d.scopeCount !== 1 ? 's' : ''}</span>
-              {d.openRepairs > 0 && <span style={{ fontSize: 10, color: 'var(--primary)' }}>{d.openRepairs} open</span>}
-            </div>
           </div>
         ))
       )}

@@ -54,10 +54,6 @@ export const ClientsList = ({ clients, loading, selectedKey, search, onSearchCha
               </span>
             </div>
             <div style={{ fontSize: 11, color: 'var(--muted)' }}>{[c.city, c.state].filter(Boolean).join(', ')}</div>
-            <div style={{ display: 'flex', gap: 10, marginTop: 2 }}>
-              <span style={{ fontSize: 10, color: 'var(--muted)' }}>{c.deptCount} dept{c.deptCount !== 1 ? 's' : ''}</span>
-              {c.openRepairs > 0 && <span style={{ fontSize: 10, color: 'var(--primary)' }}>{c.openRepairs} open</span>}
-            </div>
           </div>
         ))
       )}

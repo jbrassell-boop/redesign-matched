@@ -11,8 +11,6 @@ const CLIENT_EXPORT_COLS = [
   { key: 'city', label: 'City' },
   { key: 'state', label: 'State' },
   { key: 'isActive', label: 'Active' },
-  { key: 'deptCount', label: 'Departments' },
-  { key: 'openRepairs', label: 'Open Repairs' },
 ];
 
 export const ClientsPage = () => {

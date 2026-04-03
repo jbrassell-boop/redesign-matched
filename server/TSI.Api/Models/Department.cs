@@ -5,9 +5,7 @@ public record DepartmentListItem(
     string Name,
     string ClientName,
     int ClientKey,
-    bool IsActive,
-    int OpenRepairs,
-    int ScopeCount
+    bool IsActive
 );
 
 public record DepartmentDetail(

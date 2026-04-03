@@ -5,9 +5,7 @@ public record ClientListItem(
     string Name,
     string City,
     string State,
-    bool IsActive,
-    int DeptCount,
-    int OpenRepairs
+    bool IsActive
 );
 
 public record ClientDetail(

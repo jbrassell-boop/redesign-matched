@@ -4,8 +4,6 @@ export interface DepartmentListItem {
   clientName: string;
   clientKey: number;
   isActive: boolean;
-  openRepairs: number;
-  scopeCount: number;
 }
 
 export interface DepartmentDetail {

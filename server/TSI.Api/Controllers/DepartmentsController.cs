@@ -42,12 +42,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             SELECT d.lDepartmentKey, d.sDepartmentName,
                    ISNULL(c.sClientName1, '') AS sClientName1,
                    d.lClientKey,
-                   ISNULL(d.bActive, 0) AS bActive,
-                   (SELECT COUNT(*) FROM tblRepair r
-                    JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
-                    WHERE r.lDepartmentKey = d.lDepartmentKey
-                      AND rs.sRepairStatus NOT IN ('Shipped','Cancelled')) AS OpenRepairs,
-                   (SELECT COUNT(*) FROM tblScope s WHERE s.lDepartmentKey = d.lDepartmentKey) AS ScopeCount
+                   ISNULL(d.bActive, 0) AS bActive
             FROM tblDepartment d
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             {whereClause}
@@ -75,9 +70,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
                 Name: reader["sDepartmentName"]?.ToString() ?? "",
                 ClientName: reader["sClientName1"]?.ToString() ?? "",
                 ClientKey: Convert.ToInt32(reader["lClientKey"]),
-                IsActive: Convert.ToBoolean(reader["bActive"]),
-                OpenRepairs: Convert.ToInt32(reader["OpenRepairs"]),
-                ScopeCount: Convert.ToInt32(reader["ScopeCount"])
+                IsActive: Convert.ToBoolean(reader["bActive"])
             ));
         }
 

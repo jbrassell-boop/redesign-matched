@@ -4,8 +4,6 @@ export interface ClientListItem {
   city: string;
   state: string;
   isActive: boolean;
-  deptCount: number;
-  openRepairs: number;
 }
 
 export interface ClientDetail {
