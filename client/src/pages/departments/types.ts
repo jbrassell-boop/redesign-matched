@@ -62,6 +62,44 @@ export interface DepartmentFull {
   serviceLocation?: string;
   scopeCount: number;
   openRepairs: number;
+  // Options & Toggles
+  showConsumptionOnReq?: boolean;
+  enforceScopeTypeFiltering?: boolean;
+  showProductId?: boolean;
+  showUaOrNwt?: boolean;
+  showItemizedDescriptions?: boolean;
+  emailNewRepairs?: boolean;
+  memberBoa?: boolean;
+  trackingRequired?: boolean;
+  taxExempt?: boolean;
+  paysByCreditCard?: boolean;
+  onsiteService?: boolean;
+  // Billing & Defaults
+  salesRepKey?: number;
+  salesRep?: string;
+  pricingCategoryKey?: number;
+  pricingCategory?: string;
+  discountPct?: number;
+  defaultShipping?: number;
+  // Bill To address
+  billName1?: string;
+  billAddr1?: string;
+  billAddr2?: string;
+  billCity?: string;
+  billState?: string;
+  billZip?: string;
+  billEmail?: string;
+  // Mailing address
+  mailAddr1?: string;
+  mailAddr2?: string;
+  mailCity?: string;
+  mailState?: string;
+  mailZip?: string;
+  mailCountry?: string;
+  // Ship To extra (address1/city/state/zip already serve as ship)
+  shipName1?: string;
+  shipAddr2?: string;
+  shipCountry?: string;
 }
 
 export interface DeptKpis {
@@ -105,3 +143,14 @@ export interface DepartmentRepairItem {
 }
 
 export type SaveState = 'ready' | 'unsaved' | 'saving' | 'saved';
+
+export interface DeptContract {
+  contractKey: number;
+  contractName: string;
+  contractNumber: string;
+  contractType: string | null;
+  dateEffective: string | null;
+  dateTermination: string | null;
+  status: string;
+  annualValue: number | null;
+}

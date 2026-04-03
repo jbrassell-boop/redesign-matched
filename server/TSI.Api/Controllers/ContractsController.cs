@@ -217,6 +217,162 @@ public class ContractsController(IConfiguration config) : ControllerBase
         ));
     }
 
+    [HttpGet("{contractKey:int}/departments")]
+    public async Task<IActionResult> GetDepartments(int contractKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT
+                cd.lContractDepartmentKey,
+                cd.lDepartmentKey,
+                ISNULL(d.sDepartmentName, '') AS sDepartmentName,
+                cd.dtContractDepartmentEffectiveDate,
+                cd.dtContractDepartmentEndDate,
+                ISNULL(cd.bNonBillable, 0) AS bNonBillable,
+                ISNULL(cd.sPONumber, '') AS sPONumber
+            FROM tblContractDepartments cd
+            LEFT JOIN tblDepartment d ON cd.lDepartmentKey = d.lDepartmentKey
+            WHERE cd.lContractKey = @contractKey
+            ORDER BY d.sDepartmentName
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@contractKey", contractKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var items = new List<ContractDepartment>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new ContractDepartment(
+                ContractDepartmentKey: Convert.ToInt32(reader["lContractDepartmentKey"]),
+                DepartmentKey: Convert.ToInt32(reader["lDepartmentKey"]),
+                DepartmentName: reader["sDepartmentName"].ToString() ?? "",
+                EffectiveDate: reader["dtContractDepartmentEffectiveDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtContractDepartmentEffectiveDate"]),
+                EndDate: reader["dtContractDepartmentEndDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtContractDepartmentEndDate"]),
+                NonBillable: Convert.ToBoolean(reader["bNonBillable"]),
+                PoNumber: reader["sPONumber"].ToString()
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    [HttpGet("{contractKey:int}/amendments")]
+    public async Task<IActionResult> GetAmendments(int contractKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT
+                a.lContractAmendmentKey,
+                a.dtContractAmendmentDate,
+                ISNULL(s.sContractAmendmentStatus, 'Unknown') AS sContractAmendmentStatus,
+                ISNULL(a.nPreviousContractTotal, 0) AS nPreviousContractTotal,
+                ISNULL(a.nNewContractTotal, 0) AS nNewContractTotal,
+                ISNULL(a.nPreviousInvoiceAmount, 0) AS nPreviousInvoiceAmount,
+                ISNULL(a.nNewInvoiceAmount, 0) AS nNewInvoiceAmount,
+                ISNULL(a.lRemainingMonths, 0) AS lRemainingMonths
+            FROM tblContractAmendments a
+            LEFT JOIN tblContractAmendmentStatuses s ON a.lContractAmendmentStatusKey = s.lContractAmendmentStatusKey
+            WHERE a.lContractKey = @contractKey
+            ORDER BY a.dtContractAmendmentDate DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@contractKey", contractKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var items = new List<ContractAmendment>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new ContractAmendment(
+                AmendmentKey: Convert.ToInt32(reader["lContractAmendmentKey"]),
+                AmendmentDate: reader["dtContractAmendmentDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtContractAmendmentDate"]),
+                Status: reader["sContractAmendmentStatus"].ToString() ?? "",
+                PreviousTotal: Convert.ToDecimal(reader["nPreviousContractTotal"]),
+                NewTotal: Convert.ToDecimal(reader["nNewContractTotal"]),
+                PreviousInvoiceAmount: Convert.ToDecimal(reader["nPreviousInvoiceAmount"]),
+                NewInvoiceAmount: Convert.ToDecimal(reader["nNewInvoiceAmount"]),
+                RemainingMonths: Convert.ToInt32(reader["lRemainingMonths"])
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    [HttpPost("{contractKey:int}/amendments")]
+    public async Task<IActionResult> CreateAmendment(int contractKey, [FromBody] CreateContractAmendmentRequest request)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            INSERT INTO tblContractAmendments
+                (lContractKey, dtContractAmendmentDate, nPreviousContractTotal, nNewContractTotal,
+                 nPreviousInvoiceAmount, nNewInvoiceAmount, lContractAmendmentStatusKey, lRemainingMonths)
+            OUTPUT INSERTED.lContractAmendmentKey
+            VALUES
+                (@contractKey, @amendmentDate, @previousTotal, @newTotal,
+                 @previousInvoice, @newInvoice, 1, @remainingMonths)
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@contractKey", contractKey);
+        cmd.Parameters.AddWithValue("@amendmentDate", request.AmendmentDate ?? DateTime.Today);
+        cmd.Parameters.AddWithValue("@previousTotal", request.PreviousTotal);
+        cmd.Parameters.AddWithValue("@newTotal", request.NewTotal);
+        cmd.Parameters.AddWithValue("@previousInvoice", request.PreviousInvoiceAmount);
+        cmd.Parameters.AddWithValue("@newInvoice", request.NewInvoiceAmount);
+        cmd.Parameters.AddWithValue("@remainingMonths", request.RemainingMonths);
+
+        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return Ok(new { amendmentKey = newKey });
+    }
+
+    [HttpGet("{contractKey:int}/affiliates")]
+    public async Task<IActionResult> GetAffiliates(int contractKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT
+                a.lAffiliateKey,
+                a.lDepartmentKey,
+                ISNULL(d.sDepartmentName, '') AS sDepartmentName,
+                ISNULL(cl.sClientName1, '') AS sClientName1,
+                a.dtAffiliateStartDate,
+                a.dtAffiliateEndDate
+            FROM tblContractAffiliates a
+            LEFT JOIN tblDepartment d ON a.lDepartmentKey = d.lDepartmentKey
+            LEFT JOIN tblClient cl ON d.lClientKey = cl.lClientKey
+            WHERE a.lContractKey = @contractKey
+            ORDER BY d.sDepartmentName
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@contractKey", contractKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var items = new List<ContractAffiliate>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new ContractAffiliate(
+                AffiliateKey: Convert.ToInt32(reader["lAffiliateKey"]),
+                DepartmentKey: Convert.ToInt32(reader["lDepartmentKey"]),
+                DepartmentName: reader["sDepartmentName"].ToString() ?? "",
+                ClientName: reader["sClientName1"].ToString() ?? "",
+                StartDate: reader["dtAffiliateStartDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtAffiliateStartDate"]),
+                EndDate: reader["dtAffiliateEndDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtAffiliateEndDate"])
+            ));
+        }
+
+        return Ok(items);
+    }
+
     [HttpGet("{contractKey:int}/scopes")]
     public async Task<IActionResult> GetScopes(int contractKey)
     {

@@ -245,6 +245,129 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
         }
     }
 
+    [HttpGet("{id:int}/detail")]
+    public async Task<IActionResult> GetDetail(int id)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT ss.lSiteServiceKey, ss.sWorkOrderNumber, ss.dtOnsiteDate,
+                   ISNULL(c.sClientName1, '') AS sClientName,
+                   ISNULL(d.sDepartmentName, '') AS sDepartmentName,
+                   ISNULL(t.sTechName, '') AS sTechName,
+                   ISNULL(ss.sPurchaseOrder, '') AS sPurchaseOrder,
+                   ISNULL(ss.sTruckNumber, '') AS sTruckNumber,
+                   ISNULL(ss.sNotes, '') AS sNotes,
+                   ISNULL(ss.lTrayCount, 0) AS lTrayCount,
+                   ISNULL(ss.lTotalInstruments, 0) AS lTotalInstruments,
+                   ISNULL(ss.nInvoiceAmount, 0) AS nInvoiceAmount,
+                   ss.dtInvoiceDate,
+                   CASE
+                       WHEN ss.dtVoidDate IS NOT NULL THEN 'Void'
+                       WHEN ss.dtInvoiceDate IS NOT NULL THEN 'Invoiced'
+                       WHEN ss.dtDateSubmitted IS NOT NULL THEN 'Submitted'
+                       ELSE 'Draft'
+                   END AS sStatus
+            FROM tblSiteServices ss
+            LEFT JOIN tblClient c ON c.lClientKey = ss.lClientKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = ss.lDepartmentKey
+            LEFT JOIN tblTechnicians t ON t.lTechnicianKey = ss.lTechnicianKey
+            WHERE ss.lSiteServiceKey = @id
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@id", id);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+            return NotFound(new { message = "Visit not found." });
+
+        var visitDate = reader["dtOnsiteDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtOnsiteDate"]).ToString("MM/dd/yyyy");
+        var submittedDate = reader["dtInvoiceDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtInvoiceDate"]).ToString("MM/dd/yyyy");
+
+        return Ok(new OnsiteServiceDetail(
+            OnsiteServiceKey: Convert.ToInt32(reader["lSiteServiceKey"]),
+            InvoiceNum: reader["sWorkOrderNumber"]?.ToString() ?? "",
+            ClientName: reader["sClientName"]?.ToString() ?? "",
+            DeptName: reader["sDepartmentName"]?.ToString() ?? "",
+            TechName: reader["sTechName"]?.ToString() ?? "",
+            VisitDate: visitDate,
+            Status: reader["sStatus"]?.ToString() ?? "Draft",
+            TrayCount: Convert.ToInt32(reader["lTrayCount"]),
+            InstrumentCount: Convert.ToInt32(reader["lTotalInstruments"]),
+            TotalBilled: reader["nInvoiceAmount"] == DBNull.Value ? 0 : Convert.ToDouble(reader["nInvoiceAmount"]),
+            SubmittedDate: submittedDate,
+            PurchaseOrder: reader["sPurchaseOrder"]?.ToString(),
+            TruckNumber: reader["sTruckNumber"]?.ToString(),
+            Notes: reader["sNotes"]?.ToString()
+        ));
+    }
+
+    [HttpGet("{id:int}/trays")]
+    public async Task<IActionResult> GetTrays(int id)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT t.lSiteServiceTrayKey,
+                   ISNULL(t.lTrayNumber, 0) AS lTrayNumber,
+                   ISNULL(t.sTrayName, '') AS sTrayName,
+                   ISNULL(t.lInstrumentsCount, 0) AS lInstrumentsCount,
+                   ISNULL(t.lRepairedCount, 0) AS lRepairedCount,
+                   ISNULL(t.lSentToTSICount, 0) AS lSentToTSICount,
+                   ISNULL(t.lBeyondEconomicalRepairCount, 0) AS lBeyondEconomicalRepairCount,
+                   ISNULL(t.lReplacedCount, 0) AS lReplacedCount
+            FROM tblSiteServiceTrays t
+            WHERE t.lSiteServiceKey = @id
+            ORDER BY t.lTrayNumber
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@id", id);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var trays = new List<OnsiteServiceTray>();
+        while (await reader.ReadAsync())
+        {
+            trays.Add(new OnsiteServiceTray(
+                TrayKey: Convert.ToInt32(reader["lSiteServiceTrayKey"]),
+                TrayNumber: Convert.ToInt32(reader["lTrayNumber"]),
+                TrayName: reader["sTrayName"]?.ToString() ?? "",
+                InstrumentsCount: Convert.ToInt32(reader["lInstrumentsCount"]),
+                RepairedCount: Convert.ToInt32(reader["lRepairedCount"]),
+                SentToTsiCount: Convert.ToInt32(reader["lSentToTSICount"]),
+                BeyondEconomicalRepairCount: Convert.ToInt32(reader["lBeyondEconomicalRepairCount"]),
+                ReplacedCount: Convert.ToInt32(reader["lReplacedCount"])
+            ));
+        }
+
+        return Ok(trays);
+    }
+
+    [HttpPatch("{id:int}/submit")]
+    public async Task<IActionResult> SubmitForInvoicing(int id)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Try tblSiteServices first, fall back to tblOnsiteService
+        try
+        {
+            await using var cmd = new SqlCommand(
+                "UPDATE tblSiteServices SET dtDateSubmitted = GETDATE() WHERE lSiteServiceKey = @id AND dtDateSubmitted IS NULL",
+                conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            var rows = await cmd.ExecuteNonQueryAsync();
+            return Ok(new { submitted = rows > 0 });
+        }
+        catch (SqlException)
+        {
+            return Ok(new { submitted = false });
+        }
+    }
+
     private static DateTime? GetNullableDateTime(SqlDataReader reader, string column)
     {
         try

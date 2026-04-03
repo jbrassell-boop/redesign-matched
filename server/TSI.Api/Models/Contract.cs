@@ -151,3 +151,21 @@ public record ContractHealth(
     decimal Margin,
     string Grade
 );
+
+public record ContractAffiliate(
+    int AffiliateKey,
+    int DepartmentKey,
+    string DepartmentName,
+    string ClientName,
+    DateTime? StartDate,
+    DateTime? EndDate
+);
+
+public record CreateContractAmendmentRequest(
+    DateTime? AmendmentDate,
+    decimal PreviousTotal,
+    decimal NewTotal,
+    decimal PreviousInvoiceAmount,
+    decimal NewInvoiceAmount,
+    int RemainingMonths
+);

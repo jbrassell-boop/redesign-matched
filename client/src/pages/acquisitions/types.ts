@@ -46,3 +46,20 @@ export interface AcquisitionsFilters {
   pageSize: number;
   tab: string;
 }
+
+export interface AcquisitionDetail {
+  scopeKey: number;
+  serial: string;
+  scopeType: string;
+  manufacturer: string;
+  client: string;
+  dept: string;
+  supplier: string;
+  poNumber: string;
+  poDate: string | null;
+  dateReceived: string | null;
+  cost: number;
+  comment: string;
+  flexOrRigid: string;
+  isSold: boolean;
+}

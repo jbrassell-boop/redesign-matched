@@ -74,3 +74,12 @@ export interface LoanerRequest {
   loanerProduced: string;
   status: string;
 }
+
+export interface LoanerScopeNeedItem {
+  scopeType: string;
+  deptName: string;
+  clientName: string;
+  repairsInProgress: number;
+  avgTat: number;
+  estimatedNeedDate: string;
+}

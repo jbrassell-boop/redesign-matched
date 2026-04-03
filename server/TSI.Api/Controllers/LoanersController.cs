@@ -367,4 +367,56 @@ public class LoanersController(IConfiguration config) : ControllerBase
         var rows = await cmd.ExecuteNonQueryAsync();
         return Ok(new { updated = rows });
     }
+
+    // ── Scope Needs ───────────────────────────────────────────────────────────
+
+    [HttpGet("scope-needs")]
+    public async Task<IActionResult> GetScopeNeeds()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Repairs currently in progress grouped by scope type + department
+        // Avg TAT = avg DATEDIFF(day, dtDateIn, GETDATE()) for open repairs
+        const string sql = """
+            SELECT
+                ISNULL(st.sScopeTypeDesc, 'Unknown') AS sScopeTypeDesc,
+                ISNULL(d.sDepartmentName, 'Unknown') AS sDepartmentName,
+                ISNULL(c.sClientName1, '') AS sClientName1,
+                COUNT(*) AS RepairsInProgress,
+                AVG(DATEDIFF(day, r.dtDateIn, GETDATE())) AS AvgTat
+            FROM tblRepair r
+            INNER JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+            INNER JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            WHERE r.dtDateOut IS NULL
+              AND r.dtDateIn IS NOT NULL
+              AND r.bLoanerRequested = 1
+            GROUP BY st.sScopeTypeDesc, d.sDepartmentName, c.sClientName1
+            ORDER BY RepairsInProgress DESC, sScopeTypeDesc
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var items = new List<LoanerScopeNeedItem>();
+        while (await reader.ReadAsync())
+        {
+            var avgTat = reader["AvgTat"] == DBNull.Value ? 0.0 : Convert.ToDouble(reader["AvgTat"]);
+            // Estimated need date: today + avgTat days (when repair would complete and loaner return)
+            var estimatedNeed = DateTime.Today.AddDays(avgTat).ToString("MM/dd/yyyy");
+
+            items.Add(new LoanerScopeNeedItem(
+                ScopeType: reader["sScopeTypeDesc"]?.ToString() ?? "",
+                DeptName: reader["sDepartmentName"]?.ToString() ?? "",
+                ClientName: reader["sClientName1"]?.ToString() ?? "",
+                RepairsInProgress: Convert.ToInt32(reader["RepairsInProgress"]),
+                AvgTat: Math.Round(avgTat, 1),
+                EstimatedNeedDate: estimatedNeed
+            ));
+        }
+
+        return Ok(items);
+    }
 }

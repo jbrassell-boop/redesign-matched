@@ -86,3 +86,12 @@ public record BulkLoanerRequestAction(
     List<int> RepairKeys,
     string Action
 );
+
+public record LoanerScopeNeedItem(
+    string ScopeType,
+    string DeptName,
+    string ClientName,
+    int RepairsInProgress,
+    double AvgTat,
+    string EstimatedNeedDate
+);

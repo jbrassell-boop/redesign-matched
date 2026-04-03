@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Spin } from 'antd';
+import { Input, Spin, Drawer, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { getAcquisitions, getAcquisitionsSold, getAcquisitionStats } from '../../api/acquisitions';
-import { DetailHeader, TabBar } from '../../components/shared';
+import { getAcquisitions, getAcquisitionsSold, getAcquisitionStats, getAcquisitionDetail } from '../../api/acquisitions';
+import { DetailHeader, TabBar, Field, FormGrid, StatusBadge } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
-import type { AcquisitionListItem, AcquisitionSoldItem, AcquisitionStats } from './types';
+import type { AcquisitionListItem, AcquisitionSoldItem, AcquisitionStats, AcquisitionDetail } from './types';
 
 /* ── Stat Chip ───────────────────────────────────────────────── */
 interface StatChipProps {

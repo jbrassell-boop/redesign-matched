@@ -35,6 +35,8 @@ public record InventoryDetail(
     bool NoCountAdjustment,
     bool NotUsedByRepair,
     bool AlwaysReOrder,
+    bool LargeDiameter,
+    bool SkipPickList,
     DateTime? LastUpdate,
     DateTime? CreateDate,
     IEnumerable<InventorySizeItem> Sizes
@@ -73,4 +75,23 @@ public record InventorySupplierItem(
     double UnitCost,
     int OrderMinimum,
     bool IsActive
+);
+
+public record InventoryReceivingItem(
+    int InventorySizeKey,
+    int InventoryKey,
+    string Description,
+    string SizeDescription,
+    int CurrentLevel,
+    int MinLevel,
+    int MaxLevel,
+    string? BinNumber
+);
+
+public record ReceiveInventoryRequest(
+    int InventorySizeKey,
+    int Quantity,
+    string? LotNumber,
+    string? BinNumber,
+    string? Notes
 );

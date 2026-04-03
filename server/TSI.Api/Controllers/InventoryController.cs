@@ -305,4 +305,94 @@ public class InventoryController(IConfiguration config) : ControllerBase
             LowStockCount: Convert.ToInt32(reader["LowStockCount"])
         ));
     }
+
+    // ── Receiving ─────────────────────────────────────────────────────────────
+
+    [HttpGet("pending-receipt")]
+    public async Task<IActionResult> GetPendingReceipt()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Return all active inventory sizes that are at or below minimum (candidates for receiving)
+        const string sql = """
+            SELECT s.lInventorySizeKey, i.lInventoryKey,
+                   ISNULL(i.sItemDescription, '') AS sItemDescription,
+                   ISNULL(s.sSizeDescription, '') AS sSizeDescription,
+                   ISNULL(s.nLevelCurrent, 0) AS nLevelCurrent,
+                   ISNULL(s.nLevelMinimum, 0) AS nLevelMinimum,
+                   ISNULL(s.nLevelMaximum, 0) AS nLevelMaximum,
+                   s.sBinNumber
+            FROM tblInventorySize s
+            INNER JOIN tblInventory i ON i.lInventoryKey = s.lInventoryKey
+            WHERE ISNULL(s.bActive, 0) = 1
+              AND ISNULL(s.nLevelCurrent, 0) <= ISNULL(s.nLevelMinimum, 0)
+            ORDER BY i.sItemDescription, s.sSizeDescription
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var items = new List<InventoryReceivingItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new InventoryReceivingItem(
+                InventorySizeKey: Convert.ToInt32(reader["lInventorySizeKey"]),
+                InventoryKey: Convert.ToInt32(reader["lInventoryKey"]),
+                Description: reader["sItemDescription"]?.ToString() ?? "",
+                SizeDescription: reader["sSizeDescription"]?.ToString() ?? "",
+                CurrentLevel: Convert.ToInt32(reader["nLevelCurrent"]),
+                MinLevel: Convert.ToInt32(reader["nLevelMinimum"]),
+                MaxLevel: Convert.ToInt32(reader["nLevelMaximum"]),
+                BinNumber: reader["sBinNumber"]?.ToString()
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    [HttpPost("receive")]
+    public async Task<IActionResult> ReceiveInventory([FromBody] ReceiveInventoryRequest req)
+    {
+        if (req.Quantity <= 0)
+            return BadRequest(new { message = "Quantity must be greater than zero." });
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Insert a tblInventoryTran record (positive quantity = receipt)
+        const string tranSql = """
+            INSERT INTO tblInventoryTran
+                (lInventorySizeKey, nTranQuantity, dtTranDate, sLotNumber, sBinNumber,
+                 sTranDescription, sPostedToCurrent, dtCreateDate)
+            VALUES
+                (@sizeKey, @qty, GETDATE(), @lotNumber, @binNumber,
+                 @notes, 'Y', GETDATE());
+            """;
+
+        // Update current level on tblInventorySize
+        const string updateSql = """
+            UPDATE tblInventorySize
+            SET nLevelCurrent = ISNULL(nLevelCurrent, 0) + @qty,
+                sBinNumber = CASE WHEN @binNumber IS NOT NULL THEN @binNumber ELSE sBinNumber END,
+                dtLastUpdate = GETDATE()
+            WHERE lInventorySizeKey = @sizeKey
+            """;
+
+        await using var tranCmd = new SqlCommand(tranSql, conn);
+        tranCmd.Parameters.AddWithValue("@sizeKey", req.InventorySizeKey);
+        tranCmd.Parameters.AddWithValue("@qty", req.Quantity);
+        tranCmd.Parameters.AddWithValue("@lotNumber", (object?)req.LotNumber ?? DBNull.Value);
+        tranCmd.Parameters.AddWithValue("@binNumber", (object?)req.BinNumber ?? DBNull.Value);
+        tranCmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? (object)"Stock Receipt");
+        await tranCmd.ExecuteNonQueryAsync();
+
+        await using var updateCmd = new SqlCommand(updateSql, conn);
+        updateCmd.Parameters.AddWithValue("@qty", req.Quantity);
+        updateCmd.Parameters.AddWithValue("@binNumber", (object?)req.BinNumber ?? DBNull.Value);
+        updateCmd.Parameters.AddWithValue("@sizeKey", req.InventorySizeKey);
+        await updateCmd.ExecuteNonQueryAsync();
+
+        return Ok(new { received = true });
+    }
 }

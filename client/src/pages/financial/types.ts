@@ -105,3 +105,31 @@ export interface GLAccountItem {
   accountNumber: string;
   batchNumber: string;
 }
+
+export interface AtRiskItem {
+  departmentKey: number;
+  departmentName: string;
+  clientName: string;
+  repairCount: number;
+  revenue: number;
+  laborCost: number;
+  materialCost: number;
+  outsourceCost: number;
+  shippingCost: number;
+  commissionCost: number;
+  totalExpenses: number;
+  margin: number;
+  marginPct: number;
+}
+
+export interface TrendingItem {
+  month: string;
+  repairCount: number;
+  revenue: number;
+  laborCost: number;
+  materialCost: number;
+  outsourceCost: number;
+  totalExpenses: number;
+  margin: number;
+  marginPct: number;
+}

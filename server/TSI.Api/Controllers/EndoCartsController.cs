@@ -219,4 +219,25 @@ public class EndoCartsController(IConfiguration config) : ControllerBase
             RecentRepairs: recentRepairs
         ));
     }
+
+    // ── Cart-Specific Stubs ──────────────────────────────────────────────────
+    // TODO: Replace with real queries when endocart DB tables are migrated.
+    // No tblEndoCartQuote, tblEndoCartCatalog, or tblEndoCartModel tables exist yet.
+
+    /// <summary>GET /api/endocarts/quotes — returns empty until tblEndoCartQuote is migrated</summary>
+    [HttpGet("quotes")]
+    public IActionResult GetQuotes() => Ok(Array.Empty<object>());
+
+    /// <summary>POST /api/endocarts/quotes — stub; returns 501 until table is migrated</summary>
+    [HttpPost("quotes")]
+    public IActionResult CreateQuote() =>
+        StatusCode(501, new { message = "EndoCart quote tables not yet migrated to Azure SQL." });
+
+    /// <summary>GET /api/endocarts/catalog — returns empty until tblEndoCartCatalog is migrated</summary>
+    [HttpGet("catalog")]
+    public IActionResult GetCatalog() => Ok(Array.Empty<object>());
+
+    /// <summary>GET /api/endocarts/models — returns empty until tblEndoCartModel is migrated</summary>
+    [HttpGet("models")]
+    public IActionResult GetModels() => Ok(Array.Empty<object>());
 }

@@ -41,3 +41,20 @@ public record AcquisitionSoldResponse(
     List<AcquisitionSoldItem> Items,
     int TotalCount
 );
+
+public record AcquisitionDetail(
+    int ScopeKey,
+    string Serial,
+    string ScopeType,
+    string Manufacturer,
+    string Client,
+    string Dept,
+    string Supplier,
+    string PONumber,
+    string? PODate,
+    string? DateReceived,
+    decimal Cost,
+    string Comment,
+    string FlexOrRigid,
+    bool IsSold
+);

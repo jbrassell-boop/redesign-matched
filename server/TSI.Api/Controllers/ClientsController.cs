@@ -288,7 +288,20 @@ public class ClientsController(IConfiguration config) : ControllerBase
                     JOIN tblDepartment d2 ON d2.lDepartmentKey = r.lDepartmentKey
                     JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
                     WHERE d2.lClientKey = c.lClientKey
-                      AND rs.sRepairStatus NOT IN ('Shipped','Cancelled')) AS OpenRepairs
+                      AND rs.sRepairStatus NOT IN ('Shipped','Cancelled')) AS OpenRepairs,
+                   c.sClientName2, c.sReferenceNum2, c.sReferenceNum3,
+                   ISNULL(c.bBlindPS3, 0) AS bBlindPS3,
+                   ISNULL(c.bRequisitionTotalsOnly, 0) AS bReqTotalsOnly,
+                   ISNULL(c.bBlindTotalsOnFinal, 0) AS bBlindTotalsOnFinal,
+                   ISNULL(c.bSkipTracking, 0) AS bSkipTracking,
+                   ISNULL(c.sPORequired, '') AS sPORequired,
+                   ISNULL(c.bNeverHold, 0) AS bNeverHold,
+                   ISNULL(c.bSkipTracking, 0) AS bSkipTrackingDup,
+                   ISNULL(c.bEmailNewRepairs, 0) AS bEmailNewRepairs,
+                   ISNULL(c.bNationalAccount, 0) AS bNationalAccount,
+                   c.dblDiscountPct, c.lCreditLimitKey,
+                   c.sBillAddr1, c.sBillAddr2, c.sBillCity, c.sBillState, c.sBillZip, c.sBillCountry,
+                   c.sShipAddr1, c.sShipAddr2, c.sShipCity, c.sShipState, c.sShipZip, c.sShipCountry
             FROM tblClient c
                 LEFT JOIN tblPricingCategory pc ON pc.lPricingCategoryKey = c.lPricingCategoryKey
                 LEFT JOIN tblPaymentTerms pt ON pt.lPaymentTermsKey = c.lPaymentTermsKey
@@ -330,7 +343,38 @@ public class ClientsController(IConfiguration config) : ControllerBase
             CustomerSince: reader["dtClientSince"] as DateTime?,
             Comments: reader["mComments"]?.ToString(),
             DeptCount: Convert.ToInt32(reader["DeptCount"]),
-            OpenRepairs: Convert.ToInt32(reader["OpenRepairs"])
+            OpenRepairs: Convert.ToInt32(reader["OpenRepairs"]),
+            SecondaryName: reader["sClientName2"]?.ToString(),
+            Reference1: reader["sReferenceNum2"]?.ToString(),
+            Reference2: reader["sReferenceNum3"]?.ToString(),
+            BlindPS3: Convert.ToBoolean(reader["bBlindPS3"]),
+            ReqTotalsOnly: Convert.ToBoolean(reader["bReqTotalsOnly"]),
+            BlindTotalsOnFinal: Convert.ToBoolean(reader["bBlindTotalsOnFinal"]),
+            SkipMetrics: Convert.ToBoolean(reader["bSkipTracking"]),
+            PoRequired: reader["sPORequired"]?.ToString() == "Y",
+            NeverHold: Convert.ToBoolean(reader["bNeverHold"]),
+            SkipTracking: Convert.ToBoolean(reader["bSkipTracking"]),
+            EmailNewRepairs: Convert.ToBoolean(reader["bEmailNewRepairs"]),
+            NationalAccount: Convert.ToBoolean(reader["bNationalAccount"]),
+            DiscountPct: reader["dblDiscountPct"] as double?,
+            CreditLimitKey: reader["lCreditLimitKey"] as int?,
+            BillName1: null,
+            BillAddr1: reader["sBillAddr1"]?.ToString(),
+            BillAddr2: reader["sBillAddr2"]?.ToString(),
+            BillCity: reader["sBillCity"]?.ToString(),
+            BillState: reader["sBillState"]?.ToString(),
+            BillZip: reader["sBillZip"]?.ToString(),
+            BillCountry: reader["sBillCountry"]?.ToString(),
+            BillContact: null,
+            BillEmail: null,
+            ShipName1: null,
+            ShipAddr1: reader["sShipAddr1"]?.ToString(),
+            ShipAddr2: reader["sShipAddr2"]?.ToString(),
+            ShipCity: reader["sShipCity"]?.ToString(),
+            ShipState: reader["sShipState"]?.ToString(),
+            ShipZip: reader["sShipZip"]?.ToString(),
+            ShipCountry: reader["sShipCountry"]?.ToString(),
+            ShipEmail: null
         ));
     }
 
@@ -390,6 +434,31 @@ public class ClientsController(IConfiguration config) : ControllerBase
         if (update.DistributorKey != null) { sets.Add("lDistributorKey = @dk"); cmd.Parameters.AddWithValue("@dk", update.DistributorKey); }
         if (update.IsGPO != null) { sets.Add("bNationalAccount = @gpo"); cmd.Parameters.AddWithValue("@gpo", update.IsGPO); }
         if (update.Comments != null) { sets.Add("mComments = @comments"); cmd.Parameters.AddWithValue("@comments", update.Comments); }
+        if (update.SecondaryName != null) { sets.Add("sClientName2 = @name2"); cmd.Parameters.AddWithValue("@name2", update.SecondaryName); }
+        if (update.Reference1 != null) { sets.Add("sReferenceNum2 = @ref1"); cmd.Parameters.AddWithValue("@ref1", update.Reference1); }
+        if (update.Reference2 != null) { sets.Add("sReferenceNum3 = @ref2"); cmd.Parameters.AddWithValue("@ref2", update.Reference2); }
+        if (update.BlindPS3 != null) { sets.Add("bBlindPS3 = @blindps3"); cmd.Parameters.AddWithValue("@blindps3", update.BlindPS3); }
+        if (update.ReqTotalsOnly != null) { sets.Add("bRequisitionTotalsOnly = @reqtotals"); cmd.Parameters.AddWithValue("@reqtotals", update.ReqTotalsOnly); }
+        if (update.BlindTotalsOnFinal != null) { sets.Add("bBlindTotalsOnFinal = @blindfinal"); cmd.Parameters.AddWithValue("@blindfinal", update.BlindTotalsOnFinal); }
+        if (update.SkipTracking != null) { sets.Add("bSkipTracking = @skiptracking"); cmd.Parameters.AddWithValue("@skiptracking", update.SkipTracking); }
+        if (update.PoRequired != null) { sets.Add("sPORequired = @porequired"); cmd.Parameters.AddWithValue("@porequired", update.PoRequired == true ? "Y" : ""); }
+        if (update.NeverHold != null) { sets.Add("bNeverHold = @neverhold"); cmd.Parameters.AddWithValue("@neverhold", update.NeverHold); }
+        if (update.EmailNewRepairs != null) { sets.Add("bEmailNewRepairs = @emailrepairs"); cmd.Parameters.AddWithValue("@emailrepairs", update.EmailNewRepairs); }
+        if (update.NationalAccount != null) { sets.Add("bNationalAccount = @national"); cmd.Parameters.AddWithValue("@national", update.NationalAccount); }
+        if (update.DiscountPct != null) { sets.Add("dblDiscountPct = @discpct"); cmd.Parameters.AddWithValue("@discpct", update.DiscountPct); }
+        if (update.CreditLimitKey != null) { sets.Add("lCreditLimitKey = @creditlimit"); cmd.Parameters.AddWithValue("@creditlimit", update.CreditLimitKey); }
+        if (update.BillAddr1 != null) { sets.Add("sBillAddr1 = @billaddr1"); cmd.Parameters.AddWithValue("@billaddr1", update.BillAddr1); }
+        if (update.BillAddr2 != null) { sets.Add("sBillAddr2 = @billaddr2"); cmd.Parameters.AddWithValue("@billaddr2", update.BillAddr2); }
+        if (update.BillCity != null) { sets.Add("sBillCity = @billcity"); cmd.Parameters.AddWithValue("@billcity", update.BillCity); }
+        if (update.BillState != null) { sets.Add("sBillState = @billstate"); cmd.Parameters.AddWithValue("@billstate", update.BillState); }
+        if (update.BillZip != null) { sets.Add("sBillZip = @billzip"); cmd.Parameters.AddWithValue("@billzip", update.BillZip); }
+        if (update.BillCountry != null) { sets.Add("sBillCountry = @billcountry"); cmd.Parameters.AddWithValue("@billcountry", update.BillCountry); }
+        if (update.ShipAddr1 != null) { sets.Add("sShipAddr1 = @shipaddr1"); cmd.Parameters.AddWithValue("@shipaddr1", update.ShipAddr1); }
+        if (update.ShipAddr2 != null) { sets.Add("sShipAddr2 = @shipaddr2"); cmd.Parameters.AddWithValue("@shipaddr2", update.ShipAddr2); }
+        if (update.ShipCity != null) { sets.Add("sShipCity = @shipcity"); cmd.Parameters.AddWithValue("@shipcity", update.ShipCity); }
+        if (update.ShipState != null) { sets.Add("sShipState = @shipstate"); cmd.Parameters.AddWithValue("@shipstate", update.ShipState); }
+        if (update.ShipZip != null) { sets.Add("sShipZip = @shipzip"); cmd.Parameters.AddWithValue("@shipzip", update.ShipZip); }
+        if (update.ShipCountry != null) { sets.Add("sShipCountry = @shipcountry"); cmd.Parameters.AddWithValue("@shipcountry", update.ShipCountry); }
 
         if (sets.Count == 0) return BadRequest(new { message = "No fields to update." });
 

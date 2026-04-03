@@ -6,6 +6,7 @@ import { TabBar } from '../../components/shared';
 import { ClientToolbar } from './ClientToolbar';
 import { ClientKpiStrip } from './ClientKpiStrip';
 import { InfoTab } from './tabs/InfoTab';
+import { AddressesTab } from './tabs/AddressesTab';
 import { ContactsTab } from './tabs/ContactsTab';
 import { DepartmentsTab } from './tabs/DepartmentsTab';
 import { FlagsTab } from './tabs/FlagsTab';
@@ -23,6 +24,7 @@ interface ClientDetailPaneProps {
 
 const BASE_TABS: TabDef[] = [
   { key: 'info', label: 'Info' },
+  { key: 'addresses', label: 'Addresses' },
   { key: 'contacts', label: 'Contacts' },
   { key: 'departments', label: 'Departments' },
   { key: 'flags', label: 'Flags' },
@@ -151,6 +153,7 @@ export const ClientDetailPane = ({ clientKey, onClientDeleted }: ClientDetailPan
       <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
       <div style={{ flex: 1, overflow: 'auto' }}>
         {activeTab === 'info' && <InfoTab client={client} onChange={handleFieldChange} />}
+        {activeTab === 'addresses' && <AddressesTab client={client} onChange={handleFieldChange} />}
         {activeTab === 'contacts' && <ContactsTab clientKey={client.clientKey} />}
         {activeTab === 'departments' && <DepartmentsTab clientKey={client.clientKey} />}
         {activeTab === 'flags' && <FlagsTab clientKey={client.clientKey} />}

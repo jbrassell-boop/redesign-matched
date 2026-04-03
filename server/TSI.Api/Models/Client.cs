@@ -66,7 +66,23 @@ public record ClientFull(
     string? SalesRep, int? SalesRepKey,
     string? ContractNumber, string? Distributor, int? DistributorKey,
     bool IsGPO, bool IsNewCustomer, DateTime? CustomerSince,
-    string? Comments, int DeptCount, int OpenRepairs
+    string? Comments, int DeptCount, int OpenRepairs,
+    // Additional Details
+    string? SecondaryName, string? Reference1, string? Reference2,
+    // Invoice & Options
+    bool BlindPS3, bool ReqTotalsOnly, bool BlindTotalsOnFinal,
+    bool SkipMetrics, bool PoRequired, bool NeverHold,
+    bool SkipTracking, bool EmailNewRepairs, bool NationalAccount,
+    // Billing
+    double? DiscountPct, int? CreditLimitKey,
+    // Bill To address
+    string? BillName1, string? BillAddr1, string? BillAddr2,
+    string? BillCity, string? BillState, string? BillZip, string? BillCountry,
+    string? BillContact, string? BillEmail,
+    // Ship To address
+    string? ShipName1, string? ShipAddr1, string? ShipAddr2,
+    string? ShipCity, string? ShipState, string? ShipZip, string? ShipCountry,
+    string? ShipEmail
 );
 
 public record ClientKpis(
@@ -79,7 +95,23 @@ public record ClientUpdate(
     string? Phone, string? Fax, string? BillingEmail,
     int? PricingCategoryKey, int? PaymentTermsKey, int? SalesRepKey,
     string? ContractNumber, int? DistributorKey, bool? IsGPO,
-    string? Comments
+    string? Comments,
+    // Additional Details
+    string? SecondaryName, string? Reference1, string? Reference2,
+    // Invoice & Options
+    bool? BlindPS3, bool? ReqTotalsOnly, bool? BlindTotalsOnFinal,
+    bool? SkipMetrics, bool? PoRequired, bool? NeverHold,
+    bool? SkipTracking, bool? EmailNewRepairs, bool? NationalAccount,
+    // Billing
+    double? DiscountPct, int? CreditLimitKey,
+    // Bill To
+    string? BillName1, string? BillAddr1, string? BillAddr2,
+    string? BillCity, string? BillState, string? BillZip, string? BillCountry,
+    string? BillContact, string? BillEmail,
+    // Ship To
+    string? ShipName1, string? ShipAddr1, string? ShipAddr2,
+    string? ShipCity, string? ShipState, string? ShipZip, string? ShipCountry,
+    string? ShipEmail
 );
 
 public record ContactCreate(

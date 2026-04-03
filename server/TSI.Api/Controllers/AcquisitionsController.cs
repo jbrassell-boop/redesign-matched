@@ -198,4 +198,61 @@ public class AcquisitionsController(IConfiguration config) : ControllerBase
             SoldRevenue: reader["SoldRevenue"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["SoldRevenue"])
         ));
     }
+
+    /// <summary>GET /api/acquisitions/{scopeKey} — full acquisition detail</summary>
+    [HttpGet("{scopeKey:int}")]
+    public async Task<IActionResult> GetDetail(int scopeKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT
+                s.lScopeKey,
+                ISNULL(s.sSerialNumber, '') AS sSerialNumber,
+                ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
+                ISNULL(m.sManufacturer, '') AS sManufacturer,
+                ISNULL(c.sClientName1, '') AS sClientName1,
+                ISNULL(d.sDepartmentName, '') AS sDepartmentName,
+                ISNULL(po.sSupplierPONumber, '') AS sPONumber,
+                po.dtDateOfPO,
+                pt.dtDateReceived,
+                ISNULL(pt.nScopeCost, 0) AS nScopeCost,
+                ISNULL(CAST(pt.mComment AS nvarchar(max)), '') AS mComment,
+                ISNULL(s.sRigidOrFlexible, '') AS sRigidOrFlexible,
+                ISNULL(s.sScopeIsDead, 'N') AS sScopeIsDead,
+                ISNULL(sup.sSupplierName, '') AS sSupplierName
+            FROM tblScope s
+            LEFT JOIN tblAcquisitionSupplierPOTran pt ON pt.lAcquisitionSupplierPOTranKey = s.lAcquisitionSupplierPOTranKey
+            LEFT JOIN tblAcquisitionSupplierPO po ON po.lAcquisitionSupplierPOKey = pt.lAcquisitionSupplierPOKey
+            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblManufacturers m ON m.lManufacturerKey = st.lManufacturerKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = s.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            LEFT JOIN tblSupplier sup ON sup.lSupplierKey = po.lSupplierKey
+            WHERE s.lScopeKey = @scopeKey
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@scopeKey", scopeKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync()) return NotFound();
+
+        return Ok(new AcquisitionDetail(
+            ScopeKey: Convert.ToInt32(reader["lScopeKey"]),
+            Serial: reader["sSerialNumber"]?.ToString() ?? "",
+            ScopeType: reader["sScopeTypeDesc"]?.ToString() ?? "",
+            Manufacturer: reader["sManufacturer"]?.ToString() ?? "",
+            Client: reader["sClientName1"]?.ToString() ?? "",
+            Dept: reader["sDepartmentName"]?.ToString() ?? "",
+            Supplier: reader["sSupplierName"]?.ToString() ?? "",
+            PONumber: reader["sPONumber"]?.ToString() ?? "",
+            PODate: reader["dtDateOfPO"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtDateOfPO"]).ToString("MM/dd/yyyy"),
+            DateReceived: reader["dtDateReceived"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtDateReceived"]).ToString("MM/dd/yyyy"),
+            Cost: reader["nScopeCost"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["nScopeCost"]),
+            Comment: reader["mComment"]?.ToString() ?? "",
+            FlexOrRigid: reader["sRigidOrFlexible"]?.ToString() ?? "",
+            IsSold: reader["sScopeIsDead"]?.ToString() == "Y"
+        ));
+    }
 }

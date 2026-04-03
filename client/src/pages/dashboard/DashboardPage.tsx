@@ -1,19 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { message } from 'antd';
 import { StatStrip } from '../../components/shared';
 import type { StatChipDef } from '../../components/shared';
 import { DashboardToolbar } from './DashboardToolbar';
 import { UnifiedTable } from './UnifiedTable';
+import { QuickEditModal } from './QuickEditModal';
 import {
   getDashboardStats, getDashboardRepairs, getDashboardShipping,
   getDashboardInvoices, getDashboardFlags, getDashboardEmails,
   getDashboardTasks, getDashboardTechBench,
 } from '../../api/dashboard';
-import type { DashboardStats, DashboardToolbarState } from './types';
+import type { DashboardStats, DashboardToolbarState, DashboardRepair } from './types';
 
 const DEFAULT_STATE: DashboardToolbarState = {
   view: 'repairs',
   type: 'all',
+  location: 'all',
   groupBy: 'none',
   search: '',
   page: 1,
@@ -30,6 +33,10 @@ export const DashboardPage = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+
+  // Quick-edit modal
+  const [quickEditRecord, setQuickEditRecord] = useState<DashboardRepair | null>(null);
+  const [quickEditOpen, setQuickEditOpen] = useState(false);
 
   useEffect(() => {
     getDashboardStats()
@@ -120,8 +127,57 @@ export const DashboardPage = () => {
     }));
   };
 
+  // Repairs view: row click opens quick-edit modal instead of navigate
   const handleRowClick = (repairKey: number) => {
+    if (toolbarState.view === 'repairs') {
+      const rec = (data as DashboardRepair[]).find(r => r.repairKey === repairKey);
+      if (rec) {
+        setQuickEditRecord(rec);
+        setQuickEditOpen(true);
+        return;
+      }
+    }
     navigate(`/repairs/${repairKey}`);
+  };
+
+  const handleQuickEditSaved = () => {
+    setQuickEditOpen(false);
+    setQuickEditRecord(null);
+    // Refresh the repairs list
+    fetchData(toolbarState);
+    getDashboardStats().then(setStats).catch(() =>
+      message.error('Failed to refresh stats')
+    );
+  };
+
+  // CSV export for current repairs data
+  const handleExport = () => {
+    if (toolbarState.view !== 'repairs' || data.length === 0) {
+      message.info('Switch to Repairs view to export');
+      return;
+    }
+    const headers = ['WO', 'Date In', 'Client', 'Dept', 'Scope Type', 'Serial', 'Days In', 'Status', 'Tech', 'Est Delivery', 'Amount'];
+    const rows = (data as DashboardRepair[]).map(r => [
+      r.wo,
+      r.dateIn ? new Date(r.dateIn).toLocaleDateString() : '',
+      r.client,
+      r.dept,
+      r.scopeType,
+      r.serial,
+      r.daysIn,
+      r.status,
+      r.tech ?? '',
+      r.estDelivery ? new Date(r.estDelivery).toLocaleDateString() : '',
+      r.amountApproved != null ? r.amountApproved.toFixed(2) : '',
+    ]);
+    const csv = [headers, ...rows].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `repairs-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const chips: StatChipDef[] = stats ? [
@@ -149,6 +205,7 @@ export const DashboardPage = () => {
         state={toolbarState}
         onChange={handleToolbarChange}
         selectedCount={selectedKeys.length}
+        onExport={handleExport}
       />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         <UnifiedTable
@@ -164,6 +221,13 @@ export const DashboardPage = () => {
           onSelectionChange={setSelectedKeys}
         />
       </div>
+
+      <QuickEditModal
+        open={quickEditOpen}
+        record={quickEditRecord}
+        onClose={() => { setQuickEditOpen(false); setQuickEditRecord(null); }}
+        onSaved={handleQuickEditSaved}
+      />
     </div>
   );
 };

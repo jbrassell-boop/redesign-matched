@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Input, Spin, Drawer, Modal, message } from 'antd';
 import { SearchOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import { getLoaners, getLoanerDetail, getLoanerStats, getLoanerRequests, fulfillLoanerRequest, declineLoanerRequest, bulkUpdateLoanerRequests } from '../../api/loaners';
-import type { LoanerListItem, LoanerDetail, LoanerStats, LoanerRequest } from './types';
+import { getLoaners, getLoanerDetail, getLoanerStats, getLoanerRequests, fulfillLoanerRequest, declineLoanerRequest, bulkUpdateLoanerRequests, getLoanerScopeNeeds } from '../../api/loaners';
+import type { LoanerListItem, LoanerDetail, LoanerStats, LoanerRequest, LoanerScopeNeedItem } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import { ExportButton } from '../../components/common/ExportButton';

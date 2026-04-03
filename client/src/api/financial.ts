@@ -6,6 +6,8 @@ import type {
   HoldListResponse,
   FinancialStats,
   GLAccountItem,
+  AtRiskItem,
+  TrendingItem,
 } from '../pages/financial/types';
 
 export const getInvoices = (params: {
@@ -47,3 +49,22 @@ export const getGLAccounts = () =>
 
 export const getFinancialStats = () =>
   apiClient.get<FinancialStats>('/financial/stats').then((r) => r.data);
+
+export const getAtRisk = (params?: {
+  from?: string;
+  to?: string;
+  minInvoices?: number;
+  includeOutsource?: boolean;
+  includeLabor?: boolean;
+  includeMaterial?: boolean;
+  includeShipping?: boolean;
+  includeCommissions?: boolean;
+}) =>
+  apiClient.get<AtRiskItem[]>('/financial/at-risk', { params }).then((r) => r.data);
+
+export const getTrending = (params?: {
+  from?: string;
+  to?: string;
+  groupBy?: string;
+}) =>
+  apiClient.get<TrendingItem[]>('/financial/trending', { params }).then((r) => r.data);

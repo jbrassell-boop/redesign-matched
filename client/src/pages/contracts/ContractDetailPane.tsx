@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Spin } from 'antd';
-import { getContractScopes, getContractRepairs, getContractInvoices, getContractNotes, getContractDocuments, getContractHealth } from '../../api/contracts';
-import type { ContractDetail, ContractStats, ContractScope, ContractRepair, ContractInvoice, ContractNote, ContractDocument, ContractHealth } from './types';
+import { Spin, DatePicker, InputNumber, message } from 'antd';
+import { getContractScopes, getContractRepairs, getContractInvoices, getContractNotes, getContractDocuments, getContractHealth, getContractDepartments, getContractAmendments, createContractAmendment, getContractAffiliates } from '../../api/contracts';
+import type { ContractDetail, ContractStats, ContractScope, ContractRepair, ContractInvoice, ContractNote, ContractDocument, ContractHealth, ContractDepartment, ContractAmendment, ContractAffiliate } from './types';
+import dayjs from 'dayjs';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 
@@ -463,6 +464,350 @@ const HealthIndicator = ({ contractKey }: { contractKey: number }) => {
   );
 };
 
+// ===== DEPARTMENTS TAB =====
+const DepartmentsTab = ({ contractKey }: { contractKey: number }) => {
+  const [depts, setDepts] = useState<ContractDepartment[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    getContractDepartments(contractKey)
+      .then(setDepts)
+      .catch(() => message.error('Failed to load departments'))
+      .finally(() => setLoading(false));
+  }, [contractKey]);
+
+  if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
+
+  return (
+    <div style={{ padding: '10px 14px' }}>
+      <Panel>
+        <PanelHead><span>Linked Departments ({depts.length})</span></PanelHead>
+        <div style={{ padding: 0, maxHeight: 500, overflowY: 'auto' }}>
+          {depts.length === 0 ? (
+            <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12, fontStyle: 'italic' }}>No departments linked to this contract</div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Department</th>
+                  <th style={thStyle}>Effective</th>
+                  <th style={thStyle}>End Date</th>
+                  <th style={thStyle}>PO #</th>
+                  <th style={thStyle}>Non-Billable</th>
+                </tr>
+              </thead>
+              <tbody>
+                {depts.map(d => (
+                  <tr key={d.contractDepartmentKey}>
+                    <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--primary)' }}>{d.departmentName || '—'}</td>
+                    <td style={tdStyle}>{fmtDate(d.effectiveDate)}</td>
+                    <td style={tdStyle}>{fmtDate(d.endDate)}</td>
+                    <td style={tdStyle}>{d.poNumber || '—'}</td>
+                    <td style={tdStyle}>
+                      {d.nonBillable
+                        ? <span style={{ color: 'var(--warning)', fontWeight: 700, fontSize: 11 }}>Non-Billable</span>
+                        : <span style={{ color: 'var(--muted)', fontSize: 11 }}>Billable</span>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </Panel>
+    </div>
+  );
+};
+
+// ===== AMENDMENTS TAB =====
+const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: ContractDetail }) => {
+  const [amendments, setAmendments] = useState<ContractAmendment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    amendmentDate: dayjs().format('YYYY-MM-DD'),
+    previousTotal: detail.totalAmount,
+    newTotal: 0,
+    previousInvoiceAmount: 0,
+    newInvoiceAmount: 0,
+    remainingMonths: detail.lengthInMonths,
+  });
+
+  const reload = () => {
+    setLoading(true);
+    getContractAmendments(contractKey)
+      .then(setAmendments)
+      .catch(() => message.error('Failed to load amendments'))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { reload(); }, [contractKey]);
+
+  const handleCreate = async () => {
+    setSaving(true);
+    try {
+      await createContractAmendment(contractKey, form);
+      message.success('Amendment created');
+      setShowForm(false);
+      reload();
+    } catch {
+      message.error('Failed to create amendment');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const amendStatusColor = (s: string) => {
+    const l = s.toLowerCase();
+    if (l.includes('approv') || l.includes('active')) return 'var(--success)';
+    if (l.includes('pending')) return 'var(--warning)';
+    if (l.includes('reject') || l.includes('cancel')) return 'var(--danger)';
+    return 'var(--muted)';
+  };
+
+  if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
+
+  return (
+    <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {showForm && (
+        <Panel>
+          <PanelHead>
+            <span>New Amendment</span>
+            <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 13 }}>✕</button>
+          </PanelHead>
+          <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 }}>Amendment Date</div>
+                <DatePicker
+                  value={dayjs(form.amendmentDate)}
+                  onChange={(d) => d && setForm(f => ({ ...f, amendmentDate: d.format('YYYY-MM-DD') }))}
+                  style={{ width: '100%' }}
+                  size="small"
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 }}>Remaining Months</div>
+                <InputNumber
+                  value={form.remainingMonths}
+                  onChange={(v) => setForm(f => ({ ...f, remainingMonths: v ?? 0 }))}
+                  min={0} style={{ width: '100%' }} size="small"
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 }}>Previous Contract Total</div>
+                <InputNumber
+                  value={form.previousTotal}
+                  onChange={(v) => setForm(f => ({ ...f, previousTotal: v ?? 0 }))}
+                  min={0} prefix="$" style={{ width: '100%' }} size="small"
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 }}>New Contract Total</div>
+                <InputNumber
+                  value={form.newTotal}
+                  onChange={(v) => setForm(f => ({ ...f, newTotal: v ?? 0 }))}
+                  min={0} prefix="$" style={{ width: '100%' }} size="small"
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 }}>Previous Invoice Amount</div>
+                <InputNumber
+                  value={form.previousInvoiceAmount}
+                  onChange={(v) => setForm(f => ({ ...f, previousInvoiceAmount: v ?? 0 }))}
+                  min={0} prefix="$" style={{ width: '100%' }} size="small"
+                />
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 }}>New Invoice Amount</div>
+                <InputNumber
+                  value={form.newInvoiceAmount}
+                  onChange={(v) => setForm(f => ({ ...f, newInvoiceAmount: v ?? 0 }))}
+                  min={0} prefix="$" style={{ width: '100%' }} size="small"
+                />
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+              <button
+                onClick={() => setShowForm(false)}
+                style={{ padding: '5px 14px', fontSize: 12, border: '1px solid var(--border)', borderRadius: 5, background: 'var(--card)', cursor: 'pointer', color: 'var(--text)' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCreate}
+                disabled={saving}
+                style={{ padding: '5px 14px', fontSize: 12, border: 'none', borderRadius: 5, background: 'var(--primary)', color: 'var(--card)', cursor: 'pointer', fontWeight: 600 }}
+              >
+                {saving ? 'Saving…' : 'Save Amendment'}
+              </button>
+            </div>
+          </div>
+        </Panel>
+      )}
+
+      <Panel>
+        <PanelHead>
+          <span>Amendments ({amendments.length})</span>
+          {!showForm && (
+            <button
+              onClick={() => setShowForm(true)}
+              style={{ padding: '2px 10px', fontSize: 11, fontWeight: 600, border: '1px solid var(--primary)', borderRadius: 4, background: 'rgba(var(--primary-rgb), 0.07)', color: 'var(--primary)', cursor: 'pointer' }}
+            >
+              + New Amendment
+            </button>
+          )}
+        </PanelHead>
+        <div style={{ padding: 0, maxHeight: 500, overflowY: 'auto' }}>
+          {amendments.length === 0 ? (
+            <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12, fontStyle: 'italic' }}>No amendments for this contract</div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Date</th>
+                  <th style={thStyle}>Status</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>Prev Total</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>New Total</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>Prev Invoice</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>New Invoice</th>
+                  <th style={thStyle}>Rem. Months</th>
+                </tr>
+              </thead>
+              <tbody>
+                {amendments.map(a => (
+                  <tr key={a.amendmentKey}>
+                    <td style={tdStyle}>{fmtDate(a.amendmentDate)}</td>
+                    <td style={tdStyle}><span style={{ color: amendStatusColor(a.status), fontWeight: 600 }}>{a.status}</span></td>
+                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtMoneyDecimal(a.previousTotal)}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: 'var(--navy)' }}>{fmtMoneyDecimal(a.newTotal)}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtMoneyDecimal(a.previousInvoiceAmount)}</td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700 }}>{fmtMoneyDecimal(a.newInvoiceAmount)}</td>
+                    <td style={tdStyle}>{a.remainingMonths || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </Panel>
+    </div>
+  );
+};
+
+// ===== RENEWAL TAB =====
+const RenewalTab = ({ detail }: { detail: ContractDetail }) => {
+  const daysUntilExpiry = detail.terminationDate
+    ? Math.ceil((new Date(detail.terminationDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  const expiryColor = daysUntilExpiry == null ? 'var(--muted)'
+    : daysUntilExpiry < 0 ? 'var(--danger)'
+    : daysUntilExpiry <= 90 ? 'var(--warning)'
+    : 'var(--success)';
+
+  const expiryLabel = daysUntilExpiry == null ? 'No termination date'
+    : daysUntilExpiry < 0 ? `Expired ${Math.abs(daysUntilExpiry)}d ago`
+    : daysUntilExpiry === 0 ? 'Expires today'
+    : `Expires in ${daysUntilExpiry} days`;
+
+  return (
+    <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <Panel>
+        <PanelHead><span>Renewal Status</span></PanelHead>
+        <div style={{ padding: '16px 14px' }}>
+          <div style={{ textAlign: 'center', marginBottom: 16 }}>
+            <div style={{ fontSize: 28, fontWeight: 900, color: expiryColor }}>{expiryLabel}</div>
+            {detail.terminationDate && (
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+                Termination: {fmtDate(detail.terminationDate)}
+              </div>
+            )}
+          </div>
+          <FormGrid cols={2}>
+            <Field label="Start Date" value={fmtDate(detail.effectiveDate)} />
+            <Field label="End Date" value={fmtDate(detail.terminationDate)} />
+            <Field label="Length (Months)" value={detail.lengthInMonths || '—'} />
+            <Field label="Status" value={detail.status} />
+            <Field label="Contract Total" value={detail.totalAmount > 0 ? fmtMoney(detail.totalAmount) : '—'} />
+            <Field label="Amount Invoiced" value={detail.amtInvoiced > 0 ? fmtMoney(detail.amtInvoiced) : '—'} />
+          </FormGrid>
+        </div>
+      </Panel>
+      <Panel>
+        <PanelHead><span>Billing Info</span></PanelHead>
+        <div style={{ padding: '12px 14px' }}>
+          <FormGrid cols={2}>
+            <Field label="Installments Total" value={detail.installmentsTotal || '—'} />
+            <Field label="Installments Invoiced" value={detail.installmentsInvoiced || '—'} />
+            <Field label="Service Plan" value={detail.servicePlan ? 'Yes' : 'No'} />
+            <Field label="Shared Risk" value={detail.sharedRisk ? 'Yes' : 'No'} />
+            <Field label="Tax Exempt" value={detail.taxExempt ? 'Yes' : 'No'} />
+          </FormGrid>
+          {detail.comments && (
+            <div style={{ marginTop: 10, fontSize: 13, color: 'var(--text)', lineHeight: 1.5, borderTop: '1px solid var(--neutral-200)', paddingTop: 10 }}>
+              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 }}>Notes</div>
+              {detail.comments}
+            </div>
+          )}
+        </div>
+      </Panel>
+    </div>
+  );
+};
+
+// ===== AFFILIATES TAB =====
+const AffiliatesTab = ({ contractKey }: { contractKey: number }) => {
+  const [affiliates, setAffiliates] = useState<ContractAffiliate[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    getContractAffiliates(contractKey)
+      .then(setAffiliates)
+      .catch(() => message.error('Failed to load affiliates'))
+      .finally(() => setLoading(false));
+  }, [contractKey]);
+
+  if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
+
+  return (
+    <div style={{ padding: '10px 14px' }}>
+      <Panel>
+        <PanelHead><span>Affiliated Facilities ({affiliates.length})</span></PanelHead>
+        <div style={{ padding: 0, maxHeight: 500, overflowY: 'auto' }}>
+          {affiliates.length === 0 ? (
+            <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12, fontStyle: 'italic' }}>No affiliates linked to this contract</div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Department</th>
+                  <th style={thStyle}>Client</th>
+                  <th style={thStyle}>Start Date</th>
+                  <th style={thStyle}>End Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {affiliates.map(a => (
+                  <tr key={a.affiliateKey}>
+                    <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--primary)' }}>{a.departmentName || '—'}</td>
+                    <td style={tdStyle}>{a.clientName || '—'}</td>
+                    <td style={tdStyle}>{fmtDate(a.startDate)}</td>
+                    <td style={tdStyle}>{fmtDate(a.endDate)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </Panel>
+    </div>
+  );
+};
+
 const TABS: TabDef[] = [
   { key: 'specs',       label: 'Specifications' },
   { key: 'departments', label: 'Departments' },
@@ -471,6 +816,7 @@ const TABS: TabDef[] = [
   { key: 'notes',       label: 'Notes' },
   { key: 'amendments',  label: 'Amendments' },
   { key: 'renewal',     label: 'Renewal' },
+  { key: 'affiliates',  label: 'Affiliates' },
   { key: 'invoices',    label: 'Invoices' },
   { key: 'documents',   label: 'Documents' },
 ];
@@ -677,12 +1023,13 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {activeTab === 'specs'       && specsContent}
-        {activeTab === 'departments' && <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Departments coming soon</div>}
+        {activeTab === 'departments' && <DepartmentsTab contractKey={detail.contractKey} />}
         {activeTab === 'scopes'      && <ScopesTab contractKey={detail.contractKey} />}
         {activeTab === 'repairs'     && <RepairsTab contractKey={detail.contractKey} />}
         {activeTab === 'notes'       && <NotesTab contractKey={detail.contractKey} />}
-        {activeTab === 'amendments'  && <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Amendments coming soon</div>}
-        {activeTab === 'renewal'     && <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Renewal coming soon</div>}
+        {activeTab === 'amendments'  && <AmendmentsTab contractKey={detail.contractKey} detail={detail} />}
+        {activeTab === 'renewal'     && <RenewalTab detail={detail} />}
+        {activeTab === 'affiliates'  && <AffiliatesTab contractKey={detail.contractKey} />}
         {activeTab === 'invoices'    && <InvoicesTab contractKey={detail.contractKey} detail={detail} />}
         {activeTab === 'documents'   && <DocumentsTab contractKey={detail.contractKey} />}
       </div>

@@ -528,6 +528,67 @@ public class RepairsController(IConfiguration config) : ControllerBase
 
     // ── Status Workflow ──
 
+    /// <summary>GET /api/repairs/technicians — list of active technicians</summary>
+    [HttpGet("technicians")]
+    public async Task<IActionResult> GetTechnicians()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        const string sql = """
+            SELECT lTechnicianKey, sTechName
+            FROM tblTechnicians
+            WHERE ISNULL(bIsActive, 1) = 1
+            ORDER BY sTechName
+            """;
+        await using var cmd = new SqlCommand(sql, conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var techs = new List<TechnicianOption>();
+        while (await reader.ReadAsync())
+        {
+            techs.Add(new TechnicianOption(
+                TechKey: Convert.ToInt32(reader["lTechnicianKey"]),
+                TechName: reader["sTechName"]?.ToString() ?? ""
+            ));
+        }
+        return Ok(techs);
+    }
+
+    /// <summary>PATCH /api/repairs/{id}/quick-edit — status + tech + notes</summary>
+    [HttpPatch("{repairKey:int}/quick-edit")]
+    public async Task<IActionResult> QuickEdit(int repairKey, [FromBody] QuickEditRepairRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand("""
+            UPDATE tblRepair SET
+                lRepairStatusID   = COALESCE(@statusId, lRepairStatusID),
+                lTechnicianKey    = CASE WHEN @techKey IS NULL THEN lTechnicianKey ELSE @techKey END,
+                mComments         = COALESCE(@notes, mComments)
+            WHERE lRepairKey = @id
+            """, conn);
+        cmd.Parameters.AddWithValue("@id", repairKey);
+        cmd.Parameters.AddWithValue("@statusId", (object?)body.StatusId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@techKey", (object?)body.TechnicianKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@notes", (object?)body.Notes ?? DBNull.Value);
+        var rows = await cmd.ExecuteNonQueryAsync();
+
+        // Log status change if status was provided
+        if (body.StatusId.HasValue)
+        {
+            await using var logCmd = new SqlCommand("""
+                INSERT INTO tblRepairStatusLog (lRepairKey, lRepairStatusID, sRepairStatus, dtStatusDate)
+                SELECT @repairKey, @statusId, rs.sRepairStatus, GETDATE()
+                FROM tblRepairStatuses rs WHERE rs.lRepairStatusID = @statusId
+                """, conn);
+            logCmd.Parameters.AddWithValue("@repairKey", repairKey);
+            logCmd.Parameters.AddWithValue("@statusId", body.StatusId.Value);
+            await logCmd.ExecuteNonQueryAsync();
+        }
+
+        return rows > 0 ? NoContent() : NotFound();
+    }
+
     /// <summary>GET /api/repairs/statuses — all repair status options</summary>
     [HttpGet("statuses")]
     public async Task<IActionResult> GetStatuses()

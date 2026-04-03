@@ -150,10 +150,28 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
                    (SELECT COUNT(*) FROM tblRepair r
                     JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
                     WHERE r.lDepartmentKey = d.lDepartmentKey
-                      AND rs.sRepairStatus NOT IN ('Shipped','Cancelled')) AS OpenRepairs
+                      AND rs.sRepairStatus NOT IN ('Shipped','Cancelled')) AS OpenRepairs,
+                   ISNULL(d.bIncludeConsumptionReportWithReq, 0) AS bShowConsumptionOnReq,
+                   ISNULL(d.bEnforceScopeTypeFiltering, 0) AS bEnforceScopeTypeFiltering,
+                   ISNULL(d.bDisplayItemDescription, 0) AS bShowItemizedDescriptions,
+                   ISNULL(d.bDisplayUAorNWT, 0) AS bShowUaOrNwt,
+                   ISNULL(d.bTrackingNumberRequired, 0) AS bTrackingRequired,
+                   ISNULL(d.bTaxExempt, 0) AS bTaxExempt,
+                   ISNULL(d.bPaysByCreditCard, 0) AS bPaysByCreditCard,
+                   ISNULL(d.bOnsiteService, 0) AS bOnsiteService,
+                   d.lSalesRepKey,
+                   ISNULL(sr.sRepFirst + ' ' + sr.sRepLast, '') AS SalesRep,
+                   d.lPricingCategoryKey,
+                   pc.sPricingDescription,
+                   d.dblShippingAmt,
+                   d.sBillName1, d.sBillAddr1, d.sBillAddr2, d.sBillCity, d.sBillState, d.sBillZip, d.sBillEmail,
+                   d.sMailAddr1, d.sMailAddr2, d.sMailCity, d.sMailState, d.sMailZip, d.sMailCountry,
+                   d.sShipName1, d.sShipAddr2, d.sShipCountry
             FROM tblDepartment d
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblServiceLocations sl ON sl.lServiceLocationKey = d.lServiceLocationKey
+            LEFT JOIN tblSalesRep sr ON sr.lSalesRepKey = d.lSalesRepKey
+            LEFT JOIN tblPricingCategory pc ON pc.lPricingCategoryKey = d.lPricingCategoryKey
             WHERE d.lDepartmentKey = @deptKey
             """;
 
@@ -181,7 +199,40 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             ContactEmail: reader["sContactEMail"]?.ToString(),
             ServiceLocation: reader["sServiceLocation"]?.ToString(),
             ScopeCount: Convert.ToInt32(reader["ScopeCount"]),
-            OpenRepairs: Convert.ToInt32(reader["OpenRepairs"])
+            OpenRepairs: Convert.ToInt32(reader["OpenRepairs"]),
+            ShowConsumptionOnReq: Convert.ToBoolean(reader["bShowConsumptionOnReq"]),
+            EnforceScopeTypeFiltering: Convert.ToBoolean(reader["bEnforceScopeTypeFiltering"]),
+            ShowProductId: false,
+            ShowUaOrNwt: Convert.ToBoolean(reader["bShowUaOrNwt"]),
+            ShowItemizedDescriptions: Convert.ToBoolean(reader["bShowItemizedDescriptions"]),
+            EmailNewRepairs: false,
+            MemberBoa: false,
+            TrackingRequired: Convert.ToBoolean(reader["bTrackingRequired"]),
+            TaxExempt: Convert.ToBoolean(reader["bTaxExempt"]),
+            PaysByCreditCard: Convert.ToBoolean(reader["bPaysByCreditCard"]),
+            OnsiteService: Convert.ToBoolean(reader["bOnsiteService"]),
+            SalesRepKey: reader["lSalesRepKey"] as int?,
+            SalesRep: reader["SalesRep"]?.ToString(),
+            PricingCategoryKey: reader["lPricingCategoryKey"] as int?,
+            PricingCategory: reader["sPricingDescription"]?.ToString(),
+            DiscountPct: reader["dblShippingAmt"] == DBNull.Value ? null : (double?)Convert.ToDouble(reader["dblShippingAmt"]),
+            DefaultShipping: reader["dblShippingAmt"] == DBNull.Value ? null : (double?)Convert.ToDouble(reader["dblShippingAmt"]),
+            BillName1: reader["sBillName1"]?.ToString(),
+            BillAddr1: reader["sBillAddr1"]?.ToString(),
+            BillAddr2: reader["sBillAddr2"]?.ToString(),
+            BillCity: reader["sBillCity"]?.ToString(),
+            BillState: reader["sBillState"]?.ToString(),
+            BillZip: reader["sBillZip"]?.ToString(),
+            BillEmail: reader["sBillEmail"]?.ToString(),
+            MailAddr1: reader["sMailAddr1"]?.ToString(),
+            MailAddr2: reader["sMailAddr2"]?.ToString(),
+            MailCity: reader["sMailCity"]?.ToString(),
+            MailState: reader["sMailState"]?.ToString(),
+            MailZip: reader["sMailZip"]?.ToString(),
+            MailCountry: reader["sMailCountry"]?.ToString(),
+            ShipName1: reader["sShipName1"]?.ToString(),
+            ShipAddr2: reader["sShipAddr2"]?.ToString(),
+            ShipCountry: reader["sShipCountry"]?.ToString()
         ));
     }
 
@@ -241,6 +292,37 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         if (update.ContactFirst != null) { sets.Add("sContactFirst = @cfirst"); cmd.Parameters.AddWithValue("@cfirst", update.ContactFirst); }
         if (update.ContactLast != null) { sets.Add("sContactLast = @clast"); cmd.Parameters.AddWithValue("@clast", update.ContactLast); }
         if (update.ContactEmail != null) { sets.Add("sContactEMail = @cemail"); cmd.Parameters.AddWithValue("@cemail", update.ContactEmail); }
+        // Options
+        if (update.ShowConsumptionOnReq != null) { sets.Add("bIncludeConsumptionReportWithReq = @showConsumption"); cmd.Parameters.AddWithValue("@showConsumption", update.ShowConsumptionOnReq); }
+        if (update.EnforceScopeTypeFiltering != null) { sets.Add("bEnforceScopeTypeFiltering = @enforceScope"); cmd.Parameters.AddWithValue("@enforceScope", update.EnforceScopeTypeFiltering); }
+        if (update.ShowItemizedDescriptions != null) { sets.Add("bDisplayItemDescription = @showItemized"); cmd.Parameters.AddWithValue("@showItemized", update.ShowItemizedDescriptions); }
+        if (update.ShowUaOrNwt != null) { sets.Add("bDisplayUAorNWT = @showUa"); cmd.Parameters.AddWithValue("@showUa", update.ShowUaOrNwt); }
+        if (update.TrackingRequired != null) { sets.Add("bTrackingNumberRequired = @tracking"); cmd.Parameters.AddWithValue("@tracking", update.TrackingRequired); }
+        if (update.TaxExempt != null) { sets.Add("bTaxExempt = @taxexempt"); cmd.Parameters.AddWithValue("@taxexempt", update.TaxExempt); }
+        if (update.PaysByCreditCard != null) { sets.Add("bPaysByCreditCard = @creditcard"); cmd.Parameters.AddWithValue("@creditcard", update.PaysByCreditCard); }
+        if (update.OnsiteService != null) { sets.Add("bOnsiteService = @onsite"); cmd.Parameters.AddWithValue("@onsite", update.OnsiteService); }
+        // Billing
+        if (update.DiscountPct != null) { sets.Add("dblShippingAmt = @discpct"); cmd.Parameters.AddWithValue("@discpct", update.DiscountPct); }
+        if (update.DefaultShipping != null) { sets.Add("dblShippingAmt = @defaultship"); cmd.Parameters.AddWithValue("@defaultship", update.DefaultShipping); }
+        // Bill To
+        if (update.BillName1 != null) { sets.Add("sBillName1 = @billname1"); cmd.Parameters.AddWithValue("@billname1", update.BillName1); }
+        if (update.BillAddr1 != null) { sets.Add("sBillAddr1 = @billaddr1"); cmd.Parameters.AddWithValue("@billaddr1", update.BillAddr1); }
+        if (update.BillAddr2 != null) { sets.Add("sBillAddr2 = @billaddr2"); cmd.Parameters.AddWithValue("@billaddr2", update.BillAddr2); }
+        if (update.BillCity != null) { sets.Add("sBillCity = @billcity"); cmd.Parameters.AddWithValue("@billcity", update.BillCity); }
+        if (update.BillState != null) { sets.Add("sBillState = @billstate"); cmd.Parameters.AddWithValue("@billstate", update.BillState); }
+        if (update.BillZip != null) { sets.Add("sBillZip = @billzip"); cmd.Parameters.AddWithValue("@billzip", update.BillZip); }
+        if (update.BillEmail != null) { sets.Add("sBillEmail = @billemail"); cmd.Parameters.AddWithValue("@billemail", update.BillEmail); }
+        // Mailing
+        if (update.MailAddr1 != null) { sets.Add("sMailAddr1 = @mailaddr1"); cmd.Parameters.AddWithValue("@mailaddr1", update.MailAddr1); }
+        if (update.MailAddr2 != null) { sets.Add("sMailAddr2 = @mailaddr2"); cmd.Parameters.AddWithValue("@mailaddr2", update.MailAddr2); }
+        if (update.MailCity != null) { sets.Add("sMailCity = @mailcity"); cmd.Parameters.AddWithValue("@mailcity", update.MailCity); }
+        if (update.MailState != null) { sets.Add("sMailState = @mailstate"); cmd.Parameters.AddWithValue("@mailstate", update.MailState); }
+        if (update.MailZip != null) { sets.Add("sMailZip = @mailzip"); cmd.Parameters.AddWithValue("@mailzip", update.MailZip); }
+        if (update.MailCountry != null) { sets.Add("sMailCountry = @mailcountry"); cmd.Parameters.AddWithValue("@mailcountry", update.MailCountry); }
+        // Ship To extras
+        if (update.ShipName1 != null) { sets.Add("sShipName1 = @shipname1"); cmd.Parameters.AddWithValue("@shipname1", update.ShipName1); }
+        if (update.ShipAddr2 != null) { sets.Add("sShipAddr2 = @shipaddr2"); cmd.Parameters.AddWithValue("@shipaddr2", update.ShipAddr2); }
+        if (update.ShipCountry != null) { sets.Add("sShipCountry = @shipcountry"); cmd.Parameters.AddWithValue("@shipcountry", update.ShipCountry); }
 
         if (sets.Count == 0)
             return BadRequest(new { message = "No fields to update." });
@@ -541,5 +623,152 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         }
 
         return Ok(scopes);
+    }
+
+    [HttpGet("{deptKey:int}/flags")]
+    public async Task<IActionResult> GetDeptFlags(int deptKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT f.lFlagKey, f.sFlag, f.bVisibleOnDI, f.bVisibleOnBlank,
+                   ISNULL(ft.sFlagType, '') AS sFlagType
+            FROM tblFlags f
+                LEFT JOIN tblFlagTypes ft ON ft.lFlagTypeKey = f.lFlagTypeKey
+            WHERE f.lOwnerKey = @deptKey
+            ORDER BY ft.sFlagType, f.sFlag
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@deptKey", deptKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var flags = new List<DeptFlag>();
+        while (await reader.ReadAsync())
+        {
+            flags.Add(new DeptFlag(
+                FlagKey: Convert.ToInt32(reader["lFlagKey"]),
+                FlagType: reader["sFlagType"]?.ToString() ?? "",
+                Flag: reader["sFlag"]?.ToString() ?? "",
+                VisibleOnDI: Convert.ToBoolean(reader["bVisibleOnDI"]),
+                VisibleOnBlank: Convert.ToBoolean(reader["bVisibleOnBlank"])
+            ));
+        }
+
+        return Ok(flags);
+    }
+
+    [HttpPost("{deptKey:int}/flags")]
+    public async Task<IActionResult> AddDeptFlag(int deptKey, [FromBody] FlagCreate flag)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            INSERT INTO tblFlags (lFlagTypeKey, lOwnerKey, sFlag, bVisibleOnDI, bVisibleOnBlank)
+            VALUES (@flagTypeKey, @ownerKey, @flag, @visibleDI, @visibleBlank);
+            SELECT SCOPE_IDENTITY();
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@flagTypeKey", flag.FlagTypeKey);
+        cmd.Parameters.AddWithValue("@ownerKey", deptKey);
+        cmd.Parameters.AddWithValue("@flag", flag.Flag);
+        cmd.Parameters.AddWithValue("@visibleDI", flag.VisibleOnDI);
+        cmd.Parameters.AddWithValue("@visibleBlank", flag.VisibleOnBlank);
+
+        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return Ok(new { flagKey = newKey, message = "Flag added." });
+    }
+
+    [HttpPut("{deptKey:int}/flags/{flagKey:int}")]
+    public async Task<IActionResult> UpdateDeptFlag(int deptKey, int flagKey, [FromBody] FlagCreate flag)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            UPDATE tblFlags SET lFlagTypeKey = @flagTypeKey, sFlag = @flag,
+                bVisibleOnDI = @visibleDI, bVisibleOnBlank = @visibleBlank
+            WHERE lFlagKey = @flagKey AND lOwnerKey = @ownerKey
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@flagTypeKey", flag.FlagTypeKey);
+        cmd.Parameters.AddWithValue("@flag", flag.Flag);
+        cmd.Parameters.AddWithValue("@visibleDI", flag.VisibleOnDI);
+        cmd.Parameters.AddWithValue("@visibleBlank", flag.VisibleOnBlank);
+        cmd.Parameters.AddWithValue("@flagKey", flagKey);
+        cmd.Parameters.AddWithValue("@ownerKey", deptKey);
+
+        var rows = await cmd.ExecuteNonQueryAsync();
+        if (rows == 0) return NotFound(new { message = "Flag not found." });
+        return Ok(new { message = "Flag updated." });
+    }
+
+    [HttpDelete("{deptKey:int}/flags/{flagKey:int}")]
+    public async Task<IActionResult> DeleteDeptFlag(int deptKey, int flagKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand(
+            "DELETE FROM tblFlags WHERE lFlagKey = @flagKey AND lOwnerKey = @ownerKey", conn);
+        cmd.Parameters.AddWithValue("@flagKey", flagKey);
+        cmd.Parameters.AddWithValue("@ownerKey", deptKey);
+
+        var rows = await cmd.ExecuteNonQueryAsync();
+        if (rows == 0) return NotFound(new { message = "Flag not found." });
+        return Ok(new { message = "Flag deleted." });
+    }
+
+    [HttpGet("{deptKey:int}/contracts")]
+    public async Task<IActionResult> GetDeptContracts(int deptKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Use tblContractDepartments for department-specific contract association
+        // Fall back to client-level contracts if none found
+        const string sql = """
+            SELECT c.lContractKey, ISNULL(c.sContractName1, '') AS sContractName1,
+                   ISNULL(c.sContractNumber, '') AS sContractNumber,
+                   ct.sContractType,
+                   c.dtDateEffective, c.dtDateTermination,
+                   c.dblAmtTotal
+            FROM tblContractDepartments cd
+                JOIN tblContract c ON c.lContractKey = cd.lContractKey
+                LEFT JOIN tblContractTypes ct ON ct.lContractTypeKey = c.lContractTypeKey
+            WHERE cd.lDepartmentKey = @deptKey
+            ORDER BY c.dtDateEffective DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@deptKey", deptKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var contracts = new List<DeptContract>();
+        while (await reader.ReadAsync())
+        {
+            var termDate = reader["dtDateTermination"] as DateTime?;
+            var status = termDate == null ? "Active"
+                : termDate < DateTime.Now ? "Expired"
+                : termDate <= DateTime.Now.AddDays(90) ? "Expiring"
+                : "Active";
+
+            contracts.Add(new DeptContract(
+                ContractKey: Convert.ToInt32(reader["lContractKey"]),
+                ContractName: reader["sContractName1"]?.ToString() ?? "",
+                ContractNumber: reader["sContractNumber"]?.ToString() ?? "",
+                ContractType: reader["sContractType"]?.ToString(),
+                DateEffective: reader["dtDateEffective"] as DateTime?,
+                DateTermination: termDate,
+                Status: status,
+                AnnualValue: reader["dblAmtTotal"] == DBNull.Value ? null : (double?)Convert.ToDouble(reader["dblAmtTotal"])
+            ));
+        }
+
+        return Ok(contracts);
     }
 }

@@ -38,9 +38,30 @@ export interface InventoryDetail {
   noCountAdjustment: boolean;
   notUsedByRepair: boolean;
   alwaysReOrder: boolean;
+  largeDiameter: boolean;
+  skipPickList: boolean;
   lastUpdate: string | null;
   createDate: string | null;
   sizes: InventorySizeItem[];
+}
+
+export interface InventoryReceivingItem {
+  inventorySizeKey: number;
+  inventoryKey: number;
+  description: string;
+  sizeDescription: string;
+  currentLevel: number;
+  minLevel: number;
+  maxLevel: number;
+  binNumber: string | null;
+}
+
+export interface ReceiveInventoryRequest {
+  inventorySizeKey: number;
+  quantity: number;
+  lotNumber?: string;
+  binNumber?: string;
+  notes?: string;
 }
 
 export interface InventoryStats {

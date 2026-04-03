@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { AcquisitionListResponse, AcquisitionSoldResponse, AcquisitionStats, AcquisitionsFilters } from '../pages/acquisitions/types';
+import type { AcquisitionListResponse, AcquisitionSoldResponse, AcquisitionStats, AcquisitionsFilters, AcquisitionDetail } from '../pages/acquisitions/types';
 
 export const getAcquisitions = async (filters: AcquisitionsFilters): Promise<AcquisitionListResponse> => {
   const { data } = await apiClient.get<AcquisitionListResponse>('/acquisitions', {
@@ -27,5 +27,10 @@ export const getAcquisitionsSold = async (filters: AcquisitionsFilters): Promise
 
 export const getAcquisitionStats = async (): Promise<AcquisitionStats> => {
   const { data } = await apiClient.get<AcquisitionStats>('/acquisitions/stats');
+  return data;
+};
+
+export const getAcquisitionDetail = async (scopeKey: number): Promise<AcquisitionDetail> => {
+  const { data } = await apiClient.get<AcquisitionDetail>(`/acquisitions/${scopeKey}`);
   return data;
 };

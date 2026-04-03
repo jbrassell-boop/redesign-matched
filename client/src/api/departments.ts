@@ -1,8 +1,9 @@
 import apiClient from './client';
 import type {
   DepartmentListResponse, DepartmentDetail, DepartmentSubGroup, DepartmentScope,
-  DepartmentFull, DeptKpis, DeptContact, ScopeDetail, DepartmentRepairItem
+  DepartmentFull, DeptKpis, DeptContact, ScopeDetail, DepartmentRepairItem, DeptContract
 } from '../pages/departments/types';
+import type { ClientFlag } from '../pages/clients/types';
 import type { PrimaryContact } from '../pages/repairs/types';
 
 export const getDepartments = async (params: {
@@ -75,5 +76,28 @@ export const getDepartmentScopes = async (deptKey: number): Promise<DepartmentSc
 
 export const getDepartmentPrimaryContact = async (deptKey: number): Promise<PrimaryContact> => {
   const { data } = await apiClient.get<PrimaryContact>(`/departments/${deptKey}/contacts/primary`);
+  return data;
+};
+
+export const getDeptFlags = async (deptKey: number): Promise<ClientFlag[]> => {
+  const { data } = await apiClient.get<ClientFlag[]>(`/departments/${deptKey}/flags`);
+  return data;
+};
+
+export const addDeptFlag = async (deptKey: number, flag: { flagTypeKey: number; flag: string; visibleOnDI: boolean; visibleOnBlank: boolean }): Promise<{ flagKey: number }> => {
+  const { data } = await apiClient.post(`/departments/${deptKey}/flags`, flag);
+  return data;
+};
+
+export const updateDeptFlag = async (deptKey: number, flagKey: number, flag: { flagTypeKey: number; flag: string; visibleOnDI: boolean; visibleOnBlank: boolean }): Promise<void> => {
+  await apiClient.put(`/departments/${deptKey}/flags/${flagKey}`, flag);
+};
+
+export const deleteDeptFlag = async (deptKey: number, flagKey: number): Promise<void> => {
+  await apiClient.delete(`/departments/${deptKey}/flags/${flagKey}`);
+};
+
+export const getDeptContracts = async (deptKey: number): Promise<DeptContract[]> => {
+  const { data } = await apiClient.get<DeptContract[]>(`/departments/${deptKey}/contracts`);
   return data;
 };

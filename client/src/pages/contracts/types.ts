@@ -117,3 +117,33 @@ export interface ContractHealth {
   margin: number;
   grade: string;
 }
+
+export interface ContractDepartment {
+  contractDepartmentKey: number;
+  departmentKey: number;
+  departmentName: string;
+  effectiveDate: string | null;
+  endDate: string | null;
+  nonBillable: boolean;
+  poNumber: string | null;
+}
+
+export interface ContractAmendment {
+  amendmentKey: number;
+  amendmentDate: string | null;
+  status: string;
+  previousTotal: number;
+  newTotal: number;
+  previousInvoiceAmount: number;
+  newInvoiceAmount: number;
+  remainingMonths: number;
+}
+
+export interface ContractAffiliate {
+  affiliateKey: number;
+  departmentKey: number;
+  departmentName: string;
+  clientName: string;
+  startDate: string | null;
+  endDate: string | null;
+}

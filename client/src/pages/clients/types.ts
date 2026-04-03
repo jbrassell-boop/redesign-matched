@@ -82,6 +82,42 @@ export interface ClientFull {
   comments?: string;
   deptCount: number;
   openRepairs: number;
+  // Additional Details
+  secondaryName?: string;
+  reference1?: string;
+  reference2?: string;
+  // Invoice & Options flags
+  blindPS3?: boolean;
+  reqTotalsOnly?: boolean;
+  blindTotalsOnFinal?: boolean;
+  skipMetrics?: boolean;
+  poRequired?: boolean;
+  neverHold?: boolean;
+  skipTracking?: boolean;
+  emailNewRepairs?: boolean;
+  nationalAccount?: boolean;
+  // Billing & Pricing
+  discountPct?: number;
+  creditLimitKey?: number;
+  // Addresses — Bill To
+  billName1?: string;
+  billAddr1?: string;
+  billAddr2?: string;
+  billCity?: string;
+  billState?: string;
+  billZip?: string;
+  billCountry?: string;
+  billContact?: string;
+  billEmail?: string;
+  // Addresses — Ship To
+  shipName1?: string;
+  shipAddr1?: string;
+  shipAddr2?: string;
+  shipCity?: string;
+  shipState?: string;
+  shipZip?: string;
+  shipCountry?: string;
+  shipEmail?: string;
 }
 
 export interface ClientKpis {

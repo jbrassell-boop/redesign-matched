@@ -1,4 +1,4 @@
-import type { DashboardToolbarState, DashboardView, ScopeTypeFilter, GroupBy } from './types';
+import type { DashboardToolbarState, DashboardView, ScopeTypeFilter, LocationFilter, GroupBy } from './types';
 import './DashboardToolbar.css';
 
 const VIEWS: { key: DashboardView; label: string }[] = [
@@ -15,6 +15,16 @@ const TYPES: { key: ScopeTypeFilter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'Flexible', label: 'Flexible' },
   { key: 'Rigid', label: 'Rigid' },
+  { key: 'Instrument', label: 'Instrument' },
+  { key: 'Camera', label: 'Camera' },
+  { key: 'Carts', label: 'Carts' },
+];
+
+const LOCATIONS: { key: LocationFilter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'inhouse', label: 'In House' },
+  { key: 'outsourced', label: 'Outsourced' },
+  { key: 'hotlist', label: 'Hot List' },
 ];
 
 const GROUPS: { key: GroupBy; label: string }[] = [
@@ -29,9 +39,10 @@ interface DashboardToolbarProps {
   state: DashboardToolbarState;
   onChange: (partial: Partial<DashboardToolbarState>) => void;
   selectedCount: number;
+  onExport: () => void;
 }
 
-export const DashboardToolbar = ({ state, onChange, selectedCount }: DashboardToolbarProps) => {
+export const DashboardToolbar = ({ state, onChange, selectedCount, onExport }: DashboardToolbarProps) => {
   return (
     <div className="dash-toolbar">
       {/* View selector */}
@@ -49,7 +60,7 @@ export const DashboardToolbar = ({ state, onChange, selectedCount }: DashboardTo
 
       <div className="dash-toolbar__sep" />
 
-      {/* Type filter + Group By — repairs view only */}
+      {/* Type filter + Location filter + Group By — repairs view only */}
       {state.view === 'repairs' && (
         <>
           <div className="seg-group">
@@ -60,6 +71,18 @@ export const DashboardToolbar = ({ state, onChange, selectedCount }: DashboardTo
                 onClick={() => onChange({ type: t.key, page: 1 })}
               >
                 {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="seg-group">
+            {LOCATIONS.map(l => (
+              <button
+                key={l.key}
+                className={`seg-group__btn${state.location === l.key ? ' seg-group__btn--active' : ''}`}
+                onClick={() => onChange({ location: l.key, page: 1 })}
+              >
+                {l.label}
               </button>
             ))}
           </div>
@@ -89,8 +112,8 @@ export const DashboardToolbar = ({ state, onChange, selectedCount }: DashboardTo
         onChange={e => onChange({ search: e.target.value, page: 1 })}
       />
 
-      {/* Export */}
-      <button className="dash-toolbar__icon-btn" title="Export">
+      {/* Export CSV */}
+      <button className="dash-toolbar__icon-btn" title="Export CSV" onClick={onExport}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
           <polyline points="7 10 12 15 17 10" />
@@ -99,7 +122,7 @@ export const DashboardToolbar = ({ state, onChange, selectedCount }: DashboardTo
       </button>
 
       {/* Print */}
-      <button className="dash-toolbar__icon-btn" title="Print">
+      <button className="dash-toolbar__icon-btn" title="Print" onClick={() => window.print()}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="6 9 6 2 18 2 18 9" />
           <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />

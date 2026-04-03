@@ -51,7 +51,23 @@ public record DepartmentFull(
     string? Address1, string? City, string? State, string? Zip, string? Phone,
     string? ContactFirst, string? ContactLast, string? ContactPhone, string? ContactEmail,
     string? ServiceLocation,
-    int ScopeCount, int OpenRepairs
+    int ScopeCount, int OpenRepairs,
+    // Options
+    bool ShowConsumptionOnReq, bool EnforceScopeTypeFiltering,
+    bool ShowProductId, bool ShowUaOrNwt, bool ShowItemizedDescriptions,
+    bool EmailNewRepairs, bool MemberBoa, bool TrackingRequired,
+    bool TaxExempt, bool PaysByCreditCard, bool OnsiteService,
+    // Billing
+    int? SalesRepKey, string? SalesRep, int? PricingCategoryKey, string? PricingCategory,
+    double? DiscountPct, double? DefaultShipping,
+    // Bill To
+    string? BillName1, string? BillAddr1, string? BillAddr2,
+    string? BillCity, string? BillState, string? BillZip, string? BillEmail,
+    // Mailing
+    string? MailAddr1, string? MailAddr2, string? MailCity, string? MailState,
+    string? MailZip, string? MailCountry,
+    // Ship To extras
+    string? ShipName1, string? ShipAddr2, string? ShipCountry
 );
 
 public record DeptKpis(
@@ -72,7 +88,32 @@ public record ScopeDetail(
 public record DepartmentUpdate(
     string? Name, string? Address1, string? City, string? State, string? Zip,
     string? Phone, string? ContactFirst, string? ContactLast,
-    string? ContactPhone, string? ContactEmail
+    string? ContactPhone, string? ContactEmail,
+    // Options
+    bool? ShowConsumptionOnReq, bool? EnforceScopeTypeFiltering,
+    bool? ShowProductId, bool? ShowUaOrNwt, bool? ShowItemizedDescriptions,
+    bool? EmailNewRepairs, bool? MemberBoa, bool? TrackingRequired,
+    bool? TaxExempt, bool? PaysByCreditCard, bool? OnsiteService,
+    // Billing
+    double? DiscountPct, double? DefaultShipping,
+    // Bill To
+    string? BillName1, string? BillAddr1, string? BillAddr2,
+    string? BillCity, string? BillState, string? BillZip, string? BillEmail,
+    // Mailing
+    string? MailAddr1, string? MailAddr2, string? MailCity, string? MailState,
+    string? MailZip, string? MailCountry,
+    // Ship To extras
+    string? ShipName1, string? ShipAddr2, string? ShipCountry
+);
+
+public record DeptFlag(
+    int FlagKey, string FlagType, string Flag, bool VisibleOnDI, bool VisibleOnBlank
+);
+
+public record DeptContract(
+    int ContractKey, string ContractName, string ContractNumber,
+    string? ContractType, DateTime? DateEffective, DateTime? DateTermination,
+    string Status, double? AnnualValue
 );
 
 public record DepartmentRepairItem(

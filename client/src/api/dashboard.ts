@@ -21,6 +21,7 @@ export const getDashboardRepairs = async (filters: DashboardFilters | DashboardT
     statusFilter: filters.statusFilter !== 'all' ? filters.statusFilter : undefined,
   };
   if ('type' in filters && filters.type !== 'all') params.type = filters.type;
+  if ('location' in filters && filters.location !== 'all') params.location = filters.location;
   if ('groupBy' in filters && filters.groupBy !== 'none') params.groupBy = filters.groupBy;
   const { data } = await apiClient.get<DashboardRepairsResponse>('/dashboard/repairs', { params });
   return data;

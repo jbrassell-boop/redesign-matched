@@ -44,3 +44,31 @@ public record UpdateOnsiteStatusRequest(
     string Status,
     string? Notes
 );
+
+public record OnsiteServiceDetail(
+    int OnsiteServiceKey,
+    string InvoiceNum,
+    string ClientName,
+    string DeptName,
+    string TechName,
+    string? VisitDate,
+    string Status,
+    int TrayCount,
+    int InstrumentCount,
+    double TotalBilled,
+    string? SubmittedDate,
+    string? PurchaseOrder,
+    string? TruckNumber,
+    string? Notes
+);
+
+public record OnsiteServiceTray(
+    int TrayKey,
+    int TrayNumber,
+    string TrayName,
+    int InstrumentsCount,
+    int RepairedCount,
+    int SentToTsiCount,
+    int BeyondEconomicalRepairCount,
+    int ReplacedCount
+);

@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { OnsiteServiceListResponse, OnsiteServiceStats, OnsiteServiceFilters, CreateOnsiteVisitRequest } from '../pages/onsite-services/types';
+import type { OnsiteServiceListResponse, OnsiteServiceStats, OnsiteServiceFilters, CreateOnsiteVisitRequest, OnsiteServiceDetail, OnsiteServiceTray } from '../pages/onsite-services/types';
 
 export const getOnsiteServices = async (filters: OnsiteServiceFilters): Promise<OnsiteServiceListResponse> => {
   const { data } = await apiClient.get<OnsiteServiceListResponse>('/onsite-services', {
@@ -28,4 +28,18 @@ export const createOnsiteVisit = async (req: CreateOnsiteVisitRequest) => {
 export const updateOnsiteStatus = async (id: number, status: string, notes?: string) => {
   const { data } = await apiClient.put(`/onsite-services/${id}/status`, { status, notes });
   return data;
+};
+
+export const getOnsiteServiceDetail = async (id: number): Promise<OnsiteServiceDetail> => {
+  const { data } = await apiClient.get<OnsiteServiceDetail>(`/onsite-services/${id}/detail`);
+  return data;
+};
+
+export const getOnsiteServiceTrays = async (id: number): Promise<OnsiteServiceTray[]> => {
+  const { data } = await apiClient.get<OnsiteServiceTray[]>(`/onsite-services/${id}/trays`);
+  return data;
+};
+
+export const submitOnsiteForInvoicing = async (id: number): Promise<void> => {
+  await apiClient.patch(`/onsite-services/${id}/submit`);
 };

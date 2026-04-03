@@ -415,4 +415,142 @@ public class FinancialController(IConfiguration config) : ControllerBase
             RevenueMTD: paidMTD
         ));
     }
+
+    [HttpGet("at-risk")]
+    public async Task<IActionResult> GetAtRisk(
+        [FromQuery] string? from = null,
+        [FromQuery] string? to = null,
+        [FromQuery] int minInvoices = 1,
+        [FromQuery] bool includeOutsource = true,
+        [FromQuery] bool includeLabor = true,
+        [FromQuery] bool includeMaterial = true,
+        [FromQuery] bool includeShipping = true,
+        [FromQuery] bool includeCommissions = true)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var dateFrom = from != null && DateTime.TryParse(from, out var df) ? df : DateTime.Now.AddMonths(-12);
+        var dateTo = to != null && DateTime.TryParse(to, out var dt2) ? dt2 : DateTime.Now;
+
+        const string sql = """
+            SELECT
+                r.lDepartmentKey,
+                ISNULL(d.sDepartmentName, 'Unknown') AS sDepartmentName,
+                ISNULL(cl.sClientName1, '') AS sClientName1,
+                COUNT(r.lRepairKey) AS RepairCount,
+                ISNULL(SUM(r.dblAmtRepair), 0) AS Revenue,
+                ISNULL(SUM(r.dblAmtCostLabor), 0) AS LaborCost,
+                ISNULL(SUM(r.dblAmtCostMaterial), 0) AS MaterialCost,
+                ISNULL(SUM(r.dblOutSourceCost), 0) AS OutsourceCost,
+                ISNULL(SUM(r.dblAmtShipping), 0) AS ShippingCost,
+                ISNULL(SUM(r.dblAmtCommission), 0) AS CommissionCost
+            FROM tblRepair r
+            LEFT JOIN tblDepartment d ON r.lDepartmentKey = d.lDepartmentKey
+            LEFT JOIN tblClient cl ON d.lClientKey = cl.lClientKey
+            WHERE r.dtDateIn >= @dateFrom AND r.dtDateIn <= @dateTo
+              AND r.dblAmtRepair > 0
+            GROUP BY r.lDepartmentKey, d.sDepartmentName, cl.sClientName1
+            HAVING COUNT(r.lRepairKey) >= @minInvoices
+            ORDER BY SUM(r.dblAmtRepair) DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
+        cmd.Parameters.AddWithValue("@dateTo", dateTo);
+        cmd.Parameters.AddWithValue("@minInvoices", minInvoices);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<AtRiskItem>();
+        while (await reader.ReadAsync())
+        {
+            var revenue = Convert.ToDecimal(reader["Revenue"]);
+            var labor = includeLabor ? Convert.ToDecimal(reader["LaborCost"]) : 0;
+            var material = includeMaterial ? Convert.ToDecimal(reader["MaterialCost"]) : 0;
+            var outsource = includeOutsource ? Convert.ToDecimal(reader["OutsourceCost"]) : 0;
+            var shipping = includeShipping ? Convert.ToDecimal(reader["ShippingCost"]) : 0;
+            var commission = includeCommissions ? Convert.ToDecimal(reader["CommissionCost"]) : 0;
+            var totalExpenses = labor + material + outsource + shipping + commission;
+            var margin = revenue - totalExpenses;
+            var marginPct = revenue > 0 ? Math.Round(margin / revenue * 100, 1) : 0;
+
+            items.Add(new AtRiskItem(
+                DepartmentKey: Convert.ToInt32(reader["lDepartmentKey"]),
+                DepartmentName: reader["sDepartmentName"]?.ToString() ?? "",
+                ClientName: reader["sClientName1"]?.ToString() ?? "",
+                RepairCount: Convert.ToInt32(reader["RepairCount"]),
+                Revenue: revenue,
+                LaborCost: labor,
+                MaterialCost: material,
+                OutsourceCost: outsource,
+                ShippingCost: shipping,
+                CommissionCost: commission,
+                TotalExpenses: totalExpenses,
+                Margin: margin,
+                MarginPct: marginPct
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    [HttpGet("trending")]
+    public async Task<IActionResult> GetTrending(
+        [FromQuery] string? from = null,
+        [FromQuery] string? to = null,
+        [FromQuery] string groupBy = "month")
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var dateFrom = from != null && DateTime.TryParse(from, out var df) ? df : DateTime.Now.AddMonths(-12);
+        var dateTo = to != null && DateTime.TryParse(to, out var dt2) ? dt2 : DateTime.Now;
+
+        const string sql = """
+            SELECT
+                FORMAT(r.dtDateIn, 'yyyy-MM') AS MonthKey,
+                FORMAT(r.dtDateIn, 'MMM yyyy') AS MonthLabel,
+                COUNT(r.lRepairKey) AS RepairCount,
+                ISNULL(SUM(r.dblAmtRepair), 0) AS Revenue,
+                ISNULL(SUM(r.dblAmtCostLabor), 0) AS LaborCost,
+                ISNULL(SUM(r.dblAmtCostMaterial), 0) AS MaterialCost,
+                ISNULL(SUM(r.dblOutSourceCost), 0) AS OutsourceCost
+            FROM tblRepair r
+            WHERE r.dtDateIn >= @dateFrom AND r.dtDateIn <= @dateTo
+              AND r.dblAmtRepair > 0
+            GROUP BY FORMAT(r.dtDateIn, 'yyyy-MM'), FORMAT(r.dtDateIn, 'MMM yyyy')
+            ORDER BY MonthKey
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
+        cmd.Parameters.AddWithValue("@dateTo", dateTo);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<TrendingItem>();
+        while (await reader.ReadAsync())
+        {
+            var revenue = Convert.ToDecimal(reader["Revenue"]);
+            var labor = Convert.ToDecimal(reader["LaborCost"]);
+            var material = Convert.ToDecimal(reader["MaterialCost"]);
+            var outsource = Convert.ToDecimal(reader["OutsourceCost"]);
+            var totalExpenses = labor + material + outsource;
+            var margin = revenue - totalExpenses;
+            var marginPct = revenue > 0 ? Math.Round(margin / revenue * 100, 1) : 0;
+
+            items.Add(new TrendingItem(
+                Month: reader["MonthLabel"]?.ToString() ?? "",
+                RepairCount: Convert.ToInt32(reader["RepairCount"]),
+                Revenue: revenue,
+                LaborCost: labor,
+                MaterialCost: material,
+                OutsourceCost: outsource,
+                TotalExpenses: totalExpenses,
+                Margin: margin,
+                MarginPct: marginPct
+            ));
+        }
+
+        return Ok(items);
+    }
 }

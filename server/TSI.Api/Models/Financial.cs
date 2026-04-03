@@ -105,3 +105,31 @@ public record GLAccountItem(
     string AccountNumber,
     string BatchNumber
 );
+
+public record AtRiskItem(
+    int DepartmentKey,
+    string DepartmentName,
+    string ClientName,
+    int RepairCount,
+    decimal Revenue,
+    decimal LaborCost,
+    decimal MaterialCost,
+    decimal OutsourceCost,
+    decimal ShippingCost,
+    decimal CommissionCost,
+    decimal TotalExpenses,
+    decimal Margin,
+    decimal MarginPct
+);
+
+public record TrendingItem(
+    string Month,
+    int RepairCount,
+    decimal Revenue,
+    decimal LaborCost,
+    decimal MaterialCost,
+    decimal OutsourceCost,
+    decimal TotalExpenses,
+    decimal Margin,
+    decimal MarginPct
+);

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Spin, Table } from 'antd';
 import { PurchaseOrdersTab } from './tabs/PurchaseOrdersTab';
 import { SuppliersTab } from './tabs/SuppliersTab';
+import { ReceiveInventoryTab } from './tabs/ReceiveInventoryTab';
 import type { InventoryDetail } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar, SectionCard } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
@@ -79,6 +80,7 @@ function StatChip({
 const TABS: TabDef[] = [
   { key: 'inventory',       label: 'Inventory' },
   { key: 'sizes',           label: 'Sizes' },
+  { key: 'receive',         label: 'Receive Inventory' },
   { key: 'purchase-orders', label: 'Purchase Orders' },
   { key: 'suppliers',       label: 'Suppliers' },
 ];
@@ -116,11 +118,13 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
 
       <div style={{ marginTop: 14 }}>
       <SectionCard title="Flags">
-        <div style={{ display: 'flex', gap: 24 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
           {[
             { label: 'No Count Adjustment', value: detail.noCountAdjustment },
             { label: 'Not Used by Repair', value: detail.notUsedByRepair },
             { label: 'Always Re-Order', value: detail.alwaysReOrder },
+            { label: 'Large Diameter', value: detail.largeDiameter },
+            { label: 'Skip Pick List', value: detail.skipPickList },
           ].map(flag => (
             <div key={flag.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{
@@ -300,6 +304,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
       <div style={{ flex: 1, overflow: 'auto' }}>
         {activeTab === 'inventory'       && inventoryTab}
         {activeTab === 'sizes'           && sizesTab}
+        {activeTab === 'receive'          && <ReceiveInventoryTab />}
         {activeTab === 'purchase-orders' && <PurchaseOrdersTab inventoryKey={detail.inventoryKey} />}
         {activeTab === 'suppliers'       && <SuppliersTab inventoryKey={detail.inventoryKey} />}
       </div>

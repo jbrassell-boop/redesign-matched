@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Select, Table } from 'antd';
+import { Input, Select, Table, DatePicker, Switch, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import {
   getInvoices,
   getInvoiceDetail,
@@ -8,6 +9,8 @@ import {
   getClientsOnHold,
   getGLAccounts,
   getFinancialStats,
+  getAtRisk,
+  getTrending,
 } from '../../api/financial';
 import { FinancialDetailPane } from './FinancialDetailPane';
 import { TabBar, StatusBadge } from '../../components/shared';
@@ -20,6 +23,8 @@ import type {
   FinancialStats,
   FinancialTab,
   GLAccountItem,
+  AtRiskItem,
+  TrendingItem,
 } from './types';
 
 const fmt$ = (v: number) =>
@@ -86,6 +91,24 @@ export const FinancialPage = () => {
   const [holdTotal, setHoldTotal] = useState(0);
   const [glAccounts, setGlAccounts] = useState<GLAccountItem[]>([]);
 
+  // At Risk
+  const [atRiskItems, setAtRiskItems] = useState<AtRiskItem[]>([]);
+  const [atRiskDateFrom, setAtRiskDateFrom] = useState(dayjs().subtract(12, 'month').format('YYYY-MM-DD'));
+  const [atRiskDateTo, setAtRiskDateTo] = useState(dayjs().format('YYYY-MM-DD'));
+  const [atRiskMinInvoices, setAtRiskMinInvoices] = useState(1);
+  const [atRiskFilters, setAtRiskFilters] = useState({
+    includeLabor: true,
+    includeMaterial: true,
+    includeOutsource: true,
+    includeShipping: true,
+    includeCommissions: true,
+  });
+
+  // Trending
+  const [trendingItems, setTrendingItems] = useState<TrendingItem[]>([]);
+  const [trendDateFrom, setTrendDateFrom] = useState(dayjs().subtract(12, 'month').format('YYYY-MM-DD'));
+  const [trendDateTo, setTrendDateTo] = useState(dayjs().format('YYYY-MM-DD'));
+
   // Detail drawer
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -123,13 +146,24 @@ export const FinancialPage = () => {
       } else if (activeTab === 'gl') {
         const res = await getGLAccounts();
         setGlAccounts(res);
+      } else if (activeTab === 'atrisk') {
+        const res = await getAtRisk({
+          from: atRiskDateFrom,
+          to: atRiskDateTo,
+          minInvoices: atRiskMinInvoices,
+          ...atRiskFilters,
+        });
+        setAtRiskItems(res);
+      } else if (activeTab === 'trending') {
+        const res = await getTrending({ from: trendDateFrom, to: trendDateTo });
+        setTrendingItems(res);
       }
     } catch {
-      // silent
+      message.error('Failed to load data');
     } finally {
       setLoading(false);
     }
-  }, [activeTab, search, statusFilter, page, pageSize]);
+  }, [activeTab, search, statusFilter, page, pageSize, atRiskDateFrom, atRiskDateTo, atRiskMinInvoices, atRiskFilters, trendDateFrom, trendDateTo]);
 
   useEffect(() => {
     const timer = setTimeout(() => loadData(), search ? 300 : 0);
@@ -446,18 +480,162 @@ export const FinancialPage = () => {
           </div>
         )}
 
-        {/* At Risk / Trending placeholder */}
-        {(activeTab === 'atrisk' || activeTab === 'trending') && (
-          <div style={{
-            padding: 40,
-            textAlign: 'center',
-            color: 'var(--muted)',
-            fontSize: 13,
-            background: 'var(--card)',
-            borderRadius: 12,
-            border: '1px solid var(--border)',
-          }}>
-            {activeTab === 'atrisk' ? 'At Risk analysis' : 'Trending analysis'} — coming soon
+        {/* At Risk Tab */}
+        {activeTab === 'atrisk' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Filter bar */}
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 16px', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>From</span>
+                <DatePicker
+                  value={dayjs(atRiskDateFrom)}
+                  onChange={(d) => d && setAtRiskDateFrom(d.format('YYYY-MM-DD'))}
+                  picker="month" style={{ width: 130 }} size="small"
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>To</span>
+                <DatePicker
+                  value={dayjs(atRiskDateTo)}
+                  onChange={(d) => d && setAtRiskDateTo(d.format('YYYY-MM-DD'))}
+                  picker="month" style={{ width: 130 }} size="small"
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>Min Repairs</span>
+                <Select
+                  value={atRiskMinInvoices}
+                  onChange={setAtRiskMinInvoices}
+                  options={[1, 3, 5, 10, 20].map(v => ({ value: v, label: v }))}
+                  style={{ width: 70 }}
+                  size="small"
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                {[
+                  { key: 'includeLabor' as const, label: 'Labor' },
+                  { key: 'includeMaterial' as const, label: 'Material' },
+                  { key: 'includeOutsource' as const, label: 'Outsource' },
+                  { key: 'includeShipping' as const, label: 'Shipping' },
+                  { key: 'includeCommissions' as const, label: 'Commissions' },
+                ].map(f => (
+                  <div key={f.key} style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                    <Switch
+                      size="small"
+                      checked={atRiskFilters[f.key]}
+                      onChange={(v) => setAtRiskFilters(prev => ({ ...prev, [f.key]: v }))}
+                    />
+                    <span style={{ fontSize: 11, color: 'var(--text)' }}>{f.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Summary stats */}
+            {atRiskItems.length > 0 && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[
+                  { label: 'Departments', value: atRiskItems.length, color: 'var(--navy)' },
+                  { label: 'Total Revenue', value: '$' + atRiskItems.reduce((s, r) => s + r.revenue, 0).toLocaleString('en-US', { maximumFractionDigits: 0 }), color: 'var(--success)' },
+                  { label: 'Total Expenses', value: '$' + atRiskItems.reduce((s, r) => s + r.totalExpenses, 0).toLocaleString('en-US', { maximumFractionDigits: 0 }), color: 'var(--warning)' },
+                  { label: 'At Risk (< 40%)', value: atRiskItems.filter(r => r.marginPct < 40).length, color: 'var(--danger)' },
+                ].map(s => (
+                  <div key={s.label} style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</div>
+                    <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* Table */}
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+              <Table<AtRiskItem>
+                dataSource={atRiskItems}
+                rowKey="departmentKey"
+                loading={loading}
+                size="small"
+                pagination={{ pageSize: 50, showSizeChanger: true, pageSizeOptions: ['25', '50', '100'] }}
+                style={{ fontSize: 12 }}
+                rowClassName={(r) => r.marginPct < 40 ? 'at-risk-row' : ''}
+                columns={[
+                  { title: 'Department', dataIndex: 'departmentName', key: 'departmentName', render: (v: string) => <span style={{ fontWeight: 600 }}>{v}</span> },
+                  { title: 'Client', dataIndex: 'clientName', key: 'clientName', render: (v: string) => <span style={{ color: 'var(--muted)' }}>{v || '—'}</span> },
+                  { title: 'Repairs', dataIndex: 'repairCount', key: 'repairCount', align: 'right' as const },
+                  { title: 'Revenue', dataIndex: 'revenue', key: 'revenue', align: 'right' as const, sorter: (a: AtRiskItem, b: AtRiskItem) => a.revenue - b.revenue, defaultSortOrder: 'descend' as const, render: (v: number) => <span style={{ fontWeight: 700, color: 'var(--navy)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                  { title: 'Expenses', dataIndex: 'totalExpenses', key: 'totalExpenses', align: 'right' as const, render: (v: number) => <span style={{ color: 'var(--warning)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                  { title: 'Margin', dataIndex: 'margin', key: 'margin', align: 'right' as const, render: (v: number) => <span style={{ fontWeight: 600 }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                  { title: 'Margin %', dataIndex: 'marginPct', key: 'marginPct', align: 'right' as const, sorter: (a: AtRiskItem, b: AtRiskItem) => a.marginPct - b.marginPct, render: (v: number) => (
+                    <span style={{ fontWeight: 700, color: v < 40 ? 'var(--danger)' : v < 60 ? 'var(--warning)' : 'var(--success)' }}>{v}%</span>
+                  )},
+                  { title: 'Labor', dataIndex: 'laborCost', key: 'laborCost', align: 'right' as const, render: (v: number) => <span style={{ fontSize: 11, color: 'var(--muted)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                  { title: 'Outsource', dataIndex: 'outsourceCost', key: 'outsourceCost', align: 'right' as const, render: (v: number) => <span style={{ fontSize: 11, color: 'var(--muted)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                ]}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Trending Tab */}
+        {activeTab === 'trending' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Filter bar */}
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 16px', display: 'flex', gap: 16, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>From</span>
+                <DatePicker
+                  value={dayjs(trendDateFrom)}
+                  onChange={(d) => d && setTrendDateFrom(d.format('YYYY-MM-DD'))}
+                  picker="month" style={{ width: 130 }} size="small"
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>To</span>
+                <DatePicker
+                  value={dayjs(trendDateTo)}
+                  onChange={(d) => d && setTrendDateTo(d.format('YYYY-MM-DD'))}
+                  picker="month" style={{ width: 130 }} size="small"
+                />
+              </div>
+            </div>
+            {/* Summary stats */}
+            {trendingItems.length > 0 && (
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[
+                  { label: 'Months', value: trendingItems.length, color: 'var(--navy)' },
+                  { label: 'Total Revenue', value: '$' + trendingItems.reduce((s, t) => s + Number(t.revenue), 0).toLocaleString('en-US', { maximumFractionDigits: 0 }), color: 'var(--success)' },
+                  { label: 'Total Repairs', value: trendingItems.reduce((s, t) => s + t.repairCount, 0), color: 'var(--primary)' },
+                  { label: 'Avg Margin %', value: trendingItems.length > 0 ? Math.round(trendingItems.reduce((s, t) => s + Number(t.marginPct), 0) / trendingItems.length) + '%' : '—', color: 'var(--warning)' },
+                ].map(s => (
+                  <div key={s.label} style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</div>
+                    <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* Table */}
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+              <Table<TrendingItem>
+                dataSource={trendingItems}
+                rowKey="month"
+                loading={loading}
+                size="small"
+                pagination={false}
+                style={{ fontSize: 12 }}
+                columns={[
+                  { title: 'Month', dataIndex: 'month', key: 'month', render: (v: string) => <span style={{ fontWeight: 700 }}>{v}</span> },
+                  { title: 'Repairs', dataIndex: 'repairCount', key: 'repairCount', align: 'right' as const },
+                  { title: 'Revenue', dataIndex: 'revenue', key: 'revenue', align: 'right' as const, render: (v: number) => <span style={{ fontWeight: 700, color: 'var(--navy)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                  { title: 'Labor', dataIndex: 'laborCost', key: 'laborCost', align: 'right' as const, render: (v: number) => <span style={{ color: 'var(--muted)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                  { title: 'Material', dataIndex: 'materialCost', key: 'materialCost', align: 'right' as const, render: (v: number) => <span style={{ color: 'var(--muted)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                  { title: 'Outsource', dataIndex: 'outsourceCost', key: 'outsourceCost', align: 'right' as const, render: (v: number) => <span style={{ color: 'var(--muted)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                  { title: 'Total Expenses', dataIndex: 'totalExpenses', key: 'totalExpenses', align: 'right' as const, render: (v: number) => <span style={{ color: 'var(--warning)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                  { title: 'Margin', dataIndex: 'margin', key: 'margin', align: 'right' as const, render: (v: number) => <span style={{ fontWeight: 600 }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                  { title: 'Margin %', dataIndex: 'marginPct', key: 'marginPct', align: 'right' as const, render: (v: number) => (
+                    <span style={{ fontWeight: 700, color: v < 40 ? 'var(--danger)' : v < 60 ? 'var(--warning)' : 'var(--success)' }}>{v}%</span>
+                  )},
+                ]}
+              />
+            </div>
           </div>
         )}
 

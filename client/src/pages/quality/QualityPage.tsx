@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { message } from 'antd';
 import { getQualityInspections, getQualityStats, getQualityNcr, getQualityRework } from '../../api/quality';
 import type { QualityInspectionListItem, QualityStats, QualityFilters, NcrListItem, ReworkListItem } from './types';
 import { StatusBadge } from '../../components/shared/StatusBadge';
@@ -666,6 +667,18 @@ export const QualityPage = () => {
             display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
             background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
           }}>
+            <button
+              onClick={() => message.info('New NCR form coming soon')}
+              style={{
+                height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+                background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={12} height={12}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              New NCR
+            </button>
+            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
             <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
             <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
               {(['', 'Open', 'Under Review', 'Closed'] as const).map((v, i) => (
@@ -780,6 +793,18 @@ export const QualityPage = () => {
             display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
             background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
           }}>
+            <button
+              onClick={() => message.info('New CAPA form coming soon')}
+              style={{
+                height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+                background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={12} height={12}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              New CAPA
+            </button>
+            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
             <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Type</span>
             <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
               {['All', 'Corrective', 'Preventive'].map((v, i) => (

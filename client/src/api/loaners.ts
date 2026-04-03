@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { LoanerDetail, LoanerListResponse, LoanerStats, LoanersFilters } from '../pages/loaners/types';
+import type { LoanerDetail, LoanerListResponse, LoanerStats, LoanersFilters, LoanerScopeNeedItem } from '../pages/loaners/types';
 
 export const getLoaners = async (filters: LoanersFilters): Promise<LoanerListResponse> => {
   const { data } = await apiClient.get<LoanerListResponse>('/loaners', {
@@ -38,5 +38,10 @@ export const declineLoanerRequest = async (repairKey: number): Promise<void> => 
 
 export const bulkUpdateLoanerRequests = async (repairKeys: number[], action: 'fulfill' | 'decline'): Promise<{ updated: number }> => {
   const { data } = await apiClient.post('/loaners/requests/bulk', { repairKeys, action });
+  return data;
+};
+
+export const getLoanerScopeNeeds = async (): Promise<LoanerScopeNeedItem[]> => {
+  const { data } = await apiClient.get<LoanerScopeNeedItem[]>('/loaners/scope-needs');
   return data;
 };

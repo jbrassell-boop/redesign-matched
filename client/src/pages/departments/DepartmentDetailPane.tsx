@@ -7,13 +7,17 @@ import { DeptToolbar } from './DeptToolbar';
 import { DeptKpiStrip } from './DeptKpiStrip';
 import { ScopeDrawer } from './ScopeDrawer';
 import { InfoTab } from './tabs/InfoTab';
+import { AddressesTab } from './tabs/AddressesTab';
 import { ContactsTab } from './tabs/ContactsTab';
 import { ScopesTab } from './tabs/ScopesTab';
 import { SubGroupsTab } from './tabs/SubGroupsTab';
 import { RepairsTab } from './tabs/RepairsTab';
+import { FlagsTab } from './tabs/FlagsTab';
+import { ContractsTab } from './tabs/ContractsTab';
 import {
   getDepartmentFull, getDepartmentKpis, updateDepartment,
   getDepartmentScopes, getDepartmentSubGroups, getDepartmentContacts,
+  getDeptFlags,
 } from '../../api/departments';
 import { useTabBadges } from '../../hooks/useTabBadges';
 
@@ -23,10 +27,13 @@ interface DepartmentDetailPaneProps {
 
 const BASE_TABS: TabDef[] = [
   { key: 'info',       label: 'Info' },
+  { key: 'addresses',  label: 'Addresses' },
   { key: 'contacts',   label: 'Contacts' },
   { key: 'scopes',     label: 'Scopes' },
   { key: 'sub-groups', label: 'Sub-Groups' },
   { key: 'repairs',    label: 'Repairs' },
+  { key: 'flags',      label: 'Flags' },
+  { key: 'contracts',  label: 'Contracts' },
 ];
 
 export const DepartmentDetailPane = ({ deptKey }: DepartmentDetailPaneProps) => {
@@ -67,6 +74,7 @@ export const DepartmentDetailPane = ({ deptKey }: DepartmentDetailPaneProps) => 
       contacts: () => getDepartmentContacts(dk),
       scopes: () => getDepartmentScopes(dk),
       'sub-groups': () => getDepartmentSubGroups(dk),
+      flags: () => getDeptFlags(dk),
     } : {},
     [dk],
   );
@@ -146,10 +154,13 @@ export const DepartmentDetailPane = ({ deptKey }: DepartmentDetailPaneProps) => 
       <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
       <div style={{ flex: 1, overflow: 'auto' }}>
         {activeTab === 'info'       && <InfoTab dept={dept} onChange={handleFieldChange} />}
+        {activeTab === 'addresses'  && <AddressesTab dept={dept} onChange={handleFieldChange} />}
         {activeTab === 'contacts'   && <ContactsTab deptKey={dept.deptKey} />}
         {activeTab === 'scopes'     && <ScopesTab deptKey={dept.deptKey} onScopeClick={handleScopeClick} />}
         {activeTab === 'sub-groups' && <SubGroupsTab deptKey={dept.deptKey} />}
         {activeTab === 'repairs'    && <RepairsTab deptKey={dept.deptKey} />}
+        {activeTab === 'flags'      && <FlagsTab deptKey={dept.deptKey} />}
+        {activeTab === 'contracts'  && <ContractsTab deptKey={dept.deptKey} />}
       </div>
 
       <ScopeDrawer

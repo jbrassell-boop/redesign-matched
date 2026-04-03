@@ -39,13 +39,16 @@ export interface DashboardFilters {
 
 export type DashboardView = 'repairs' | 'shipping' | 'invoices' | 'flags' | 'emails' | 'tasks' | 'techbench';
 
-export type ScopeTypeFilter = 'all' | 'Flexible' | 'Rigid';
+export type ScopeTypeFilter = 'all' | 'Flexible' | 'Rigid' | 'Instrument' | 'Camera' | 'Carts';
+
+export type LocationFilter = 'all' | 'inhouse' | 'outsourced' | 'hotlist';
 
 export type GroupBy = 'none' | 'Client' | 'Status' | 'Tech' | 'ScopeType';
 
 export interface DashboardToolbarState {
   view: DashboardView;
   type: ScopeTypeFilter;
+  location: LocationFilter;
   groupBy: GroupBy;
   search: string;
   page: number;

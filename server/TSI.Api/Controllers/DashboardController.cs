@@ -54,6 +54,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
         [FromQuery] int pageSize = 50,
         [FromQuery] string? statusFilter = null,
         [FromQuery] string type = "all",
+        [FromQuery] string location = "all",
         [FromQuery] string groupBy = "none")
     {
         await using var conn = CreateConnection();
@@ -73,6 +74,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
             where.Add("rs.sRepairStatus = @statusFilter");
         if (type != "all")
             where.Add("stc.sScopeTypeCategory = @type");
+        if (location == "inhouse")
+            where.Add("ISNULL(r.bOutsourced, 0) = 0 AND ISNULL(r.bHotList, 0) = 0");
+        else if (location == "outsourced")
+            where.Add("ISNULL(r.bOutsourced, 0) = 1");
+        else if (location == "hotlist")
+            where.Add("ISNULL(r.bHotList, 0) = 1");
 
         var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
 

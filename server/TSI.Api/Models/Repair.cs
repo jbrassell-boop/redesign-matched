@@ -226,3 +226,14 @@ public record RepairFinancials(
     decimal MarginPct,
     decimal ContractMargin
 );
+
+public record TechnicianOption(
+    int TechKey,
+    string TechName
+);
+
+public record QuickEditRepairRequest(
+    int? StatusId,
+    int? TechnicianKey,
+    string? Notes
+);

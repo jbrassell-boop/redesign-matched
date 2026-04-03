@@ -1,3 +1,16 @@
+// TODO: Replace with real API when DB tables are migrated.
+// No EndoCart-specific tables (cart quotes, catalog, models) were found in db-schema-dump.json
+// as of 2026-04-03. The EndoCartsController at /api/endocarts currently serves scope inventory
+// and service history from tblScope / tblRepair. When cart-specific tables are added to the DB,
+// replace these constants with API calls to the stub endpoints in EndoCartsController.cs.
+//
+// Stub endpoints to implement when tables exist:
+//   GET /api/endocarts/quotes         → tblEndoCartQuote (not yet migrated)
+//   GET /api/endocarts/catalog        → tblEndoCartCatalog (not yet migrated)
+//   GET /api/endocarts/models         → tblEndoCartModel (not yet migrated)
+//   POST /api/endocarts/quotes        → create new quote
+//   PUT  /api/endocarts/quotes/{key}  → update quote
+
 import type { CatalogPart, CartModel, EndoCartQuote } from './types';
 
 export const CATALOG: CatalogPart[] = [

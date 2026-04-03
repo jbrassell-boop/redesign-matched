@@ -32,7 +32,7 @@ const fieldWrap: React.CSSProperties = {
 
 const EditField = ({ label, value, field, onChange, type = 'text' }: {
   label: string;
-  value: string | undefined | null;
+  value: string | number | undefined | null;
   field: string;
   onChange: (field: string, value: string) => void;
   type?: string;
@@ -50,19 +50,25 @@ const EditField = ({ label, value, field, onChange, type = 'text' }: {
 
 const ToggleField = ({ label, value, field, onChange }: {
   label: string;
-  value: boolean;
+  value: boolean | undefined;
   field: string;
   onChange: (field: string, value: boolean) => void;
 }) => (
-  <div style={{ ...fieldWrap, display: 'flex', alignItems: 'center', gap: 8 }}>
+  <label style={{
+    display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+    padding: '4px 10px', border: '1px solid var(--border)', borderRadius: 4,
+    fontSize: 12, fontWeight: 500, color: 'var(--text)',
+    background: value ? 'rgba(var(--primary-rgb), 0.08)' : 'var(--card)',
+    borderColor: value ? 'rgba(var(--primary-rgb), 0.3)' : 'var(--border)',
+  }}>
     <input
       type="checkbox"
-      checked={value}
+      checked={value ?? false}
       onChange={e => onChange(field, e.target.checked)}
-      style={{ width: 16, height: 16, cursor: 'pointer' }}
+      style={{ width: 13, height: 13, cursor: 'pointer', accentColor: 'var(--primary)' }}
     />
-    <span style={{ fontSize: 13, color: 'var(--text)' }}>{label}</span>
-  </div>
+    {label}
+  </label>
 );
 
 const ReadonlyField = ({ label, value }: { label: string; value: string | undefined | null }) => (
@@ -96,6 +102,19 @@ export const InfoTab = ({ client, onChange }: InfoTabProps) => (
         <SectionCard title="Billing Information">
           <EditField label="Billing Email" value={client.billingEmail} field="billingEmail" onChange={onChange} />
           <EditField label="Contract Number" value={client.contractNumber} field="contractNumber" onChange={onChange} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <EditField label="Discount %" value={client.discountPct} field="discountPct" onChange={onChange} type="number" />
+          </div>
+        </SectionCard>
+      </div>
+
+      <div style={{ marginTop: 16 }}>
+        <SectionCard title="Additional Details">
+          <EditField label="Secondary Name / AP Contact" value={client.secondaryName} field="secondaryName" onChange={onChange} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <EditField label="Reference #1" value={client.reference1} field="reference1" onChange={onChange} />
+            <EditField label="Reference #2" value={client.reference2} field="reference2" onChange={onChange} />
+          </div>
         </SectionCard>
       </div>
     </div>
@@ -107,10 +126,26 @@ export const InfoTab = ({ client, onChange }: InfoTabProps) => (
         <ReadonlyField label="Pricing Category" value={client.pricingCategory} />
         <ReadonlyField label="Payment Terms" value={client.paymentTerms} />
         <ReadonlyField label="Distributor" value={client.distributor} />
-        <ToggleField label="GPO / National Account" value={client.isGPO} field="isGPO" onChange={onChange} />
       </SectionCard>
 
-      {client.comments && (
+      <div style={{ marginTop: 16 }}>
+        <SectionCard title="Invoice &amp; Options">
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            <ToggleField label="Blind PS3" value={client.blindPS3} field="blindPS3" onChange={onChange} />
+            <ToggleField label="Req. Totals Only" value={client.reqTotalsOnly} field="reqTotalsOnly" onChange={onChange} />
+            <ToggleField label="Blind Totals On Final" value={client.blindTotalsOnFinal} field="blindTotalsOnFinal" onChange={onChange} />
+            <ToggleField label="Skip Metrics" value={client.skipMetrics} field="skipMetrics" onChange={onChange} />
+            <ToggleField label="PO Required" value={client.poRequired} field="poRequired" onChange={onChange} />
+            <ToggleField label="Never Hold" value={client.neverHold} field="neverHold" onChange={onChange} />
+            <ToggleField label="Skip Tracking" value={client.skipTracking} field="skipTracking" onChange={onChange} />
+            <ToggleField label="Email New Repairs" value={client.emailNewRepairs} field="emailNewRepairs" onChange={onChange} />
+            <ToggleField label="National Account" value={client.nationalAccount} field="nationalAccount" onChange={onChange} />
+            <ToggleField label="GPO / Nat'l Account" value={client.isGPO} field="isGPO" onChange={onChange} />
+          </div>
+        </SectionCard>
+      </div>
+
+      {client.comments !== undefined && (
         <div style={{ marginTop: 16 }}>
           <SectionCard title="Comments">
             <textarea
