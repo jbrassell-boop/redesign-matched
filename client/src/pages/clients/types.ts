@@ -54,3 +54,53 @@ export interface ClientFlag {
   visibleOnDI: boolean;
   visibleOnBlank: boolean;
 }
+
+export interface ClientFull {
+  clientKey: number;
+  name: string;
+  isActive: boolean;
+  address1?: string;
+  address2?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  phone?: string;
+  fax?: string;
+  billingEmail?: string;
+  pricingCategory?: string;
+  pricingCategoryKey?: number;
+  paymentTerms?: string;
+  paymentTermsKey?: number;
+  salesRep?: string;
+  salesRepKey?: number;
+  contractNumber?: string;
+  distributor?: string;
+  distributorKey?: number;
+  isGPO: boolean;
+  isNewCustomer: boolean;
+  customerSince?: string;
+  comments?: string;
+  deptCount: number;
+  openRepairs: number;
+}
+
+export interface ClientKpis {
+  totalRepairs: number;
+  openRepairs: number;
+  avgTat: number;
+  totalRevenue: number;
+}
+
+export type SaveState = 'ready' | 'unsaved' | 'saving' | 'saved';
+
+export interface ClientRepairItem {
+  repairKey: number;
+  workOrderNumber: string;
+  dateIn?: string;
+  status: string;
+  department?: string;
+  scopeType?: string;
+  serial?: string;
+  tat?: number;
+  amount?: number;
+}
