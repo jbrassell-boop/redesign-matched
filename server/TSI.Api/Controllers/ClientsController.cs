@@ -124,6 +124,42 @@ public class ClientsController(IConfiguration config) : ControllerBase
         ));
     }
 
+    [HttpGet("{clientKey:int}/summary")]
+    public async Task<IActionResult> GetClientSummary(int clientKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT c.sClientName1,
+                   ISNULL(pc.sPricingDescription, '') AS sPricingDescription,
+                   ISNULL(pt.sTermsDesc, '') AS sTermsDesc,
+                   ISNULL(sr.sRepFirst + ' ' + sr.sRepLast, '') AS sSalesRepName,
+                   ISNULL(c.bActive, 0) AS bActive
+            FROM tblClient c
+            LEFT JOIN tblPricingCategory pc ON c.lPricingCategoryKey = pc.lPricingCategoryKey
+            LEFT JOIN tblPaymentTerms pt ON c.lPaymentTermsKey = pt.lPaymentTermsKey
+            LEFT JOIN tblSalesRep sr ON c.lSalesRepKey = sr.lSalesRepKey
+            WHERE c.lClientKey = @id
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@id", clientKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+            return NotFound();
+
+        return Ok(new ClientSummary(
+            Name: reader["sClientName1"]?.ToString() ?? "",
+            PricingCategory: reader["sPricingDescription"] == DBNull.Value ? null : reader["sPricingDescription"]?.ToString(),
+            ContractType: null,
+            PaymentTerms: reader["sTermsDesc"] == DBNull.Value ? null : reader["sTermsDesc"]?.ToString(),
+            SalesRep: reader["sSalesRepName"] == DBNull.Value ? null : reader["sSalesRepName"]?.ToString(),
+            IsActive: Convert.ToBoolean(reader["bActive"])
+        ));
+    }
+
     [HttpGet("{clientKey:int}/contacts")]
     public async Task<IActionResult> GetClientContacts(int clientKey)
     {
