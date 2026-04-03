@@ -39,8 +39,8 @@ export const QuickEditModal = ({ open, record, onClose, onSaved }: QuickEditModa
 
   useEffect(() => {
     if (record) {
-      const matched = statuses.find(s => s.statusName === record.status);
-      setStatusId(matched?.statusId ?? record.statusId ?? undefined);
+      const matched = statuses.find(s => s.statusName === record.status) ?? statuses.find(s => s.statusId === record.statusId);
+      setStatusId(matched?.statusId ?? undefined);
       setNotes('');
       // Find tech by name
       const matchedTech = techs.find(t => t.techName === record.tech);

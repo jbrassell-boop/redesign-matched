@@ -27,7 +27,7 @@ interface StatusBadgeProps {
 }
 
 export const StatusBadge = ({ status, variant, className }: StatusBadgeProps) => {
-  const resolved = variant ?? STATUS_MAP[status.toLowerCase()] ?? 'gray';
+  const resolved = variant ?? STATUS_MAP[(status ?? '').toLowerCase()] ?? 'gray';
   return (
     <span className={`status-badge status-badge--${resolved}${className ? ` ${className}` : ''}`}>
       {status}

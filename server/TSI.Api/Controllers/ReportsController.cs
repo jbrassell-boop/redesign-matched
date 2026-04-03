@@ -29,7 +29,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
         var sql = $@"
             SELECT {groupBy} AS Period,
                    COUNT(*) AS TotalRepairs,
-                   SUM(CASE WHEN rs.sRepairStatus = 'Shipped' THEN 1 ELSE 0 END) AS Shipped,
+                   SUM(CASE WHEN r.dtDateOut IS NOT NULL THEN 1 ELSE 0 END) AS Shipped,
                    SUM(CASE WHEN rs.sRepairStatus NOT IN ('Shipped','Cancelled') THEN 1 ELSE 0 END) AS InProgress,
                    ISNULL(SUM(r.dblAmtRepair), 0) AS Revenue
             FROM tblRepair r
@@ -70,7 +70,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
             JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
-            WHERE rs.sRepairStatus = 'Shipped'
+            WHERE r.dtDateOut IS NOT NULL
               AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
             GROUP BY FORMAT(r.dtDateOut, 'yyyy-MM'), st.sScopeTypeDesc
             ORDER BY MIN(r.dtDateOut), st.sScopeTypeDesc";
@@ -105,7 +105,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
             JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             JOIN tblClient c ON c.lClientKey = d.lClientKey
-            WHERE rs.sRepairStatus = 'Shipped'
+            WHERE r.dtDateOut IS NOT NULL
               AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
             GROUP BY c.sClientName1
             ORDER BY SUM(r.dblAmtRepair) DESC";
@@ -144,7 +144,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
             JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblRepairItemTran rit ON rit.lRepairKey = r.lRepairKey
-            WHERE rs.sRepairStatus = 'Shipped'
+            WHERE r.dtDateOut IS NOT NULL
               AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
             GROUP BY c.sClientName1
             ORDER BY SUM(r.dblAmtRepair) DESC";
@@ -184,7 +184,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
             FROM tblRepair r
             JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey
-            WHERE rs.sRepairStatus = 'Shipped'
+            WHERE r.dtDateOut IS NOT NULL
               AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
             GROUP BY t.sTechName
             ORDER BY COUNT(*) DESC";

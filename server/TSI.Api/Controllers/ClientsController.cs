@@ -86,7 +86,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
                     JOIN tblDepartment d2 ON d2.lDepartmentKey = r.lDepartmentKey
                     JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
                     WHERE d2.lClientKey = c.lClientKey
-                      AND rs.sRepairStatus NOT IN ('Shipped','Cancelled')) AS OpenRepairs
+                      AND r.dtDateOut IS NULL AND rs.sRepairStatus NOT IN ('Cancelled')) AS OpenRepairs
             FROM tblClient c
             WHERE c.lClientKey = @clientKey
             """;
@@ -280,7 +280,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
                     JOIN tblDepartment d2 ON d2.lDepartmentKey = r.lDepartmentKey
                     JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
                     WHERE d2.lClientKey = c.lClientKey
-                      AND rs.sRepairStatus NOT IN ('Shipped','Cancelled')) AS OpenRepairs,
+                      AND r.dtDateOut IS NULL AND rs.sRepairStatus NOT IN ('Cancelled')) AS OpenRepairs,
                    c.sClientName2, c.sReferenceNum2, c.sReferenceNum3,
                    ISNULL(c.bBlindPS3, 0) AS bBlindPS3,
                    ISNULL(c.bRequisitionTotalsOnly, 0) AS bReqTotalsOnly,
@@ -379,7 +379,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
         const string sql = """
             SELECT
                 COUNT(*) AS TotalRepairs,
-                SUM(CASE WHEN rs.sRepairStatus NOT IN ('Shipped','Cancelled') THEN 1 ELSE 0 END) AS OpenRepairs,
+                SUM(CASE WHEN r.dtDateOut IS NULL AND rs.sRepairStatus NOT IN ('Cancelled') THEN 1 ELSE 0 END) AS OpenRepairs,
                 ISNULL(AVG(CAST(DATEDIFF(DAY, r.dtDateIn, ISNULL(r.dtDateOut, GETDATE())) AS DECIMAL)), 0) AS AvgTat,
                 ISNULL(SUM(r.dblAmtRepair), 0) AS TotalRevenue
             FROM tblRepair r
@@ -722,7 +722,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
         const string dataSql = """
             SELECT r.lRepairKey, r.sWorkOrderNumber, r.dtDateIn,
                    rs.sRepairStatus, dep.sDepartmentName,
-                   st.sScopeTypeName, s.sSerialNumber,
+                   ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeName, s.sSerialNumber,
                    DATEDIFF(DAY, r.dtDateIn, ISNULL(r.dtDateOut, GETDATE())) AS Tat,
                    r.dblAmtRepair
             FROM tblRepair r
