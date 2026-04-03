@@ -1,5 +1,1 @@
-APPROVED 2026-04-02T00:00:00Z
-Reviewer: tab-reviewer
-Scope: 10 sub-tabs (Tasks, Emails, Shipping, Inventory, PurchaseOrders, Invoices, Flags, Analytics, TechBench, Briefing) + DashboardController
-Checks passed: zero hardcoded hex in tabs, rgba uses --name-rgb tokens, all tabs wired via lazy loading, backend uses await using throughout, no EF Core
-Note: RepairTable.tsx (main dashboard, not a sub-tab) has hardcoded hex on lines 7-14, 147, 180 — recommend follow-up fix
+APPROVED 2026-04-03T01:00:50Z

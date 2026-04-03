@@ -51,7 +51,7 @@
 
 .seg-group__btn--active {
   background: var(--primary);
-  color: #fff;
+  color: var(--card);
   font-weight: 600;
 }
 
