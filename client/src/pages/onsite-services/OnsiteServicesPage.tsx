@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { getOnsiteServices, getOnsiteServiceStats } from '../../api/onsite-services';
 import { QuoteModal } from './QuoteModal';
 import { CompleteServiceModal } from './CompleteServiceModal';
+import { OnsiteServiceDetailDrawer } from './OnsiteServiceDetailDrawer';
 import { StatusBadge } from '../../components/shared';
 import type { OnsiteServiceListItem, OnsiteServiceStats, OnsiteServiceFilters } from './types';
 
@@ -106,6 +107,8 @@ export const OnsiteServicesPage = () => {
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState<OnsiteServiceListItem | null>(null);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailKey, setDetailKey] = useState<number | null>(null);
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -418,7 +421,7 @@ export const OnsiteServicesPage = () => {
                   style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
-                  onClick={() => { setSelectedVisit(item); setCompleteOpen(true); }}
+                  onClick={() => { setDetailKey(item.onsiteServiceKey); setDetailOpen(true); }}
                 >
                   <td style={tdStyle}>
                     <span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{item.invoiceNum}</span>
@@ -513,6 +516,12 @@ export const OnsiteServicesPage = () => {
         visit={selectedVisit}
         onClose={() => { setCompleteOpen(false); setSelectedVisit(null); }}
         onUpdated={() => { setCompleteOpen(false); setSelectedVisit(null); reload(); }}
+      />
+      <OnsiteServiceDetailDrawer
+        open={detailOpen}
+        serviceKey={detailKey}
+        onClose={() => { setDetailOpen(false); setDetailKey(null); }}
+        onUpdated={() => { reload(); }}
       />
     </div>
   );
