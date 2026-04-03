@@ -1,4 +1,5 @@
 import { Modal } from 'antd';
+import type { CSSProperties } from 'react';
 import type { RepairFull } from '../types';
 
 interface DefectTrackingModalProps {
@@ -8,16 +9,16 @@ interface DefectTrackingModalProps {
   defects: { itemKey: number; item: string; comment: string }[];
 }
 
-const sBar: React.CSSProperties = {
+const sBar: CSSProperties = {
   background: 'var(--primary)', color: '#fff',
   fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
   letterSpacing: '.06em', padding: '4px 10px', margin: '8px 0 0',
 };
-const fl: React.CSSProperties = {
+const fl: CSSProperties = {
   fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase',
   color: '#555', letterSpacing: '.04em',
 };
-const fv: React.CSSProperties = {
+const fv: CSSProperties = {
   borderBottom: '1px solid #999', minHeight: 18, fontSize: 11, padding: '1px 2px',
 };
 
