@@ -49,22 +49,7 @@ export const LoginPage = () => {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, position: 'relative', zIndex: 1 }}>
         {/* Company identity above card */}
         <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: 64, height: 64, borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--primary) 0%, #1e5a9e 100%)',
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 12,
-            boxShadow: '0 4px 24px rgba(46, 117, 182, 0.4)',
-          }}>
-            <svg width={32} height={32} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth={2}>
-              <circle cx="11" cy="11" r="8" />
-              <path d="M11 7v4l2.5 2.5" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </div>
-          <h1 style={{ color: '#fff', fontSize: 24, fontWeight: 900, letterSpacing: '0.02em', margin: 0 }}>
-            Total Scope, Inc.
-          </h1>
+          <img src="/logo-white.png" alt="Total Scope, Inc." style={{ height: 64, marginBottom: 12, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} />
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 600 }}>
             Medical Device Repair Management
           </p>
@@ -170,7 +155,7 @@ export const LoginPage = () => {
             padding: '14px 32px',
             borderTop: '1px solid var(--border)',
             background: 'var(--neutral-50)',
-            display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16,
+            display: 'flex', justifyContent: 'center', alignItems: 'center',
           }}>
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -181,16 +166,6 @@ export const LoginPage = () => {
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
               <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--primary)', letterSpacing: '.03em' }}>ISO 13485:2016</span>
-            </div>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 6,
-              padding: '3px 10px', borderRadius: 4,
-              background: '#F0FDF4', border: '1px solid #BBF7D0',
-            }}>
-              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth={2.5}>
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-              <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--success)', letterSpacing: '.03em' }}>SDVOSB Certified</span>
             </div>
           </div>
         </div>
