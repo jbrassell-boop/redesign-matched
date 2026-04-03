@@ -103,7 +103,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
-            LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCategoryKey
+            LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey
@@ -134,7 +134,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
-            LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCategoryKey
+            LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey
