@@ -38,14 +38,27 @@ public class DashboardController(IConfiguration config) : ControllerBase
         if (!await reader.ReadAsync())
             return Ok(new DashboardStats(0, 0, 0, 0, 0, 0));
 
-        return Ok(new DashboardStats(
+        var stats = new DashboardStats(
             OpenRepairs: reader["OpenRepairs"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OpenRepairs"]),
             UrgentRepairs: reader["UrgentRepairs"] == DBNull.Value ? 0 : Convert.ToInt32(reader["UrgentRepairs"]),
             PendingQC: reader["PendingQC"] == DBNull.Value ? 0 : Convert.ToInt32(reader["PendingQC"]),
             PendingShip: reader["PendingShip"] == DBNull.Value ? 0 : Convert.ToInt32(reader["PendingShip"]),
             CompletedToday: reader["CompletedToday"] == DBNull.Value ? 0 : Convert.ToInt32(reader["CompletedToday"]),
             ReceivedToday: reader["ReceivedToday"] == DBNull.Value ? 0 : Convert.ToInt32(reader["ReceivedToday"])
-        ));
+        );
+        await reader.CloseAsync();
+
+        // Contract expiration check
+        await using var contractCmd = new SqlCommand(
+            "SELECT COUNT(*) FROM tblContract WHERE dtDateTermination BETWEEN GETDATE() AND DATEADD(DAY, 90, GETDATE())", conn);
+        contractCmd.CommandTimeout = 10;
+        var expiringContracts = Convert.ToInt32(await contractCmd.ExecuteScalarAsync());
+
+        return Ok(new {
+            stats.OpenRepairs, stats.UrgentRepairs, stats.PendingQC, stats.PendingShip,
+            stats.CompletedToday, stats.ReceivedToday,
+            expiringContracts
+        });
     }
 
     [HttpGet("repairs")]

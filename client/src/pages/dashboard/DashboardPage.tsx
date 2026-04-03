@@ -193,6 +193,10 @@ export const DashboardPage = () => {
       state: (stats.pendingShip ?? 0) > 20 ? 'warn' : 'normal' },
     { id: 'completedToday', label: 'SHIPPED TODAY', value: stats.completedToday, color: 'green' },
     { id: 'receivedToday', label: 'RECEIVED TODAY', value: stats.receivedToday, color: 'muted' },
+    ...((stats as any).expiringContracts > 0 ? [{
+      id: 'expiringContracts', label: 'CONTRACTS EXPIRING', value: (stats as any).expiringContracts as number, color: 'amber' as const,
+      state: 'warn' as const, tooltip: `${(stats as any).expiringContracts} contracts expiring within 90 days`,
+    }] : []),
   ] : [];
 
   return (

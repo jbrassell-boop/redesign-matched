@@ -364,6 +364,41 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
 
 /* ── Default generate handler ────────────────────────────────────── */
 
-export const handleGenerate = (_id: string) => {
-  message.success('Report generating... check Downloads shortly');
+const REPORT_ENDPOINTS: Record<string, string> = {
+  'repair-volume': '/reports/repair-volume',
+  'repair-tat': '/reports/tat-analysis',
+  'revenue-client': '/reports/revenue-client',
+  'repair-metrics': '/reports/client-scorecard',
+  'billable-report': '/reports/revenue-client',
+  'outstanding-aging': '/reports/revenue-client',
+  'monthly-revenue': '/reports/repair-volume',
+};
+
+export const handleGenerate = async (id: string) => {
+  const endpoint = REPORT_ENDPOINTS[id];
+  if (!endpoint) {
+    message.info('This report type is not yet available for export');
+    return;
+  }
+  message.loading({ content: 'Generating report...', key: 'report', duration: 0 });
+  try {
+    const token = localStorage.getItem('tsi_token');
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
+    const resp = await fetch(`${baseUrl}${endpoint}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!resp.ok) throw new Error('Failed');
+    const blob = await resp.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = resp.headers.get('content-disposition')?.split('filename=')[1]?.replace(/"/g, '') || `${id}-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    message.success({ content: 'Report downloaded', key: 'report' });
+  } catch {
+    message.error({ content: 'Failed to generate report', key: 'report' });
+  }
 };

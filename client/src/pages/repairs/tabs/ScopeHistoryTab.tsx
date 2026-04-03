@@ -37,8 +37,43 @@ export const ScopeHistoryTab = ({ repairKey, currentRepairKey }: { repairKey: nu
 
   if (loading) return <div style={{ padding: 40, textAlign: 'center' }}><Spin /></div>;
 
+  // Lifecycle stats
+  const totalRepairs = items.length;
+  const totalCost = items.reduce((s, i) => s + (i.amount ?? 0), 0);
+  const avgTat = totalRepairs > 0 ? items.reduce((s, i) => s + (i.daysIn ?? 0), 0) / totalRepairs : 0;
+  const fmt$ = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+
   return (
     <div style={{ padding: '10px 14px' }}>
+      {/* Lifecycle Summary */}
+      {totalRepairs > 0 && (
+        <div style={{
+          display: 'flex', gap: 16, marginBottom: 12, padding: '10px 14px',
+          background: 'linear-gradient(135deg, var(--navy) 0%, #1a365d 100%)',
+          borderRadius: 8, color: '#fff',
+        }}>
+          <div style={{ fontSize: 10, fontWeight: 700, opacity: .6, textTransform: 'uppercase', letterSpacing: '.06em', alignSelf: 'center', marginRight: 8 }}>
+            Scope Lifecycle
+          </div>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 900 }}>{totalRepairs}</div>
+            <div style={{ fontSize: 9, opacity: .6 }}>Total Repairs</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 900 }}>{fmt$(totalCost)}</div>
+            <div style={{ fontSize: 9, opacity: .6 }}>Lifetime Cost</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 900 }}>{avgTat.toFixed(1)}d</div>
+            <div style={{ fontSize: 9, opacity: .6 }}>Avg TAT</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 900 }}>{fmt$(totalRepairs > 0 ? totalCost / totalRepairs : 0)}</div>
+            <div style={{ fontSize: 9, opacity: .6 }}>Avg Cost/Repair</div>
+          </div>
+        </div>
+      )}
+
       <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>
         Scope Repair History ({items.length} repairs)
       </div>
