@@ -97,3 +97,21 @@ export interface ScopeTypeDeptMaxCharge {
   clientName: string;
   maxCharge: number | null;
 }
+
+export interface ScopeTypeInventoryItem {
+  inventoryKey: number;
+  description: string;
+  flexOrRigid: string;
+  levelCurrent: number;
+  levelMinimum: number;
+  levelMaximum: number;
+  isActive: boolean;
+}
+
+export interface ScopeTypeFlag {
+  flagKey: number;
+  flag: string;
+  flagType: string;
+  visibleOnDI: boolean;
+  visibleOnBlank: boolean;
+}

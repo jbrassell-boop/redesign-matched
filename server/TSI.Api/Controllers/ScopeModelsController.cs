@@ -325,6 +325,89 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
         return Ok(items);
     }
 
+    /// <summary>GET /api/scope-models/{id}/inventory — inventory items linked to this scope type</summary>
+    [HttpGet("{id:int}/inventory")]
+    public async Task<IActionResult> GetInventory(int id)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Inventory items linked through repair items for this scope type:
+        // tblScopeTypeRepairItems → tblImpliedInventory → tblInventory
+        const string sql = """
+            SELECT DISTINCT
+                inv.lInventoryKey,
+                ISNULL(inv.sItemDescription, '') AS sItemDescription,
+                ISNULL(inv.sRigidOrFlexible, '') AS sRigidOrFlexible,
+                ISNULL(inv.nLevelCurrent, 0) AS nLevelCurrent,
+                ISNULL(inv.nLevelMinimum, 0) AS nLevelMinimum,
+                ISNULL(inv.nLevelMaximum, 0) AS nLevelMaximum,
+                ISNULL(inv.bActive, 1) AS bActive
+            FROM tblScopeTypeRepairItems stri
+            INNER JOIN tblImpliedInventory ii ON ii.lRepairItemKey = stri.lRepairItemKey
+            INNER JOIN tblInventory inv ON inv.lInventoryKey = ii.lInventoryKey
+            WHERE stri.lScopeTypeKey = @id
+              AND ISNULL(inv.bNotUsedByRepair, 0) = 0
+            ORDER BY inv.sItemDescription
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@id", id);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<ScopeTypeInventoryItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new ScopeTypeInventoryItem(
+                InventoryKey: Convert.ToInt32(reader["lInventoryKey"]),
+                Description: reader["sItemDescription"]?.ToString() ?? "",
+                FlexOrRigid: reader["sRigidOrFlexible"]?.ToString() ?? "",
+                LevelCurrent: Convert.ToInt32(reader["nLevelCurrent"]),
+                LevelMinimum: Convert.ToInt32(reader["nLevelMinimum"]),
+                LevelMaximum: Convert.ToInt32(reader["nLevelMaximum"]),
+                IsActive: Convert.ToBoolean(reader["bActive"])
+            ));
+        }
+        return Ok(items);
+    }
+
+    /// <summary>GET /api/scope-models/{id}/flags — flags linked to this scope type</summary>
+    [HttpGet("{id:int}/flags")]
+    public async Task<IActionResult> GetFlags(int id)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Flags linked to the scope type via tblFlags where lOwnerKey = @id
+        // Flag types that apply to scope types have sFlagType containing 'Scope Type'
+        const string sql = """
+            SELECT f.lFlagKey, f.sFlag,
+                   ISNULL(ft.sFlagType, '') AS sFlagType,
+                   ISNULL(f.bVisibleOnDI, 0) AS bVisibleOnDI,
+                   ISNULL(f.bVisibleOnBlank, 0) AS bVisibleOnBlank
+            FROM tblFlags f
+            INNER JOIN tblFlagTypes ft ON ft.lFlagTypeKey = f.lFlagTypeKey
+            WHERE f.lOwnerKey = @id
+              AND ft.sFlagType LIKE '%Scope Type%'
+            ORDER BY ft.sFlagType, f.sFlag
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@id", id);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var flags = new List<ScopeTypeFlag>();
+        while (await reader.ReadAsync())
+        {
+            flags.Add(new ScopeTypeFlag(
+                FlagKey: Convert.ToInt32(reader["lFlagKey"]),
+                Flag: reader["sFlag"]?.ToString() ?? "",
+                FlagType: reader["sFlagType"]?.ToString() ?? "",
+                VisibleOnDI: Convert.ToBoolean(reader["bVisibleOnDI"]),
+                VisibleOnBlank: Convert.ToBoolean(reader["bVisibleOnBlank"])
+            ));
+        }
+        return Ok(flags);
+    }
+
     private static void AddParams(SqlCommand cmd, string? search, string? typeFilter, string? statusFilter, int? manufacturerKey)
     {
         if (!string.IsNullOrWhiteSpace(search)) cmd.Parameters.AddWithValue("@search", $"%{search}%");

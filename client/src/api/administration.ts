@@ -75,3 +75,27 @@ export const getBonusPools = (type: string = 'tech') =>
 
 export const getAdminStats = () =>
   apiClient.get('/administration/stats').then(r => r.data);
+
+// ── Repair Reasons CRUD ──
+export const createRepairReason = (reason: string, active: boolean) =>
+  apiClient.post('/administration/repair-reasons', { reason, active }).then(r => r.data);
+
+export const updateRepairReason = (key: number, reason: string, active: boolean) =>
+  apiClient.put(`/administration/repair-reasons/${key}`, { reason, active });
+
+export const deleteRepairReason = (key: number) =>
+  apiClient.delete(`/administration/repair-reasons/${key}`);
+
+// ── Repair Statuses CRUD ──
+export const createRepairStatus = (statusName: string, sortOrder?: number) =>
+  apiClient.post('/administration/repair-statuses', { statusName, sortOrder }).then(r => r.data);
+
+export const updateRepairStatus = (id: number, statusName: string, sortOrder?: number) =>
+  apiClient.put(`/administration/repair-statuses/${id}`, { statusName, sortOrder });
+
+export const deleteRepairStatus = (id: number) =>
+  apiClient.delete(`/administration/repair-statuses/${id}`);
+
+// ── Users PATCH ──
+export const patchAdminUser = (key: number, body: { fullName?: string; emailAddress?: string; active?: boolean }) =>
+  apiClient.patch(`/administration/users/${key}`, body);

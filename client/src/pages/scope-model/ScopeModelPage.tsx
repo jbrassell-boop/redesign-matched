@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Spin, Select, Drawer } from 'antd';
+import { Input, Spin, Select, Drawer, Table, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { getScopeModels, getScopeModelDetail, getScopeModelStats, getManufacturers } from '../../api/scopeModels';
+import { getScopeModels, getScopeModelDetail, getScopeModelStats, getManufacturers, getScopeModelInventory, getScopeModelFlags } from '../../api/scopeModels';
 import { RepairItemsTab } from './tabs/RepairItemsTab';
 import { MaxChargesTab } from './tabs/MaxChargesTab';
-import type { ScopeModelListItem, ScopeModelDetail, ScopeModelStats, Manufacturer } from './types';
+import type { ScopeModelListItem, ScopeModelDetail, ScopeModelStats, Manufacturer, ScopeTypeInventoryItem, ScopeTypeFlag } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 
@@ -91,6 +91,12 @@ export const ScopeModelPage = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('specs');
 
+  // Inventory + Flags tab data
+  const [inventoryItems, setInventoryItems] = useState<ScopeTypeInventoryItem[]>([]);
+  const [inventoryLoading, setInventoryLoading] = useState(false);
+  const [flagItems, setFlagItems] = useState<ScopeTypeFlag[]>([]);
+  const [flagsLoading, setFlagsLoading] = useState(false);
+
   const loadData = useCallback(async (s: string, tf: string, sf: string, mk: number | null, p: number) => {
     setLoading(true);
     try {
@@ -116,7 +122,34 @@ export const ScopeModelPage = () => {
     setDrawerOpen(true);
     setDetailLoading(true);
     setActiveTab('specs');
+    setInventoryItems([]);
+    setFlagItems([]);
     try { setDetail(await getScopeModelDetail(item.scopeTypeKey)); } finally { setDetailLoading(false); }
+  };
+
+  const handleTabChange = async (tab: string) => {
+    setActiveTab(tab);
+    if (!detail) return;
+    if (tab === 'inventory' && inventoryItems.length === 0) {
+      setInventoryLoading(true);
+      try {
+        setInventoryItems(await getScopeModelInventory(detail.scopeTypeKey));
+      } catch {
+        message.error('Failed to load inventory');
+      } finally {
+        setInventoryLoading(false);
+      }
+    }
+    if (tab === 'flags' && flagItems.length === 0) {
+      setFlagsLoading(true);
+      try {
+        setFlagItems(await getScopeModelFlags(detail.scopeTypeKey));
+      } catch {
+        message.error('Failed to load flags');
+      } finally {
+        setFlagsLoading(false);
+      }
+    }
   };
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
@@ -330,12 +363,63 @@ export const ScopeModelPage = () => {
           </>
         }
       />
-      <TabBar tabs={DRAWER_TABS} activeKey={activeTab} onChange={setActiveTab} />
+      <TabBar tabs={DRAWER_TABS} activeKey={activeTab} onChange={handleTabChange} />
       {activeTab === 'specs'       && specsContent}
       {activeTab === 'repairItems' && <RepairItemsTab scopeTypeKey={detail.scopeTypeKey} />}
       {activeTab === 'maxCharges'  && <MaxChargesTab scopeTypeKey={detail.scopeTypeKey} />}
-      {activeTab === 'inventory'   && <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>Inventory coming soon</div>}
-      {activeTab === 'flags'       && <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>Flags coming soon</div>}
+      {activeTab === 'inventory'   && (
+        inventoryLoading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+        ) : (
+          <Table
+            dataSource={inventoryItems}
+            rowKey="inventoryKey"
+            size="small"
+            pagination={false}
+            scroll={{ y: 400 }}
+            locale={{ emptyText: 'No inventory items linked to this scope type' }}
+            columns={[
+              { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true },
+              { title: 'Type', dataIndex: 'flexOrRigid', key: 'flexOrRigid', width: 80 },
+              { title: 'On Hand', dataIndex: 'levelCurrent', key: 'levelCurrent', width: 80, align: 'center' as const },
+              { title: 'Min', dataIndex: 'levelMinimum', key: 'levelMinimum', width: 60, align: 'center' as const },
+              { title: 'Max', dataIndex: 'levelMaximum', key: 'levelMaximum', width: 60, align: 'center' as const },
+              {
+                title: 'Status', dataIndex: 'isActive', key: 'isActive', width: 80,
+                render: (v: boolean) => <StatusBadge status={v ? 'Active' : 'Inactive'} />,
+              },
+            ]}
+            style={{ padding: '0 16px' }}
+          />
+        )
+      )}
+      {activeTab === 'flags' && (
+        flagsLoading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+        ) : (
+          <Table
+            dataSource={flagItems}
+            rowKey="flagKey"
+            size="small"
+            pagination={false}
+            scroll={{ y: 400 }}
+            locale={{ emptyText: 'No flags linked to this scope type' }}
+            columns={[
+              { title: 'Flag', dataIndex: 'flag', key: 'flag', ellipsis: true },
+              { title: 'Type', dataIndex: 'flagType', key: 'flagType', width: 120 },
+              {
+                title: 'On DI', dataIndex: 'visibleOnDI', key: 'visibleOnDI', width: 70, align: 'center' as const,
+                render: (v: boolean) => v ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Yes</span> : <span style={{ color: 'var(--muted)' }}>—</span>,
+              },
+              {
+                title: 'On Blank', dataIndex: 'visibleOnBlank', key: 'visibleOnBlank', width: 80, align: 'center' as const,
+                render: (v: boolean) => v ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Yes</span> : <span style={{ color: 'var(--muted)' }}>—</span>,
+              },
+            ]}
+            style={{ padding: '0 16px' }}
+          />
+        )
+      )}
     </div>
   ) : null;
 

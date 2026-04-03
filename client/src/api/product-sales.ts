@@ -22,3 +22,6 @@ export const getProductSaleDetail = (id: number) =>
 
 export const getProductSaleStats = () =>
   apiClient.get<ProductSaleStats>('/product-sales/stats').then((r) => r.data);
+
+export const createProductSale = (body: { purchaseOrder?: string | null; note?: string | null }) =>
+  apiClient.post<{ productSaleKey: number }>('/product-sales', body).then((r) => r.data);

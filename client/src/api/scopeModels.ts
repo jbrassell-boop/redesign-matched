@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { ScopeModelDetail, ScopeModelListResponse, ScopeModelStats, ScopeModelsFilters, Manufacturer, ScopeTypeRepairItem, ScopeTypeDeptMaxCharge } from '../pages/scope-model/types';
+import type { ScopeModelDetail, ScopeModelListResponse, ScopeModelStats, ScopeModelsFilters, Manufacturer, ScopeTypeRepairItem, ScopeTypeDeptMaxCharge, ScopeTypeInventoryItem, ScopeTypeFlag } from '../pages/scope-model/types';
 
 export const getScopeModels = async (filters: ScopeModelsFilters): Promise<ScopeModelListResponse> => {
   const { data } = await apiClient.get<ScopeModelListResponse>('/scope-models', {
@@ -37,5 +37,15 @@ export const getScopeModelRepairItems = async (id: number): Promise<ScopeTypeRep
 
 export const getScopeModelMaxCharges = async (id: number): Promise<ScopeTypeDeptMaxCharge[]> => {
   const { data } = await apiClient.get<ScopeTypeDeptMaxCharge[]>(`/scope-models/${id}/max-charges`);
+  return data;
+};
+
+export const getScopeModelInventory = async (id: number): Promise<ScopeTypeInventoryItem[]> => {
+  const { data } = await apiClient.get<ScopeTypeInventoryItem[]>(`/scope-models/${id}/inventory`);
+  return data;
+};
+
+export const getScopeModelFlags = async (id: number): Promise<ScopeTypeFlag[]> => {
+  const { data } = await apiClient.get<ScopeTypeFlag[]>(`/scope-models/${id}/flags`);
   return data;
 };

@@ -267,4 +267,25 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
             TotalRevenue: Convert.ToDecimal(reader["TotalRevenue"])
         ));
     }
+
+    /// <summary>POST /api/product-sales — create a new draft product sale</summary>
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] CreateProductSaleRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var cmd = new SqlCommand("""
+            INSERT INTO tblProductSales
+                (dtOrderDate, sPurchaseOrder, sNote, nQuoteAmount, nShippingAmount, nTaxAmount, nTotalAmount)
+            OUTPUT INSERTED.lProductSaleKey
+            VALUES
+                (GETDATE(), @po, @note, 0, 0, 0, 0)
+            """, conn);
+        cmd.Parameters.AddWithValue("@po", (object?)body.PurchaseOrder ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@note", (object?)body.Note ?? DBNull.Value);
+
+        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return Ok(new { ProductSaleKey = newKey });
+    }
 }

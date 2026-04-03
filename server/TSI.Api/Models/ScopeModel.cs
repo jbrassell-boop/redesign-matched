@@ -92,3 +92,21 @@ public record ScopeTypeReportingGroupMaxCharge(
     string? EndDate,
     decimal? MaxCharge
 );
+
+public record ScopeTypeInventoryItem(
+    int InventoryKey,
+    string Description,
+    string FlexOrRigid,
+    int LevelCurrent,
+    int LevelMinimum,
+    int LevelMaximum,
+    bool IsActive
+);
+
+public record ScopeTypeFlag(
+    int FlagKey,
+    string Flag,
+    string FlagType,
+    bool VisibleOnDI,
+    bool VisibleOnBlank
+);

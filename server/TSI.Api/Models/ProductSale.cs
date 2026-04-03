@@ -71,3 +71,8 @@ public record ProductSaleListResponse(
     IEnumerable<ProductSaleListItem> Items,
     int TotalCount
 );
+
+public record CreateProductSaleRequest(
+    string? PurchaseOrder,
+    string? Note
+);

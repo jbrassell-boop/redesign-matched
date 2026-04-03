@@ -295,6 +295,49 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         return Ok(items);
     }
 
+    // ── Repair Reasons CRUD ──
+    [HttpPost("repair-reasons")]
+    public async Task<IActionResult> CreateRepairReason([FromBody] UpsertRepairReasonRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand("""
+            INSERT INTO tblRepairReasons (sRepairReason, bActive, lRepairReasonCategoryKey)
+            OUTPUT INSERTED.lRepairReasonKey
+            VALUES (@reason, @active, NULL)
+            """, conn);
+        cmd.Parameters.AddWithValue("@reason", body.Reason);
+        cmd.Parameters.AddWithValue("@active", body.Active);
+        var key = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return Ok(new { ReasonKey = key });
+    }
+
+    [HttpPut("repair-reasons/{key:int}")]
+    public async Task<IActionResult> UpdateRepairReason(int key, [FromBody] UpsertRepairReasonRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand(
+            "UPDATE tblRepairReasons SET sRepairReason = @reason, bActive = @active WHERE lRepairReasonKey = @key", conn);
+        cmd.Parameters.AddWithValue("@key", key);
+        cmd.Parameters.AddWithValue("@reason", body.Reason);
+        cmd.Parameters.AddWithValue("@active", body.Active);
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return rows > 0 ? NoContent() : NotFound();
+    }
+
+    [HttpDelete("repair-reasons/{key:int}")]
+    public async Task<IActionResult> DeleteRepairReason(int key)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand(
+            "DELETE FROM tblRepairReasons WHERE lRepairReasonKey = @key", conn);
+        cmd.Parameters.AddWithValue("@key", key);
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return rows > 0 ? NoContent() : NotFound();
+    }
+
     // ── Repair Statuses ──
     [HttpGet("repair-statuses")]
     public async Task<IActionResult> GetRepairStatuses()
@@ -320,6 +363,74 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         }
 
         return Ok(items);
+    }
+
+    // ── Repair Statuses CRUD ──
+    [HttpPost("repair-statuses")]
+    public async Task<IActionResult> CreateRepairStatus([FromBody] UpsertRepairStatusRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand("""
+            INSERT INTO tblRepairStatuses (sRepairStatus, lRepairStatusSortOrder, bIsReadOnly)
+            OUTPUT INSERTED.lRepairStatusID
+            VALUES (@status, @sortOrder, 0)
+            """, conn);
+        cmd.Parameters.AddWithValue("@status", body.StatusName);
+        cmd.Parameters.AddWithValue("@sortOrder", (object?)body.SortOrder ?? DBNull.Value);
+        var key = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return Ok(new { StatusId = key });
+    }
+
+    [HttpPut("repair-statuses/{id:int}")]
+    public async Task<IActionResult> UpdateRepairStatus(int id, [FromBody] UpsertRepairStatusRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand("""
+            UPDATE tblRepairStatuses
+            SET sRepairStatus = @status, lRepairStatusSortOrder = @sortOrder
+            WHERE lRepairStatusID = @id AND ISNULL(bIsReadOnly, 0) = 0
+            """, conn);
+        cmd.Parameters.AddWithValue("@id", id);
+        cmd.Parameters.AddWithValue("@status", body.StatusName);
+        cmd.Parameters.AddWithValue("@sortOrder", (object?)body.SortOrder ?? DBNull.Value);
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return rows > 0 ? NoContent() : NotFound();
+    }
+
+    [HttpDelete("repair-statuses/{id:int}")]
+    public async Task<IActionResult> DeleteRepairStatus(int id)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        // Only delete non-read-only statuses
+        await using var cmd = new SqlCommand(
+            "DELETE FROM tblRepairStatuses WHERE lRepairStatusID = @id AND ISNULL(bIsReadOnly, 0) = 0", conn);
+        cmd.Parameters.AddWithValue("@id", id);
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return rows > 0 ? NoContent() : NotFound();
+    }
+
+    // ── Users PATCH ──
+    [HttpPatch("users/{key:int}")]
+    public async Task<IActionResult> PatchUser(int key, [FromBody] PatchUserRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand("""
+            UPDATE tblUsers SET
+                sUserFullName   = COALESCE(@fullName, sUserFullName),
+                sEmailAddress   = COALESCE(@email, sEmailAddress),
+                bActive         = COALESCE(@active, bActive)
+            WHERE lUserKey = @key
+            """, conn);
+        cmd.Parameters.AddWithValue("@key", key);
+        cmd.Parameters.AddWithValue("@fullName", (object?)body.FullName ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@email", (object?)body.EmailAddress ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@active", (object?)body.Active ?? DBNull.Value);
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return rows > 0 ? NoContent() : NotFound();
     }
 
     // ── Holidays ──

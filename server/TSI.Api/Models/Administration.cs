@@ -219,3 +219,20 @@ public record AdminStats(
     int AuditEntries24h,
     int LockedAccounts
 );
+
+// ── CRUD request models ──
+public record UpsertRepairReasonRequest(
+    string Reason,
+    bool Active
+);
+
+public record UpsertRepairStatusRequest(
+    string StatusName,
+    int? SortOrder
+);
+
+public record PatchUserRequest(
+    string? FullName,
+    string? EmailAddress,
+    bool? Active
+);

@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Table, Input, Select, Drawer } from 'antd';
+import { Table, Input, Select, Drawer, Button, Modal, Switch, message } from 'antd';
 import {
   UserOutlined, DollarOutlined, SettingOutlined,
   AuditOutlined, CarOutlined, CreditCardOutlined, GlobalOutlined,
   ShopOutlined, BankOutlined, ToolOutlined, OrderedListOutlined,
   AppstoreOutlined, CalendarOutlined, PercentageOutlined,
   SearchOutlined, SafetyOutlined, TagsOutlined, SwapOutlined,
-  ExperimentOutlined, FileTextOutlined, TeamOutlined, TrophyOutlined
+  ExperimentOutlined, FileTextOutlined, TeamOutlined, TrophyOutlined,
+  PlusOutlined, EditOutlined, DeleteOutlined
 } from '@ant-design/icons';
 import { StatStrip, TabBar, StatusBadge } from '../../components/shared';
 import type { StatChipDef, TabDef as SharedTabDef } from '../../components/shared';
@@ -16,7 +17,10 @@ import {
   getRepairStatuses, getHolidays, getSalesTax, getPricingLists, getAdminStats,
   getSettings, getAuditLog, getCreditLimits, getReportingGroups,
   getStandardDepts, getCleaningSystems, getCountries, getSalesReps,
-  getSalesRepAssignments, getBonusPools
+  getSalesRepAssignments, getBonusPools,
+  createRepairReason, updateRepairReason, deleteRepairReason,
+  createRepairStatus, updateRepairStatus, deleteRepairStatus,
+  patchAdminUser,
 } from '../../api/administration';
 import type {
   AdminUserItem, SecurityGroupItem, DeliveryMethodItem, PaymentTermsItem,
@@ -108,6 +112,27 @@ export function AdministrationPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTitle, setDrawerTitle] = useState('');
   const [drawerRecord, setDrawerRecord] = useState<any>(null);
+
+  // Repair Reason edit modal
+  const [reasonModalOpen, setReasonModalOpen] = useState(false);
+  const [editingReason, setEditingReason] = useState<RepairReasonItem | null>(null);
+  const [reasonText, setReasonText] = useState('');
+  const [reasonActive, setReasonActive] = useState(true);
+  const [reasonSaving, setReasonSaving] = useState(false);
+
+  // Repair Status edit modal
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [editingStatus, setEditingStatus] = useState<RepairStatusItem | null>(null);
+  const [statusText, setStatusText] = useState('');
+  const [statusSortOrder, setStatusSortOrder] = useState<string>('');
+  const [statusSaving, setStatusSaving] = useState(false);
+
+  // User edit drawer state
+  const [editingUser, setEditingUser] = useState<AdminUserItem | null>(null);
+  const [userEditName, setUserEditName] = useState('');
+  const [userEditEmail, setUserEditEmail] = useState('');
+  const [userEditActive, setUserEditActive] = useState(true);
+  const [userSaving, setUserSaving] = useState(false);
 
   useEffect(() => {
     getAdminStats().then(setStats).catch(() => {});
@@ -203,9 +228,116 @@ export function AdministrationPage() {
   }, [activeCategory, visibleTabs]);
 
   const openDrawer = (title: string, record: any) => {
-    setDrawerTitle(title);
-    setDrawerRecord(record);
-    setDrawerOpen(true);
+    if (activeTab === 'users') {
+      setEditingUser(record);
+      setUserEditName(record.name || '');
+      setUserEditEmail(record.email || '');
+      setUserEditActive(record.isActive ?? true);
+      setDrawerTitle(title);
+      setDrawerRecord(record);
+      setDrawerOpen(true);
+    } else {
+      setEditingUser(null);
+      setDrawerTitle(title);
+      setDrawerRecord(record);
+      setDrawerOpen(true);
+    }
+  };
+
+  const openReasonModal = (reason: RepairReasonItem | null) => {
+    setEditingReason(reason);
+    setReasonText(reason?.reason ?? '');
+    setReasonActive(reason?.isActive ?? true);
+    setReasonModalOpen(true);
+  };
+
+  const saveReason = async () => {
+    if (!reasonText.trim()) { message.error('Reason text is required'); return; }
+    setReasonSaving(true);
+    try {
+      if (editingReason) {
+        await updateRepairReason(editingReason.reasonKey, reasonText.trim(), reasonActive);
+        message.success('Repair reason updated');
+      } else {
+        await createRepairReason(reasonText.trim(), reasonActive);
+        message.success('Repair reason created');
+      }
+      setReasonModalOpen(false);
+      getRepairReasons().then(setRepairReasons).catch(() => message.error('Failed to reload reasons'));
+    } catch {
+      message.error('Failed to save repair reason');
+    } finally {
+      setReasonSaving(false);
+    }
+  };
+
+  const deleteReason = async (key: number) => {
+    try {
+      await deleteRepairReason(key);
+      message.success('Deleted');
+      getRepairReasons().then(setRepairReasons).catch(() => message.error('Failed to reload reasons'));
+    } catch {
+      message.error('Failed to delete repair reason');
+    }
+  };
+
+  const openStatusModal = (status: RepairStatusItem | null) => {
+    setEditingStatus(status);
+    setStatusText(status?.statusName ?? '');
+    setStatusSortOrder(status?.sortOrder != null ? String(status.sortOrder) : '');
+    setStatusModalOpen(true);
+  };
+
+  const saveStatus = async () => {
+    if (!statusText.trim()) { message.error('Status name is required'); return; }
+    setStatusSaving(true);
+    try {
+      const sortOrder = statusSortOrder ? parseInt(statusSortOrder) : undefined;
+      if (editingStatus) {
+        await updateRepairStatus(editingStatus.statusId, statusText.trim(), sortOrder);
+        message.success('Repair status updated');
+      } else {
+        await createRepairStatus(statusText.trim(), sortOrder);
+        message.success('Repair status created');
+      }
+      setStatusModalOpen(false);
+      getRepairStatuses().then(setRepairStatuses).catch(() => message.error('Failed to reload statuses'));
+    } catch {
+      message.error('Failed to save repair status');
+    } finally {
+      setStatusSaving(false);
+    }
+  };
+
+  const deleteStatus = async (id: number) => {
+    try {
+      await deleteRepairStatus(id);
+      message.success('Deleted');
+      getRepairStatuses().then(setRepairStatuses).catch(() => message.error('Failed to reload statuses'));
+    } catch {
+      message.error('Failed to delete (read-only statuses cannot be deleted)');
+    }
+  };
+
+  const saveUser = async () => {
+    if (!editingUser) return;
+    setUserSaving(true);
+    try {
+      await patchAdminUser(editingUser.userKey, {
+        fullName: userEditName || undefined,
+        emailAddress: userEditEmail || undefined,
+        active: userEditActive,
+      });
+      message.success('User updated');
+      setDrawerOpen(false);
+      getAdminUsers({ search: search || undefined, page: userPage, pageSize: 50 })
+        .then((r: any) => { setUsers(r.items || r); setUserTotal(r.totalCount || r.length || 0); })
+        .catch(() => message.error('Failed to reload users'));
+    } catch {
+      message.error('Failed to save user');
+    } finally {
+      setUserSaving(false);
+    }
   };
 
   const statusBadge = (active: boolean) => (
@@ -289,12 +421,33 @@ export function AdministrationPage() {
     { title: 'Repair Reason', dataIndex: 'reason', key: 'reason', width: 240 },
     { title: 'Category', dataIndex: 'category', key: 'category', width: 180, render: (v: string | null) => v || '—' },
     { title: 'Status', dataIndex: 'isActive', key: 'isActive', width: 90, render: statusBadge },
+    {
+      title: '', key: 'actions', width: 80,
+      render: (_: unknown, r: RepairReasonItem) => (
+        <div style={{ display: 'flex', gap: 4 }}>
+          <Button size="small" icon={<EditOutlined />} onClick={e => { e.stopPropagation(); openReasonModal(r); }} />
+          <Button size="small" danger icon={<DeleteOutlined />} onClick={e => { e.stopPropagation(); deleteReason(r.reasonKey); }} />
+        </div>
+      ),
+    },
   ];
 
   const statusColumns = [
     { title: 'Order', dataIndex: 'sortOrder', key: 'sortOrder', width: 80, render: (v: number | null) => v ?? '—' },
     { title: 'Status Name', dataIndex: 'statusName', key: 'statusName', width: 240 },
-    { title: 'Active', dataIndex: 'isActive', key: 'isActive', width: 90, render: statusBadge },
+    {
+      title: 'Read-Only', dataIndex: 'isReadOnly', key: 'isReadOnly', width: 90,
+      render: (v: boolean) => v ? <StatusBadge status="Read-Only" variant="blue" /> : <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>,
+    },
+    {
+      title: '', key: 'actions', width: 80,
+      render: (_: unknown, r: RepairStatusItem) => (
+        <div style={{ display: 'flex', gap: 4 }}>
+          <Button size="small" icon={<EditOutlined />} disabled={r.isReadOnly} onClick={e => { e.stopPropagation(); openStatusModal(r); }} />
+          <Button size="small" danger icon={<DeleteOutlined />} disabled={r.isReadOnly} onClick={e => { e.stopPropagation(); deleteStatus(r.statusId); }} />
+        </div>
+      ),
+    },
   ];
 
   const holidayColumns = [
@@ -414,11 +567,27 @@ export function AdministrationPage() {
         return <Table dataSource={companies} columns={companyColumns} rowKey="companyKey" size="small" pagination={false}
           onRow={(r) => ({ onClick: () => openDrawer(`Company: ${r.companyName}`, r), style: { cursor: 'pointer' } })} />;
       case 'reasons':
-        return <Table dataSource={repairReasons} columns={reasonColumns} rowKey="reasonKey" size="small" pagination={false}
-          onRow={(r) => ({ onClick: () => openDrawer(`Reason: ${r.reason}`, r), style: { cursor: 'pointer' } })} />;
+        return (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+              <Button icon={<PlusOutlined />} type="primary" size="small" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }} onClick={() => openReasonModal(null)}>
+                New Reason
+              </Button>
+            </div>
+            <Table dataSource={repairReasons} columns={reasonColumns} rowKey="reasonKey" size="small" pagination={false} />
+          </div>
+        );
       case 'statuses':
-        return <Table dataSource={repairStatuses} columns={statusColumns} rowKey="statusId" size="small" pagination={false}
-          onRow={(r) => ({ onClick: () => openDrawer(`Status: ${r.statusName}`, r), style: { cursor: 'pointer' } })} />;
+        return (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
+              <Button icon={<PlusOutlined />} type="primary" size="small" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }} onClick={() => openStatusModal(null)}>
+                New Status
+              </Button>
+            </div>
+            <Table dataSource={repairStatuses} columns={statusColumns} rowKey="statusId" size="small" pagination={false} />
+          </div>
+        );
       case 'holidays':
         return <Table dataSource={holidays} columns={holidayColumns} rowKey="holidayKey" size="small" pagination={false}
           onRow={(r) => ({ onClick: () => openDrawer(`Holiday: ${r.holidayName}`, r), style: { cursor: 'pointer' } })} />;
@@ -594,8 +763,46 @@ export function AdministrationPage() {
         onClose={() => setDrawerOpen(false)}
         width={600}
         styles={{ header: { background: 'var(--primary-dark)', color: 'var(--card)' }, body: { padding: 0 } }}
+        footer={editingUser ? (
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>
+            <Button type="primary" loading={userSaving} onClick={saveUser} style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>
+              Save Changes
+            </Button>
+          </div>
+        ) : undefined}
       >
-        {drawerRecord && (
+        {drawerRecord && editingUser ? (
+          /* User edit form */
+          <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Full Name</label>
+              <Input value={userEditName} onChange={e => setUserEditName(e.target.value)} style={{ fontSize: 12 }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Email Address</label>
+              <Input value={userEditEmail} onChange={e => setUserEditEmail(e.target.value)} style={{ fontSize: 12 }} />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>Active</label>
+              <Switch checked={userEditActive} onChange={setUserEditActive} />
+            </div>
+            {/* Read-only info */}
+            <div style={{ marginTop: 8, padding: '12px', background: 'var(--neutral-50)', borderRadius: 6, border: '1px solid var(--border)' }}>
+              {[
+                { label: 'Role', value: editingUser.role },
+                { label: 'Location', value: editingUser.location },
+                { label: 'Last Login', value: editingUser.lastLogin ? new Date(editingUser.lastLogin).toLocaleDateString() : '—' },
+              ].map(f => (
+                <div key={f.label} style={{ display: 'flex', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ width: 100, fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>{f.label}</span>
+                  <span style={{ fontSize: 12, color: 'var(--neutral-900)' }}>{f.value || '—'}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : drawerRecord ? (
+          /* Generic JSON drawer for non-user records */
           <div style={{ padding: 20 }}>
             {Object.entries(drawerRecord).map(([k, v]) => (
               <div key={k} style={{ display: 'flex', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
@@ -608,8 +815,58 @@ export function AdministrationPage() {
               </div>
             ))}
           </div>
-        )}
+        ) : null}
       </Drawer>
+
+      {/* Repair Reason Add/Edit Modal */}
+      <Modal
+        title={editingReason ? 'Edit Repair Reason' : 'New Repair Reason'}
+        open={reasonModalOpen}
+        onCancel={() => setReasonModalOpen(false)}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button onClick={() => setReasonModalOpen(false)}>Cancel</Button>
+            <Button type="primary" loading={reasonSaving} onClick={saveReason} style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>Save</Button>
+          </div>
+        }
+        width={420}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Reason Text</label>
+            <Input value={reasonText} onChange={e => setReasonText(e.target.value)} placeholder="Enter repair reason..." style={{ fontSize: 12 }} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>Active</label>
+            <Switch checked={reasonActive} onChange={setReasonActive} />
+          </div>
+        </div>
+      </Modal>
+
+      {/* Repair Status Add/Edit Modal */}
+      <Modal
+        title={editingStatus ? 'Edit Repair Status' : 'New Repair Status'}
+        open={statusModalOpen}
+        onCancel={() => setStatusModalOpen(false)}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button onClick={() => setStatusModalOpen(false)}>Cancel</Button>
+            <Button type="primary" loading={statusSaving} onClick={saveStatus} style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>Save</Button>
+          </div>
+        }
+        width={420}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Status Name</label>
+            <Input value={statusText} onChange={e => setStatusText(e.target.value)} placeholder="Enter status name..." style={{ fontSize: 12 }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Sort Order</label>
+            <Input type="number" value={statusSortOrder} onChange={e => setStatusSortOrder(e.target.value)} placeholder="e.g. 10" style={{ width: 120, fontSize: 12 }} />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
