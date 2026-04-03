@@ -1,0 +1,96 @@
+.dept-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--neutral-200);
+  background: var(--card);
+  flex-shrink: 0;
+}
+
+.dept-toolbar__name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dept-toolbar__client {
+  font-size: 12px;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.dept-toolbar__client:hover {
+  text-decoration: underline;
+}
+
+.dept-toolbar__id {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(var(--primary-rgb), 0.1);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.dept-toolbar__spacer {
+  flex: 1;
+}
+
+.dept-toolbar__save-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.dept-toolbar__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.dept-toolbar__dot--ready { background: var(--success); }
+.dept-toolbar__dot--unsaved { background: var(--amber); }
+.dept-toolbar__dot--saved { background: var(--success); }
+
+.dept-toolbar__save-text--ready { color: var(--success); }
+.dept-toolbar__save-text--unsaved { color: var(--amber); }
+.dept-toolbar__save-text--saving { color: var(--muted); }
+.dept-toolbar__save-text--saved { color: var(--success); }
+
+.dept-toolbar__btn {
+  padding: 5px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--card);
+  transition: opacity 150ms ease;
+}
+
+.dept-toolbar__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dept-toolbar__btn--toggle {
+  background: transparent;
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.dept-toolbar__btn--toggle:hover:not(:disabled) {
+  background: rgba(var(--danger-rgb), 0.08);
+}
