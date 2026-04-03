@@ -127,7 +127,7 @@ public record RepairFull(
     string? RepairReason, string? Source,
     // Extended 4-tab fields
     string? RackPosition,
-    string? RequestSentDate,
+    string? ApprovalSentDate, // dtAprSent not found in schema; using dtReqSent as closest match
     decimal? DiscountPct,
     decimal? ShippingClientIn,
     bool? TrackingNumberRequired,

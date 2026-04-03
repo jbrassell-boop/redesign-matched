@@ -358,7 +358,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             Source: null, // no source column in tblRepair
             // Extended 4-tab fields
             RackPosition: ReadStr("sRackPosition"),
-            RequestSentDate: ReadDate("dtReqSent")?.ToString("MM/dd/yyyy"),
+            ApprovalSentDate: ReadDate("dtReqSent")?.ToString("MM/dd/yyyy"),
             DiscountPct: reader["dblDiscountPct"] == DBNull.Value ? null : Convert.ToDecimal(reader["dblDiscountPct"]),
             ShippingClientIn: reader["dblShippingClientIn"] == DBNull.Value ? null : Convert.ToDecimal(reader["dblShippingClientIn"]),
             TrackingNumberRequired: reader["bTrackingNumberRequired"] == DBNull.Value ? null : Convert.ToBoolean(reader["bTrackingNumberRequired"]),
