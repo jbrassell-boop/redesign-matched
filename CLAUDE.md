@@ -165,6 +165,50 @@ Usage: `rgba(var(--primary-rgb), 0.13)` — NOT `rgba(var(--primary), 0.13)`
 
 ---
 
+## Mandatory Agent Rules
+
+These apply to every agent working in this repo — no exceptions.
+
+### 1. SQL Column Verification
+Before writing any SQL column reference, confirm the column exists on the correct table in:
+`C:/Projects/tsi-redesign/tasks/db-schema-dump.json`
+
+- Never assume a column exists — look it up
+- Trace the join chain: know which table alias owns each field
+- Columns often exist on a related table (e.g. `dblDiscountPct` is on `tblClient`, not `tblRepair`)
+- When uncertain, use `NULL AS columnName` as a placeholder and flag it — a wrong column name that compiles but fails at runtime against Azure SQL is worse than a null
+
+### 2. No Silent Error Swallowing
+Never use `.catch(() => {})` in frontend API calls. Always surface failures:
+```typescript
+// ✗ Wrong — hides real problems
+.catch(() => {})
+
+// ✓ Right — user sees the failure
+.catch(() => message.error('Failed to load data'))
+```
+
+### 3. Live Smoke Test After Every Deploy
+Green pipeline ≠ working feature. After any push that triggers a deploy:
+
+**Backend:** Hit the real Azure API endpoint with a known record key and confirm real data returns.
+```bash
+curl "https://tsi-redesign-matched-api-hthhd4h3byb8dtdq.centralus-01.azurewebsites.net/api/repairs/577712/full"
+```
+
+**Frontend:** Load `https://happy-plant-03638db0f.6.azurestaticapps.net`, navigate to the changed screen, click into a real record, confirm it renders.
+
+**The task is not done until the live environment is confirmed working.**
+
+### 4. TypeScript Unused Imports
+TS6133/TS6196 errors fail the Azure deploy pipeline. After any file change, run:
+```bash
+cd client && npx tsc --noEmit 2>&1 | head -20
+```
+Remove all unused imports before committing.
+
+---
+
 ## Known Gotchas
 
 - `tblClient` has NO email or contact name columns — those fields return null
