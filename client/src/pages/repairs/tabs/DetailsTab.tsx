@@ -1,11 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { message, Modal } from 'antd';
+import { message } from 'antd';
 import type { RepairFull, RepairLineItem } from '../types';
 import type { ClientFlag } from '../../clients/types';
 import { getRepairLineItems, updateRepairTechs, getRepairTechnicians, bulkApproveLineItems, getUpdateSlips, getDefectTracking, getRepairInventoryUsage } from '../../../api/repairs';
 import type { TechnicianOption } from '../../../api/repairs';
 import { RepairItemsTable } from '../components/RepairItemsTable';
 import { AmendmentModal } from '../components/AmendmentModal';
+import { UpdateSlipsModal } from '../components/UpdateSlipsModal';
+import { DefectTrackingModal } from '../components/DefectTrackingModal';
+import { InventoryPicklistModal } from '../components/InventoryPicklistModal';
 
 interface DetailsTabProps {
   repair: RepairFull;
@@ -374,80 +377,24 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
         </div>
       </Modal>
 
-      {/* Update Slips Modal */}
-      <Modal open={slipsModalOpen} onCancel={() => setSlipsModalOpen(false)} footer={null}
-        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>Update Slips</span>} width={600}>
-        {slipsData.length === 0 ? (
-          <div style={{ padding: 20, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No update slips for this repair</div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-            <thead>
-              <tr>{['Date', 'Reason', 'Primary Tech', 'Secondary Tech'].map(h => (
-                <th key={h} style={{ padding: '6px 8px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--border)', textAlign: 'left', fontSize: 10, fontWeight: 700 }}>{h}</th>
-              ))}</tr>
-            </thead>
-            <tbody>
-              {slipsData.map(s => (
-                <tr key={s.slipKey}>
-                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{s.date}</td>
-                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{s.reason || '—'}</td>
-                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{s.primaryTech || '—'}</td>
-                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{s.secondaryTech || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Modal>
-
-      {/* Defect Tracking Modal */}
-      <Modal open={defectsModalOpen} onCancel={() => setDefectsModalOpen(false)} footer={null}
-        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>Defect Tracking</span>} width={500}>
-        {defectsData.length === 0 ? (
-          <div style={{ padding: 20, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No defect tracking items for this repair</div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-            <thead>
-              <tr>{['Defect Item', 'Comment'].map(h => (
-                <th key={h} style={{ padding: '6px 8px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--border)', textAlign: 'left', fontSize: 10, fontWeight: 700 }}>{h}</th>
-              ))}</tr>
-            </thead>
-            <tbody>
-              {defectsData.map(d => (
-                <tr key={d.itemKey}>
-                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', fontWeight: 500 }}>{d.item || '—'}</td>
-                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{d.comment || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Modal>
-
-      {/* Inventory Usage Modal */}
-      <Modal open={invModalOpen} onCancel={() => setInvModalOpen(false)} footer={null}
-        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>Inventory Used</span>} width={600}>
-        {invData.length === 0 ? (
-          <div style={{ padding: 20, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No inventory items used on this repair</div>
-        ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-            <thead>
-              <tr>{['Inventory Item', 'Size', 'Repair Item'].map(h => (
-                <th key={h} style={{ padding: '6px 8px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--border)', textAlign: 'left', fontSize: 10, fontWeight: 700 }}>{h}</th>
-              ))}</tr>
-            </thead>
-            <tbody>
-              {invData.map(i => (
-                <tr key={i.key}>
-                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', fontWeight: 500 }}>{i.inventoryItem || '—'}</td>
-                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{i.size || '—'}</td>
-                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{i.repairItem || '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </Modal>
+      <UpdateSlipsModal
+        open={slipsModalOpen}
+        onClose={() => setSlipsModalOpen(false)}
+        repair={repair}
+        slips={slipsData}
+      />
+      <DefectTrackingModal
+        open={defectsModalOpen}
+        onClose={() => setDefectsModalOpen(false)}
+        repair={repair}
+        defects={defectsData}
+      />
+      <InventoryPicklistModal
+        open={invModalOpen}
+        onClose={() => setInvModalOpen(false)}
+        repair={repair}
+        items={invData}
+      />
     </div>
   );
 };
