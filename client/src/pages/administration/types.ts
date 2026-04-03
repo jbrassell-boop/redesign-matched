@@ -82,6 +82,7 @@ export interface RepairStatusItem {
   statusName: string;
   sortOrder: number | null;
   isActive: boolean;
+  isReadOnly: boolean;
 }
 
 export interface HolidayItem {
