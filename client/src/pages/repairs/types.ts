@@ -82,23 +82,63 @@ export interface RepairFull {
   scopeType: string; serial: string; scopeModel?: string; manufacturer?: string;
   dateIn: string; dateApproved?: string; estDelivery?: string; shipDate?: string; dateOut?: string;
   daysIn: number;
+  // Command strip fields
+  rackLocation?: string;
+  repairLevel?: string;
+  leadTime?: string;
+  turnAroundTime?: string;
+  purchaseOrder?: string;
+  // Scope glance computed
+  withinFortyDay?: boolean;
+  daysLastIn?: number | null;
+  capFfs?: string;
+  // Techs
   tech?: string; techKey?: number; tech2?: string; inspector?: string;
-  approvalName?: string; salesRep?: string;
-  amountApproved?: number; invoiceNumber?: string; purchaseOrder?: string;
-  complaint?: string; notes?: string; customerRef?: string;
+  // Order
+  approvalName?: string; salesRep?: string; reportingGroup?: string;
+  approvalSentDate?: string;
+  requisition?: string;
+  discountPct?: number | null;
+  // Financial
+  amountApproved?: number; invoiceNumber?: string;
+  pricingCategory?: string; paymentTerms?: string; contractNumber?: string;
+  // Complaint
+  complaint?: string; notes?: string; repairReason?: string;
+  psLevel?: string;
+  customerRef?: string;
+  // Invoice options
+  displayComplaintOnInvoice?: boolean;
+  displayItemizedDesc?: boolean;
+  displayItemizedAmounts?: boolean;
+  billToCustomer?: string;
+  // Inbound
+  inboundServiceLevel?: string;
+  shippingCostIn?: number | null;
+  distributor?: string;
+  trackingNumberIn?: string;
+  // Addresses
   billName?: string; billAddr1?: string; billAddr2?: string;
   billCity?: string; billState?: string; billZip?: string; billEmail?: string;
   shipName?: string; shipAddr1?: string; shipAddr2?: string;
   shipCity?: string; shipState?: string; shipZip?: string;
-  trackingNumber?: string; trackingNumberIn?: string; trackingNumberFedEx?: string;
+  // Outbound
+  trackingNumber?: string; trackingNumberFedEx?: string;
   shipWeight?: string; deliveryServiceLevel?: string;
+  packageType?: string;
+  trackingRequired?: boolean;
+  gtdDeliveryDate?: string;
+  winscopeGtdDate?: string;
+  actualDeliveryDate?: string;
+  // Outsource
+  outsourced: boolean; outsourceVendor?: string;
+  outsourceCost?: number | null;
+  outsourceTracking?: string;
+  // Accessories / loaner
   loanerRequested: boolean; loanerProvided?: boolean; loanerRepair?: string;
   includesBox: boolean; includesCase: boolean; includesETOCap: boolean; includesCO2Cap: boolean;
   includesCamera: boolean; includesHood: boolean; includesLightPostAdapter: boolean;
   includesSuctionValve: boolean; includesWaterProofCap: boolean; includesAirWaterValve: boolean;
-  outsourced: boolean; firstRepair: boolean; reworkRequired?: string;
-  pricingCategory?: string; paymentTerms?: string; contractNumber?: string;
-  repairReason?: string; source?: string;
+  firstRepair: boolean; reworkRequired?: string; source?: string;
 }
 
 export interface RepairInspections {
@@ -126,8 +166,16 @@ export interface PrimaryContact {
 }
 
 export interface LineItemUpdate {
-  approved?: string; itemCode?: string; description?: string;
-  fixType?: string; amount?: number; comments?: string;
+  approved?: string;
+  itemCode?: string;
+  cause?: string;
+  description?: string;
+  fixType?: string;
+  amount?: number;
+  techKey?: number | null;
+  tech2Key?: number | null;
+  isPrimary?: boolean;
+  comments?: string;
 }
 
 // ── Financials ──
