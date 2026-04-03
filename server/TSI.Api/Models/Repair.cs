@@ -172,8 +172,20 @@ public record PrimaryContact(
 );
 
 public record LineItemUpdate(
-    string? Approved, string? ItemCode, string? Description,
-    string? FixType, decimal? Amount, string? Comments
+    string? Approved, string? ItemCode, string? Cause, string? Description,
+    string? FixType, decimal? Amount, string? Comments, int? TechKey
+);
+
+public record PatchRepairHeaderRequest(
+    string? PurchaseOrder,
+    string? RackLocation,
+    string? Complaint,
+    string? RepairReason,
+    string? InboundTracking,
+    string? DisplayCustomerComplaint,
+    string? DisplayItemizedDesc,
+    string? DisplayItemizedAmounts,
+    string? BillToCustomer
 );
 
 // ── Financials tab ──

@@ -387,6 +387,40 @@ public class RepairsController(IConfiguration config) : ControllerBase
         return rows > 0 ? NoContent() : NotFound();
     }
 
+    [HttpPatch("{repairKey:int}/header")]
+    public async Task<IActionResult> PatchRepairHeader(int repairKey, [FromBody] PatchRepairHeaderRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand("""
+            UPDATE tblRepair SET
+                sPurchaseOrder            = COALESCE(@po, sPurchaseOrder),
+                sRackPosition             = COALESCE(@rack, sRackPosition),
+                sComplaintDesc            = COALESCE(@complaint, sComplaintDesc),
+                lRepairReasonKey          = COALESCE(
+                    (SELECT TOP 1 lRepairReasonKey FROM tblRepairReasons WHERE sRepairReason = @reason),
+                    lRepairReasonKey),
+                sShipTrackingNumberIn     = COALESCE(@inboundTracking, sShipTrackingNumberIn),
+                sDisplayCustomerComplaint = COALESCE(@displayCustomerComplaint, sDisplayCustomerComplaint),
+                sDisplayItemDescription   = COALESCE(@displayItemDesc, sDisplayItemDescription),
+                sDisplayItemAmount        = COALESCE(@displayItemAmt, sDisplayItemAmount),
+                sBillTo                   = COALESCE(@billTo, sBillTo)
+            WHERE lRepairKey = @id
+            """, conn);
+        cmd.Parameters.AddWithValue("@id", repairKey);
+        cmd.Parameters.AddWithValue("@po", (object?)body.PurchaseOrder ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@rack", (object?)body.RackLocation ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@complaint", (object?)body.Complaint ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@reason", (object?)body.RepairReason ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@inboundTracking", (object?)body.InboundTracking ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@displayCustomerComplaint", (object?)body.DisplayCustomerComplaint ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@displayItemDesc", (object?)body.DisplayItemizedDesc ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@displayItemAmt", (object?)body.DisplayItemizedAmounts ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billTo", (object?)body.BillToCustomer ?? DBNull.Value);
+        await cmd.ExecuteNonQueryAsync();
+        return NoContent();
+    }
+
     // ── Line Items (Workflow tab) ──
     [HttpGet("{repairKey:int}/lineitems")]
     public async Task<IActionResult> GetLineItems(int repairKey)
@@ -707,18 +741,20 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         const string sql = """
-            INSERT INTO tblRepairItemTran (lRepairKey, sApproved, sProblemID, sFixType, dblRepairPrice, sComments)
+            INSERT INTO tblRepairItemTran (lRepairKey, lRepairItemKey, sProblemID, sApproved, sFixType, dblRepairPrice, sComments, lTechnicianKey)
             OUTPUT INSERTED.lRepairItemTranKey
-            VALUES (@repairKey, @approved, @itemCode, @fixType, @amount, @comments)
+            VALUES (@repairKey, @repairItemKey, @cause, @approved, @fixType, @amount, @comments, @techKey)
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        cmd.Parameters.AddWithValue("@repairItemKey", body.ItemCode != null && int.TryParse(body.ItemCode, out var ik) ? (object)ik : DBNull.Value);
+        cmd.Parameters.AddWithValue("@cause", (object?)body.Cause ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@approved", (object?)body.Approved ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@itemCode", (object?)body.ItemCode ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@fixType", (object?)body.FixType ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@amount", (object?)body.Amount ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@comments", (object?)body.Comments ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@techKey", body.TechKey.HasValue ? (object)body.TechKey.Value : DBNull.Value);
         var newKey = await cmd.ExecuteScalarAsync();
         return Ok(new { tranKey = Convert.ToInt32(newKey) });
     }
@@ -731,19 +767,26 @@ public class RepairsController(IConfiguration config) : ControllerBase
 
         const string sql = """
             UPDATE tblRepairItemTran SET
-                sApproved = @approved, sProblemID = @itemCode,
-                sFixType = @fixType, dblRepairPrice = @amount, sComments = @comments
+                lRepairItemKey = @repairItemKey,
+                sProblemID     = @cause,
+                sApproved      = @approved,
+                sFixType       = @fixType,
+                dblRepairPrice = @amount,
+                sComments      = @comments,
+                lTechnicianKey = @techKey
             WHERE lRepairItemTranKey = @tranKey AND lRepairKey = @repairKey
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@tranKey", tranKey);
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        cmd.Parameters.AddWithValue("@repairItemKey", body.ItemCode != null && int.TryParse(body.ItemCode, out var ik) ? (object)ik : DBNull.Value);
+        cmd.Parameters.AddWithValue("@cause", (object?)body.Cause ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@approved", (object?)body.Approved ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@itemCode", (object?)body.ItemCode ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@fixType", (object?)body.FixType ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@amount", (object?)body.Amount ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@comments", (object?)body.Comments ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@techKey", body.TechKey.HasValue ? (object)body.TechKey.Value : DBNull.Value);
         var rows = await cmd.ExecuteNonQueryAsync();
         return rows > 0 ? NoContent() : NotFound();
     }
