@@ -1,4 +1,12 @@
 import type { ComponentType } from 'react';
+import { MorningBriefing } from './widgets/MorningBriefing';
+import { MyTasks } from './widgets/MyTasks';
+import { MyRepairQueue } from './widgets/MyRepairQueue';
+import { OverdueAtRisk } from './widgets/OverdueAtRisk';
+import { OutstandingInvoices } from './widgets/OutstandingInvoices';
+import { ContractsExpiring } from './widgets/ContractsExpiring';
+import { AnalyticsWidget } from './widgets/AnalyticsWidget';
+import { QuickLinks } from './widgets/QuickLinks';
 
 export interface WidgetConfig {
   id: string;
@@ -17,6 +25,17 @@ export interface WorkspaceLayout {
   preset: 'processor' | 'manager' | 'billing' | 'custom';
   widgets: WidgetInstance[];
 }
+
+export const WIDGET_COMPONENTS: Record<string, ComponentType> = {
+  briefing: MorningBriefing,
+  tasks: MyTasks,
+  repairQueue: MyRepairQueue,
+  overdue: OverdueAtRisk,
+  invoices: OutstandingInvoices,
+  contracts: ContractsExpiring,
+  analytics: AnalyticsWidget,
+  quickLinks: QuickLinks,
+};
 
 export const WIDGET_REGISTRY: Record<string, Omit<WidgetConfig, 'component'>> = {
   briefing:    { id: 'briefing',    title: 'Morning Briefing',     description: "Yesterday's stats at a glance",      defaultSpan: 2 },
