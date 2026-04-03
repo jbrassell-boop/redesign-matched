@@ -1,0 +1,32 @@
+.flags-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--neutral-200);
+  background: var(--card);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.flags-bar__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.flags-bar__chip--amber {
+  background: rgba(var(--amber-rgb), 0.13);
+  color: var(--amber);
+}
+.flags-bar__chip--blue {
+  background: rgba(var(--primary-rgb), 0.1);
+  color: var(--primary);
+}
+.flags-bar__chip--purple {
+  background: rgba(var(--purple-rgb), 0.1);
+  color: var(--purple);
+}

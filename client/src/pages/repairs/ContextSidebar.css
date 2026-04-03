@@ -1,0 +1,55 @@
+.context-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--neutral-50);
+  padding: 10px;
+  border-left: 1.5px solid var(--border-dk);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.context-sidebar__link {
+  font-size: 11px;
+  color: var(--primary);
+  cursor: pointer;
+  text-decoration: none;
+}
+.context-sidebar__link:hover {
+  text-decoration: underline;
+}
+.context-sidebar__mini-table {
+  width: 100%;
+  font-size: 11px;
+  border-collapse: collapse;
+}
+.context-sidebar__mini-table th {
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 4px;
+  border-bottom: 1px solid var(--neutral-200);
+}
+.context-sidebar__mini-table td {
+  padding: 3px 4px;
+  color: var(--text);
+  border-bottom: 1px solid var(--neutral-100);
+}
+.context-sidebar__field-label {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.context-sidebar__field-value {
+  font-size: 12px;
+  color: var(--text);
+}
+.context-sidebar__margin--positive {
+  color: var(--success);
+}
+.context-sidebar__margin--negative {
+  color: var(--danger);
+}
