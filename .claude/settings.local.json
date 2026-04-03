@@ -1,22 +1,23 @@
 {
   "permissions": {
     "allow": [
+      "Read",
+      "Edit",
+      "Write",
+      "Glob",
+      "Grep",
+      "Bash",
       "WebSearch",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "WebFetch(domain:api.anthropic.com)",
-      "WebFetch(domain:github.com)",
-      "Bash(claude mcp:*)",
-      "Bash(az account:*)",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\(''''mcpServers'''',{}\\), indent=2\\)\\)\")",
-      "Read(//c/Users/JoeBrassell/**)",
-      "Bash(python3 -c \":*)",
-      "Bash(mkdir -p /c/Projects/redesign-matched/.claude/review-approvals)",
-      "Bash(touch /c/Projects/redesign-matched/.claude/review-approvals/.gitkeep)",
-      "Bash(mkdir -p /c/Projects/redesign-matched/.claude/hooks)",
-      "Bash(chmod +x /c/Projects/redesign-matched/.claude/hooks/task-completed.sh)",
-      "Bash(bash .claude/hooks/task-completed.sh)",
-      "Bash(echo \"Exit code: $?\")"
+      "WebFetch",
+      "mcp__Claude_Preview__*",
+      "mcp__Claude_in_Chrome__*",
+      "mcp__azure__*",
+      "mcp__PDF_Tools_-_Fill__Analyze__Extract__View__*",
+      "mcp__c4e0f18a-1d81-4496-8f8a-99683c440fbe__*",
+      "mcp__mcp-registry__*",
+      "mcp__scheduled-tasks__*",
+      "mcp__15e253a7-9183-440c-bc36-6d3bf169aea5__*",
+      "mcp__21daebe2-7258-4d17-bd1b-6fed673336b8__*"
     ]
   }
 }
