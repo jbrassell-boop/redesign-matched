@@ -101,3 +101,32 @@ export const getDeptContracts = async (deptKey: number): Promise<DeptContract[]>
   const { data } = await apiClient.get<DeptContract[]>(`/departments/${deptKey}/contracts`);
   return data;
 };
+
+export interface CreateDepartmentPayload {
+  clientKey: number;
+  name: string;
+  address1?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip?: string | null;
+  phone?: string | null;
+  contactFirst?: string | null;
+  contactLast?: string | null;
+  contactEmail?: string | null;
+  carrierKey?: number | null;
+  showConsumptionOnReq: boolean;
+  enforceScopeTypeFiltering: boolean;
+  showProductId?: string | null;
+  showUAorNWT: boolean;
+  showItemizedDesc: boolean;
+  emailNewRepairs: boolean;
+  trackingRequired: boolean;
+  taxExempt: boolean;
+  paysByCreditCard: boolean;
+  onsiteService: boolean;
+}
+
+export const createDepartment = async (payload: CreateDepartmentPayload): Promise<{ deptKey: number }> => {
+  const { data } = await apiClient.post('/departments', payload);
+  return data;
+};

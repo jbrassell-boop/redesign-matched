@@ -105,3 +105,43 @@ export const getClientSummary = async (clientKey: number): Promise<ClientSummary
   const { data } = await apiClient.get<ClientSummary>(`/clients/${clientKey}/summary`);
   return data;
 };
+
+export interface CreateClientPayload {
+  name: string;
+  address1?: string | null;
+  unitBuilding?: string | null;
+  city?: string | null;
+  state?: string | null;
+  zip?: string | null;
+  phone?: string | null;
+  fax?: string | null;
+  clientSince?: string | null;
+  pricingCategoryKey?: number | null;
+  salesRepKey?: number | null;
+  paymentTermsKey?: number | null;
+  billTo?: string | null;
+  distributorKey?: number | null;
+  discountPct?: number | null;
+  billAddr1?: string | null;
+  billCity?: string | null;
+  billState?: string | null;
+  billZip?: string | null;
+  billEmail?: string | null;
+  blindPS3: boolean;
+  reqTotalsOnly: boolean;
+  blindTotalsOnFinal: boolean;
+  pORequired: boolean;
+  neverHold: boolean;
+  skipTracking: boolean;
+  emailNewRepairs: boolean;
+  nationalAccount: boolean;
+  secondaryName?: string | null;
+  ref1?: string | null;
+  ref2?: string | null;
+  gpId?: string | null;
+}
+
+export const createNewClient = async (payload: CreateClientPayload): Promise<{ clientKey: number }> => {
+  const { data } = await apiClient.post('/clients', payload);
+  return data;
+};

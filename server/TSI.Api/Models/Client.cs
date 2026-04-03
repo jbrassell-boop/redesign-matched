@@ -125,3 +125,38 @@ public record ClientRepairItem(
     string Status, string? Department, string? ScopeType,
     string? Serial, int? Tat, decimal? Amount
 );
+
+public record CreateClientRequest(
+    string Name,
+    string? Address1,
+    string? UnitBuilding,
+    string? City,
+    string? State,
+    string? Zip,
+    string? Phone,
+    string? Fax,
+    DateTime? ClientSince,
+    int? PricingCategoryKey,
+    int? SalesRepKey,
+    int? PaymentTermsKey,
+    string? BillTo,
+    int? DistributorKey,
+    double? DiscountPct,
+    string? BillAddr1,
+    string? BillCity,
+    string? BillState,
+    string? BillZip,
+    string? BillEmail,
+    bool BlindPS3,
+    bool ReqTotalsOnly,
+    bool BlindTotalsOnFinal,
+    bool PORequired,
+    bool NeverHold,
+    bool SkipTracking,
+    bool EmailNewRepairs,
+    bool NationalAccount,
+    string? SecondaryName,
+    string? Ref1,
+    string? Ref2,
+    string? GpId
+);

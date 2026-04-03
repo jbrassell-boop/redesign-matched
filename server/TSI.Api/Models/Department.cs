@@ -119,3 +119,27 @@ public record DepartmentRepairItem(
     string? Status, string? ScopeType, string? SerialNumber,
     int Tat, decimal? Amount
 );
+
+public record CreateDepartmentRequest(
+    int ClientKey,
+    string Name,
+    string? Address1,
+    string? City,
+    string? State,
+    string? Zip,
+    string? Phone,
+    string? ContactFirst,
+    string? ContactLast,
+    string? ContactEmail,
+    int? CarrierKey,
+    bool ShowConsumptionOnReq,
+    bool EnforceScopeTypeFiltering,
+    string? ShowProductId,
+    bool ShowUAorNWT,
+    bool ShowItemizedDesc,
+    bool EmailNewRepairs,
+    bool TrackingRequired,
+    bool TaxExempt,
+    bool PaysByCreditCard,
+    bool OnsiteService
+);

@@ -1380,4 +1380,130 @@ public class RepairsController(IConfiguration config) : ControllerBase
             ContractMargin: 0
         ));
     }
+
+    // ── Scope Lookup by Serial Number ──
+    [HttpGet("scope-lookup")]
+    public async Task<IActionResult> ScopeLookup([FromQuery] string? sn)
+    {
+        if (string.IsNullOrWhiteSpace(sn)) return BadRequest("sn is required");
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT TOP 1
+                s.lScopeKey,
+                s.sSerialNumber,
+                s.lScopeTypeKey,
+                ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
+                st.lManufacturerKey,
+                ISNULL(m.sManufacturer, '') AS sManufacturer,
+                s.lDepartmentKey,
+                ISNULL(d.sDepartmentName, '') AS sDepartmentName,
+                d.lClientKey,
+                ISNULL(c.sClientName1, '') AS sClientName1
+            FROM tblScope s
+            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblManufacturers m ON m.lManufacturerKey = st.lManufacturerKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = s.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            WHERE s.sSerialNumber = @sn
+            ORDER BY s.lScopeKey DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@sn", sn.Trim());
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync()) return Ok(null);
+
+        return Ok(new {
+            scopeKey       = Convert.ToInt32(reader["lScopeKey"]),
+            serialNumber   = reader["sSerialNumber"]?.ToString() ?? "",
+            scopeTypeKey   = reader["lScopeTypeKey"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["lScopeTypeKey"]),
+            scopeTypeDesc  = reader["sScopeTypeDesc"].ToString()!,
+            manufacturerKey= reader["lManufacturerKey"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["lManufacturerKey"]),
+            manufacturer   = reader["sManufacturer"].ToString()!,
+            deptKey        = reader["lDepartmentKey"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["lDepartmentKey"]),
+            deptName       = reader["sDepartmentName"].ToString()!,
+            clientKey      = reader["lClientKey"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["lClientKey"]),
+            clientName     = reader["sClientName1"].ToString()!
+        });
+    }
+
+    // ── Create Repair ──
+    [HttpPost]
+    public async Task<IActionResult> CreateRepair([FromBody] CreateRepairRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        int scopeKey = body.ScopeKey ?? 0;
+
+        // If no existing scope, create one
+        if (scopeKey == 0 && body.DeptKey > 0)
+        {
+            const string scopeSql = """
+                INSERT INTO tblScope (lScopeTypeKey, lDepartmentKey, sSerialNumber, dtCreateDate)
+                OUTPUT INSERTED.lScopeKey
+                VALUES (@scopeTypeKey, @deptKey, @sn, GETDATE())
+                """;
+            await using var scopeCmd = new SqlCommand(scopeSql, conn);
+            scopeCmd.Parameters.AddWithValue("@scopeTypeKey", (object?)body.ScopeTypeKey ?? DBNull.Value);
+            scopeCmd.Parameters.AddWithValue("@deptKey", body.DeptKey);
+            scopeCmd.Parameters.AddWithValue("@sn", (object?)body.SerialNumber ?? DBNull.Value);
+            scopeKey = Convert.ToInt32(await scopeCmd.ExecuteScalarAsync());
+        }
+
+        const string sql = """
+            INSERT INTO tblRepair
+                (lScopeKey, lDepartmentKey, lRepairStatusID, dtDateIn, dtCreateDate,
+                 sPurchaseOrder, sComplaintDesc, lRepairReasonKey, lDeliveryMethodKey,
+                 sShipTrackingNumberIn, sPickupWasRequired, lSalesRepKey,
+                 lPricingCategoryKey, lPaymentTermsKey, sBillTo, lDistributorKey,
+                 sBillEmail, lBillType, sDisplayCustomerComplaint,
+                 sDisplayItemDescription, sDisplayItemAmount, sRackPosition)
+            OUTPUT INSERTED.lRepairKey
+            VALUES
+                (@scopeKey, @deptKey, @statusId, @dateIn, GETDATE(),
+                 @po, @complaint, @reasonKey, @carrierKey,
+                 @inboundTracking, @pickupRequired, @salesRepKey,
+                 @pricingCatKey, @paymentTermsKey, @billTo, @distributorKey,
+                 @billEmail, @billType, @displayComplaint,
+                 @displayItemDesc, @displayItemAmt, @rack)
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@scopeKey",        scopeKey > 0 ? (object)scopeKey : DBNull.Value);
+        cmd.Parameters.AddWithValue("@deptKey",         body.DeptKey > 0 ? (object)body.DeptKey : DBNull.Value);
+        cmd.Parameters.AddWithValue("@statusId",        body.StatusId.HasValue ? (object)body.StatusId.Value : DBNull.Value);
+        cmd.Parameters.AddWithValue("@dateIn",          body.DateIn);
+        cmd.Parameters.AddWithValue("@po",              (object?)body.PurchaseOrder ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@complaint",       (object?)body.Complaint ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@reasonKey",       (object?)body.ReasonKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@carrierKey",      (object?)body.CarrierKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@inboundTracking", (object?)body.InboundTracking ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@pickupRequired",  (object?)body.PickupRequired ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@salesRepKey",     (object?)body.SalesRepKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@pricingCatKey",   (object?)body.PricingCategoryKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@paymentTermsKey", (object?)body.PaymentTermsKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billTo",          (object?)body.BillTo ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@distributorKey",  (object?)body.DistributorKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billEmail",       (object?)body.BillEmail ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billType",        (object?)body.BillType ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@displayComplaint",(object?)body.DisplayCustomerComplaint ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@displayItemDesc", (object?)body.DisplayItemDesc ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@displayItemAmt",  (object?)body.DisplayItemAmt ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@rack",            (object?)body.RackPosition ?? DBNull.Value);
+
+        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+
+        // Set work order number = the new repair key (matches legacy format)
+        await using var woCmd = new SqlCommand(
+            "UPDATE tblRepair SET sWorkOrderNumber = CAST(@k AS NVARCHAR) WHERE lRepairKey = @k", conn);
+        woCmd.Parameters.AddWithValue("@k", newKey);
+        await woCmd.ExecuteNonQueryAsync();
+
+        return Ok(new { repairKey = newKey });
+    }
 }

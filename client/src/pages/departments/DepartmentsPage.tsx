@@ -3,6 +3,7 @@ import { Input, Table, Drawer, Tag, Button } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { getDepartments } from '../../api/departments';
 import { DepartmentDetailPane } from './DepartmentDetailPane';
+import { NewDepartmentModal } from './NewDepartmentModal';
 import { ExportButton } from '../../components/common/ExportButton';
 import type { DepartmentListItem } from './types';
 
@@ -50,6 +51,7 @@ export const DepartmentsPage = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [drawerKey, setDrawerKey] = useState<number | null>(null);
+  const [newModalOpen, setNewModalOpen] = useState(false);
 
   const loadDepartments = useCallback(async (s: string) => {
     setLoading(true);
@@ -112,6 +114,7 @@ export const DepartmentsPage = () => {
           icon={<PlusOutlined />}
           type="primary"
           size="small"
+          onClick={() => setNewModalOpen(true)}
           style={{ background: 'var(--primary)', borderColor: 'var(--primary)', fontSize: 12 }}
         >
           New Department
@@ -135,6 +138,12 @@ export const DepartmentsPage = () => {
           rowClassName={record => record.deptKey === drawerKey ? 'ant-table-row-selected' : ''}
         />
       </div>
+
+      <NewDepartmentModal
+        open={newModalOpen}
+        onClose={() => setNewModalOpen(false)}
+        onCreated={() => loadDepartments(search)}
+      />
 
       {/* Detail Drawer */}
       <Drawer

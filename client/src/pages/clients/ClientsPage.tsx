@@ -3,6 +3,7 @@ import { Input, Table, Drawer, Tag, Button } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { getClients } from '../../api/clients';
 import { ClientDetailPane } from './ClientDetailPane';
+import { NewClientModal } from './NewClientModal';
 import { ExportButton } from '../../components/common/ExportButton';
 import type { ClientListItem } from './types';
 
@@ -59,6 +60,7 @@ export const ClientsPage = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [drawerKey, setDrawerKey] = useState<number | null>(null);
+  const [newModalOpen, setNewModalOpen] = useState(false);
 
   const loadClients = useCallback(async (s: string, sf: string) => {
     setLoading(true);
@@ -126,6 +128,7 @@ export const ClientsPage = () => {
           icon={<PlusOutlined />}
           type="primary"
           size="small"
+          onClick={() => setNewModalOpen(true)}
           style={{ background: 'var(--primary)', borderColor: 'var(--primary)', fontSize: 12 }}
         >
           New Client
@@ -149,6 +152,12 @@ export const ClientsPage = () => {
           rowClassName={record => record.clientKey === drawerKey ? 'ant-table-row-selected' : ''}
         />
       </div>
+
+      <NewClientModal
+        open={newModalOpen}
+        onClose={() => setNewModalOpen(false)}
+        onCreated={() => loadClients(search, statusFilter)}
+      />
 
       {/* Detail Drawer */}
       <Drawer

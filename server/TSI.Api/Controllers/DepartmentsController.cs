@@ -765,4 +765,80 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
 
         return Ok(contracts);
     }
+
+    // ── Departments by client (for dropdowns) ──
+    [HttpGet("by-client/{clientKey:int}")]
+    public async Task<IActionResult> GetByClient(int clientKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        const string sql = """
+            SELECT lDepartmentKey, ISNULL(sDepartmentName,'') AS sDepartmentName
+            FROM tblDepartment
+            WHERE lClientKey = @clientKey AND ISNULL(bActive,1) = 1
+            ORDER BY sDepartmentName
+            """;
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@clientKey", clientKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var list = new List<object>();
+        while (await reader.ReadAsync())
+            list.Add(new { key = Convert.ToInt32(reader["lDepartmentKey"]), name = reader["sDepartmentName"].ToString()! });
+        return Ok(list);
+    }
+
+    // ── Create Department ──
+    [HttpPost]
+    public async Task<IActionResult> CreateDepartment([FromBody] CreateDepartmentRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            INSERT INTO tblDepartment
+                (lClientKey, sDepartmentName, sShipAddr1, sShipCity, sShipState, sShipZip,
+                 sContactPhoneVoice, sContactFirst, sContactLast, sContactEMail,
+                 lShippingCarrierKey, dtCreateDate, bActive,
+                 bIncludeConsumptionReportWithReq, bEnforceScopeTypeFiltering,
+                 sDispProductID, bDisplayUAorNWT, bDisplayItemDescription,
+                 bEmailNewRepairs, bTrackingNumberRequired, bTaxExempt,
+                 bPaysByCreditCard, bOnsiteService)
+            OUTPUT INSERTED.lDepartmentKey
+            VALUES
+                (@clientKey, @name, @addr1, @city, @state, @zip,
+                 @phone, @contactFirst, @contactLast, @contactEmail,
+                 @carrierKey, GETDATE(), 1,
+                 @consumptionOnReq, @enforceScopeType,
+                 @showProductId, @showUAorNWT, @showItemizedDesc,
+                 @emailNewRepairs, @trackingRequired, @taxExempt,
+                 @paysByCreditCard, @onsiteService)
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@clientKey",        body.ClientKey);
+        cmd.Parameters.AddWithValue("@name",             body.Name);
+        cmd.Parameters.AddWithValue("@addr1",            (object?)body.Address1 ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@city",             (object?)body.City ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@state",            (object?)body.State ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@zip",              (object?)body.Zip ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@phone",            (object?)body.Phone ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@contactFirst",     (object?)body.ContactFirst ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@contactLast",      (object?)body.ContactLast ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@contactEmail",     (object?)body.ContactEmail ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@carrierKey",       (object?)body.CarrierKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@consumptionOnReq", body.ShowConsumptionOnReq ? 1 : 0);
+        cmd.Parameters.AddWithValue("@enforceScopeType", body.EnforceScopeTypeFiltering ? 1 : 0);
+        cmd.Parameters.AddWithValue("@showProductId",    (object?)body.ShowProductId ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@showUAorNWT",      body.ShowUAorNWT ? 1 : 0);
+        cmd.Parameters.AddWithValue("@showItemizedDesc", body.ShowItemizedDesc ? 1 : 0);
+        cmd.Parameters.AddWithValue("@emailNewRepairs",  body.EmailNewRepairs ? 1 : 0);
+        cmd.Parameters.AddWithValue("@trackingRequired", body.TrackingRequired ? 1 : 0);
+        cmd.Parameters.AddWithValue("@taxExempt",        body.TaxExempt ? 1 : 0);
+        cmd.Parameters.AddWithValue("@paysByCreditCard", body.PaysByCreditCard ? 1 : 0);
+        cmd.Parameters.AddWithValue("@onsiteService",    body.OnsiteService ? 1 : 0);
+
+        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return Ok(new { deptKey = newKey });
+    }
+
 }

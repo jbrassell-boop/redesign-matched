@@ -241,3 +241,29 @@ public record QuickEditRepairRequest(
     int? TechnicianKey,
     string? Notes
 );
+
+public record CreateRepairRequest(
+    int? ScopeKey,
+    string? SerialNumber,
+    int? ScopeTypeKey,
+    int DeptKey,
+    DateTime DateIn,
+    int? StatusId,
+    string? PurchaseOrder,
+    string? Complaint,
+    int? ReasonKey,
+    int? CarrierKey,
+    string? InboundTracking,
+    string? PickupRequired,
+    int? SalesRepKey,
+    int? PricingCategoryKey,
+    int? PaymentTermsKey,
+    string? BillTo,
+    int? DistributorKey,
+    string? BillEmail,
+    int? BillType,
+    string? DisplayCustomerComplaint,
+    string? DisplayItemDesc,
+    string? DisplayItemAmt,
+    string? RackPosition
+);

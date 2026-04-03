@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getRepairs } from '../../api/repairs';
 import { RepairsList } from './RepairsList';
 import { RepairDetailPane } from './RepairDetailPane';
+import { NewRepairModal } from './components/NewRepairModal';
 import type { RepairListItem } from './types';
 import { ExportButton } from '../../components/common/ExportButton';
 import { useKeyboardNav } from '../../hooks/useKeyboardNav';
@@ -43,6 +44,7 @@ const RepairsListView = () => {
   const [listLoading, setListLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
+  const [newModalOpen, setNewModalOpen] = useState(false);
 
   const loadRepairs = useCallback(async (s: string) => {
     setListLoading(true);
@@ -83,10 +85,25 @@ const RepairsListView = () => {
       }}>
         <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>Repairs</span>
         <span style={{ fontSize: 11, color: 'var(--muted)' }}>{repairs.length} records</span>
-        <div style={{ marginLeft: 'auto' }}>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
           <ExportButton data={repairs as unknown as Record<string, unknown>[]} columns={REPAIR_EXPORT_COLS} filename="repairs-export" sheetName="Repairs" />
+          <button
+            onClick={() => setNewModalOpen(true)}
+            style={{
+              height: 28, padding: '0 12px', fontSize: 11, fontWeight: 700,
+              background: 'var(--primary)', color: '#fff', border: 'none',
+              borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit',
+            }}
+          >
+            + New Repair
+          </button>
         </div>
       </div>
+      <NewRepairModal
+        open={newModalOpen}
+        onClose={() => setNewModalOpen(false)}
+        onCreated={() => loadRepairs(search)}
+      />
 
       {/* Full-width list */}
       <div style={{ flex: 1, overflow: 'auto' }}>

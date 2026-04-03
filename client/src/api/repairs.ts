@@ -209,6 +209,38 @@ export const createDraftInvoice = async (repairKey: number) => {
   return data as { invoiceKey: number };
 };
 
+// ── Create Repair ──
+export interface CreateRepairPayload {
+  scopeKey?: number | null;
+  serialNumber?: string | null;
+  scopeTypeKey?: number | null;
+  deptKey: number;
+  dateIn: string;
+  statusId?: number | null;
+  purchaseOrder?: string | null;
+  complaint?: string | null;
+  reasonKey?: number | null;
+  carrierKey?: number | null;
+  inboundTracking?: string | null;
+  pickupRequired?: string | null;
+  salesRepKey?: number | null;
+  pricingCategoryKey?: number | null;
+  paymentTermsKey?: number | null;
+  billTo?: string | null;
+  distributorKey?: number | null;
+  billEmail?: string | null;
+  billType?: number | null;
+  displayCustomerComplaint?: string | null;
+  displayItemDesc?: string | null;
+  displayItemAmt?: string | null;
+  rackPosition?: string | null;
+}
+
+export const createRepair = async (payload: CreateRepairPayload): Promise<{ repairKey: number }> => {
+  const { data } = await apiClient.post('/repairs', payload);
+  return data;
+};
+
 // ── Technicians Lookup ──
 export interface TechnicianOption {
   techKey: number;

@@ -763,4 +763,90 @@ public class ClientsController(IConfiguration config) : ControllerBase
 
         return Ok(new { items = repairs, totalCount, page, pageSize });
     }
+
+    // ── Simple client list for dropdowns ──
+    [HttpGet("simple")]
+    public async Task<IActionResult> GetClientsSimple()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        const string sql = """
+            SELECT lClientKey, ISNULL(sClientName1,'') AS sClientName1
+            FROM tblClient
+            WHERE ISNULL(bActive,1) = 1
+            ORDER BY sClientName1
+            """;
+        await using var cmd = new SqlCommand(sql, conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var list = new List<object>();
+        while (await reader.ReadAsync())
+            list.Add(new { key = Convert.ToInt32(reader["lClientKey"]), name = reader["sClientName1"].ToString()! });
+        return Ok(list);
+    }
+
+    // ── Create Client ──
+    [HttpPost]
+    public async Task<IActionResult> CreateClient([FromBody] CreateClientRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            INSERT INTO tblClient
+                (sClientName1, sMailAddr1, sMailAddr2, sMailCity, sMailState, sMailZip,
+                 sPhoneVoice, sPhoneFAX, dtClientSince, dtCreateDate,
+                 lPricingCategoryKey, lSalesRepKey, lPaymentTermsKey, sBillTo, lDistributorKey,
+                 dblDiscountPct, sBillAddr1, sBillCity, sBillState, sBillZip,
+                 sBillEmail, bBlindPS3, bRequisitionTotalsOnly, bBlindTotalsOnFinal,
+                 sPORequired, bNeverHold, bSkipTracking, bEmailNewRepairs, bNationalAccount,
+                 sClientName2, sReferenceNum, sReferenceNum2, sGPID, bActive)
+            OUTPUT INSERTED.lClientKey
+            VALUES
+                (@name, @addr1, @unit, @city, @state, @zip,
+                 @phone, @fax, @clientSince, GETDATE(),
+                 @pricingCatKey, @salesRepKey, @paymentTermsKey, @billTo, @distributorKey,
+                 @discountPct, @billAddr1, @billCity, @billState, @billZip,
+                 @billEmail, @blindPS3, @reqTotalsOnly, @blindTotalsOnFinal,
+                 @poRequired, @neverHold, @skipTracking, @emailNewRepairs, @nationalAccount,
+                 @secondary, @ref1, @ref2, @gpid, 1)
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@name",              body.Name);
+        cmd.Parameters.AddWithValue("@unit",              (object?)body.UnitBuilding ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@addr1",             (object?)body.Address1 ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@city",              (object?)body.City ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@state",             (object?)body.State ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@zip",               (object?)body.Zip ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@phone",             (object?)body.Phone ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@fax",               (object?)body.Fax ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@clientSince",       body.ClientSince.HasValue ? (object)body.ClientSince.Value : DBNull.Value);
+        cmd.Parameters.AddWithValue("@pricingCatKey",     (object?)body.PricingCategoryKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@salesRepKey",       (object?)body.SalesRepKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@paymentTermsKey",   (object?)body.PaymentTermsKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billTo",            (object?)body.BillTo ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@distributorKey",    (object?)body.DistributorKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@discountPct",       body.DiscountPct.HasValue ? (object)body.DiscountPct.Value : DBNull.Value);
+        cmd.Parameters.AddWithValue("@billAddr1",         (object?)body.BillAddr1 ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billCity",          (object?)body.BillCity ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billState",         (object?)body.BillState ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billZip",           (object?)body.BillZip ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billEmail",         (object?)body.BillEmail ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@blindPS3",          body.BlindPS3 ? 1 : 0);
+        cmd.Parameters.AddWithValue("@reqTotalsOnly",     body.ReqTotalsOnly ? 1 : 0);
+        cmd.Parameters.AddWithValue("@blindTotalsOnFinal",body.BlindTotalsOnFinal ? 1 : 0);
+        cmd.Parameters.AddWithValue("@poRequired",        body.PORequired ? "Y" : "N");
+        cmd.Parameters.AddWithValue("@neverHold",         body.NeverHold ? 1 : 0);
+        cmd.Parameters.AddWithValue("@skipTracking",      body.SkipTracking ? 1 : 0);
+        cmd.Parameters.AddWithValue("@emailNewRepairs",   body.EmailNewRepairs ? 1 : 0);
+        cmd.Parameters.AddWithValue("@nationalAccount",   body.NationalAccount ? 1 : 0);
+        cmd.Parameters.AddWithValue("@secondary",         (object?)body.SecondaryName ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@ref1",              (object?)body.Ref1 ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@ref2",              (object?)body.Ref2 ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@gpid",              (object?)body.GpId ?? DBNull.Value);
+
+        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return Ok(new { clientKey = newKey });
+    }
+
 }
