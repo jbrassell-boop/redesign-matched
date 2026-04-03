@@ -44,6 +44,7 @@ export const router = createBrowserRouter([
           { path: '/inventory', element: <InventoryPage /> },
           { path: '/quality', element: <QualityPage /> },
           { path: '/repairs', element: <RepairsPage /> },
+          { path: '/repairs/:repairKey', element: <RepairsPage /> },
           { path: '/loaners', element: <LoanersPage /> },
           { path: '/suppliers', element: <SuppliersPage /> },
           { path: '/financial', element: <FinancialPage /> },

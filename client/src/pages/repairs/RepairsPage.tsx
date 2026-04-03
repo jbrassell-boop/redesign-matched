@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { getRepairs, getRepairDetail } from '../../api/repairs';
 import { RepairsList } from './RepairsList';
 import { RepairDetailPane } from './RepairDetailPane';
@@ -18,6 +19,30 @@ const REPAIR_EXPORT_COLS = [
 ];
 
 export const RepairsPage = () => {
+  const { repairKey: repairKeyParam } = useParams<{ repairKey: string }>();
+  const navigate = useNavigate();
+  const cockpitKey = repairKeyParam ? parseInt(repairKeyParam, 10) : null;
+
+  // If we have a repairKey param, render cockpit mode
+  if (cockpitKey) {
+    return (
+      <RepairDetailPane
+        cockpitMode
+        repairKey={cockpitKey}
+        onStatusChanged={() => {
+          // Reload in place — cockpit handles its own refresh
+        }}
+      />
+    );
+  }
+
+  // Otherwise, render the split-pane list view
+  return <RepairsListView />;
+};
+
+// Extracted to separate component to avoid hook rules issues with early return
+const RepairsListView = () => {
+  const navigate = useNavigate();
   const [repairs, setRepairs] = useState<RepairListItem[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -51,6 +76,10 @@ export const RepairsPage = () => {
     }
   }, []);
 
+  const handleOpenCockpit = useCallback((r: RepairListItem) => {
+    navigate(`/repairs/${r.repairKey}`);
+  }, [navigate]);
+
   const selectedIndex = useMemo(
     () => repairs.findIndex(r => r.repairKey === selectedKey),
     [repairs, selectedKey],
@@ -82,16 +111,15 @@ export const RepairsPage = () => {
           search={search}
           onSearchChange={setSearch}
           onSelect={handleSelect}
+          onDoubleClick={handleOpenCockpit}
         />
       </div>
 
       {/* Right panel */}
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
         <RepairDetailPane detail={detail} loading={detailLoading} onStatusChanged={async (rk) => {
-          // Reload detail to reflect new status
           const d = await getRepairDetail(rk);
           setDetail(d);
-          // Also refresh the list
           loadRepairs(search);
         }} />
       </div>

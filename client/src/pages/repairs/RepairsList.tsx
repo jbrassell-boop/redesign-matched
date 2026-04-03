@@ -16,9 +16,10 @@ interface RepairsListProps {
   search: string;
   onSearchChange: (s: string) => void;
   onSelect: (r: RepairListItem) => void;
+  onDoubleClick?: (r: RepairListItem) => void;
 }
 
-export const RepairsList = ({ repairs, loading, selectedKey, search, onSearchChange, onSelect }: RepairsListProps) => (
+export const RepairsList = ({ repairs, loading, selectedKey, search, onSearchChange, onSelect, onDoubleClick }: RepairsListProps) => (
   <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
     {/* Search */}
     <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)' }}>
@@ -47,6 +48,7 @@ export const RepairsList = ({ repairs, loading, selectedKey, search, onSearchCha
           <div
             key={r.repairKey}
             onClick={() => onSelect(r)}
+            onDoubleClick={() => onDoubleClick?.(r)}
             style={{
               padding: '8px 12px',
               borderBottom: '1px solid var(--neutral-200)',

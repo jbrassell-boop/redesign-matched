@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Table, Input, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 import type { DashboardRepair, DashboardFilters } from './types';
 import { BulkActionBar } from '../../components/common/BulkActionBar';
@@ -156,6 +157,7 @@ const EXPORT_COLS = [
 ];
 
 export const RepairTable = ({ repairs, totalCount, loading, filters, onFiltersChange }: RepairTableProps) => {
+  const navigate = useNavigate();
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
 
   const handleExportSelected = () => {
@@ -211,6 +213,10 @@ export const RepairTable = ({ repairs, totalCount, loading, filters, onFiltersCh
         loading={loading}
         size="small"
         scroll={{ x: 1200 }}
+        onRow={(record) => ({
+          onClick: () => navigate(`/repairs/${record.repairKey}`),
+          style: { cursor: 'pointer' },
+        })}
         rowClassName={(row) => row.isUrgent ? 'urgent-row' : ''}
         rowSelection={{
           selectedRowKeys,

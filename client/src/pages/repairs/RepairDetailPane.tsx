@@ -1,26 +1,41 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Spin, message } from 'antd';
-import type { RepairDetail } from './types';
+import { useParams } from 'react-router-dom';
+import type { RepairDetail, RepairFull, ClientSummary, PrimaryContact, RepairScopeHistory, RepairFinancials } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
+import { CockpitHeader } from './CockpitHeader';
+import { ReferenceStrip } from './ReferenceStrip';
+import { FlagsBar } from './FlagsBar';
+import { ContextSidebar } from './ContextSidebar';
+import { DetailsTab } from './tabs/DetailsTab';
 import { WorkflowTab } from './tabs/WorkflowTab';
 import { InspectionsTab } from './tabs/InspectionsTab';
 import { FinancialsTab } from './tabs/FinancialsTab';
 import { ScopeHistoryTab } from './tabs/ScopeHistoryTab';
 import { StatusHistoryTab } from './tabs/StatusHistoryTab';
 import { InlineEditor } from '../../components/common/InlineEditor';
-import { updateRepairNotes, getRepairStatuses, updateRepairStatus, getRepairLineItems, getRepairScopeHistory, getRepairStatusHistory } from '../../api/repairs';
+import {
+  updateRepairNotes, getRepairStatuses, updateRepairStatus,
+  getRepairLineItems, getRepairScopeHistory, getRepairStatusHistory,
+  getRepairFull, getRepairFinancials, updateRepairPO,
+} from '../../api/repairs';
+import { getClientSummary, getClientFlags } from '../../api/clients';
+import { getDepartmentPrimaryContact } from '../../api/departments';
 import type { RepairStatusOption } from '../../api/repairs';
+import type { ClientFlag } from '../clients/types';
 import { useTabBadges } from '../../hooks/useTabBadges';
 import { useAlerts } from '../../hooks/useAlerts';
 import { AlertBanner } from '../../components/common/AlertBanner';
 import { evaluateRepair } from '../../components/common/alertsController';
 
 interface RepairDetailPaneProps {
-  detail: RepairDetail | null;
-  loading: boolean;
+  detail?: RepairDetail | null;
+  loading?: boolean;
   onNoteSaved?: (repairKey: number, notes: string) => void;
   onStatusChanged?: (repairKey: number) => void;
+  cockpitMode?: boolean;
+  repairKey?: number;
 }
 
 // Status flow: maps current status ID to next status ID (0 = end of workflow)
@@ -47,16 +62,59 @@ const BASE_TABS: TabDef[] = [
   { key: 'financials',   label: 'Financials' },
   { key: 'scopehistory', label: 'Scope History' },
   { key: 'statuslog',    label: 'Status Log' },
-  { key: 'comments',     label: 'Comments' },
 ];
 
-export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged }: RepairDetailPaneProps) => {
-  const [activeTab, setActiveTab] = useState('details');
+export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged, cockpitMode, repairKey: repairKeyProp }: RepairDetailPaneProps) => {
+  const params = useParams<{ repairKey: string }>();
+  const isCockpit = cockpitMode || !!params.repairKey;
+  const resolvedKey = repairKeyProp ?? (params.repairKey ? parseInt(params.repairKey, 10) : null);
+
+  const [activeTab, setActiveTab] = useState('workflow');
   const [statuses, setStatuses] = useState<RepairStatusOption[]>([]);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const statusMenuRef = useRef<HTMLDivElement>(null);
 
-  const rk = detail?.repairKey ?? 0;
+  // Cockpit-specific state
+  const [fullRepair, setFullRepair] = useState<RepairFull | null>(null);
+  const [clientSummary, setClientSummary] = useState<ClientSummary | null>(null);
+  const [contact, setContact] = useState<PrimaryContact | null>(null);
+  const [flags, setFlags] = useState<ClientFlag[]>([]);
+  const [scopeHistory, setScopeHistory] = useState<RepairScopeHistory[]>([]);
+  const [financials, setFinancials] = useState<RepairFinancials | null>(null);
+  const [cockpitLoading, setCockpitLoading] = useState(false);
+
+  // Load cockpit data
+  useEffect(() => {
+    if (!isCockpit || !resolvedKey) return;
+    setCockpitLoading(true);
+    Promise.all([
+      getRepairFull(resolvedKey),
+      getRepairStatuses(),
+    ]).then(([repair, sts]) => {
+      setFullRepair(repair);
+      setStatuses(sts);
+      // Load secondary data
+      const promises: Promise<void>[] = [];
+      if (repair.clientKey) {
+        promises.push(
+          getClientSummary(repair.clientKey).then(setClientSummary).catch(() => {}),
+          getClientFlags(repair.clientKey).then(setFlags).catch(() => {}),
+        );
+      }
+      if (repair.deptKey) {
+        promises.push(
+          getDepartmentPrimaryContact(repair.deptKey).then(setContact).catch(() => {}),
+        );
+      }
+      promises.push(
+        getRepairScopeHistory(resolvedKey).then(setScopeHistory).catch(() => {}),
+        getRepairFinancials(resolvedKey).then(setFinancials).catch(() => {}),
+      );
+      return Promise.all(promises);
+    }).catch(() => {}).finally(() => setCockpitLoading(false));
+  }, [isCockpit, resolvedKey]);
+
+  const rk = isCockpit ? (fullRepair?.repairKey ?? 0) : (detail?.repairKey ?? 0);
   const badgeCounts = useTabBadges(
     rk ? {
       workflow: () => getRepairLineItems(rk),
@@ -74,18 +132,21 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   // Smart alerts
   const { alerts, setAll: setAlerts, dismiss: dismissAlert } = useAlerts();
   useEffect(() => {
-    if (!detail) { setAlerts([]); return; }
+    const src = isCockpit ? fullRepair : detail;
+    if (!src) { setAlerts([]); return; }
     setAlerts(evaluateRepair({
-      amountApproved: detail.amountApproved,
-      isUrgent: detail.isUrgent,
-      daysIn: detail.daysIn,
+      amountApproved: src.amountApproved,
+      isUrgent: src.isUrgent,
+      daysIn: src.daysIn,
     }));
-  }, [detail, setAlerts]);
+  }, [isCockpit ? fullRepair : detail, setAlerts]);
 
-  // Load statuses once
+  // Load statuses once (non-cockpit mode)
   useEffect(() => {
-    getRepairStatuses().then(setStatuses).catch(() => {});
-  }, []);
+    if (!isCockpit) {
+      getRepairStatuses().then(setStatuses).catch(() => {});
+    }
+  }, [isCockpit]);
 
   // Close status menu on outside click
   useEffect(() => {
@@ -99,11 +160,13 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
     return () => document.removeEventListener('click', handler);
   }, [statusMenuOpen]);
 
+  const currentStatusId = isCockpit ? (fullRepair?.statusId ?? 0) : (detail?.statusId ?? 0);
+  const currentStatus = isCockpit ? (fullRepair?.status ?? '') : (detail?.status ?? '');
+
   const handleAdvance = useCallback(async () => {
-    if (!detail) return;
-    const nextId = STATUS_NEXT_MAP[detail.statusId];
+    const nextId = STATUS_NEXT_MAP[currentStatusId];
     if (nextId === undefined) {
-      message.warning(`No next stage for: ${detail.status}`);
+      message.warning(`No next stage for: ${currentStatus}`);
       return;
     }
     if (nextId === 0) {
@@ -111,40 +174,141 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       return;
     }
     try {
-      await updateRepairStatus(detail.repairKey, nextId);
+      await updateRepairStatus(rk, nextId);
       const nextName = statuses.find(s => s.statusId === nextId)?.statusName ?? `Status #${nextId}`;
       message.success(`Advanced to: ${nextName}`);
-      onStatusChanged?.(detail.repairKey);
+      onStatusChanged?.(rk);
+      if (isCockpit && resolvedKey) {
+        getRepairFull(resolvedKey).then(setFullRepair).catch(() => {});
+      }
     } catch {
       message.error('Failed to advance status');
     }
-  }, [detail, statuses, onStatusChanged]);
+  }, [currentStatusId, currentStatus, rk, statuses, onStatusChanged, isCockpit, resolvedKey]);
 
   const handleSetStatus = useCallback(async (statusId: number) => {
-    if (!detail) return;
     setStatusMenuOpen(false);
     try {
-      await updateRepairStatus(detail.repairKey, statusId);
+      await updateRepairStatus(rk, statusId);
       const name = statuses.find(s => s.statusId === statusId)?.statusName ?? '';
       message.success(`Status changed to: ${name}`);
-      onStatusChanged?.(detail.repairKey);
+      onStatusChanged?.(rk);
+      if (isCockpit && resolvedKey) {
+        getRepairFull(resolvedKey).then(setFullRepair).catch(() => {});
+      }
     } catch {
       message.error('Failed to change status');
     }
-  }, [detail, statuses, onStatusChanged]);
+  }, [rk, statuses, onStatusChanged, isCockpit, resolvedKey]);
 
   const handleNoteSave = useCallback(async (notes: string) => {
-    if (!detail) return;
     try {
-      await updateRepairNotes(detail.repairKey, notes);
+      await updateRepairNotes(rk, notes);
       message.success('Note saved');
-      onNoteSaved?.(detail.repairKey, notes);
+      onNoteSaved?.(rk, notes);
     } catch {
       message.error('Failed to save note');
       throw new Error('save failed');
     }
-  }, [detail, onNoteSaved]);
+  }, [rk, onNoteSaved]);
 
+  const handlePOChange = useCallback(async (po: string) => {
+    try {
+      await updateRepairPO(rk, po);
+      message.success('PO# updated');
+    } catch {
+      message.error('Failed to update PO#');
+    }
+  }, [rk]);
+
+  const hasNext = STATUS_NEXT_MAP[currentStatusId] !== undefined && STATUS_NEXT_MAP[currentStatusId] !== 0;
+  const nextStatusName = hasNext
+    ? statuses.find(s => s.statusId === STATUS_NEXT_MAP[currentStatusId])?.statusName ?? null
+    : null;
+
+  // ── COCKPIT MODE ──
+  if (isCockpit) {
+    if (cockpitLoading) {
+      return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}><Spin size="large" /></div>;
+    }
+    if (!fullRepair) {
+      return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Repair not found</div>;
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+        <CockpitHeader
+          repair={fullRepair}
+          hasNextStage={hasNext}
+          nextStageName={nextStatusName}
+          onNextStage={handleAdvance}
+          onChangeStatus={() => setStatusMenuOpen(!statusMenuOpen)}
+          onPrint={() => message.info('Print D&I coming soon')}
+        />
+        <ReferenceStrip
+          repair={fullRepair}
+          clientSummary={clientSummary}
+          contact={contact}
+          onPOChange={handlePOChange}
+        />
+        <FlagsBar flags={flags} scopeHistoryCount={scopeHistory.length} />
+        <AlertBanner alerts={alerts} onDismiss={dismissAlert} />
+
+        {/* Status dropdown overlay */}
+        {statusMenuOpen && (
+          <div ref={statusMenuRef} style={{
+            position: 'absolute', top: 42, right: 120, zIndex: 100,
+            background: 'var(--card)', border: '1px solid var(--neutral-200)',
+            borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+            minWidth: 200, maxHeight: 300, overflowY: 'auto',
+          }}>
+            {statuses.map(s => (
+              <div
+                key={s.statusId}
+                onClick={() => handleSetStatus(s.statusId)}
+                style={{
+                  padding: '6px 12px', cursor: 'pointer', fontSize: 12,
+                  color: s.statusId === currentStatusId ? 'var(--primary)' : 'var(--text)',
+                  fontWeight: s.statusId === currentStatusId ? 700 : 400,
+                  background: s.statusId === currentStatusId ? 'var(--primary-light)' : undefined,
+                  borderBottom: '1px solid var(--neutral-100)',
+                }}
+                onMouseEnter={e => { if (s.statusId !== currentStatusId) e.currentTarget.style.background = 'var(--neutral-50)'; }}
+                onMouseLeave={e => { if (s.statusId !== currentStatusId) e.currentTarget.style.background = ''; }}
+              >
+                {s.statusName}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          {/* Main content area */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+            <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
+            <div style={{ flex: 1, overflow: 'auto' }}>
+              {activeTab === 'details'      && <DetailsTab repair={fullRepair} />}
+              {activeTab === 'workflow'     && <WorkflowTab repairKey={fullRepair.repairKey} />}
+              {activeTab === 'inspections'  && <InspectionsTab repairKey={fullRepair.repairKey} />}
+              {activeTab === 'financials'   && <FinancialsTab repairKey={fullRepair.repairKey} />}
+              {activeTab === 'scopehistory' && <ScopeHistoryTab repairKey={fullRepair.repairKey} currentRepairKey={fullRepair.repairKey} />}
+              {activeTab === 'statuslog'    && <StatusHistoryTab repairKey={fullRepair.repairKey} />}
+            </div>
+          </div>
+
+          {/* Context sidebar */}
+          <ContextSidebar
+            clientSummary={clientSummary}
+            contact={contact}
+            scopeHistory={scopeHistory}
+            financials={financials}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ── LEGACY SPLIT-PANE MODE ──
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
   if (!detail) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Select a repair to view details</div>;
 
@@ -185,11 +349,6 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       </div>
     </div>
   );
-
-  const hasNext = STATUS_NEXT_MAP[detail.statusId] !== undefined && STATUS_NEXT_MAP[detail.statusId] !== 0;
-  const nextStatusName = hasNext
-    ? statuses.find(s => s.statusId === STATUS_NEXT_MAP[detail.statusId])?.statusName
-    : null;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -273,7 +432,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         </div>
       </div>
 
-      <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
+      <TabBar tabs={[...tabs, { key: 'comments', label: 'Comments' }]} activeKey={activeTab} onChange={setActiveTab} />
       {activeTab === 'details'      && detailsContent}
       {activeTab === 'workflow'     && <WorkflowTab repairKey={detail.repairKey} />}
       {activeTab === 'inspections'  && <InspectionsTab repairKey={detail.repairKey} />}
