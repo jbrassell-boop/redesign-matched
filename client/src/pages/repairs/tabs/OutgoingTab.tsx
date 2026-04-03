@@ -1,6 +1,7 @@
 import React from 'react';
 import { message } from 'antd';
 import type { RepairFull, RepairLineItem } from '../types';
+import { createDraftInvoice } from '../../../api/repairs';
 
 interface OutgoingTabProps {
   repair: RepairFull;
@@ -110,7 +111,7 @@ export const OutgoingTab = ({ repair, items }: OutgoingTabProps) => {
             </div>
           </div>
           <button
-            onClick={() => message.info('Create Label — coming soon')}
+            onClick={() => message.info('Create Label — requires printer integration')}
             style={{
               height: 28, padding: '0 12px', fontSize: 11, fontWeight: 600,
               background: 'var(--neutral-50, #f9fafb)', color: 'var(--navy)',
@@ -143,9 +144,14 @@ export const OutgoingTab = ({ repair, items }: OutgoingTabProps) => {
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               {[
-                { label: 'Draft Invoice', onClick: () => message.info('Draft Invoice — coming soon') },
-                { label: 'Email Invoice', onClick: () => message.info('Email Invoice — coming soon') },
-                { label: 'Void Invoice',  onClick: () => message.info('Void Invoice — coming soon'), danger: true },
+                { label: 'Draft Invoice', onClick: async () => {
+                  try {
+                    const r = await createDraftInvoice(repair.repairKey);
+                    message.success(`Draft invoice #${r.invoiceKey} created`);
+                  } catch { message.error('Failed to create draft invoice'); }
+                } },
+                { label: 'Email Invoice', onClick: () => message.info('Email Invoice — requires email integration') },
+                { label: 'Void Invoice',  onClick: () => message.info('Void Invoice — requires existing invoice'), danger: true },
               ].map(btn => (
                 <button key={btn.label}
                   onClick={btn.onClick}

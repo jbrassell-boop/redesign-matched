@@ -668,7 +668,7 @@ export const QualityPage = () => {
             background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
           }}>
             <button
-              onClick={() => message.info('New NCR form coming soon')}
+              onClick={() => message.info('New NCR — requires ISO complaint workflow configuration')}
               style={{
                 height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
                 background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
@@ -794,7 +794,7 @@ export const QualityPage = () => {
             background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
           }}>
             <button
-              onClick={() => message.info('New CAPA form coming soon')}
+              onClick={() => message.info('New CAPA — requires corrective action workflow configuration')}
               style={{
                 height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
                 background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',

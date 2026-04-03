@@ -185,6 +185,30 @@ export const addRepairNote = async (repairKey: number, note: string): Promise<vo
   await apiClient.post(`/repairs/${repairKey}/repair-notes`, { note });
 };
 
+// ── Update Slips ──
+export const getUpdateSlips = async (repairKey: number) => {
+  const { data } = await apiClient.get(`/repairs/${repairKey}/update-slips`);
+  return data as { slipKey: number; date: string; primaryTech: string; secondaryTech: string; reason: string }[];
+};
+
+// ── Defect Tracking ──
+export const getDefectTracking = async (repairKey: number) => {
+  const { data } = await apiClient.get(`/repairs/${repairKey}/defect-tracking`);
+  return data as { itemKey: number; item: string; comment: string }[];
+};
+
+// ── Repair Inventory Usage ──
+export const getRepairInventoryUsage = async (repairKey: number) => {
+  const { data } = await apiClient.get(`/repairs/${repairKey}/inventory-usage`);
+  return data as { key: number; inventoryItem: string; size: string; repairItem: string }[];
+};
+
+// ── Draft Invoice ──
+export const createDraftInvoice = async (repairKey: number) => {
+  const { data } = await apiClient.post(`/repairs/${repairKey}/draft-invoice`);
+  return data as { invoiceKey: number };
+};
+
 // ── Technicians Lookup ──
 export interface TechnicianOption {
   techKey: number;

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { message, Modal } from 'antd';
 import type { RepairFull, RepairLineItem } from '../types';
 import type { ClientFlag } from '../../clients/types';
-import { getRepairLineItems, updateRepairTechs, getRepairTechnicians } from '../../../api/repairs';
+import { getRepairLineItems, updateRepairTechs, getRepairTechnicians, bulkApproveLineItems, getUpdateSlips, getDefectTracking, getRepairInventoryUsage } from '../../../api/repairs';
 import type { TechnicianOption } from '../../../api/repairs';
 import { RepairItemsTable } from '../components/RepairItemsTable';
 import { AmendmentModal } from '../components/AmendmentModal';
@@ -33,6 +33,13 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
   const [items, setItems] = useState<RepairLineItem[]>([]);
   const [amendOpen, setAmendOpen] = useState(false);
   const [amendTranKey, setAmendTranKey] = useState<number | undefined>(undefined);
+  // Data modals
+  const [slipsModalOpen, setSlipsModalOpen] = useState(false);
+  const [slipsData, setSlipsData] = useState<{ slipKey: number; date: string; primaryTech: string; secondaryTech: string; reason: string }[]>([]);
+  const [defectsModalOpen, setDefectsModalOpen] = useState(false);
+  const [defectsData, setDefectsData] = useState<{ itemKey: number; item: string; comment: string }[]>([]);
+  const [invModalOpen, setInvModalOpen] = useState(false);
+  const [invData, setInvData] = useState<{ key: number; inventoryItem: string; size: string; repairItem: string }[]>([]);
   // Update Techs modal
   const [techModalOpen, setTechModalOpen] = useState(false);
   const [techList, setTechList] = useState<TechnicianOption[]>([]);
@@ -56,19 +63,39 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
   };
 
   const actionButtons = [
-    { label: 'Consumption',     style: { background: 'var(--primary)', color: '#fff' } },
-    { label: 'Unapproved',      style: { background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' } },
-    { label: 'Approved',        style: { background: 'var(--success)', color: '#fff' } },
-    { label: 'Update Slips',    style: { background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' } },
-    { label: 'Amend Repair',    style: { background: 'var(--amber)', color: '#1a1a1a' } },
-    { label: 'Defect Tracking', style: { background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' } },
+    { label: 'Consumption',     style: { background: 'var(--primary)', color: '#fff' }, action: async () => {
+      try { await bulkApproveLineItems(repair.repairKey, 'Y'); loadItems(); message.success('All items approved (consumption)'); }
+      catch { message.error('Failed to approve items'); }
+    } },
+    { label: 'Unapproved',      style: { background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: async () => {
+      try { await bulkApproveLineItems(repair.repairKey, ''); loadItems(); message.success('All items unapproved'); }
+      catch { message.error('Failed to unapprove items'); }
+    } },
+    { label: 'Approved',        style: { background: 'var(--success)', color: '#fff' }, action: async () => {
+      try { await bulkApproveLineItems(repair.repairKey, 'Y'); loadItems(); message.success('All items approved'); }
+      catch { message.error('Failed to approve items'); }
+    } },
+    { label: 'Update Slips',    style: { background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: () => {
+      getUpdateSlips(repair.repairKey).then(setSlipsData).catch(() => message.error('Failed to load update slips'));
+      setSlipsModalOpen(true);
+    } },
+    { label: 'Amend Repair',    style: { background: 'var(--amber)', color: '#1a1a1a' }, action: () => {
+      handleOpenAmendments();
+    } },
+    { label: 'Defect Tracking', style: { background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: () => {
+      getDefectTracking(repair.repairKey).then(setDefectsData).catch(() => message.error('Failed to load defect tracking'));
+      setDefectsModalOpen(true);
+    } },
     { label: 'Update Techs',    style: { background: 'var(--neutral-50, #f9fafb)', color: 'var(--navy)', border: '1px solid var(--border)' }, action: () => {
       getRepairTechnicians().then(setTechList).catch(() => message.error('Failed to load technicians'));
       setSelectedTech(repair.techKey ?? 0);
       setSelectedTech2(null);
       setTechModalOpen(true);
     } },
-    { label: 'Inventory',       style: { background: 'var(--neutral-50, #f9fafb)', color: 'var(--navy)', border: '1px solid var(--border)' } },
+    { label: 'Inventory',       style: { background: 'var(--neutral-50, #f9fafb)', color: 'var(--navy)', border: '1px solid var(--border)' }, action: () => {
+      getRepairInventoryUsage(repair.repairKey).then(setInvData).catch(() => message.error('Failed to load inventory'));
+      setInvModalOpen(true);
+    } },
   ];
 
   return (
@@ -134,7 +161,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
               <div style={{ display: 'flex', gap: 3 }}>
                 {(['Reset', 'Override'] as const).map(lbl => (
                   <button key={lbl}
-                    onClick={() => message.info(`${lbl} — coming soon`)}
+                    onClick={() => message.info(`${lbl} angulation — use Inspections tab`)}
                     style={{
                       height: 20, padding: '0 7px', fontSize: 9, fontWeight: 600,
                       background: '#fff', color: 'var(--navy)', border: '1px solid var(--border)',
@@ -345,6 +372,81 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
             </button>
           </div>
         </div>
+      </Modal>
+
+      {/* Update Slips Modal */}
+      <Modal open={slipsModalOpen} onCancel={() => setSlipsModalOpen(false)} footer={null}
+        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>Update Slips</span>} width={600}>
+        {slipsData.length === 0 ? (
+          <div style={{ padding: 20, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No update slips for this repair</div>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr>{['Date', 'Reason', 'Primary Tech', 'Secondary Tech'].map(h => (
+                <th key={h} style={{ padding: '6px 8px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--border)', textAlign: 'left', fontSize: 10, fontWeight: 700 }}>{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {slipsData.map(s => (
+                <tr key={s.slipKey}>
+                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{s.date}</td>
+                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{s.reason || '—'}</td>
+                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{s.primaryTech || '—'}</td>
+                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{s.secondaryTech || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Modal>
+
+      {/* Defect Tracking Modal */}
+      <Modal open={defectsModalOpen} onCancel={() => setDefectsModalOpen(false)} footer={null}
+        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>Defect Tracking</span>} width={500}>
+        {defectsData.length === 0 ? (
+          <div style={{ padding: 20, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No defect tracking items for this repair</div>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr>{['Defect Item', 'Comment'].map(h => (
+                <th key={h} style={{ padding: '6px 8px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--border)', textAlign: 'left', fontSize: 10, fontWeight: 700 }}>{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {defectsData.map(d => (
+                <tr key={d.itemKey}>
+                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', fontWeight: 500 }}>{d.item || '—'}</td>
+                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{d.comment || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+      </Modal>
+
+      {/* Inventory Usage Modal */}
+      <Modal open={invModalOpen} onCancel={() => setInvModalOpen(false)} footer={null}
+        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>Inventory Used</span>} width={600}>
+        {invData.length === 0 ? (
+          <div style={{ padding: 20, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No inventory items used on this repair</div>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+            <thead>
+              <tr>{['Inventory Item', 'Size', 'Repair Item'].map(h => (
+                <th key={h} style={{ padding: '6px 8px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--border)', textAlign: 'left', fontSize: 10, fontWeight: 700 }}>{h}</th>
+              ))}</tr>
+            </thead>
+            <tbody>
+              {invData.map(i => (
+                <tr key={i.key}>
+                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', fontWeight: 500 }}>{i.inventoryItem || '—'}</td>
+                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{i.size || '—'}</td>
+                  <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{i.repairItem || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </Modal>
     </div>
   );

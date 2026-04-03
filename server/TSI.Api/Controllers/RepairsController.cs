@@ -1141,6 +1141,137 @@ public class RepairsController(IConfiguration config) : ControllerBase
         return rows > 0 ? NoContent() : NotFound();
     }
 
+    // ── Update Slips ──
+    [HttpGet("{repairKey:int}/update-slips")]
+    public async Task<IActionResult> GetUpdateSlips(int repairKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT us.lRepairUpdateSlipKey, us.dtUpdateRequestDate,
+                   ISNULL(t1.sTechName,'') AS PrimaryTech,
+                   ISNULL(t2.sTechName,'') AS SecondaryTech,
+                   ISNULL(mr.sMainRepairUpdateSlipReason,'') AS Reason
+            FROM tblRepairUpdateSlips us
+            LEFT JOIN tblTechnicians t1 ON t1.lTechnicianKey = us.lResponsibleTech
+            LEFT JOIN tblTechnicians t2 ON t2.lTechnicianKey = us.lResponsibleTech2
+            LEFT JOIN tblMainRepairUpdateSlipReasons mr ON mr.lMainRepairUpdateSlipReasonKey = us.lMainRepairUpdateSlipReasonKey
+            WHERE us.lRepairKey = @repairKey
+            ORDER BY us.dtUpdateRequestDate DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<object>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new {
+                slipKey = Convert.ToInt32(reader["lRepairUpdateSlipKey"]),
+                date = Convert.ToDateTime(reader["dtUpdateRequestDate"]).ToString("MM/dd/yyyy"),
+                primaryTech = reader["PrimaryTech"]?.ToString() ?? "",
+                secondaryTech = reader["SecondaryTech"]?.ToString() ?? "",
+                reason = reader["Reason"]?.ToString() ?? "",
+            });
+        }
+        return Ok(items);
+    }
+
+    // ── Defect Tracking ──
+    [HttpGet("{repairKey:int}/defect-tracking")]
+    public async Task<IActionResult> GetDefectTracking(int repairKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT dt.lDefectTrackingItemKey,
+                   ISNULL(di.sDefectTrackingItem,'') AS ItemName,
+                   ISNULL(dt.sComment,'') AS Comment
+            FROM tblRepairDefectTracking dt
+            LEFT JOIN tblDefectTrackingItems di ON di.lDefectTrackingItemKey = dt.lDefectTrackingItemKey
+            WHERE dt.lRepairKey = @repairKey
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<object>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new {
+                itemKey = Convert.ToInt32(reader["lDefectTrackingItemKey"]),
+                item = reader["ItemName"]?.ToString() ?? "",
+                comment = reader["Comment"]?.ToString() ?? "",
+            });
+        }
+        return Ok(items);
+    }
+
+    // ── Repair Inventory Usage ──
+    [HttpGet("{repairKey:int}/inventory-usage")]
+    public async Task<IActionResult> GetRepairInventoryUsage(int repairKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT ri.lRepairInventoryKey,
+                   ISNULL(inv.sItemDescription,'') AS InventoryItem,
+                   ISNULL(isz.sSizeDescription,'') AS SizeDesc,
+                   ISNULL(ritem.sItemDescription,'') AS RepairItem
+            FROM tblRepairInventory ri
+            LEFT JOIN tblScopeTypeRepairItemInventoryItems strii ON strii.lScopeTypeRepairItemInventoryKey = ri.lScopeTypeRepairItemInventoryKey
+            LEFT JOIN tblInventorySize isz ON isz.lInventorySizeKey = strii.lInventorySizeKey
+            LEFT JOIN tblInventory inv ON inv.lInventoryKey = isz.lInventoryKey
+            LEFT JOIN tblRepairItemTran rit ON rit.lRepairItemTranKey = ri.lRepairItemTranKey
+            LEFT JOIN tblRepairItem ritem ON ritem.lRepairItemKey = rit.lRepairItemKey
+            WHERE rit.lRepairKey = @repairKey
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<object>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new {
+                key = Convert.ToInt32(reader["lRepairInventoryKey"]),
+                inventoryItem = reader["InventoryItem"]?.ToString() ?? "",
+                size = reader["SizeDesc"]?.ToString() ?? "",
+                repairItem = reader["RepairItem"]?.ToString() ?? "",
+            });
+        }
+        return Ok(items);
+    }
+
+    // ── Draft Invoice ──
+    [HttpPost("{repairKey:int}/draft-invoice")]
+    public async Task<IActionResult> CreateDraftInvoice(int repairKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Get repair details for the invoice
+        const string sql = """
+            INSERT INTO tblInvoice (lRepairKey, lClientKey, lDepartmentKey, lScopeKey,
+                dtTranDate, dblTranAmount, sInvoiceStatus, bIsManual, bIsVoid, bFinalized)
+            OUTPUT INSERTED.lInvoiceKey
+            SELECT r.lRepairKey, d.lClientKey, r.lDepartmentKey, r.lScopeKey,
+                GETDATE(), ISNULL(r.dblAmtRepair, 0), 'Draft', 0, 0, 0
+            FROM tblRepair r
+            JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            WHERE r.lRepairKey = @repairKey
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        var result = await cmd.ExecuteScalarAsync();
+        if (result == null) return NotFound();
+        return Ok(new { invoiceKey = Convert.ToInt32(result) });
+    }
+
     // ── Repair Notes ──
     [HttpGet("{repairKey:int}/repair-notes")]
     public async Task<IActionResult> GetRepairNotes(int repairKey)
