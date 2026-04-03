@@ -74,7 +74,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string> { "ISNULL(r.sRepairClosed, 'N') != 'Y'" };
+        var where = new List<string> { "ISNULL(r.sRepairClosed, 'N') != 'Y'", "r.dtDateIn >= DATEADD(MONTH, -12, GETDATE())" };
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("""
                 (r.sWorkOrderNumber LIKE @search
