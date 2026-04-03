@@ -190,7 +190,7 @@ export const LoginPage = () => {
               <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth={2.5}>
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--success)', letterSpacing: '.03em' }}>FDA Regulated</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--success)', letterSpacing: '.03em' }}>SDVOSB Certified</span>
             </div>
           </div>
         </div>
