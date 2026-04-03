@@ -24,6 +24,7 @@ import { AdministrationPage } from './pages/administration/AdministrationPage';
 import { DevelopmentListPage } from './pages/development-list/DevelopmentListPage';
 import { EndoCartsPage } from './pages/endocarts/EndoCartsPage';
 import { ReceivingPage } from './pages/receiving/ReceivingPage';
+import { RepairItemsPage } from './pages/repair-items/RepairItemsPage';
 
 export const router = createBrowserRouter([
   {
@@ -60,6 +61,7 @@ export const router = createBrowserRouter([
           { path: '/development-list', element: <DevelopmentListPage /> },
           { path: '/endocarts', element: <EndoCartsPage /> },
           { path: '/receiving', element: <ReceivingPage /> },
+          { path: '/repair-items', element: <RepairItemsPage /> },
         ],
       },
     ],

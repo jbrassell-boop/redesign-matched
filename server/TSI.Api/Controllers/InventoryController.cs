@@ -101,6 +101,8 @@ public class InventoryController(IConfiguration config) : ControllerBase
                    ISNULL(i.bNoCountAdjustment, 0) AS bNoCountAdjustment,
                    ISNULL(i.bNotUsedByRepair, 0) AS bNotUsedByRepair,
                    ISNULL(i.bAlwaysReOrder, 0) AS bAlwaysReOrder,
+                   ISNULL(i.bLargeDiameter, 0) AS bLargeDiameter,
+                   ISNULL(i.bSkipPickList, 0) AS bSkipPickList,
                    i.dtLastUpdate, i.dtCreateDate,
                    CASE WHEN ISNULL(i.nLevelCurrent, 0) <= ISNULL(i.nLevelMinimum, 0) THEN 1 ELSE 0 END AS IsLowStock
             FROM tblInventory i
@@ -138,6 +140,8 @@ public class InventoryController(IConfiguration config) : ControllerBase
         var noCountAdj = Convert.ToBoolean(itemReader["bNoCountAdjustment"]);
         var notUsedByRepair = Convert.ToBoolean(itemReader["bNotUsedByRepair"]);
         var alwaysReOrder = Convert.ToBoolean(itemReader["bAlwaysReOrder"]);
+        var largeDiameter = Convert.ToBoolean(itemReader["bLargeDiameter"]);
+        var skipPickList = Convert.ToBoolean(itemReader["bSkipPickList"]);
         var lastUpdate = itemReader["dtLastUpdate"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(itemReader["dtLastUpdate"]);
         var createDate = itemReader["dtCreateDate"] == DBNull.Value ? (DateTime?)null : Convert.ToDateTime(itemReader["dtCreateDate"]);
         var isLowStock = Convert.ToBoolean(itemReader["IsLowStock"]);
@@ -175,6 +179,8 @@ public class InventoryController(IConfiguration config) : ControllerBase
             NoCountAdjustment: noCountAdj,
             NotUsedByRepair: notUsedByRepair,
             AlwaysReOrder: alwaysReOrder,
+            LargeDiameter: largeDiameter,
+            SkipPickList: skipPickList,
             LastUpdate: lastUpdate,
             CreateDate: createDate,
             Sizes: sizes
