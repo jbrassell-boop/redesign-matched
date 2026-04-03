@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Select, Table } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
-import { getProductSales, getProductSaleDetail, getProductSaleStats } from '../../api/product-sales';
+import { Input, Select, Table, Modal, Button, message } from 'antd';
+import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
+import { getProductSales, getProductSaleDetail, getProductSaleStats, createProductSale } from '../../api/product-sales';
 import { ProductSaleDetailPane } from './ProductSaleDetailPane';
 import { StatusBadge } from '../../components/shared';
 import type { ProductSaleListItem, ProductSaleDetail, ProductSaleStats } from './types';
@@ -48,6 +48,13 @@ export const ProductSalePage = () => {
   const [detailLoading, setDetailLoading] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // New Sale modal
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [_createClientKey, setCreateClientKey] = useState<string>('');
+  const [createPO, setCreatePO] = useState('');
+  const [createNotes, setCreateNotes] = useState('');
+  const [creating, setCreating] = useState(false);
+
   useEffect(() => {
     getProductSaleStats().then(setStats).catch(() => {});
   }, []);
@@ -83,6 +90,30 @@ export const ProductSalePage = () => {
       setDetail(d);
     } finally {
       setDetailLoading(false);
+    }
+  };
+
+  const handleCreate = async () => {
+    setCreating(true);
+    try {
+      const res = await createProductSale({
+        purchaseOrder: createPO || null,
+        note: createNotes || null,
+      });
+      message.success('Product sale created');
+      setCreateModalOpen(false);
+      setCreateClientKey('');
+      setCreatePO('');
+      setCreateNotes('');
+      loadData();
+      // Open the new record in the detail drawer
+      if (res?.productSaleKey) {
+        handleView(res.productSaleKey);
+      }
+    } catch {
+      message.error('Failed to create product sale');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -255,6 +286,15 @@ export const ProductSalePage = () => {
               { value: 'Quote Sent', label: 'Quote Sent' },
             ]}
           />
+          <div style={{ flex: 1 }} />
+          <Button
+            icon={<PlusOutlined />}
+            type="primary"
+            style={{ background: 'var(--primary)', borderColor: 'var(--primary)', height: 32, fontSize: 12 }}
+            onClick={() => setCreateModalOpen(true)}
+          >
+            New Product Sale
+          </Button>
         </div>
 
         {/* Table */}
@@ -285,6 +325,52 @@ export const ProductSalePage = () => {
         open={drawerOpen}
         onClose={() => { setDrawerOpen(false); setDetail(null); }}
       />
+
+      {/* New Product Sale Modal */}
+      <Modal
+        title="New Product Sale"
+        open={createModalOpen}
+        onCancel={() => setCreateModalOpen(false)}
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <Button onClick={() => setCreateModalOpen(false)}>Cancel</Button>
+            <Button
+              type="primary"
+              loading={creating}
+              onClick={handleCreate}
+              style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}
+            >
+              Create
+            </Button>
+          </div>
+        }
+        width={440}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Purchase Order #</label>
+            <Input
+              value={createPO}
+              onChange={e => setCreatePO(e.target.value)}
+              placeholder="Optional PO number"
+              style={{ fontSize: 12 }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Notes</label>
+            <Input.TextArea
+              rows={3}
+              value={createNotes}
+              onChange={e => setCreateNotes(e.target.value)}
+              placeholder="Optional notes for this order"
+              style={{ fontSize: 12 }}
+            />
+          </div>
+          <p style={{ fontSize: 11, color: 'var(--muted)', margin: 0 }}>
+            Client, department, and line items can be added after creation in the detail view.
+          </p>
+        </div>
+      </Modal>
     </div>
   );
 };
