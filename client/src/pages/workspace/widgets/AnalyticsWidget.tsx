@@ -3,7 +3,6 @@ import { Skeleton } from 'antd';
 import { getDashboardAnalytics } from '../../../api/dashboard';
 import type { DashboardAnalyticsStats } from '../../dashboard/types';
 
-const fmtCurrency = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 export const AnalyticsWidget = () => {
   const [stats, setStats] = useState<DashboardAnalyticsStats | null>(null);
