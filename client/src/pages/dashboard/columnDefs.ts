@@ -27,15 +27,25 @@ const moneyRender = (v: number | null) =>
   v != null ? `$${v.toLocaleString('en-US', { minimumFractionDigits: 0 })}` : '\u2014';
 
 // ── Repairs ──
+const hotBadge = (text: string, record: { isUrgent?: boolean }) =>
+  createElement('span', null,
+    record?.isUrgent
+      ? createElement('span', { style: { background: 'var(--danger)', color: '#fff', padding: '1px 5px', borderRadius: 8, fontSize: 9, fontWeight: 700, marginRight: 4 } }, 'HOT')
+      : null,
+    text,
+  );
+
 const repairsColumns = (onRowClick: (key: number) => void): ColumnsType<any> => [
   { title: 'DATE IN', dataIndex: 'dateIn', key: 'dateIn', width: 90 },
-  { title: 'CLIENT', dataIndex: 'client', key: 'client', ellipsis: true },
+  { title: 'CLIENT', dataIndex: 'client', key: 'client', ellipsis: true, render: hotBadge },
   { title: 'DEPT', dataIndex: 'dept', key: 'dept', ellipsis: true },
   woLink(onRowClick),
   { title: 'SCOPE TYPE', dataIndex: 'scopeType', key: 'scopeType', ellipsis: true },
   { title: 'SERIAL', dataIndex: 'serial', key: 'serial', width: 100 },
   { title: 'TAT', dataIndex: 'daysIn', key: 'daysIn', width: 60, align: 'center', render: tatRender },
   { title: 'STATUS', dataIndex: 'status', key: 'status', width: 130, render: statusRender },
+  { title: 'DATE APPR', dataIndex: 'dateApproved', key: 'dateApproved', width: 90, render: nullDash },
+  { title: 'EST DELIV', dataIndex: 'estDelivery', key: 'estDelivery', width: 90, render: nullDash },
   { title: 'APPROVED $', dataIndex: 'amountApproved', key: 'amountApproved', width: 90, align: 'right', render: moneyRender },
   { title: 'TECH', dataIndex: 'tech', key: 'tech', width: 90, render: nullDash },
 ];
