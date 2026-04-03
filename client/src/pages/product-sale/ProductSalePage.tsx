@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Select, Table, Modal, Button, message } from 'antd';
+import { Input, Select, Modal, Button, message } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { getProductSales, getProductSaleDetail, getProductSaleStats, createProductSale } from '../../api/product-sales';
 import { ProductSaleDetailPane } from './ProductSaleDetailPane';
@@ -39,14 +39,15 @@ export const ProductSalePage = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<ProductSaleStats | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize] = useState(50);
 
   const [sales, setSales] = useState<ProductSaleListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
 
+  // Inline detail state
+  const [selectedKey, setSelectedKey] = useState<number | null>(null);
   const [detail, setDetail] = useState<ProductSaleDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // New Sale modal
   const [createModalOpen, setCreateModalOpen] = useState(false);
@@ -83,14 +84,20 @@ export const ProductSalePage = () => {
   }, [loadData, search]);
 
   const handleView = async (key: number) => {
+    setSelectedKey(key);
     setDetailLoading(true);
-    setDrawerOpen(true);
+    setDetail(null);
     try {
       const d = await getProductSaleDetail(key);
       setDetail(d);
     } finally {
       setDetailLoading(false);
     }
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedKey(null);
+    setDetail(null);
   };
 
   const handleCreate = async () => {
@@ -106,7 +113,7 @@ export const ProductSalePage = () => {
       setCreatePO('');
       setCreateNotes('');
       loadData();
-      // Open the new record in the detail drawer
+      // Open the new record in the detail pane
       if (res?.productSaleKey) {
         handleView(res.productSaleKey);
       }
@@ -136,195 +143,170 @@ export const ProductSalePage = () => {
     }
   };
 
-  const columns = [
-    {
-      title: 'Invoice #',
-      dataIndex: 'invoiceNumber',
-      key: 'invoiceNumber',
-      width: 100,
-      render: (v: string) => <span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{v}</span>,
-    },
-    { title: 'Client', dataIndex: 'clientName', key: 'clientName' },
-    { title: 'Department', dataIndex: 'departmentName', key: 'departmentName' },
-    { title: 'Sales Rep', dataIndex: 'salesRep', key: 'salesRep', width: 120 },
-    {
-      title: 'Order Date',
-      dataIndex: 'orderDate',
-      key: 'orderDate',
-      width: 100,
-      render: (v: string | null) => <span style={{ color: 'var(--muted)' }}>{fmtDate(v)}</span>,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: 100,
-      render: (v: string) => <StatusBadge status={v} />,
-    },
-    {
-      title: 'Items',
-      dataIndex: 'itemCount',
-      key: 'itemCount',
-      width: 60,
-      align: 'center' as const,
-    },
-    {
-      title: 'PO #',
-      dataIndex: 'purchaseOrder',
-      key: 'purchaseOrder',
-      width: 100,
-      render: (v: string) => v || '\u2014',
-    },
-    {
-      title: 'Total',
-      dataIndex: 'total',
-      key: 'total',
-      width: 100,
-      align: 'right' as const,
-      render: (v: number) => <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{fmt$(v)}</span>,
-      sorter: (a: ProductSaleListItem, b: ProductSaleListItem) => a.total - b.total,
-    },
-    {
-      title: '',
-      key: 'actions',
-      width: 70,
-      render: (_: unknown, r: ProductSaleListItem) => (
-        <button
-          onClick={() => handleView(r.productSaleKey)}
-          style={{
-            padding: '3px 10px',
-            fontSize: 11,
-            fontWeight: 600,
-            border: '1px solid var(--border)',
-            borderRadius: 4,
-            background: 'var(--card)',
-            color: 'var(--primary)',
-            cursor: 'pointer',
-          }}
-        >
-          View
-        </button>
-      ),
-    },
-  ];
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return (
-    <div style={{ height: 'calc(100vh - 64px)', overflow: 'auto', background: 'var(--bg)' }}>
-      <div style={{ padding: '16px 20px' }}>
-        {/* Stat strip */}
-        <div style={{
-          display: 'flex',
-          marginBottom: 20,
-          borderRadius: 10,
-          border: '1px solid var(--border)',
-          overflow: 'hidden',
-          background: 'var(--card)',
-        }}>
-          {STAT_CHIPS.map((chip, i) => (
-            <div
-              key={chip.key}
-              onClick={() => handleChipClick(chip.filter)}
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 12px',
-                cursor: chip.filter !== undefined ? 'pointer' : 'default',
-                borderRight: i < STAT_CHIPS.length - 1 ? '1px solid var(--border)' : undefined,
-                background: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? 'var(--primary-light)' : undefined,
-                outline: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? '2.5px solid var(--navy)' : undefined,
-                outlineOffset: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? -2 : undefined,
-                transition: 'background 0.12s',
-              }}
-            >
-              <div style={{
-                width: 28,
-                height: 28,
-                borderRadius: 6,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: chip.iconBg,
-                color: chip.iconColor,
-                fontSize: 13,
-                fontWeight: 700,
-                flexShrink: 0,
-              }}>
-                {chip.icon}
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: chip.valueColor, lineHeight: 1.2 }}>
-                  {getStatValue(chip.key)}
-                </div>
-                <div style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{chip.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Toolbar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-          <Input
-            prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
-            placeholder="Search invoice#, client, PO#..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ width: 260, height: 32, fontSize: 12 }}
-            allowClear
-          />
-          <Select
-            value={statusFilter}
-            onChange={(v) => { setStatusFilter(v); setPage(1); }}
-            style={{ width: 150 }}
-            options={[
-              { value: '', label: 'All Statuses' },
-              { value: 'Draft', label: 'Draft' },
-              { value: 'Open', label: 'Open' },
-              { value: 'Invoiced', label: 'Invoiced' },
-              { value: 'Cancelled', label: 'Cancelled' },
-              { value: 'Quote Sent', label: 'Quote Sent' },
-            ]}
-          />
-          <div style={{ flex: 1 }} />
-          <Button
-            icon={<PlusOutlined />}
-            type="primary"
-            style={{ background: 'var(--primary)', borderColor: 'var(--primary)', height: 32, fontSize: 12 }}
-            onClick={() => setCreateModalOpen(true)}
-          >
-            New Product Sale
-          </Button>
-        </div>
-
-        {/* Table */}
-        <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 16px rgba(var(--primary-rgb), 0.06)' }}>
-          <Table
-            dataSource={sales}
-            columns={columns}
-            rowKey="productSaleKey"
-            loading={loading}
-            size="small"
-            pagination={{
-              current: page,
-              pageSize,
-              total: totalCount,
-              showSizeChanger: true,
-              pageSizeOptions: ['15', '25', '50', '100'],
-              onChange: (p, ps) => { setPage(p); setPageSize(ps); },
-              showTotal: (total, range) => `Showing ${range[0]}\u2013${range[1]} of ${total.toLocaleString()}`,
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+      {/* Stat strip */}
+      <div style={{
+        display: 'flex',
+        background: 'var(--card)',
+        borderBottom: '1px solid var(--border)',
+        flexShrink: 0,
+        overflowX: 'auto',
+      }}>
+        {STAT_CHIPS.map((chip, i) => (
+          <div
+            key={chip.key}
+            onClick={() => handleChipClick(chip.filter)}
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '10px 12px',
+              cursor: chip.filter !== undefined ? 'pointer' : 'default',
+              borderRight: i < STAT_CHIPS.length - 1 ? '1px solid var(--border)' : undefined,
+              background: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? 'var(--primary-light)' : undefined,
+              outline: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? '2.5px solid var(--navy)' : undefined,
+              outlineOffset: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? -2 : undefined,
+              transition: 'background 0.12s',
+              minWidth: 100,
             }}
-            style={{ fontSize: 12 }}
-          />
-        </div>
+          >
+            <div style={{
+              width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: chip.iconBg, color: chip.iconColor, fontSize: 13, fontWeight: 700, flexShrink: 0,
+            }}>
+              {chip.icon}
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: chip.valueColor, lineHeight: 1.2 }}>{getStatValue(chip.key)}</div>
+              <div style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{chip.label}</div>
+            </div>
+          </div>
+        ))}
       </div>
 
-      <ProductSaleDetailPane
-        detail={detail}
-        loading={detailLoading}
-        open={drawerOpen}
-        onClose={() => { setDrawerOpen(false); setDetail(null); }}
-      />
+      {/* Split pane */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+        {/* Left panel — list */}
+        <div style={{
+          width: selectedKey ? 340 : '100%',
+          minWidth: selectedKey ? 340 : undefined,
+          borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
+          display: 'flex', flexDirection: 'column',
+          background: 'var(--card)',
+          transition: 'width 0.2s ease',
+          overflow: 'hidden',
+        }}>
+          {/* List toolbar */}
+          <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--navy)' }}>Product Sales</span>
+                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' }}>{totalCount.toLocaleString()}</span>
+              </div>
+              <Button
+                icon={<PlusOutlined />}
+                type="primary"
+                size="small"
+                style={{ background: 'var(--primary)', borderColor: 'var(--primary)', fontSize: 11, height: 28 }}
+                onClick={() => setCreateModalOpen(true)}
+              >
+                {selectedKey ? '' : 'New Sale'}
+              </Button>
+            </div>
+            <Input
+              prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+              placeholder="Search invoice#, client, PO#..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ height: 28, fontSize: 11 }}
+              allowClear
+            />
+            {!selectedKey && (
+              <Select
+                value={statusFilter}
+                onChange={(v) => { setStatusFilter(v); setPage(1); }}
+                style={{ width: '100%' }}
+                size="small"
+                options={[
+                  { value: '', label: 'All Statuses' },
+                  { value: 'Draft', label: 'Draft' },
+                  { value: 'Open', label: 'Open' },
+                  { value: 'Invoiced', label: 'Invoiced' },
+                  { value: 'Cancelled', label: 'Cancelled' },
+                  { value: 'Quote Sent', label: 'Quote Sent' },
+                ]}
+              />
+            )}
+          </div>
+
+          {/* List rows */}
+          <div style={{ flex: 1, overflow: 'auto' }}>
+            {loading && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>}
+            {!loading && sales.length === 0 && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No records found</div>}
+            {sales.map(item => {
+              const isSelected = item.productSaleKey === selectedKey;
+              return (
+                <div
+                  key={item.productSaleKey}
+                  onClick={() => handleView(item.productSaleKey)}
+                  style={{
+                    padding: '9px 12px',
+                    borderBottom: '1px solid var(--neutral-100)',
+                    cursor: 'pointer',
+                    background: isSelected ? 'var(--primary-light)' : 'var(--card)',
+                    borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
+                    transition: 'background 0.1s',
+                  }}
+                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
+                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>{item.invoiceNumber || '\u2014'}</div>
+                    <StatusBadge status={item.status} />
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{item.clientName}</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+                    <span>{fmtDate(item.orderDate)}</span>
+                    <span style={{ fontWeight: 600, color: 'var(--navy)' }}>{fmt$(item.total)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Pagination */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
+            <span style={{ fontSize: 10, color: 'var(--muted)' }}>{sales.length} of {totalCount}</span>
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', gap: 3 }}>
+                <PgBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{'\u2039'}</PgBtn>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+                  const p = start + i;
+                  return p <= totalPages ? <PgBtn key={p} active={p === page} onClick={() => setPage(p)}>{p}</PgBtn> : null;
+                })}
+                <PgBtn disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>{'\u203A'}</PgBtn>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right panel — detail */}
+        {selectedKey && (
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+            <ProductSaleDetailPane
+              detail={detail}
+              loading={detailLoading}
+              open={true}
+              onClose={handleCloseDetail}
+            />
+          </div>
+        )}
+      </div>
 
       {/* New Product Sale Modal */}
       <Modal
@@ -374,3 +356,12 @@ export const ProductSalePage = () => {
     </div>
   );
 };
+
+/* ── Shared ───────────────────────────────────────────────── */
+const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (
+  <button disabled={disabled} onClick={onClick} style={{
+    height: 22, minWidth: 22, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 10, fontFamily: 'inherit',
+    cursor: disabled ? 'default' : 'pointer', fontWeight: active ? 600 : 400,
+    background: active ? 'var(--navy)' : 'var(--card)', color: active ? 'var(--card)' : 'var(--muted)', opacity: disabled ? 0.4 : 1,
+  }}>{children}</button>
+);

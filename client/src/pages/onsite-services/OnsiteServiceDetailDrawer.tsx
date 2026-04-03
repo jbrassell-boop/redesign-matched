@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Drawer, Spin, message } from 'antd';
+import { Spin, message } from 'antd';
 import { getOnsiteServiceDetail, getOnsiteServiceTrays, submitOnsiteForInvoicing } from '../../api/onsite-services';
 import { StatusBadge } from '../../components/shared';
 import type { OnsiteServiceDetail, OnsiteServiceTray } from './types';
@@ -83,34 +83,37 @@ export const OnsiteServiceDetailDrawer = ({ open, serviceKey, onClose, onUpdated
 
   const canSubmit = detail?.status === 'Draft';
 
+  if (!open) return null;
+
   return (
-    <Drawer
-      title={
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Header */}
+      <div style={{
+        background: 'var(--navy)', padding: '12px 16px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ color: 'var(--card)', fontWeight: 700 }}>
+          <span style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>
             {detail?.invoiceNum || 'Visit Detail'}
           </span>
           {detail && <StatusBadge status={detail.status} />}
         </div>
-      }
-      placement="right"
-      width={680}
-      open={open}
-      onClose={onClose}
-      styles={{
-        header: { background: 'var(--primary-dark)', borderBottom: '1px solid var(--border)', padding: '12px 20px' },
-        body: { padding: 0, display: 'flex', flexDirection: 'column' },
-      }}
-      closeIcon={<span style={{ color: 'var(--card)', fontSize: 16 }}>&times;</span>}
-    >
+        <button
+          onClick={onClose}
+          style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: '2px 6px' }}
+        >
+          &times;
+        </button>
+      </div>
+
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
       ) : !detail ? null : (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           {/* Action bar */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-            background: 'var(--neutral-50)', borderBottom: '1px solid var(--border)',
+            background: 'var(--neutral-50)', borderBottom: '1px solid var(--border)', flexShrink: 0,
           }}>
             {canSubmit && (
               <button
@@ -142,7 +145,7 @@ export const OnsiteServiceDetailDrawer = ({ open, serviceKey, onClose, onUpdated
           {/* Tab bar */}
           <div style={{
             display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--border)',
-            padding: '0 16px',
+            padding: '0 16px', flexShrink: 0,
           }}>
             {TAB_LABELS.map(tab => (
               <button
@@ -170,7 +173,7 @@ export const OnsiteServiceDetailDrawer = ({ open, serviceKey, onClose, onUpdated
           </div>
         </div>
       )}
-    </Drawer>
+    </div>
   );
 };
 

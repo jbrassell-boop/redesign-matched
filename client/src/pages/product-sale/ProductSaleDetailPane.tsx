@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { Drawer, Spin, Table } from 'antd';
-import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
+import { Spin, Table } from 'antd';
+import { Field, FormGrid, StatusBadge, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import type { ProductSaleDetail } from './types';
 
@@ -25,7 +25,7 @@ interface Props {
   onClose: () => void;
 }
 
-export const ProductSaleDetailPane = ({ detail, loading, open, onClose }: Props) => {
+export const ProductSaleDetailPane = ({ detail, loading, onClose }: Props) => {
   const [activeTab, setActiveTab] = useState('details');
 
   const lineItemColumns = [
@@ -53,32 +53,35 @@ export const ProductSaleDetailPane = ({ detail, loading, open, onClose }: Props)
     : TABS;
 
   return (
-    <Drawer
-      title={
-        detail ? (
-          <DetailHeader
-            title={detail.invoiceNumber}
-            badges={<StatusBadge status={detail.status} />}
-          />
-        ) : 'Sale Detail'
-      }
-      placement="right"
-      width={600}
-      open={open}
-      onClose={onClose}
-      styles={{
-        header: { background: 'var(--primary-dark)', borderBottom: 'none' },
-        body: { padding: 0 },
-      }}
-    >
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Header */}
+      <div style={{
+        background: 'var(--navy)', padding: '12px 16px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>
+            {detail?.invoiceNumber || 'Sale Detail'}
+          </span>
+          {detail && <StatusBadge status={detail.status} />}
+        </div>
+        <button
+          onClick={onClose}
+          style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: '2px 6px' }}
+        >
+          &times;
+        </button>
+      </div>
+
+      {/* Body */}
       {loading ? (
         <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
       ) : !detail ? (
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No sale selected</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           {/* Financial summary bar */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--neutral-200)', background: 'var(--neutral-50)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 10, padding: '12px 16px', borderBottom: '1px solid var(--neutral-200)', background: 'var(--neutral-50)', flexShrink: 0 }}>
             {[
               { label: 'Subtotal', value: fmt$(detail.subTotal), color: 'var(--navy)' },
               { label: 'Tax', value: fmt$(detail.taxAmount), color: 'var(--muted)' },
@@ -96,7 +99,6 @@ export const ProductSaleDetailPane = ({ detail, loading, open, onClose }: Props)
 
           {activeTab === 'details' && (
             <div style={{ padding: '12px 16px', overflowY: 'auto', flex: 1 }}>
-              {/* Order Info */}
               <FormGrid cols={2}>
                 <Field label="Client" value={detail.clientName} />
                 <Field label="Department" value={detail.departmentName} />
@@ -108,7 +110,6 @@ export const ProductSaleDetailPane = ({ detail, loading, open, onClose }: Props)
                 <Field label="Phone" value={detail.contactPhone} />
               </FormGrid>
 
-              {/* Addresses */}
               <FormGrid cols={2} className="mt-2">
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bill To</div>
@@ -154,6 +155,6 @@ export const ProductSaleDetailPane = ({ detail, loading, open, onClose }: Props)
           )}
         </div>
       )}
-    </Drawer>
+    </div>
   );
 };

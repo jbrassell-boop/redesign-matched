@@ -49,15 +49,9 @@ const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon, active, o
     onMouseLeave={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = ''; }}
   >
     <div style={{
-      width: 32,
-      height: 32,
-      borderRadius: 6,
-      background: iconBg,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-      color: iconColor,
+      width: 32, height: 32, borderRadius: 6, background: iconBg,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      flexShrink: 0, color: iconColor,
     }}>
       {icon}
     </div>
@@ -118,8 +112,9 @@ export const OnsiteServicesPage = () => {
   const [quoteOpen, setQuoteOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState<OnsiteServiceListItem | null>(null);
-  const [detailOpen, setDetailOpen] = useState(false);
-  const [detailKey, setDetailKey] = useState<number | null>(null);
+
+  // Inline detail state
+  const [selectedKey, setSelectedKey] = useState<number | null>(null);
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -179,33 +174,6 @@ export const OnsiteServicesPage = () => {
     fontFamily: 'inherit',
     transition: 'all 0.1s',
   });
-
-  const thStyle: React.CSSProperties = {
-    background: 'var(--neutral-50)',
-    color: 'var(--neutral-500)',
-    fontWeight: 700,
-    padding: '8px 10px',
-    textAlign: 'left',
-    textTransform: 'uppercase',
-    letterSpacing: '0.04em',
-    fontSize: 11,
-    position: 'sticky',
-    top: 0,
-    zIndex: 2,
-    whiteSpace: 'nowrap',
-    borderRight: '1px solid rgba(180,200,220,0.3)',
-    borderBottom: '1px solid var(--neutral-200)',
-    userSelect: 'none',
-  };
-
-  const tdStyle: React.CSSProperties = {
-    padding: '6px 10px',
-    fontSize: 12,
-    borderBottom: '1px solid var(--border)',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
@@ -276,31 +244,16 @@ export const OnsiteServicesPage = () => {
 
       {/* Toolbar */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: '10px 16px',
-        background: 'var(--card)',
-        borderBottom: '1px solid var(--neutral-200)',
-        flexShrink: 0,
-        flexWrap: 'wrap',
+        display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
+        background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)',
+        flexShrink: 0, flexWrap: 'wrap',
       }}>
         <button
           onClick={() => setQuoteOpen(true)}
           style={{
-            height: 30,
-            padding: '0 14px',
-            fontSize: 12,
-            fontWeight: 700,
-            fontFamily: 'inherit',
-            background: 'var(--navy)',
-            color: 'var(--card)',
-            border: 'none',
-            borderRadius: 6,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 5,
+            height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
+            background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', gap: 5,
           }}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={13} height={13}>
@@ -335,17 +288,9 @@ export const OnsiteServicesPage = () => {
           onChange={e => { setDateFrom(e.target.value); setPage(1); }}
           title="From date"
           style={{
-            height: 30,
-            border: '1.5px solid var(--border-dk)',
-            borderRadius: 6,
-            padding: '0 8px',
-            fontSize: 11,
-            fontFamily: 'inherit',
-            color: 'var(--text)',
-            background: 'var(--card)',
-            outline: 'none',
-            cursor: 'pointer',
-            width: 120,
+            height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px',
+            fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)',
+            outline: 'none', cursor: 'pointer', width: 120,
           }}
         />
         <span style={{ fontSize: 10, color: 'var(--muted)' }}>to</span>
@@ -355,17 +300,9 @@ export const OnsiteServicesPage = () => {
           onChange={e => { setDateTo(e.target.value); setPage(1); }}
           title="To date"
           style={{
-            height: 30,
-            border: '1.5px solid var(--border-dk)',
-            borderRadius: 6,
-            padding: '0 8px',
-            fontSize: 11,
-            fontFamily: 'inherit',
-            color: 'var(--text)',
-            background: 'var(--card)',
-            outline: 'none',
-            cursor: 'pointer',
-            width: 120,
+            height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px',
+            fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)',
+            outline: 'none', cursor: 'pointer', width: 120,
           }}
         />
 
@@ -375,15 +312,9 @@ export const OnsiteServicesPage = () => {
           onChange={e => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search invoice, client, dept..."
           style={{
-            marginLeft: 'auto',
-            height: 30,
-            width: 220,
-            border: '1.5px solid var(--border-dk)',
-            borderRadius: 6,
-            padding: '0 10px 0 30px',
-            fontSize: 11,
-            fontFamily: 'inherit',
-            outline: 'none',
+            marginLeft: 'auto', height: 30, width: 220,
+            border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px',
+            fontSize: 11, fontFamily: 'inherit', outline: 'none',
             background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
           }}
         />
@@ -394,132 +325,130 @@ export const OnsiteServicesPage = () => {
         />
       </div>
 
-      {/* Data Table */}
-      <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-          <thead>
-            <tr>
-              {[
-                { label: 'Invoice #', width: 88 },
-                { label: 'Client', width: 190 },
-                { label: 'Department', width: 150 },
-                { label: 'Technician', width: 120 },
-                { label: 'Visit Date', width: 82 },
-                { label: 'Status', width: 82 },
-                { label: 'Trays', width: 58, align: 'center' as const },
-                { label: 'Instruments', width: 95, align: 'center' as const },
-                { label: 'Total Billed', width: 95, align: 'right' as const },
-                { label: 'Submitted', width: 85 },
-              ].map(col => (
-                <th key={col.label} style={{ ...thStyle, width: col.width, textAlign: col.align || 'left' }}>
-                  {col.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
+      {/* Split pane */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+        {/* Left panel — list */}
+        <div style={{
+          width: selectedKey ? 340 : '100%',
+          minWidth: selectedKey ? 340 : undefined,
+          borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
+          display: 'flex', flexDirection: 'column',
+          background: 'var(--card)',
+          transition: 'width 0.2s ease',
+          overflow: 'hidden',
+        }}>
+          {/* List rows */}
+          <div style={{ flex: 1, overflow: 'auto' }}>
             {loading ? (
-              <tr>
-                <td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>
-                  Loading...
-                </td>
-              </tr>
+              <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>Loading...</div>
             ) : items.length === 0 ? (
-              <tr>
-                <td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>
-                  No visits found.
-                </td>
-              </tr>
+              <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No visits found.</div>
             ) : (
-              items.map((item, idx) => (
-                <tr
-                  key={item.onsiteServiceKey}
-                  style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
-                  onClick={() => { setDetailKey(item.onsiteServiceKey); setDetailOpen(true); }}
-                >
-                  <td style={tdStyle}>
-                    <span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{item.invoiceNum}</span>
-                  </td>
-                  <td style={tdStyle}>{item.clientName}</td>
-                  <td style={tdStyle}>{item.deptName}</td>
-                  <td style={tdStyle}>{item.techName}</td>
-                  <td style={tdStyle}>{item.visitDate ?? '\u2014'}</td>
-                  <td style={tdStyle}><StatusBadge status={item.status} /></td>
-                  <td style={{ ...tdStyle, textAlign: 'center' }}>{item.trayCount}</td>
-                  <td style={{ ...tdStyle, textAlign: 'center' }}>{item.instrumentCount}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>
-                    ${item.totalBilled.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </td>
-                  <td style={{ ...tdStyle, color: 'var(--muted)' }}>{item.submittedDate ?? '\u2014'}</td>
-                </tr>
-              ))
+              items.map(item => {
+                const isSelected = item.onsiteServiceKey === selectedKey;
+                return (
+                  <div
+                    key={item.onsiteServiceKey}
+                    onClick={() => setSelectedKey(item.onsiteServiceKey)}
+                    style={{
+                      padding: '9px 12px',
+                      borderBottom: '1px solid var(--neutral-100)',
+                      cursor: 'pointer',
+                      background: isSelected ? 'var(--primary-light)' : 'var(--card)',
+                      borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
+                      transition: 'background 0.1s',
+                    }}
+                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
+                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>{item.invoiceNum}</div>
+                      <StatusBadge status={item.status} />
+                    </div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{item.clientName}</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+                      <span>{item.deptName}</span>
+                      <span>{item.visitDate ?? '\u2014'}</span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2, fontSize: 10, color: 'var(--muted)' }}>
+                      <span>{item.techName}</span>
+                      <span style={{ fontWeight: 600, color: 'var(--navy)' }}>${item.totalBilled.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                );
+              })
             )}
-          </tbody>
-        </table>
-      </div>
+          </div>
 
-      {/* Table Footer */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '8px 16px',
-        background: 'var(--neutral-50)',
-        borderTop: '1.5px solid var(--border-dk)',
-        flexShrink: 0,
-        fontSize: 11,
-        color: 'var(--muted)',
-      }}>
-        <span style={{ fontWeight: 500 }}>{totalCount.toLocaleString()} records</span>
-        <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-          <button
-            disabled={page <= 1}
-            onClick={() => setPage(p => p - 1)}
-            style={{
-              height: 26, minWidth: 26, padding: '0 6px',
-              border: '1px solid var(--border-dk)', borderRadius: 4,
-              background: 'var(--card)', fontSize: 11, color: 'var(--label)',
-              cursor: page <= 1 ? 'default' : 'pointer',
-              opacity: page <= 1 ? 0.4 : 1, fontFamily: 'inherit',
-            }}
-          >
-            {'\u2039'}
-          </button>
-          {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-            const pg = i + 1;
-            return (
+          {/* Table Footer */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '8px 12px', background: 'var(--neutral-50)',
+            borderTop: '1.5px solid var(--border-dk)', flexShrink: 0,
+            fontSize: 11, color: 'var(--muted)',
+          }}>
+            <span style={{ fontWeight: 500 }}>{totalCount.toLocaleString()} records</span>
+            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
               <button
-                key={pg}
-                onClick={() => setPage(pg)}
+                disabled={page <= 1}
+                onClick={() => setPage(p => p - 1)}
                 style={{
                   height: 26, minWidth: 26, padding: '0 6px',
                   border: '1px solid var(--border-dk)', borderRadius: 4,
-                  background: page === pg ? 'var(--navy)' : 'var(--card)',
-                  color: page === pg ? 'var(--card)' : 'var(--label)',
-                  fontSize: 11, fontWeight: page === pg ? 600 : 400,
-                  cursor: 'pointer', fontFamily: 'inherit',
+                  background: 'var(--card)', fontSize: 11, color: 'var(--label)',
+                  cursor: page <= 1 ? 'default' : 'pointer',
+                  opacity: page <= 1 ? 0.4 : 1, fontFamily: 'inherit',
                 }}
               >
-                {pg}
+                {'\u2039'}
               </button>
-            );
-          })}
-          <button
-            disabled={page >= totalPages}
-            onClick={() => setPage(p => p + 1)}
-            style={{
-              height: 26, minWidth: 26, padding: '0 6px',
-              border: '1px solid var(--border-dk)', borderRadius: 4,
-              background: 'var(--card)', fontSize: 11, color: 'var(--label)',
-              cursor: page >= totalPages ? 'default' : 'pointer',
-              opacity: page >= totalPages ? 0.4 : 1, fontFamily: 'inherit',
-            }}
-          >
-            {'\u203A'}
-          </button>
+              {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                const pg = i + 1;
+                return (
+                  <button
+                    key={pg}
+                    onClick={() => setPage(pg)}
+                    style={{
+                      height: 26, minWidth: 26, padding: '0 6px',
+                      border: '1px solid var(--border-dk)', borderRadius: 4,
+                      background: page === pg ? 'var(--navy)' : 'var(--card)',
+                      color: page === pg ? 'var(--card)' : 'var(--label)',
+                      fontSize: 11, fontWeight: page === pg ? 600 : 400,
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    {pg}
+                  </button>
+                );
+              })}
+              <button
+                disabled={page >= totalPages}
+                onClick={() => setPage(p => p + 1)}
+                style={{
+                  height: 26, minWidth: 26, padding: '0 6px',
+                  border: '1px solid var(--border-dk)', borderRadius: 4,
+                  background: 'var(--card)', fontSize: 11, color: 'var(--label)',
+                  cursor: page >= totalPages ? 'default' : 'pointer',
+                  opacity: page >= totalPages ? 0.4 : 1, fontFamily: 'inherit',
+                }}
+              >
+                {'\u203A'}
+              </button>
+            </div>
+          </div>
         </div>
+
+        {/* Right panel — detail */}
+        {selectedKey && (
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+            <OnsiteServiceDetailDrawer
+              open={true}
+              serviceKey={selectedKey}
+              onClose={() => setSelectedKey(null)}
+              onUpdated={() => { reload(); }}
+            />
+          </div>
+        )}
       </div>
 
       <QuoteModal
@@ -532,12 +461,6 @@ export const OnsiteServicesPage = () => {
         visit={selectedVisit}
         onClose={() => { setCompleteOpen(false); setSelectedVisit(null); }}
         onUpdated={() => { setCompleteOpen(false); setSelectedVisit(null); reload(); }}
-      />
-      <OnsiteServiceDetailDrawer
-        open={detailOpen}
-        serviceKey={detailKey}
-        onClose={() => { setDetailOpen(false); setDetailKey(null); }}
-        onUpdated={() => { reload(); }}
       />
     </div>
   );

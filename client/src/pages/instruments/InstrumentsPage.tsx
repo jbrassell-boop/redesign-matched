@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Select, Table } from 'antd';
+import { Input, Select } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import {
   getInstrumentRepairs,
@@ -8,7 +8,7 @@ import {
   getInstrumentCatalogDetail,
   getInstrumentStats,
 } from '../../api/instruments';
-import { RepairDrawer, CatalogDrawer } from './InstrumentsDetailPane';
+import { RepairDetailPane, CatalogDetailPane } from './InstrumentsDetailPane';
 import { TabBar, StatusBadge } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import type {
@@ -63,20 +63,20 @@ export const InstrumentsPage = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<InstrumentRepairStats | null>(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize] = useState(50);
 
   // Repairs data
   const [repairs, setRepairs] = useState<InstrumentRepairListItem[]>([]);
   const [repairTotal, setRepairTotal] = useState(0);
   const [repairDetail, setRepairDetail] = useState<InstrumentRepairDetail | null>(null);
-  const [repairDrawerOpen, setRepairDrawerOpen] = useState(false);
+  const [selectedRepairKey, setSelectedRepairKey] = useState<number | null>(null);
   const [repairDetailLoading, setRepairDetailLoading] = useState(false);
 
   // Catalog data
   const [catalogItems, setCatalogItems] = useState<InstrumentCatalogItem[]>([]);
   const [catalogTotal, setCatalogTotal] = useState(0);
   const [catalogDetail, setCatalogDetail] = useState<InstrumentCatalogDetail | null>(null);
-  const [catalogDrawerOpen, setCatalogDrawerOpen] = useState(false);
+  const [selectedCatalogKey, setSelectedCatalogKey] = useState<number | null>(null);
   const [catalogDetailLoading, setCatalogDetailLoading] = useState(false);
 
   useEffect(() => {
@@ -125,6 +125,10 @@ export const InstrumentsPage = () => {
     setTypeFilter('');
     setActiveFilter('');
     setPage(1);
+    setSelectedRepairKey(null);
+    setRepairDetail(null);
+    setSelectedCatalogKey(null);
+    setCatalogDetail(null);
   };
 
   const handleChipClick = (filter?: string) => {
@@ -137,8 +141,9 @@ export const InstrumentsPage = () => {
   };
 
   const handleViewRepair = async (key: number) => {
+    setSelectedRepairKey(key);
     setRepairDetailLoading(true);
-    setRepairDrawerOpen(true);
+    setRepairDetail(null);
     try {
       const d = await getInstrumentRepairDetail(key);
       setRepairDetail(d);
@@ -148,8 +153,9 @@ export const InstrumentsPage = () => {
   };
 
   const handleViewCatalogItem = async (key: number) => {
+    setSelectedCatalogKey(key);
     setCatalogDetailLoading(true);
-    setCatalogDrawerOpen(true);
+    setCatalogDetail(null);
     try {
       const d = await getInstrumentCatalogDetail(key);
       setCatalogDetail(d);
@@ -173,150 +179,98 @@ export const InstrumentsPage = () => {
     }
   };
 
-  const repairColumns = [
-    {
-      title: 'Order #',
-      dataIndex: 'orderNumber',
-      key: 'orderNumber',
-      width: 100,
-      render: (v: string) => <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{v}</span>,
-    },
-    {
-      title: 'Date',
-      dataIndex: 'dateReceived',
-      key: 'dateReceived',
-      width: 90,
-      render: (v: string | null) => <span style={{ color: 'var(--muted)' }}>{fmtDate(v)}</span>,
-    },
-    { title: 'Client', dataIndex: 'clientName', key: 'clientName' },
-    { title: 'Department', dataIndex: 'departmentName', key: 'departmentName' },
-    {
-      title: 'Items',
-      dataIndex: 'itemCount',
-      key: 'itemCount',
-      width: 60,
-      align: 'center' as const,
-    },
-    {
-      title: 'Value',
-      dataIndex: 'totalValue',
-      key: 'totalValue',
-      width: 100,
-      align: 'right' as const,
-      render: (v: number) => <span style={{ fontWeight: 600, color: 'var(--navy)' }}>{fmt$(v)}</span>,
-      sorter: (a: InstrumentRepairListItem, b: InstrumentRepairListItem) => a.totalValue - b.totalValue,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      width: 110,
-      render: (v: string) => <StatusBadge status={v} />,
-    },
-    {
-      title: '',
-      key: 'actions',
-      width: 70,
-      render: (_: unknown, r: InstrumentRepairListItem) => (
-        <button
-          onClick={() => handleViewRepair(r.repairKey)}
-          style={{
-            padding: '3px 10px',
-            fontSize: 11,
-            fontWeight: 600,
-            border: '1px solid var(--border)',
-            borderRadius: 4,
-            background: 'var(--card)',
-            color: 'var(--primary)',
-            cursor: 'pointer',
-          }}
-        >
-          View
-        </button>
-      ),
-    },
-  ];
+  // Whether a detail pane is open for repairs/quotes tab
+  const repairDetailOpen = (activeTab === 'repairs' || activeTab === 'quotes') && selectedRepairKey !== null;
+  const catalogDetailOpen = activeTab === 'catalog' && selectedCatalogKey !== null;
+  const anyDetailOpen = repairDetailOpen || catalogDetailOpen;
 
-  const catalogColumns = [
-    {
-      title: 'Description',
-      dataIndex: 'itemDescription',
-      key: 'itemDescription',
-      render: (v: string) => <span style={{ fontWeight: 600 }}>{v}</span>,
-    },
-    {
-      title: 'Type',
-      dataIndex: 'rigidOrFlexible',
-      key: 'rigidOrFlexible',
-      width: 80,
-      render: (v: string | null) => v === 'R' ? 'Rigid' : v === 'F' ? 'Flexible' : v || '\u2014',
-    },
-    {
-      title: 'P/L',
-      dataIndex: 'partOrLabor',
-      key: 'partOrLabor',
-      width: 60,
-      render: (v: string | null) => v === 'P' ? 'Part' : v === 'L' ? 'Labor' : v || '\u2014',
-    },
-    { title: 'Product ID', dataIndex: 'productId', key: 'productId', width: 90, render: (v: string | null) => v || '\u2014' },
-    { title: 'TSI Code', dataIndex: 'tsiCode', key: 'tsiCode', width: 90, render: (v: string | null) => v || '\u2014' },
-    {
-      title: 'Avg Material',
-      dataIndex: 'avgCostMaterial',
-      key: 'avgCostMaterial',
-      width: 100,
-      align: 'right' as const,
-      render: (v: number) => <span style={{ color: 'var(--muted)' }}>{fmt$(v)}</span>,
-    },
-    {
-      title: 'Avg Labor',
-      dataIndex: 'avgCostLabor',
-      key: 'avgCostLabor',
-      width: 90,
-      align: 'right' as const,
-      render: (v: number) => <span style={{ color: 'var(--muted)' }}>{fmt$(v)}</span>,
-    },
-    {
-      title: 'Usage',
-      dataIndex: 'usageCount',
-      key: 'usageCount',
-      width: 70,
-      align: 'right' as const,
-      sorter: (a: InstrumentCatalogItem, b: InstrumentCatalogItem) => a.usageCount - b.usageCount,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'isActive',
-      key: 'isActive',
-      width: 80,
-      render: (v: boolean) => <StatusBadge status={v ? 'Active' : 'Inactive'} />,
-    },
-    {
-      title: '',
-      key: 'actions',
-      width: 70,
-      render: (_: unknown, r: InstrumentCatalogItem) => (
-        <button
-          onClick={() => handleViewCatalogItem(r.repairItemKey)}
-          style={{
-            padding: '3px 10px',
-            fontSize: 11,
-            fontWeight: 600,
-            border: '1px solid var(--border)',
-            borderRadius: 4,
-            background: 'var(--card)',
-            color: 'var(--primary)',
-            cursor: 'pointer',
-          }}
-        >
-          View
-        </button>
-      ),
-    },
-  ];
+  /* ── Repair / Quote row card ──────────────────────────────── */
+  const renderRepairRow = (item: InstrumentRepairListItem) => {
+    const isSelected = item.repairKey === selectedRepairKey;
+    return (
+      <div
+        key={item.repairKey}
+        onClick={() => handleViewRepair(item.repairKey)}
+        style={{
+          padding: '9px 12px',
+          borderBottom: '1px solid var(--neutral-100)',
+          cursor: 'pointer',
+          background: isSelected ? 'var(--primary-light)' : 'var(--card)',
+          borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
+          transition: 'background 0.1s',
+        }}
+        onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
+        onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>{item.orderNumber}</div>
+          <StatusBadge status={item.status} />
+        </div>
+        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{item.clientName}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+          <span>{item.departmentName}</span>
+          <span style={{ fontWeight: 600, color: 'var(--navy)' }}>{fmt$(item.totalValue)}</span>
+        </div>
+      </div>
+    );
+  };
+
+  /* ── Catalog row card ─────────────────────────────────────── */
+  const renderCatalogRow = (item: InstrumentCatalogItem) => {
+    const isSelected = item.repairItemKey === selectedCatalogKey;
+    return (
+      <div
+        key={item.repairItemKey}
+        onClick={() => handleViewCatalogItem(item.repairItemKey)}
+        style={{
+          padding: '9px 12px',
+          borderBottom: '1px solid var(--neutral-100)',
+          cursor: 'pointer',
+          background: isSelected ? 'var(--primary-light)' : 'var(--card)',
+          borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
+          transition: 'background 0.1s',
+        }}
+        onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
+        onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)', flex: 1, marginRight: 8 }}>{item.itemDescription}</div>
+          <StatusBadge status={item.isActive ? 'Active' : 'Inactive'} />
+        </div>
+        <div style={{ display: 'flex', gap: 12, marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+          <span>{item.rigidOrFlexible === 'R' ? 'Rigid' : item.rigidOrFlexible === 'F' ? 'Flexible' : item.rigidOrFlexible || '\u2014'}</span>
+          <span>{item.tsiCode || '\u2014'}</span>
+          <span style={{ marginLeft: 'auto' }}>Usage: {item.usageCount}</span>
+        </div>
+      </div>
+    );
+  };
+
+  /* ── Pagination ───────────────────────────────────────────── */
+  const totalItems = (activeTab === 'repairs' || activeTab === 'quotes') ? repairTotal : catalogTotal;
+  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+  const paginationBar = (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
+      <span style={{ fontSize: 10, color: 'var(--muted)' }}>
+        {(activeTab === 'repairs' || activeTab === 'quotes') ? repairs.length : catalogItems.length} of {totalItems}
+      </span>
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', gap: 3 }}>
+          <PgBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{'\u2039'}</PgBtn>
+          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+            const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+            const p = start + i;
+            return p <= totalPages ? <PgBtn key={p} active={p === page} onClick={() => setPage(p)}>{p}</PgBtn> : null;
+          })}
+          <PgBtn disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>{'\u203A'}</PgBtn>
+        </div>
+      )}
+    </div>
+  );
 
   return (
-    <div style={{ height: 'calc(100vh - 64px)', overflow: 'auto', background: 'var(--bg)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
       {/* Page tabs */}
       <TabBar
         tabs={TABS.map(t =>
@@ -328,258 +282,169 @@ export const InstrumentsPage = () => {
         onChange={handleTabChange}
       />
 
-      <div style={{ padding: '16px 20px' }}>
-        {/* Stat strip — only for repairs/quotes tab */}
-        {(activeTab === 'repairs' || activeTab === 'quotes') && (
-          <div style={{
-            display: 'flex',
-            marginBottom: 20,
-            borderRadius: 10,
-            border: '1px solid var(--border)',
-            overflow: 'hidden',
-            background: 'var(--card)',
-          }}>
-            {STAT_CHIPS.map((chip, i) => (
-              <div
-                key={chip.key}
-                onClick={() => chip.filter !== undefined ? handleChipClick(chip.filter) : handleChipClick()}
-                style={{
-                  flex: 1,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '10px 12px',
-                  cursor: chip.filter !== undefined ? 'pointer' : 'default',
-                  borderRight: i < STAT_CHIPS.length - 1 ? '1px solid var(--border)' : undefined,
-                  background: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? 'var(--primary-light)' : undefined,
-                  outline: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? '2.5px solid var(--navy)' : undefined,
-                  outlineOffset: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? -2 : undefined,
-                  transition: 'background 0.12s',
-                }}
-              >
-                <div style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: 6,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: chip.iconBg,
-                  color: chip.iconColor,
-                  fontSize: 13,
-                  fontWeight: 700,
-                  flexShrink: 0,
-                }}>
-                  {chip.icon}
-                </div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: chip.valueColor, lineHeight: 1.2 }}>
-                    {getStatValue(chip.key)}
-                  </div>
-                  <div style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{chip.label}</div>
-                </div>
+      {/* Stat strip — only for repairs/quotes tab */}
+      {(activeTab === 'repairs' || activeTab === 'quotes') && (
+        <div style={{
+          display: 'flex',
+          borderBottom: '1px solid var(--border)',
+          background: 'var(--card)',
+          flexShrink: 0,
+          overflowX: 'auto',
+        }}>
+          {STAT_CHIPS.map((chip, i) => (
+            <div
+              key={chip.key}
+              onClick={() => chip.filter !== undefined ? handleChipClick(chip.filter) : handleChipClick()}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 12px',
+                cursor: chip.filter !== undefined ? 'pointer' : 'default',
+                borderRight: i < STAT_CHIPS.length - 1 ? '1px solid var(--border)' : undefined,
+                background: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? 'var(--primary-light)' : undefined,
+                outline: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? '2.5px solid var(--navy)' : undefined,
+                outlineOffset: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? -2 : undefined,
+                transition: 'background 0.12s',
+                minWidth: 100,
+              }}
+            >
+              <div style={{
+                width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: chip.iconBg, color: chip.iconColor, fontSize: 13, fontWeight: 700, flexShrink: 0,
+              }}>
+                {chip.icon}
               </div>
-            ))}
-          </div>
-        )}
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: chip.valueColor, lineHeight: 1.2 }}>{getStatValue(chip.key)}</div>
+                <div style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{chip.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
-        {/* Toolbar */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-          <Input
-            prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
-            placeholder={activeTab === 'catalog' ? 'Search instruments...' : 'Search order, client, dept...'}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{ width: 240, height: 32, fontSize: 12 }}
-            allowClear
-          />
-          {(activeTab === 'repairs' || activeTab === 'quotes') && (
-            <Select
-              value={statusFilter}
-              onChange={(v) => { setStatusFilter(v); setPage(1); }}
-              style={{ width: 150 }}
-              options={[
-                { value: '', label: 'All Statuses' },
-                { value: 'Received', label: 'Received' },
-                { value: 'In Progress', label: 'In Progress' },
-                { value: 'Outsourced', label: 'Outsourced' },
-                { value: 'On Hold', label: 'On Hold' },
-                { value: 'Complete', label: 'Complete' },
-                { value: 'Invoiced', label: 'Invoiced' },
-              ]}
-            />
-          )}
-          {activeTab === 'catalog' && (
-            <>
-              <Select
-                value={typeFilter}
-                onChange={(v) => { setTypeFilter(v); setPage(1); }}
-                style={{ width: 130 }}
-                options={[
-                  { value: '', label: 'All Types' },
-                  { value: 'R', label: 'Rigid' },
-                  { value: 'F', label: 'Flexible' },
-                ]}
+      {/* Split pane */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+        {/* Left panel — list */}
+        <div style={{
+          width: anyDetailOpen ? 340 : '100%',
+          minWidth: anyDetailOpen ? 340 : undefined,
+          borderRight: anyDetailOpen ? '1px solid var(--neutral-200)' : undefined,
+          display: 'flex', flexDirection: 'column',
+          background: 'var(--card)',
+          transition: 'width 0.2s ease',
+          overflow: 'hidden',
+        }}>
+          {/* Toolbar */}
+          <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+              <Input
+                prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+                placeholder={activeTab === 'catalog' ? 'Search instruments...' : 'Search order, client, dept...'}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{ height: 28, fontSize: 11, flex: 1, minWidth: 140 }}
+                allowClear
               />
-              <Select
-                value={activeFilter}
-                onChange={(v) => { setActiveFilter(v); setPage(1); }}
-                style={{ width: 130 }}
-                options={[
-                  { value: '', label: 'All' },
-                  { value: 'active', label: 'Active' },
-                  { value: 'inactive', label: 'Inactive' },
-                ]}
-              />
-            </>
-          )}
+              {(activeTab === 'repairs' || activeTab === 'quotes') && !anyDetailOpen && (
+                <Select
+                  value={statusFilter}
+                  onChange={(v) => { setStatusFilter(v); setPage(1); }}
+                  style={{ width: 140 }}
+                  size="small"
+                  options={[
+                    { value: '', label: 'All Statuses' },
+                    { value: 'Received', label: 'Received' },
+                    { value: 'In Progress', label: 'In Progress' },
+                    { value: 'Outsourced', label: 'Outsourced' },
+                    { value: 'On Hold', label: 'On Hold' },
+                    { value: 'Complete', label: 'Complete' },
+                    { value: 'Invoiced', label: 'Invoiced' },
+                  ]}
+                />
+              )}
+              {activeTab === 'catalog' && !anyDetailOpen && (
+                <>
+                  <Select
+                    value={typeFilter}
+                    onChange={(v) => { setTypeFilter(v); setPage(1); }}
+                    style={{ width: 110 }}
+                    size="small"
+                    options={[
+                      { value: '', label: 'All Types' },
+                      { value: 'R', label: 'Rigid' },
+                      { value: 'F', label: 'Flexible' },
+                    ]}
+                  />
+                  <Select
+                    value={activeFilter}
+                    onChange={(v) => { setActiveFilter(v); setPage(1); }}
+                    style={{ width: 100 }}
+                    size="small"
+                    options={[
+                      { value: '', label: 'All' },
+                      { value: 'active', label: 'Active' },
+                      { value: 'inactive', label: 'Inactive' },
+                    ]}
+                  />
+                </>
+              )}
+            </div>
+            {/* Count badge */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' }}>
+                {totalItems.toLocaleString()} records
+              </span>
+            </div>
+          </div>
+
+          {/* List rows */}
+          <div style={{ flex: 1, overflow: 'auto' }}>
+            {loading && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>}
+            {!loading && (activeTab === 'repairs' || activeTab === 'quotes') && repairs.length === 0 && (
+              <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No records found</div>
+            )}
+            {!loading && activeTab === 'catalog' && catalogItems.length === 0 && (
+              <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No records found</div>
+            )}
+            {(activeTab === 'repairs' || activeTab === 'quotes') && repairs.map(renderRepairRow)}
+            {activeTab === 'catalog' && catalogItems.map(renderCatalogRow)}
+          </div>
+
+          {paginationBar}
         </div>
 
-        {/* Quotes table — shows repair orders in quote-centric view */}
-        {activeTab === 'quotes' && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 16px rgba(var(--primary-rgb), 0.06)' }}>
-            <Table
-              dataSource={repairs}
-              columns={[
-                {
-                  title: 'Quote #',
-                  dataIndex: 'orderNumber',
-                  key: 'orderNumber',
-                  width: 120,
-                  render: (v: string) => <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{v}</span>,
-                },
-                { title: 'Client', dataIndex: 'clientName', key: 'clientName', width: 180 },
-                { title: 'Department', dataIndex: 'departmentName', key: 'departmentName' },
-                {
-                  title: 'Date',
-                  dataIndex: 'dateReceived',
-                  key: 'dateReceived',
-                  width: 90,
-                  render: (v: string | null) => <span style={{ color: 'var(--muted)' }}>{fmtDate(v)}</span>,
-                },
-                {
-                  title: 'Items',
-                  dataIndex: 'itemCount',
-                  key: 'itemCount',
-                  width: 55,
-                  align: 'center' as const,
-                },
-                {
-                  title: 'Total',
-                  dataIndex: 'totalValue',
-                  key: 'totalValue',
-                  width: 100,
-                  align: 'right' as const,
-                  render: (v: number) => <span style={{ fontWeight: 600, color: 'var(--navy)' }}>{fmt$(v)}</span>,
-                  sorter: (a: InstrumentRepairListItem, b: InstrumentRepairListItem) => a.totalValue - b.totalValue,
-                },
-                {
-                  title: 'Status',
-                  dataIndex: 'status',
-                  key: 'status',
-                  width: 120,
-                  render: (v: string) => <StatusBadge status={v} />,
-                },
-                {
-                  title: '',
-                  key: 'actions',
-                  width: 70,
-                  render: (_: unknown, r: InstrumentRepairListItem) => (
-                    <button
-                      onClick={() => handleViewRepair(r.repairKey)}
-                      style={{
-                        padding: '3px 10px',
-                        fontSize: 11,
-                        fontWeight: 600,
-                        border: '1px solid var(--border)',
-                        borderRadius: 4,
-                        background: 'var(--card)',
-                        color: 'var(--primary)',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      View
-                    </button>
-                  ),
-                },
-              ]}
-              rowKey="repairKey"
-              loading={loading}
-              size="small"
-              pagination={{
-                current: page,
-                pageSize,
-                total: repairTotal,
-                showSizeChanger: true,
-                pageSizeOptions: ['25', '50', '100'],
-                onChange: (p, ps) => { setPage(p); setPageSize(ps); },
-                showTotal: (total, range) => `Showing ${range[0]}\u2013${range[1]} of ${total.toLocaleString()}`,
-              }}
-              style={{ fontSize: 12 }}
+        {/* Right panel — detail */}
+        {repairDetailOpen && (
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+            <RepairDetailPane
+              detail={repairDetail}
+              loading={repairDetailLoading}
+              onClose={() => { setSelectedRepairKey(null); setRepairDetail(null); }}
             />
           </div>
         )}
-
-        {/* Repairs table */}
-        {activeTab === 'repairs' && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 16px rgba(var(--primary-rgb), 0.06)' }}>
-            <Table
-              dataSource={repairs}
-              columns={repairColumns}
-              rowKey="repairKey"
-              loading={loading}
-              size="small"
-              pagination={{
-                current: page,
-                pageSize,
-                total: repairTotal,
-                showSizeChanger: true,
-                pageSizeOptions: ['25', '50', '100'],
-                onChange: (p, ps) => { setPage(p); setPageSize(ps); },
-                showTotal: (total, range) => `Showing ${range[0]}\u2013${range[1]} of ${total.toLocaleString()}`,
-              }}
-              style={{ fontSize: 12 }}
-            />
-          </div>
-        )}
-
-        {/* Catalog table */}
-        {activeTab === 'catalog' && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 16px rgba(var(--primary-rgb), 0.06)' }}>
-            <Table
-              dataSource={catalogItems}
-              columns={catalogColumns}
-              rowKey="repairItemKey"
-              loading={loading}
-              size="small"
-              pagination={{
-                current: page,
-                pageSize,
-                total: catalogTotal,
-                showSizeChanger: true,
-                pageSizeOptions: ['25', '50', '100'],
-                onChange: (p, ps) => { setPage(p); setPageSize(ps); },
-                showTotal: (total, range) => `Showing ${range[0]}\u2013${range[1]} of ${total.toLocaleString()}`,
-              }}
-              style={{ fontSize: 12 }}
+        {catalogDetailOpen && (
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+            <CatalogDetailPane
+              detail={catalogDetail}
+              loading={catalogDetailLoading}
+              onClose={() => { setSelectedCatalogKey(null); setCatalogDetail(null); }}
             />
           </div>
         )}
       </div>
-
-      {/* Drawers */}
-      <RepairDrawer
-        detail={repairDetail}
-        loading={repairDetailLoading}
-        open={repairDrawerOpen}
-        onClose={() => { setRepairDrawerOpen(false); setRepairDetail(null); }}
-      />
-      <CatalogDrawer
-        detail={catalogDetail}
-        loading={catalogDetailLoading}
-        open={catalogDrawerOpen}
-        onClose={() => { setCatalogDrawerOpen(false); setCatalogDetail(null); }}
-      />
     </div>
   );
 };
+
+/* ── Shared ───────────────────────────────────────────────── */
+const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (
+  <button disabled={disabled} onClick={onClick} style={{
+    height: 22, minWidth: 22, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 10, fontFamily: 'inherit',
+    cursor: disabled ? 'default' : 'pointer', fontWeight: active ? 600 : 400,
+    background: active ? 'var(--navy)' : 'var(--card)', color: active ? 'var(--card)' : 'var(--muted)', opacity: disabled ? 0.4 : 1,
+  }}>{children}</button>
+);

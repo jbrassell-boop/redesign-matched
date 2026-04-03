@@ -1,4 +1,4 @@
-import { Drawer, Spin, Table } from 'antd';
+import { Spin, Table } from 'antd';
 import type { InstrumentRepairDetail, InstrumentCatalogDetail } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader } from '../../components/shared';
 
@@ -11,14 +11,33 @@ const fmtDate = (d: string | null) => {
   return isNaN(dt.getTime()) ? '\u2014' : dt.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 };
 
-interface RepairDrawerProps {
+/* ── Shared inline header ──────────────────────────────────── */
+const InlineHeader = ({ title, badge, onClose }: { title: React.ReactNode; badge?: React.ReactNode; onClose: () => void }) => (
+  <div style={{
+    background: 'var(--navy)', padding: '12px 16px',
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+  }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <span style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{title}</span>
+      {badge}
+    </div>
+    <button
+      onClick={onClose}
+      style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: '2px 6px' }}
+    >
+      &times;
+    </button>
+  </div>
+);
+
+/* ── Repair Detail Pane (inline) ───────────────────────────── */
+interface RepairPaneProps {
   detail: InstrumentRepairDetail | null;
   loading: boolean;
-  open: boolean;
   onClose: () => void;
 }
 
-export const RepairDrawer = ({ detail, loading, open, onClose }: RepairDrawerProps) => {
+export const RepairDetailPane = ({ detail, loading, onClose }: RepairPaneProps) => {
   const itemColumns = [
     { title: 'Item', dataIndex: 'itemDescription', key: 'itemDescription' },
     {
@@ -44,154 +63,141 @@ export const RepairDrawer = ({ detail, loading, open, onClose }: RepairDrawerPro
   ];
 
   return (
-    <Drawer
-      title={
-        detail ? (
-          <DetailHeader
-            title={`Order ${detail.orderNumber}`}
-            badges={<StatusBadge status={detail.status} />}
-          />
-        ) : 'Repair Detail'
-      }
-      placement="right"
-      width={600}
-      open={open}
-      onClose={onClose}
-      styles={{
-        header: { background: 'var(--primary-dark)', borderBottom: 'none' },
-        body: { padding: '16px 20px' },
-      }}
-    >
-      {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
-      ) : !detail ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No repair selected</div>
-      ) : (
-        <>
-          <div style={{ display: 'flex', gap: 16, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--neutral-200)' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Items</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>{detail.items.length}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Days Open</div>
-              <div style={{
-                fontSize: 20,
-                fontWeight: 800,
-                color: detail.daysOpen > 14 ? 'var(--danger)' : detail.daysOpen > 7 ? 'var(--amber)' : 'var(--muted)',
-              }}>
-                {detail.daysOpen}d
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <InlineHeader
+        title={detail ? `Order ${detail.orderNumber}` : 'Repair Detail'}
+        badge={detail ? <StatusBadge status={detail.status} /> : undefined}
+        onClose={onClose}
+      />
+      <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px' }}>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+        ) : !detail ? (
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No repair selected</div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--neutral-200)' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Items</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>{detail.items.length}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Days Open</div>
+                <div style={{
+                  fontSize: 20,
+                  fontWeight: 800,
+                  color: detail.daysOpen > 14 ? 'var(--danger)' : detail.daysOpen > 7 ? 'var(--amber)' : 'var(--muted)',
+                }}>
+                  {detail.daysOpen}d
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Total Value</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>
+                  {fmt$(detail.items.reduce((s, i) => s + i.repairPrice, 0))}
+                </div>
               </div>
             </div>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Total Value</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>
-                {fmt$(detail.items.reduce((s, i) => s + i.repairPrice, 0))}
+
+            <FormGrid cols={2}>
+              <Field label="Client" value={detail.clientName} />
+              <Field label="Department" value={detail.departmentName} />
+              <Field label="PO #" value={detail.purchaseOrder} />
+              <Field label="Technician" value={detail.technicianName} />
+              <Field label="Received" value={fmtDate(detail.dateReceived)} />
+              <Field label="Due" value={fmtDate(detail.dateDue)} />
+              <Field label="Completed" value={fmtDate(detail.dateCompleted)} />
+            </FormGrid>
+
+            {detail.notes && (
+              <div style={{ marginTop: 8 }}>
+                <Field label="Notes" value={detail.notes} />
               </div>
-            </div>
-          </div>
+            )}
 
-          <FormGrid cols={2}>
-            <Field label="Client" value={detail.clientName} />
-            <Field label="Department" value={detail.departmentName} />
-            <Field label="PO #" value={detail.purchaseOrder} />
-            <Field label="Technician" value={detail.technicianName} />
-            <Field label="Received" value={fmtDate(detail.dateReceived)} />
-            <Field label="Due" value={fmtDate(detail.dateDue)} />
-            <Field label="Completed" value={fmtDate(detail.dateCompleted)} />
-          </FormGrid>
-
-          {detail.notes && (
-            <div style={{ marginTop: 8 }}>
-              <Field label="Notes" value={detail.notes} />
-            </div>
-          )}
-
-          {detail.items.length > 0 && (
-            <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Line Items ({detail.items.length})
+            {detail.items.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Line Items ({detail.items.length})
+                </div>
+                <Table
+                  dataSource={detail.items}
+                  columns={itemColumns}
+                  rowKey="tranKey"
+                  size="small"
+                  pagination={false}
+                  style={{ fontSize: 12 }}
+                />
               </div>
-              <Table
-                dataSource={detail.items}
-                columns={itemColumns}
-                rowKey="tranKey"
-                size="small"
-                pagination={false}
-                style={{ fontSize: 12 }}
-              />
-            </div>
-          )}
-        </>
-      )}
-    </Drawer>
+            )}
+          </>
+        )}
+      </div>
+    </div>
   );
 };
 
-interface CatalogDrawerProps {
+/* ── Catalog Detail Pane (inline) ──────────────────────────── */
+interface CatalogPaneProps {
   detail: InstrumentCatalogDetail | null;
   loading: boolean;
-  open: boolean;
   onClose: () => void;
 }
 
-export const CatalogDrawer = ({ detail, loading, open, onClose }: CatalogDrawerProps) => (
-  <Drawer
-    title={
-      detail ? (
-        <DetailHeader
-          title={detail.itemDescription}
-          badges={<StatusBadge status={detail.isActive ? 'Active' : 'Inactive'} />}
-        />
-      ) : 'Instrument Detail'
-    }
-    placement="right"
-    width={600}
-    open={open}
-    onClose={onClose}
-    styles={{
-      header: { background: 'var(--primary-dark)', borderBottom: 'none' },
-      body: { padding: '16px 20px' },
-    }}
-  >
-    {loading ? (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
-    ) : !detail ? (
-      <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No instrument selected</div>
-    ) : (
-      <>
-        <FormGrid cols={2}>
-          <Field label="Description" value={detail.itemDescription} />
-          <Field label="TSI Code" value={detail.tsiCode} />
-          <Field label="Type" value={detail.rigidOrFlexible === 'R' ? 'Rigid' : detail.rigidOrFlexible === 'F' ? 'Flexible' : detail.rigidOrFlexible} />
-          <Field label="Part/Labor" value={detail.partOrLabor === 'P' ? 'Part' : detail.partOrLabor === 'L' ? 'Labor' : detail.partOrLabor} />
-          <Field label="Product ID" value={detail.productId} />
-          <Field label="Problem ID" value={detail.problemId} />
-          <Field label="HPG Product ID" value={detail.productIdHPG} />
-          <Field label="Premier Product ID" value={detail.productIdPremier} />
-          <Field label="Diameter Type" value={detail.diameterType} />
-          <Field label="Major Repair" value={detail.isMajorRepair ? 'Yes' : 'No'} />
-        </FormGrid>
+export const CatalogDetailPane = ({ detail, loading, onClose }: CatalogPaneProps) => (
+  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <InlineHeader
+      title={detail ? detail.itemDescription : 'Instrument Detail'}
+      badge={detail ? <StatusBadge status={detail.isActive ? 'Active' : 'Inactive'} /> : undefined}
+      onClose={onClose}
+    />
+    <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px' }}>
+      {loading ? (
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+      ) : !detail ? (
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No instrument selected</div>
+      ) : (
+        <>
+          <FormGrid cols={2}>
+            <Field label="Description" value={detail.itemDescription} />
+            <Field label="TSI Code" value={detail.tsiCode} />
+            <Field label="Type" value={detail.rigidOrFlexible === 'R' ? 'Rigid' : detail.rigidOrFlexible === 'F' ? 'Flexible' : detail.rigidOrFlexible} />
+            <Field label="Part/Labor" value={detail.partOrLabor === 'P' ? 'Part' : detail.partOrLabor === 'L' ? 'Labor' : detail.partOrLabor} />
+            <Field label="Product ID" value={detail.productId} />
+            <Field label="Problem ID" value={detail.problemId} />
+            <Field label="HPG Product ID" value={detail.productIdHPG} />
+            <Field label="Premier Product ID" value={detail.productIdPremier} />
+            <Field label="Diameter Type" value={detail.diameterType} />
+            <Field label="Major Repair" value={detail.isMajorRepair ? 'Yes' : 'No'} />
+          </FormGrid>
 
-        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginTop: 16, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Costs & Time
-        </div>
-        <FormGrid cols={3}>
-          {[
-            { label: 'Avg Material', value: fmt$(detail.avgCostMaterial), color: 'var(--navy)' },
-            { label: 'Avg Labor', value: fmt$(detail.avgCostLabor), color: 'var(--navy)' },
-            { label: 'Unit Cost', value: detail.unitCost != null ? fmt$(detail.unitCost) : '\u2014', color: 'var(--navy)' },
-            { label: 'TAT', value: detail.turnAroundTime + 'd', color: 'var(--amber)' },
-            { label: 'Tech 1 Hrs', value: String(detail.hoursTech1), color: 'var(--muted)' },
-            { label: 'Tech 2 Hrs', value: String(detail.hoursTech2), color: 'var(--muted)' },
-          ].map((card) => (
-            <div key={card.label} style={{ background: 'var(--neutral-50)', border: '1px solid var(--border)', borderRadius: 6, padding: 12, textAlign: 'center' }}>
-              <div style={{ fontSize: 18, fontWeight: 800, color: card.color }}>{card.value}</div>
-              <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 2 }}>{card.label}</div>
-            </div>
-          ))}
-        </FormGrid>
-      </>
-    )}
-  </Drawer>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginTop: 16, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Costs &amp; Time
+          </div>
+          <FormGrid cols={3}>
+            {[
+              { label: 'Avg Material', value: fmt$(detail.avgCostMaterial), color: 'var(--navy)' },
+              { label: 'Avg Labor', value: fmt$(detail.avgCostLabor), color: 'var(--navy)' },
+              { label: 'Unit Cost', value: detail.unitCost != null ? fmt$(detail.unitCost) : '\u2014', color: 'var(--navy)' },
+              { label: 'TAT', value: detail.turnAroundTime + 'd', color: 'var(--amber)' },
+              { label: 'Tech 1 Hrs', value: String(detail.hoursTech1), color: 'var(--muted)' },
+              { label: 'Tech 2 Hrs', value: String(detail.hoursTech2), color: 'var(--muted)' },
+            ].map((card) => (
+              <div key={card.label} style={{ background: 'var(--neutral-50)', border: '1px solid var(--border)', borderRadius: 6, padding: 12, textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: card.color }}>{card.value}</div>
+                <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 2 }}>{card.label}</div>
+              </div>
+            ))}
+          </FormGrid>
+        </>
+      )}
+    </div>
+  </div>
 );
+
+/* ── Legacy Drawer exports (kept for backwards compat) ──────── */
+// These are no longer used but kept to avoid breaking any other imports
+export { RepairDetailPane as RepairDrawer, CatalogDetailPane as CatalogDrawer };
+
+// Re-export DetailHeader so any callers that imported it from here still work
+export { DetailHeader };

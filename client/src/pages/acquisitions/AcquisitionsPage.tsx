@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Spin, Drawer, message } from 'antd';
+import { Input, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { getAcquisitions, getAcquisitionsSold, getAcquisitionStats, getAcquisitionDetail } from '../../api/acquisitions';
 import { DetailHeader, TabBar, Field, FormGrid, StatusBadge } from '../../components/shared';
@@ -45,6 +45,72 @@ const TABS: TabDef[] = [
   { key: 'sold', label: 'Sold' },
 ];
 
+/* ── Acquisition Detail Panel (inline) ───────────────────────── */
+const AcquisitionDetailPanel = ({ detail, loading, onClose }: { detail: AcquisitionDetail | null; loading: boolean; onClose: () => void }) => {
+  const fmt$ = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2 });
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Header */}
+      <div style={{
+        background: 'var(--navy)', padding: '12px 16px',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>
+            {detail?.serial || 'Acquisition Detail'}
+          </span>
+          {detail && <StatusBadge status={detail.isSold ? 'Sold' : 'In-House'} />}
+        </div>
+        <button
+          onClick={onClose}
+          style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: '2px 6px' }}
+        >
+          &times;
+        </button>
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px' }}>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+        ) : !detail ? (
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>No detail available</div>
+        ) : (
+          <>
+            {/* Cost banner */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 16px', borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--navy)' }}>{fmt$(detail.cost)}</div>
+                <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Acquisition Cost</div>
+              </div>
+            </div>
+            <FormGrid cols={2}>
+              <Field label="Serial #" value={detail.serial} />
+              <Field label="Type" value={detail.flexOrRigid || '\u2014'} />
+              <Field label="Scope Model" value={detail.scopeType} />
+              <Field label="Manufacturer" value={detail.manufacturer || '\u2014'} />
+              <Field label="Client" value={detail.client || '\u2014'} />
+              <Field label="Department" value={detail.dept || '\u2014'} />
+              <Field label="Supplier" value={detail.supplier || '\u2014'} />
+              <Field label="PO Number" value={detail.poNumber || '\u2014'} />
+              <Field label="PO Date" value={detail.poDate || '\u2014'} />
+              <Field label="Date Received" value={detail.dateReceived || '\u2014'} />
+            </FormGrid>
+            {detail.comment && (
+              <div style={{ marginTop: 16 }}>
+                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Comments</div>
+                <div style={{ fontSize: 12, color: 'var(--text)', background: 'var(--neutral-50)', borderRadius: 6, padding: '10px 12px', border: '1px solid var(--border)' }}>
+                  {detail.comment}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 /* ═════════════════════════════════════════════════════════════ */
 /*  ACQUISITIONS PAGE                                           */
 /* ═════════════════════════════════════════════════════════════ */
@@ -75,22 +141,28 @@ export const AcquisitionsPage = () => {
 
   const pageSize = 50;
 
-  // Detail drawer state
-  const [detailOpen, setDetailOpen] = useState(false);
+  // Inline detail state
+  const [selectedKey, setSelectedKey] = useState<number | null>(null);
   const [detail, setDetail] = useState<AcquisitionDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
   const handleRowClick = async (scopeKey: number) => {
-    setDetailOpen(true);
+    setSelectedKey(scopeKey);
     setDetailLoading(true);
+    setDetail(null);
     try {
       const d = await getAcquisitionDetail(scopeKey);
       setDetail(d);
     } catch {
-      message.error('Failed to load acquisition detail');
+      // silent
     } finally {
       setDetailLoading(false);
     }
+  };
+
+  const handleCloseDetail = () => {
+    setSelectedKey(null);
+    setDetail(null);
   };
 
   useEffect(() => { getAcquisitionStats().then(setStats).catch(() => {}); }, []);
@@ -125,7 +197,7 @@ export const AcquisitionsPage = () => {
 
   /* ── Stat Strip ──────────────────────────────────────────── */
   const statStrip = (
-    <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' }}>
+    <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
       <StatChip label="In-House" value={stats?.inHouse ?? 0} iconBg="rgba(var(--primary-rgb), 0.10)" iconColor="var(--primary)" valueColor="var(--navy)" active={activeTab === 'inhouse'} onClick={() => setActiveTab('inhouse')} icon={<IconInHouse />} />
       <StatChip label="Consigned" value={stats?.consigned ?? 0} iconBg="rgba(var(--amber-rgb), 0.10)" iconColor="var(--amber)" valueColor="var(--amber)" active={activeTab === 'consigned'} onClick={() => setActiveTab('consigned')} icon={<IconConsigned />} />
       <StatChip label="Sold" value={stats?.sold ?? 0} iconBg="rgba(var(--success-rgb), 0.10)" iconColor="var(--success)" valueColor="var(--success)" active={activeTab === 'sold'} onClick={() => setActiveTab('sold')} icon={<IconSold />} />
@@ -134,62 +206,72 @@ export const AcquisitionsPage = () => {
     </div>
   );
 
-  /* ── In-House / Consigned Table ──────────────────────────── */
-  const renderAcqTable = (items: AcquisitionListItem[], loading: boolean, total: number, searchVal: string, onSearch: (s: string) => void, currentPage: number, onPage: (p: number) => void, tabLabel: string) => {
+  /* ── Render list rows ────────────────────────────────────── */
+  const renderAcqList = (
+    items: AcquisitionListItem[],
+    loading: boolean,
+    total: number,
+    searchVal: string,
+    onSearch: (s: string) => void,
+    currentPage: number,
+    onPage: (p: number) => void,
+    tabLabel: string,
+  ) => {
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
-    const cols = [
-      { key: 'serial', label: 'Serial #', width: 130 },
-      { key: 'scopeType', label: 'Model / Type', width: 200 },
-      { key: 'poNumber', label: 'PO #', width: 110 },
-      { key: 'dept', label: 'Department', width: 140 },
-      { key: 'client', label: 'Client', width: 160 },
-      { key: 'dateAcquired', label: 'Date Acquired', width: 110 },
-      { key: 'poDate', label: 'PO Date', width: 100 },
-      { key: 'cost', label: 'Cost', width: 100 },
-    ];
-
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <DetailHeader
-          title={`${tabLabel} Acquisitions`}
-          badges={<span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary-light)' }}>{total} records</span>}
-          actions={<Input prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />} placeholder="Search serial, model, client..." value={searchVal} onChange={e => { onSearch(e.target.value); onPage(1); }} style={{ height: 30, width: 240, fontSize: 11 }} allowClear />}
-        />
-        <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1000 }}>
-            <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
-              <tr>
-                {cols.map(col => (
-                  <th key={col.key} style={{ background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px', textAlign: col.key === 'cost' ? 'right' : 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 10, width: col.width }}>
-                    {col.label}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr><td colSpan={cols.length} style={{ textAlign: 'center', padding: 30 }}><Spin size="small" /></td></tr>
-              ) : items.length === 0 ? (
-                <tr><td colSpan={cols.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No acquisition records found</td></tr>
-              ) : items.map((item, idx) => (
-                <tr key={item.scopeKey} style={{ cursor: 'pointer', background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }} onClick={() => handleRowClick(item.scopeKey)} onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }} onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}>
-                  <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.serial || '\u2014'}</span></td>
-                  <td style={tdStyle}>{item.scopeType || '\u2014'}</td>
-                  <td style={tdStyle}>{item.poNumber || '\u2014'}</td>
-                  <td style={tdStyle}>{item.dept || '\u2014'}</td>
-                  <td style={tdStyle}>{item.client || '\u2014'}</td>
-                  <td style={tdStyle}>{item.dateAcquired || '\u2014'}</td>
-                  <td style={tdStyle}>{item.poDate || '\u2014'}</td>
-                  <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace', fontWeight: 600 }}>{item.cost > 0 ? `$${item.cost.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '\u2014'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* List header */}
+        <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--navy)' }}>{tabLabel} Acquisitions</span>
+              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' }}>{total}</span>
+            </div>
+          </div>
+          <Input
+            prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+            placeholder="Search serial, model, client..."
+            value={searchVal}
+            onChange={e => { onSearch(e.target.value); onPage(1); }}
+            allowClear
+            style={{ height: 28, fontSize: 11 }}
+          />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{total}</strong></span>
+
+        {/* List rows */}
+        <div style={{ flex: 1, overflow: 'auto' }}>
+          {loading && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>}
+          {!loading && items.length === 0 && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No records found</div>}
+          {items.map(item => (
+            <div
+              key={item.scopeKey}
+              onClick={() => handleRowClick(item.scopeKey)}
+              style={{
+                padding: '9px 12px',
+                borderBottom: '1px solid var(--neutral-100)',
+                cursor: 'pointer',
+                background: item.scopeKey === selectedKey ? 'var(--primary-light)' : 'var(--card)',
+                borderLeft: item.scopeKey === selectedKey ? '3px solid var(--primary)' : '3px solid transparent',
+                transition: 'background 0.1s',
+              }}
+              onMouseEnter={e => { if (item.scopeKey !== selectedKey) e.currentTarget.style.background = 'var(--neutral-50)'; }}
+              onMouseLeave={e => { if (item.scopeKey !== selectedKey) e.currentTarget.style.background = 'var(--card)'; }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2 }}>{item.serial || '\u2014'}</div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{item.scopeType || '\u2014'}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+                <span>{item.client || '\u2014'}</span>
+                <span>{item.dateAcquired || '\u2014'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Pagination */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
+          <span style={{ fontSize: 10, color: 'var(--muted)' }}>{items.length} of {total}</span>
           {totalPages > 1 && (
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 3 }}>
               <PgBtn disabled={currentPage <= 1} onClick={() => onPage(currentPage - 1)}>{'\u2039'}</PgBtn>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const start = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
@@ -204,46 +286,55 @@ export const AcquisitionsPage = () => {
     );
   };
 
-  /* ── Sold Table ──────────────────────────────────────────── */
+  /* ── Sold List ───────────────────────────────────────────── */
   const soldTotalPages = Math.max(1, Math.ceil(soldTotal / pageSize));
-  const soldTable = (
+  const renderSoldList = () => (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <DetailHeader
-        title="Sold Acquisitions"
-        badges={<span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 12, fontSize: 11, fontWeight: 700, background: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary-light)' }}>{soldTotal} records</span>}
-        actions={<Input prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />} placeholder="Search serial, model, buyer..." value={soldSearch} onChange={e => { setSoldSearch(e.target.value); setSoldPage(1); }} style={{ height: 30, width: 240, fontSize: 11 }} allowClear />}
-      />
-      <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
-          <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
-            <tr>
-              {[{ l: 'Serial #', w: 130 }, { l: 'Model', w: 200 }, { l: 'Client', w: 180 }, { l: 'Sale Date', w: 110 }, { l: 'Sale Price', w: 110 }, { l: 'Buyer', w: 160 }].map(col => (
-                <th key={col.l} style={{ background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px', textAlign: col.l === 'Sale Price' ? 'right' : 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 10, width: col.w }}>{col.l}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {soldLoading ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 30 }}><Spin size="small" /></td></tr>
-            ) : soldItems.length === 0 ? (
-              <tr><td colSpan={6} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No sold records found</td></tr>
-            ) : soldItems.map((item, idx) => (
-              <tr key={item.scopeKey} style={{ cursor: 'pointer', background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }} onClick={() => handleRowClick(item.scopeKey)} onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }} onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}>
-                <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.serial || '\u2014'}</span></td>
-                <td style={tdStyle}>{item.scopeType || '\u2014'}</td>
-                <td style={tdStyle}>{item.client || '\u2014'}</td>
-                <td style={tdStyle}>{item.saleDate || '\u2014'}</td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace', fontWeight: 600 }}>{item.salePrice > 0 ? `$${item.salePrice.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '\u2014'}</td>
-                <td style={tdStyle}>{item.buyer || '\u2014'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--navy)' }}>Sold Acquisitions</span>
+          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' }}>{soldTotal}</span>
+        </div>
+        <Input
+          prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+          placeholder="Search serial, model, buyer..."
+          value={soldSearch}
+          onChange={e => { setSoldSearch(e.target.value); setSoldPage(1); }}
+          allowClear
+          style={{ height: 28, fontSize: 11 }}
+        />
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
-        <span style={{ fontSize: 11, color: 'var(--muted)' }}>Showing <strong style={{ color: 'var(--text)' }}>{soldItems.length}</strong> of <strong style={{ color: 'var(--text)' }}>{soldTotal}</strong></span>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        {soldLoading && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>}
+        {!soldLoading && soldItems.length === 0 && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No records found</div>}
+        {soldItems.map(item => (
+          <div
+            key={item.scopeKey}
+            onClick={() => handleRowClick(item.scopeKey)}
+            style={{
+              padding: '9px 12px',
+              borderBottom: '1px solid var(--neutral-100)',
+              cursor: 'pointer',
+              background: item.scopeKey === selectedKey ? 'var(--primary-light)' : 'var(--card)',
+              borderLeft: item.scopeKey === selectedKey ? '3px solid var(--primary)' : '3px solid transparent',
+              transition: 'background 0.1s',
+            }}
+            onMouseEnter={e => { if (item.scopeKey !== selectedKey) e.currentTarget.style.background = 'var(--neutral-50)'; }}
+            onMouseLeave={e => { if (item.scopeKey !== selectedKey) e.currentTarget.style.background = 'var(--card)'; }}
+          >
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2 }}>{item.serial || '\u2014'}</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{item.scopeType || '\u2014'}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+              <span>{item.client || '\u2014'}</span>
+              <span>{item.saleDate || '\u2014'}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
+        <span style={{ fontSize: 10, color: 'var(--muted)' }}>{soldItems.length} of {soldTotal}</span>
         {soldTotalPages > 1 && (
-          <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 3 }}>
             <PgBtn disabled={soldPage <= 1} onClick={() => setSoldPage(p => p - 1)}>{'\u2039'}</PgBtn>
             {Array.from({ length: Math.min(5, soldTotalPages) }, (_, i) => {
               const start = Math.max(1, Math.min(soldPage - 2, soldTotalPages - 4));
@@ -257,83 +348,52 @@ export const AcquisitionsPage = () => {
     </div>
   );
 
-  const fmt$ = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2 });
+  /* ── Active list content ─────────────────────────────────── */
+  const listContent = activeTab === 'inhouse'
+    ? renderAcqList(inHouseItems, inHouseLoading, inHouseTotal, inHouseSearch, setInHouseSearch, inHousePage, setInHousePage, 'In-House')
+    : activeTab === 'consigned'
+    ? renderAcqList(consignedItems, consignedLoading, consignedTotal, consignedSearch, setConsignedSearch, consignedPage, setConsignedPage, 'Consigned')
+    : renderSoldList();
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
       {statStrip}
-      <TabBar tabs={TABS} activeKey={activeTab} onChange={setActiveTab} />
-      <div style={{ flex: 1, overflow: 'hidden' }}>
-        {activeTab === 'inhouse' && renderAcqTable(inHouseItems, inHouseLoading, inHouseTotal, inHouseSearch, setInHouseSearch, inHousePage, setInHousePage, 'In-House')}
-        {activeTab === 'consigned' && renderAcqTable(consignedItems, consignedLoading, consignedTotal, consignedSearch, setConsignedSearch, consignedPage, setConsignedPage, 'Consigned')}
-        {activeTab === 'sold' && soldTable}
-      </div>
+      <TabBar tabs={TABS} activeKey={activeTab} onChange={tab => { setActiveTab(tab); handleCloseDetail(); }} />
 
-      {/* Detail Drawer */}
-      <Drawer
-        open={detailOpen}
-        onClose={() => { setDetailOpen(false); setDetail(null); }}
-        placement="right"
-        width={600}
-        title={detail ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontWeight: 700, color: 'var(--card)', fontSize: 14 }}>{detail.serial || 'Acquisition Detail'}</span>
-            <StatusBadge status={detail.isSold ? 'Sold' : 'In-House'} />
-          </div>
-        ) : 'Acquisition Detail'}
-        styles={{
-          header: { background: 'var(--primary-dark)', borderBottom: 'none', color: 'var(--card)' },
-          body: { padding: 0 },
-        }}
-      >
-        {detailLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
-        ) : !detail ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>No detail available</div>
-        ) : (
-          <div style={{ padding: '16px 20px' }}>
-            {/* Cost banner */}
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 16px', borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--navy)' }}>{fmt$(detail.cost)}</div>
-                <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Acquisition Cost</div>
-              </div>
-            </div>
-            <FormGrid cols={2}>
-              <Field label="Serial #" value={detail.serial} />
-              <Field label="Type" value={detail.flexOrRigid || '\u2014'} />
-              <Field label="Scope Model" value={detail.scopeType} />
-              <Field label="Manufacturer" value={detail.manufacturer || '\u2014'} />
-              <Field label="Client" value={detail.client || '\u2014'} />
-              <Field label="Department" value={detail.dept || '\u2014'} />
-              <Field label="Supplier" value={detail.supplier || '\u2014'} />
-              <Field label="PO Number" value={detail.poNumber || '\u2014'} />
-              <Field label="PO Date" value={detail.poDate || '\u2014'} />
-              <Field label="Date Received" value={detail.dateReceived || '\u2014'} />
-            </FormGrid>
-            {detail.comment && (
-              <div style={{ marginTop: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Comments</div>
-                <div style={{ fontSize: 12, color: 'var(--text)', background: 'var(--neutral-50)', borderRadius: 6, padding: '10px 12px', border: '1px solid var(--border)' }}>
-                  {detail.comment}
-                </div>
-              </div>
-            )}
+      {/* Split pane */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+        {/* Left panel — list */}
+        <div style={{
+          width: selectedKey ? 340 : '100%',
+          minWidth: selectedKey ? 340 : undefined,
+          borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
+          display: 'flex', flexDirection: 'column',
+          background: 'var(--card)',
+          transition: 'width 0.2s ease',
+          overflow: 'hidden',
+        }}>
+          {listContent}
+        </div>
+
+        {/* Right panel — detail */}
+        {selectedKey && (
+          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+            <AcquisitionDetailPanel
+              detail={detail}
+              loading={detailLoading}
+              onClose={handleCloseDetail}
+            />
           </div>
         )}
-      </Drawer>
+      </div>
     </div>
   );
 };
 
 /* ── Shared ───────────────────────────────────────────────── */
-const tdStyle: React.CSSProperties = {
-  padding: '7px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', color: 'var(--text)',
-};
-
 const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (
   <button disabled={disabled} onClick={onClick} style={{
-    height: 24, minWidth: 24, padding: '0 8px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, fontFamily: 'inherit',
+    height: 22, minWidth: 22, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 10, fontFamily: 'inherit',
     cursor: disabled ? 'default' : 'pointer', fontWeight: active ? 600 : 400,
     background: active ? 'var(--navy)' : 'var(--card)', color: active ? 'var(--card)' : 'var(--muted)', opacity: disabled ? 0.4 : 1,
   }}>{children}</button>
