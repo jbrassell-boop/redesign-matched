@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import type { RepairFull, RepairLineItem } from '../types';
 import type { ClientFlag } from '../../clients/types';
 import { getRepairLineItems, updateRepairTechs, getRepairTechnicians, bulkApproveLineItems, getUpdateSlips, getDefectTracking, getRepairInventoryUsage } from '../../../api/repairs';
