@@ -37,6 +37,31 @@ export interface DashboardFilters {
   statusFilter: string;
 }
 
+export type DashboardView = 'repairs' | 'shipping' | 'invoices' | 'flags' | 'emails' | 'tasks' | 'techbench';
+
+export type ScopeTypeFilter = 'all' | 'Flexible' | 'Rigid';
+
+export type GroupBy = 'none' | 'Client' | 'Status' | 'Tech' | 'ScopeType';
+
+export interface DashboardToolbarState {
+  view: DashboardView;
+  type: ScopeTypeFilter;
+  groupBy: GroupBy;
+  search: string;
+  page: number;
+  pageSize: number;
+  statusFilter: string;
+}
+
+export interface BriefingStats {
+  received: number;
+  shipped: number;
+  approved: number;
+  revenue: number;
+  avgTat: number;
+  overdue: number;
+}
+
 // ── Tasks ──
 export interface DashboardTask {
   taskKey: number;

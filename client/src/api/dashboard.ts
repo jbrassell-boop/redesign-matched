@@ -4,7 +4,8 @@ import type {
   DashboardTasksResponse, DashboardEmailsResponse,
   DashboardShippingResponse, DashboardInvoicesResponse,
   DashboardFlagsResponse, DashboardTechBenchResponse,
-  DashboardAnalyticsResponse,
+  DashboardAnalyticsResponse, BriefingStats,
+  DashboardToolbarState,
 } from '../pages/dashboard/types';
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {
@@ -12,15 +13,16 @@ export const getDashboardStats = async (): Promise<DashboardStats> => {
   return data;
 };
 
-export const getDashboardRepairs = async (filters: DashboardFilters): Promise<DashboardRepairsResponse> => {
-  const { data } = await apiClient.get<DashboardRepairsResponse>('/dashboard/repairs', {
-    params: {
-      search: filters.search || undefined,
-      page: filters.page,
-      pageSize: filters.pageSize,
-      statusFilter: filters.statusFilter !== 'all' ? filters.statusFilter : undefined,
-    },
-  });
+export const getDashboardRepairs = async (filters: DashboardFilters | DashboardToolbarState): Promise<DashboardRepairsResponse> => {
+  const params: Record<string, unknown> = {
+    search: filters.search || undefined,
+    page: filters.page,
+    pageSize: filters.pageSize,
+    statusFilter: filters.statusFilter !== 'all' ? filters.statusFilter : undefined,
+  };
+  if ('type' in filters && filters.type !== 'all') params.type = filters.type;
+  if ('groupBy' in filters && filters.groupBy !== 'none') params.groupBy = filters.groupBy;
+  const { data } = await apiClient.get<DashboardRepairsResponse>('/dashboard/repairs', { params });
   return data;
 };
 
@@ -56,5 +58,10 @@ export const getDashboardTechBench = async (params: { search?: string; statusFil
 
 export const getDashboardAnalytics = async () => {
   const { data } = await apiClient.get<DashboardAnalyticsResponse>('/dashboard/analytics');
+  return data;
+};
+
+export const getDashboardBriefing = async (): Promise<BriefingStats> => {
+  const { data } = await apiClient.get<BriefingStats>('/dashboard/briefing');
   return data;
 };

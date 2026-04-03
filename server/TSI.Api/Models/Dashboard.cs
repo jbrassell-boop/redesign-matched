@@ -32,6 +32,11 @@ public record DashboardRepairsResponse(
     int TotalCount
 );
 
+public record BriefingStats(
+    int Received, int Shipped, int Approved,
+    decimal Revenue, decimal AvgTat, int Overdue
+);
+
 // ── Tasks sub-tab ──
 public record DashboardTask(
     int TaskKey,

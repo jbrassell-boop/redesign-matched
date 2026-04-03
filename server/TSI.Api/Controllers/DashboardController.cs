@@ -52,7 +52,9 @@ public class DashboardController(IConfiguration config) : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
-        [FromQuery] string? statusFilter = null)
+        [FromQuery] string? statusFilter = null,
+        [FromQuery] string type = "all",
+        [FromQuery] string groupBy = "none")
     {
         await using var conn = CreateConnection();
         await conn.OpenAsync();
@@ -69,6 +71,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
                 """);
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all")
             where.Add("rs.sRepairStatus = @statusFilter");
+        if (type != "all")
+            where.Add("stc.sScopeTypeCategory = @type");
 
         var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
 
@@ -78,11 +82,21 @@ public class DashboardController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCategoryKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey
             {whereClause}
             """;
+
+        var orderBy = groupBy switch
+        {
+            "Client" => "c.sClientName1, r.dtDateIn DESC",
+            "Status" => "rs.sRepairStatus, r.dtDateIn DESC",
+            "Tech" => "t.sTechName, r.dtDateIn DESC",
+            "ScopeType" => "st.sScopeTypeDesc, r.dtDateIn DESC",
+            _ => "r.dtDateIn DESC"
+        };
 
         var dataSql = $"""
             SELECT r.lRepairKey, r.sWorkOrderNumber, r.dtDateIn, r.lRepairStatusID,
@@ -99,23 +113,26 @@ public class DashboardController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCategoryKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey
             {whereClause}
-            ORDER BY r.dtDateIn DESC
+            ORDER BY {orderBy}
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
+        if (type != "all") countCmd.Parameters.AddWithValue("@type", type);
 
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
+        if (type != "all") dataCmd.Parameters.AddWithValue("@type", type);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
 
@@ -148,6 +165,35 @@ public class DashboardController(IConfiguration config) : ControllerBase
         }
 
         return Ok(new DashboardRepairsResponse(repairs, totalCount));
+    }
+
+    // ── Briefing ──
+    [HttpGet("briefing")]
+    public async Task<IActionResult> GetBriefing()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        var yesterday = DateTime.Today.AddDays(-1);
+        await using var cmd = new SqlCommand(@"
+            SELECT
+                (SELECT COUNT(*) FROM tblRepair WHERE CAST(dtDateIn AS DATE) = @yesterday) AS Received,
+                (SELECT COUNT(*) FROM tblRepair WHERE CAST(dtDateOut AS DATE) = @yesterday) AS Shipped,
+                (SELECT COUNT(*) FROM tblRepair WHERE CAST(dtAprRecvd AS DATE) = @yesterday) AS Approved,
+                (SELECT ISNULL(SUM(dblAmtRepair), 0) FROM tblRepair WHERE CAST(dtDateOut AS DATE) = @yesterday) AS Revenue,
+                (SELECT ISNULL(AVG(CAST(DATEDIFF(DAY, dtDateIn, ISNULL(dtDateOut, GETDATE())) AS DECIMAL(10,1))), 0)
+                 FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+                 WHERE rs.sRepairStatus NOT IN ('Cancelled','Closed')) AS AvgTat,
+                (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+                 WHERE rs.sRepairStatus NOT IN ('Shipped','Cancelled','Closed','Invoiced')
+                 AND DATEDIFF(DAY, dtDateIn, GETDATE()) > 14) AS Overdue
+        ", conn);
+        cmd.Parameters.AddWithValue("@yesterday", yesterday);
+        await using var rdr = await cmd.ExecuteReaderAsync();
+        await rdr.ReadAsync();
+        return Ok(new BriefingStats(
+            rdr.GetInt32(0), rdr.GetInt32(1), rdr.GetInt32(2),
+            rdr.GetDecimal(3), rdr.GetDecimal(4), rdr.GetInt32(5)
+        ));
     }
 
     // ── Tasks sub-tab ──

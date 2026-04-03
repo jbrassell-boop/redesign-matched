@@ -1,0 +1,116 @@
+.dash-toolbar {
+  display: flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-bottom: 1px solid var(--neutral-200);
+  background: var(--neutral-50);
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dash-toolbar__sep {
+  width: 1px;
+  height: 20px;
+  background: var(--neutral-200);
+  flex-shrink: 0;
+}
+
+.dash-toolbar__spacer {
+  flex: 1;
+}
+
+/* ── segmented button group ── */
+.seg-group {
+  display: inline-flex;
+  border: 1px solid var(--neutral-200);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.seg-group__btn {
+  padding: 4px 10px;
+  font-size: 10px;
+  font-weight: 500;
+  border: none;
+  border-left: 1px solid var(--neutral-200);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition: background 0.15s, color 0.15s;
+}
+
+.seg-group__btn:first-child {
+  border-left: none;
+}
+
+.seg-group__btn:hover:not(.seg-group__btn--active) {
+  background: var(--primary-light);
+}
+
+.seg-group__btn--active {
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── search input ── */
+.dash-toolbar__search {
+  width: 200px;
+  height: 28px;
+  padding: 0 8px;
+  font-size: 12px;
+  border: 1px solid var(--neutral-200);
+  border-radius: 4px;
+  outline: none;
+  background: var(--card);
+  color: var(--text);
+}
+
+.dash-toolbar__search:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.13);
+}
+
+.dash-toolbar__search::placeholder {
+  color: var(--muted);
+}
+
+/* ── icon buttons ── */
+.dash-toolbar__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--neutral-200);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.dash-toolbar__icon-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ── group-by select ── */
+.dash-toolbar__select {
+  height: 28px;
+  padding: 0 6px;
+  font-size: 11px;
+  border: 1px solid var(--neutral-200);
+  border-radius: 4px;
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+}
+
+.dash-toolbar__select:focus {
+  border-color: var(--primary);
+}
