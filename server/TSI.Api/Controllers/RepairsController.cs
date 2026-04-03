@@ -240,7 +240,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
                    -- Extended 4-tab fields
                    r.sRackPosition,
                    r.dtReqSent,
-                   NULL AS dblDiscountPct, -- not in tblRepair
+                   c.dblDiscountPct,
                    r.dblShippingClientIn,
                    r.bTrackingNumberRequired,
                    r.dtDeliveryDateGuaranteed,
