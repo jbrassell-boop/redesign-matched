@@ -1,32 +1,70 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Spin } from 'antd';
-import type { DepartmentDetail } from './types';
-import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
+import type { DepartmentFull, DeptKpis, SaveState } from './types';
 import type { TabDef } from '../../components/shared';
-import { SubGroupsTab } from './tabs/SubGroupsTab';
+import { TabBar } from '../../components/shared';
+import { DeptToolbar } from './DeptToolbar';
+import { DeptKpiStrip } from './DeptKpiStrip';
+import { ScopeDrawer } from './ScopeDrawer';
+import { InfoTab } from './tabs/InfoTab';
+import { ContactsTab } from './tabs/ContactsTab';
 import { ScopesTab } from './tabs/ScopesTab';
-import { getDepartmentSubGroups, getDepartmentScopes } from '../../api/departments';
+import { SubGroupsTab } from './tabs/SubGroupsTab';
+import { RepairsTab } from './tabs/RepairsTab';
+import {
+  getDepartmentFull, getDepartmentKpis, updateDepartment,
+  getDepartmentScopes, getDepartmentSubGroups, getDepartmentContacts,
+} from '../../api/departments';
 import { useTabBadges } from '../../hooks/useTabBadges';
 
 interface DepartmentDetailPaneProps {
-  detail: DepartmentDetail | null;
-  loading: boolean;
+  deptKey: number | null;
 }
 
 const BASE_TABS: TabDef[] = [
   { key: 'info',       label: 'Info' },
+  { key: 'contacts',   label: 'Contacts' },
   { key: 'scopes',     label: 'Scopes' },
   { key: 'sub-groups', label: 'Sub-Groups' },
   { key: 'repairs',    label: 'Repairs' },
-  { key: 'contacts',   label: 'Contacts' },
 ];
 
-export const DepartmentDetailPane = ({ detail, loading }: DepartmentDetailPaneProps) => {
+export const DepartmentDetailPane = ({ deptKey }: DepartmentDetailPaneProps) => {
+  const [dept, setDept] = useState<DepartmentFull | null>(null);
+  const [kpis, setKpis] = useState<DeptKpis | null>(null);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
+  const [saveState, setSaveState] = useState<SaveState>('ready');
+  const [dirtyFields, setDirtyFields] = useState<Record<string, unknown>>({});
+  const [scopeDrawerKey, setScopeDrawerKey] = useState<number | null>(null);
 
-  const dk = detail?.deptKey ?? 0;
+  const dk = deptKey ?? 0;
+
+  // Load full department + KPIs
+  useEffect(() => {
+    if (!dk) { setDept(null); setKpis(null); return; }
+    let cancelled = false;
+    setLoading(true);
+    setSaveState('ready');
+    setDirtyFields({});
+    setActiveTab('info');
+    setScopeDrawerKey(null);
+
+    Promise.all([getDepartmentFull(dk), getDepartmentKpis(dk)])
+      .then(([fullData, kpiData]) => {
+        if (cancelled) return;
+        setDept(fullData);
+        setKpis(kpiData);
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [dk]);
+
+  // Tab badges
   const badgeCounts = useTabBadges(
     dk ? {
+      contacts: () => getDepartmentContacts(dk),
       scopes: () => getDepartmentScopes(dk),
       'sub-groups': () => getDepartmentSubGroups(dk),
     } : {},
@@ -38,45 +76,88 @@ export const DepartmentDetailPane = ({ detail, loading }: DepartmentDetailPanePr
     [badgeCounts],
   );
 
+  // Handle field change from InfoTab
+  const handleFieldChange = useCallback((field: string, value: unknown) => {
+    setDirtyFields(prev => ({ ...prev, [field]: value }));
+    setSaveState('unsaved');
+    setDept(prev => prev ? { ...prev, [field]: value } as DepartmentFull : null);
+  }, []);
+
+  // Save flow
+  const handleSave = useCallback(async () => {
+    if (!dk || Object.keys(dirtyFields).length === 0) return;
+    setSaveState('saving');
+    try {
+      await updateDepartment(dk, dirtyFields as Partial<DepartmentFull>);
+      setDirtyFields({});
+      setSaveState('saved');
+      const [fullData, kpiData] = await Promise.all([getDepartmentFull(dk), getDepartmentKpis(dk)]);
+      setDept(fullData);
+      setKpis(kpiData);
+      setTimeout(() => setSaveState('ready'), 2000);
+    } catch {
+      setSaveState('unsaved');
+    }
+  }, [dk, dirtyFields]);
+
+  // Ctrl+S keyboard shortcut
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (saveState === 'unsaved') handleSave();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [saveState, handleSave]);
+
+  // Toggle active
+  const handleToggleActive = useCallback(async () => {
+    if (!dk || !dept) return;
+    const action = dept.isActive ? 'Deactivate' : 'Activate';
+    if (!confirm(`${action} ${dept.name}?`)) return;
+    await updateDepartment(dk, { isActive: !dept.isActive } as Partial<DepartmentFull>);
+    const fullData = await getDepartmentFull(dk);
+    setDept(fullData);
+  }, [dk, dept]);
+
+  // Scope drawer
+  const handleScopeClick = useCallback((scopeKey: number) => {
+    setScopeDrawerKey(scopeKey);
+  }, []);
+
+  const handleDrawerClose = useCallback(() => {
+    setScopeDrawerKey(null);
+  }, []);
+
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
-  if (!detail) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Select a department to view details</div>;
-
-  const scopeMeta = `${detail.scopeCount} scope${detail.scopeCount !== 1 ? 's' : ''}`;
-  const repairMeta = detail.openRepairs > 0
-    ? <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{detail.openRepairs} open repairs</span>
-    : null;
-
-  const infoContent = (
-    <div style={{ padding: '16px 20px' }}>
-      <FormGrid cols={2}>
-        <Field label="Address" value={detail.address1} />
-        <Field label="City / State / Zip" value={[detail.city, detail.state, detail.zip].filter(Boolean).join(', ')} />
-        <Field label="Phone" value={detail.phone} />
-        <Field label="Contact" value={detail.contactName} />
-        <Field label="Email" value={detail.email} />
-      </FormGrid>
-    </div>
-  );
+  if (!dept) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Select a department to view details</div>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <DetailHeader
-        title={detail.name}
-        subtitle={detail.clientName}
-        badges={
-          <>
-            <StatusBadge status={detail.isActive ? 'Active' : 'Inactive'} />
-            {repairMeta}
-          </>
-        }
-        meta={scopeMeta}
+      <DeptToolbar
+        dept={dept}
+        saveState={saveState}
+        onSave={handleSave}
+        onToggleActive={handleToggleActive}
       />
+      <DeptKpiStrip dept={dept} kpis={kpis} loading={loading} />
       <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
-      {activeTab === 'info'       && infoContent}
-      {activeTab === 'scopes'     && <ScopesTab deptKey={detail.deptKey} />}
-      {activeTab === 'sub-groups' && <SubGroupsTab deptKey={detail.deptKey} />}
-      {activeTab === 'repairs'    && <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>Repairs coming soon</div>}
-      {activeTab === 'contacts'   && <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>Contacts coming soon</div>}
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        {activeTab === 'info'       && <InfoTab dept={dept} onChange={handleFieldChange} />}
+        {activeTab === 'contacts'   && <ContactsTab deptKey={dept.deptKey} />}
+        {activeTab === 'scopes'     && <ScopesTab deptKey={dept.deptKey} onScopeClick={handleScopeClick} />}
+        {activeTab === 'sub-groups' && <SubGroupsTab deptKey={dept.deptKey} />}
+        {activeTab === 'repairs'    && <RepairsTab deptKey={dept.deptKey} />}
+      </div>
+
+      <ScopeDrawer
+        scopeKey={scopeDrawerKey}
+        deptKey={dept.deptKey}
+        open={scopeDrawerKey !== null}
+        onClose={handleDrawerClose}
+      />
     </div>
   );
 };

@@ -1,16 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getDepartments, getDepartmentDetail } from '../../api/departments';
+import { getDepartments } from '../../api/departments';
 import { DepartmentsList } from './DepartmentsList';
 import { DepartmentDetailPane } from './DepartmentDetailPane';
-import type { DepartmentListItem, DepartmentDetail } from './types';
+import type { DepartmentListItem } from './types';
 
 export const DepartmentsPage = () => {
   const [departments, setDepartments] = useState<DepartmentListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
-  const [detail, setDetail] = useState<DepartmentDetail | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
 
   const loadDepartments = useCallback(async (s: string) => {
     setLoading(true);
@@ -27,15 +25,8 @@ export const DepartmentsPage = () => {
     return () => clearTimeout(timer);
   }, [search, loadDepartments]);
 
-  const handleSelect = useCallback(async (d: DepartmentListItem) => {
+  const handleSelect = useCallback((d: DepartmentListItem) => {
     setSelectedKey(d.deptKey);
-    setDetailLoading(true);
-    try {
-      const dep = await getDepartmentDetail(d.deptKey);
-      setDetail(dep);
-    } finally {
-      setDetailLoading(false);
-    }
   }, []);
 
   return (
@@ -55,7 +46,7 @@ export const DepartmentsPage = () => {
         />
       </div>
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-        <DepartmentDetailPane detail={detail} loading={detailLoading} />
+        <DepartmentDetailPane deptKey={selectedKey} />
       </div>
     </div>
   );
