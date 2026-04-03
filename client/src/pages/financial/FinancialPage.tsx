@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Input, Select, Table, DatePicker, Switch, message } from 'antd';
+import { ExportButton } from '../../components/common/ExportButton';
 import { SearchOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import {
@@ -378,6 +379,15 @@ export const FinancialPage = () => {
 
   const showFilters = activeTab === 'outstanding' || activeTab === 'drafts' || activeTab === 'payments';
 
+  const INVOICE_EXPORT_COLS = [
+    { key: 'invoiceNumber', label: 'Invoice #' },
+    { key: 'clientName', label: 'Client' },
+    { key: 'amount', label: 'Amount' },
+    { key: 'paymentTerms', label: 'Payment Terms' },
+    { key: 'issuedDate', label: 'Issued Date' },
+    { key: 'dueDate', label: 'Due Date' },
+  ];
+
   return (
     <div style={{ height: 'calc(100vh - 64px)', overflow: 'auto', background: 'var(--bg)' }}>
       {/* Subnav tabs */}
@@ -463,6 +473,11 @@ export const FinancialPage = () => {
                 />
               )}
             </div>
+            <ExportButton
+              data={invoices as unknown as Record<string, unknown>[]}
+              columns={INVOICE_EXPORT_COLS}
+              filename="invoices"
+            />
           </div>
         )}
 

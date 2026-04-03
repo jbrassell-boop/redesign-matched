@@ -3,6 +3,16 @@ import { getSuppliers, getSupplierDetail, getSupplierStats } from '../../api/sup
 import { SuppliersList } from './SuppliersList';
 import { SupplierDetailPane } from './SupplierDetailPane';
 import type { SupplierListItem, SupplierDetail, SupplierStats } from './types';
+import { ExportButton } from '../../components/common/ExportButton';
+
+const EXPORT_COLS = [
+  { key: 'name', label: 'Name' },
+  { key: 'city', label: 'City' },
+  { key: 'state', label: 'State' },
+  { key: 'phone', label: 'Phone' },
+  { key: 'gpId', label: 'GP ID' },
+  { key: 'roles', label: 'Roles' },
+];
 
 const StatChip = ({ label, value, color }: { label: string; value: number; color: string }) => (
   <div style={{
@@ -94,7 +104,14 @@ export const SuppliersPage = () => {
           {/* Toolbar */}
           <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary-dark)' }}>Suppliers</span>
-            <span style={{ fontSize: 11, color: 'var(--muted)' }}>{suppliers.length} records</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 11, color: 'var(--muted)' }}>{suppliers.length} records</span>
+              <ExportButton
+                data={suppliers as unknown as Record<string, unknown>[]}
+                columns={EXPORT_COLS}
+                filename="suppliers"
+              />
+            </div>
           </div>
           <SuppliersList
             suppliers={suppliers}

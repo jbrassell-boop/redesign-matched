@@ -1,5 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getOnsiteServices, getOnsiteServiceStats } from '../../api/onsite-services';
+import { ExportButton } from '../../components/common/ExportButton';
+
+const EXPORT_COLS = [
+  { key: 'invoiceNum', label: 'Invoice #' },
+  { key: 'clientName', label: 'Client' },
+  { key: 'deptName', label: 'Department' },
+  { key: 'techName', label: 'Technician' },
+  { key: 'visitDate', label: 'Visit Date' },
+  { key: 'status', label: 'Status' },
+  { key: 'totalBilled', label: 'Total Billed' },
+];
 import { QuoteModal } from './QuoteModal';
 import { CompleteServiceModal } from './CompleteServiceModal';
 import { OnsiteServiceDetailDrawer } from './OnsiteServiceDetailDrawer';
@@ -375,6 +386,11 @@ export const OnsiteServicesPage = () => {
             outline: 'none',
             background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
           }}
+        />
+        <ExportButton
+          data={items as unknown as Record<string, unknown>[]}
+          columns={EXPORT_COLS}
+          filename="onsite-services"
         />
       </div>
 

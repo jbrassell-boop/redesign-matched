@@ -2,6 +2,15 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { message } from 'antd';
 import { getQualityInspections, getQualityStats, getQualityNcr, getQualityRework } from '../../api/quality';
 import type { QualityInspectionListItem, QualityStats, QualityFilters, NcrListItem, ReworkListItem } from './types';
+import { ExportButton } from '../../components/common/ExportButton';
+
+const EXPORT_COLS = [
+  { key: 'workOrderNumber', label: 'WO#' },
+  { key: 'inspectionType', label: 'Inspection Type' },
+  { key: 'result', label: 'Result' },
+  { key: 'inspectionDate', label: 'Inspection Date' },
+  { key: 'clientName', label: 'Client' },
+];
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { TabBar } from '../../components/shared/TabBar';
 import type { TabDef } from '../../components/shared/TabBar';
@@ -456,27 +465,11 @@ export const QualityPage = () => {
             />
 
             {/* Export */}
-            <button
-              onClick={exportCSV}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                height: 32,
-                padding: '0 12px',
-                fontSize: 12,
-                fontWeight: 500,
-                color: 'var(--label)',
-                background: 'var(--card)',
-                border: '1px solid var(--neutral-200)',
-                borderRadius: 6,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
-            >
-              <IconDownload />
-              Export
-            </button>
+            <ExportButton
+              data={inspections as unknown as Record<string, unknown>[]}
+              columns={EXPORT_COLS}
+              filename="quality-inspections"
+            />
           </div>
 
           {/* Table */}
