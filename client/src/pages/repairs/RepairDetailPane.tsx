@@ -1,14 +1,15 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Spin, message } from 'antd';
 import { useParams } from 'react-router-dom';
-import type { RepairDetail, RepairFull, ClientSummary, PrimaryContact, RepairScopeHistory, RepairFinancials } from './types';
+import type { RepairDetail, RepairFull, RepairLineItem } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
-import { CockpitHeader } from './CockpitHeader';
-import { ReferenceStrip } from './ReferenceStrip';
-import { FlagsBar } from './FlagsBar';
-import { ContextSidebar } from './ContextSidebar';
+import { CommandStrip } from './components/CommandStrip';
+import { ScopeGlance } from './components/ScopeGlance';
 import { DetailsTab } from './tabs/DetailsTab';
+import { ScopeInTab } from './tabs/ScopeInTab';
+import { OutgoingTab } from './tabs/OutgoingTab';
+import { ExpenseTab } from './tabs/ExpenseTab';
 import { WorkflowTab } from './tabs/WorkflowTab';
 import { InspectionsTab } from './tabs/InspectionsTab';
 import { FinancialsTab } from './tabs/FinancialsTab';
@@ -18,10 +19,9 @@ import { InlineEditor } from '../../components/common/InlineEditor';
 import {
   updateRepairNotes, getRepairStatuses, updateRepairStatus,
   getRepairLineItems, getRepairScopeHistory, getRepairStatusHistory,
-  getRepairFull, getRepairFinancials, updateRepairPO,
+  getRepairFull,
 } from '../../api/repairs';
-import { getClientSummary, getClientFlags } from '../../api/clients';
-import { getDepartmentPrimaryContact } from '../../api/departments';
+import { getClientFlags } from '../../api/clients';
 import type { RepairStatusOption } from '../../api/repairs';
 import type { ClientFlag } from '../clients/types';
 import { useTabBadges } from '../../hooks/useTabBadges';
@@ -69,18 +69,15 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   const isCockpit = cockpitMode || !!params.repairKey;
   const resolvedKey = repairKeyProp ?? (params.repairKey ? parseInt(params.repairKey, 10) : null);
 
-  const [activeTab, setActiveTab] = useState('workflow');
+  const [activeTab, setActiveTab] = useState<'scope-in' | 'details' | 'outgoing' | 'expense' | 'workflow' | 'inspections' | 'financials' | 'scopehistory' | 'statuslog' | 'comments'>('details');
+  const [lineItems, setLineItems] = useState<RepairLineItem[]>([]);
   const [statuses, setStatuses] = useState<RepairStatusOption[]>([]);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const statusMenuRef = useRef<HTMLDivElement>(null);
 
   // Cockpit-specific state
   const [fullRepair, setFullRepair] = useState<RepairFull | null>(null);
-  const [clientSummary, setClientSummary] = useState<ClientSummary | null>(null);
-  const [contact, setContact] = useState<PrimaryContact | null>(null);
   const [flags, setFlags] = useState<ClientFlag[]>([]);
-  const [scopeHistory, setScopeHistory] = useState<RepairScopeHistory[]>([]);
-  const [financials, setFinancials] = useState<RepairFinancials | null>(null);
   const [cockpitLoading, setCockpitLoading] = useState(false);
 
   // Load cockpit data
@@ -97,18 +94,11 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       const promises: Promise<void>[] = [];
       if (repair.clientKey) {
         promises.push(
-          getClientSummary(repair.clientKey).then(setClientSummary).catch(() => {}),
           getClientFlags(repair.clientKey).then(setFlags).catch(() => {}),
         );
       }
-      if (repair.deptKey) {
-        promises.push(
-          getDepartmentPrimaryContact(repair.deptKey).then(setContact).catch(() => {}),
-        );
-      }
       promises.push(
-        getRepairScopeHistory(resolvedKey).then(setScopeHistory).catch(() => {}),
-        getRepairFinancials(resolvedKey).then(setFinancials).catch(() => {}),
+        getRepairLineItems(resolvedKey).then(setLineItems).catch(() => {}),
       );
       return Promise.all(promises);
     }).catch(() => {}).finally(() => setCockpitLoading(false));
@@ -212,15 +202,6 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
     }
   }, [rk, onNoteSaved]);
 
-  const handlePOChange = useCallback(async (po: string) => {
-    try {
-      await updateRepairPO(rk, po);
-      message.success('PO# updated');
-    } catch {
-      message.error('Failed to update PO#');
-    }
-  }, [rk]);
-
   const hasNext = STATUS_NEXT_MAP[currentStatusId] !== undefined && STATUS_NEXT_MAP[currentStatusId] !== 0;
   const nextStatusName = hasNext
     ? statuses.find(s => s.statusId === STATUS_NEXT_MAP[currentStatusId])?.statusName ?? null
@@ -237,72 +218,44 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
-        <CockpitHeader
-          repair={fullRepair}
-          hasNextStage={hasNext}
-          nextStageName={nextStatusName}
-          onNextStage={handleAdvance}
-          onChangeStatus={() => setStatusMenuOpen(!statusMenuOpen)}
-          onPrint={() => message.info('Print D&I coming soon')}
-        />
-        <ReferenceStrip
-          repair={fullRepair}
-          clientSummary={clientSummary}
-          contact={contact}
-          onPOChange={handlePOChange}
-        />
-        <FlagsBar flags={flags} scopeHistoryCount={scopeHistory.length} />
-        <AlertBanner alerts={alerts} onDismiss={dismissAlert} />
+        <CommandStrip repair={fullRepair} />
+        <ScopeGlance repair={fullRepair} flags={flags} />
 
-        {/* Status dropdown overlay */}
-        {statusMenuOpen && (
-          <div ref={statusMenuRef} style={{
-            position: 'absolute', top: 42, right: 120, zIndex: 100,
-            background: 'var(--card)', border: '1px solid var(--neutral-200)',
-            borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-            minWidth: 200, maxHeight: 300, overflowY: 'auto',
-          }}>
-            {statuses.map(s => (
-              <div
-                key={s.statusId}
-                onClick={() => handleSetStatus(s.statusId)}
-                style={{
-                  padding: '6px 12px', cursor: 'pointer', fontSize: 12,
-                  color: s.statusId === currentStatusId ? 'var(--primary)' : 'var(--text)',
-                  fontWeight: s.statusId === currentStatusId ? 700 : 400,
-                  background: s.statusId === currentStatusId ? 'var(--primary-light)' : undefined,
-                  borderBottom: '1px solid var(--neutral-100)',
-                }}
-                onMouseEnter={e => { if (s.statusId !== currentStatusId) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                onMouseLeave={e => { if (s.statusId !== currentStatusId) e.currentTarget.style.background = ''; }}
-              >
-                {s.statusName}
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-          {/* Main content area */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
-            <div style={{ flex: 1, overflow: 'auto' }}>
-              {activeTab === 'details'      && <DetailsTab repair={fullRepair} flags={flags} />}
-              {activeTab === 'workflow'     && <WorkflowTab repairKey={fullRepair.repairKey} />}
-              {activeTab === 'inspections'  && <InspectionsTab repairKey={fullRepair.repairKey} />}
-              {activeTab === 'financials'   && <FinancialsTab repairKey={fullRepair.repairKey} />}
-              {activeTab === 'scopehistory' && <ScopeHistoryTab repairKey={fullRepair.repairKey} currentRepairKey={fullRepair.repairKey} />}
-              {activeTab === 'statuslog'    && <StatusHistoryTab repairKey={fullRepair.repairKey} />}
+        {/* Tab bar */}
+        <div style={{
+          background: '#fff', borderBottom: '2px solid var(--border)',
+          display: 'flex', padding: '0 14px', flexShrink: 0,
+        }}>
+          {([
+            { key: 'scope-in', label: '1 — Scope In' },
+            { key: 'details',  label: '2 — Details' },
+            { key: 'outgoing', label: '3 — Outgoing' },
+            { key: 'expense',  label: '4 — Expense' },
+          ] as const).map(t => (
+            <div
+              key={t.key}
+              onClick={() => setActiveTab(t.key)}
+              style={{
+                padding: '9px 18px',
+                fontSize: 12, fontWeight: 600,
+                color: activeTab === t.key ? 'var(--primary)' : 'var(--muted)',
+                borderBottom: activeTab === t.key ? '2px solid var(--primary)' : '2px solid transparent',
+                marginBottom: -2,
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {t.label}
             </div>
-          </div>
+          ))}
+        </div>
 
-          {/* Context sidebar */}
-          <ContextSidebar
-            clientSummary={clientSummary}
-            contact={contact}
-            scopeHistory={scopeHistory}
-            financials={financials}
-          />
+        {/* Tab content */}
+        <div style={{ flex: 1, overflow: 'auto' }}>
+          {activeTab === 'scope-in' && <ScopeInTab repair={fullRepair} />}
+          {activeTab === 'details'  && <DetailsTab repair={fullRepair} flags={flags} />}
+          {activeTab === 'outgoing' && <OutgoingTab repair={fullRepair} items={lineItems} />}
+          {activeTab === 'expense'  && <ExpenseTab repairKey={fullRepair.repairKey} />}
         </div>
       </div>
     );
@@ -432,7 +385,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         </div>
       </div>
 
-      <TabBar tabs={[...tabs, { key: 'comments', label: 'Comments' }]} activeKey={activeTab} onChange={setActiveTab} />
+      <TabBar tabs={[...tabs, { key: 'comments', label: 'Comments' }]} activeKey={activeTab} onChange={k => setActiveTab(k as Parameters<typeof setActiveTab>[0])} />
       {activeTab === 'details'      && detailsContent}
       {activeTab === 'workflow'     && <WorkflowTab repairKey={detail.repairKey} />}
       {activeTab === 'inspections'  && <InspectionsTab repairKey={detail.repairKey} />}
