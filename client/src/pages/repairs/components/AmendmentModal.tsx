@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Modal, message } from 'antd';
-import type { Amendment, AmendType, AmendReason, CreateAmendmentRequest } from '../types';
+import type { Amendment, AmendType, AmendReason, CreateAmendmentRequest, RepairFull } from '../types';
 import { getAmendments, createAmendment, getAmendTypes, getAmendReasons } from '../../../api/repairs';
 
 interface Props {
   repairKey: number;
+  repair: RepairFull;
   open: boolean;
   onClose: () => void;
   onAmendmentCreated: () => void;
   prefillTranKey?: number;
 }
 
-export const AmendmentModal = ({ repairKey, open, onClose, onAmendmentCreated, prefillTranKey }: Props) => {
+export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAmendmentCreated, prefillTranKey }: Props) => {
   const [amendments, setAmendments] = useState<Amendment[]>([]);
   const [selected, setSelected] = useState<Amendment | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -118,19 +119,29 @@ export const AmendmentModal = ({ repairKey, open, onClose, onAmendmentCreated, p
           <div style={{
             padding: '8px 12px', background: 'var(--neutral-50)',
             borderBottom: '1px solid var(--border)',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 6,
           }}>
             <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)' }}>
               {amendments.length} amendment{amendments.length !== 1 ? 's' : ''}
             </span>
-            <button
-              onClick={() => { setShowForm(true); setSelected(null); }}
-              style={{
-                background: 'var(--primary)', color: '#fff', border: 'none',
-                borderRadius: 3, padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
-              }}>
-              + New
-            </button>
+            <div style={{ display: 'flex', gap: 4 }}>
+              <button
+                onClick={() => window.print()}
+                style={{
+                  background: '#fff', color: 'var(--muted)', border: '1px solid var(--border)',
+                  borderRadius: 3, padding: '2px 7px', fontSize: 9, fontWeight: 600, cursor: 'pointer',
+                }}>
+                Print OM07-9
+              </button>
+              <button
+                onClick={() => { setShowForm(true); setSelected(null); }}
+                style={{
+                  background: 'var(--primary)', color: '#fff', border: 'none',
+                  borderRadius: 3, padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                }}>
+                + New
+              </button>
+            </div>
           </div>
           {amendments.length === 0 && (
             <div style={{ padding: 16, fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>

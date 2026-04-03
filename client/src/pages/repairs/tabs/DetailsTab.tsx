@@ -311,6 +311,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
           />
           <AmendmentModal
             repairKey={repair.repairKey}
+            repair={repair}
             open={amendOpen}
             onClose={() => setAmendOpen(false)}
             onAmendmentCreated={() => { loadItems(); setAmendOpen(false); }}
