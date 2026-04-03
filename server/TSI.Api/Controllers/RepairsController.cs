@@ -739,6 +739,44 @@ public class RepairsController(IConfiguration config) : ControllerBase
         return rows > 0 ? NoContent() : NotFound();
     }
 
+    // ── Pricing Diagnostic (temporary) ──
+    [HttpGet("pricing-diag")]
+    public async Task<IActionResult> PricingDiag([FromQuery] int repairKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT c.lPricingCategoryKey, pc.sPricingDescription,
+                   (SELECT COUNT(*) FROM tblPricingDetail) AS TotalPricingRows,
+                   (SELECT COUNT(*) FROM tblPricingDetail WHERE lPricingCategoryKey = c.lPricingCategoryKey) AS MatchingRows,
+                   (SELECT COUNT(DISTINCT lPricingCategoryKey) FROM tblPricingDetail) AS DistinctCategories,
+                   (SELECT TOP 5 STRING_AGG(CAST(sub.lPricingCategoryKey AS varchar), ',')
+                    FROM (SELECT DISTINCT TOP 5 lPricingCategoryKey FROM tblPricingDetail) sub) AS SampleCatKeys
+            FROM tblRepair r
+            JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            JOIN tblClient c ON c.lClientKey = d.lClientKey
+            LEFT JOIN tblPricingCategory pc ON pc.lPricingCategoryKey = c.lPricingCategoryKey
+            WHERE r.lRepairKey = @repairKey
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return Ok(new {
+                clientCategoryKey = reader["lPricingCategoryKey"]?.ToString(),
+                categoryName = reader["sPricingDescription"]?.ToString(),
+                totalPricingRows = Convert.ToInt32(reader["TotalPricingRows"]),
+                matchingRows = Convert.ToInt32(reader["MatchingRows"]),
+                distinctCategories = Convert.ToInt32(reader["DistinctCategories"]),
+                sampleCategoryKeys = reader["SampleCatKeys"]?.ToString()
+            });
+        }
+        return NotFound();
+    }
+
     // ── Repair Item Catalog ──
     [HttpGet("items")]
     public async Task<IActionResult> GetRepairItemCatalog([FromQuery] int repairKey)
