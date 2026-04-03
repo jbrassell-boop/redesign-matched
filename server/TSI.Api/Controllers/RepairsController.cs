@@ -236,7 +236,27 @@ public class RepairsController(IConfiguration config) : ControllerBase
                    ISNULL(pc.sPricingDescription, '') AS sPricingCategory,
                    ISNULL(pt.sTermsDesc, '') AS sPaymentTerms,
                    ISNULL(rr.sRepairReason, '') AS sRepairReason,
-                   DATEDIFF(day, r.dtDateIn, GETDATE()) AS DaysIn
+                   DATEDIFF(day, r.dtDateIn, GETDATE()) AS DaysIn,
+                   -- Extended 4-tab fields
+                   r.sRackPosition,
+                   r.dtReqSent,
+                   r.dblDiscountPct,
+                   r.dblShippingClientIn,
+                   r.bTrackingNumberRequired,
+                   r.dtDeliveryDateGuaranteed,
+                   r.dtCarrierDeliveryDateGuaranteed,
+                   r.dtDeliveryDate,
+                   r.dblOutSourceCost,
+                   r.sDisplayItemDescription,
+                   r.sDisplayItemAmount,
+                   r.sBillTo,
+                   r.sPS3,
+                   (SELECT TOP 1 DATEDIFF(day, r2.dtDateIn, r.dtDateIn)
+                    FROM tblRepair r2
+                    WHERE r2.lScopeKey = r.lScopeKey
+                      AND r2.lRepairKey < r.lRepairKey
+                      AND r2.dtDateIn IS NOT NULL
+                    ORDER BY r2.lRepairKey DESC) AS DaysLastIn
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
@@ -335,7 +355,22 @@ public class RepairsController(IConfiguration config) : ControllerBase
             PaymentTerms: ReadStr("sPaymentTerms"),
             ContractNumber: ReadStr("sContractNumber"),
             RepairReason: ReadStr("sRepairReason"),
-            Source: null // no source column in tblRepair
+            Source: null, // no source column in tblRepair
+            // Extended 4-tab fields
+            RackPosition: ReadStr("sRackPosition"),
+            RequestSentDate: ReadDate("dtReqSent")?.ToString("MM/dd/yyyy"),
+            DiscountPct: reader["dblDiscountPct"] == DBNull.Value ? null : Convert.ToDecimal(reader["dblDiscountPct"]),
+            ShippingClientIn: reader["dblShippingClientIn"] == DBNull.Value ? null : Convert.ToDecimal(reader["dblShippingClientIn"]),
+            TrackingNumberRequired: reader["bTrackingNumberRequired"] == DBNull.Value ? null : Convert.ToBoolean(reader["bTrackingNumberRequired"]),
+            GtdDeliveryDate: ReadDate("dtDeliveryDateGuaranteed")?.ToString("MM/dd/yyyy"),
+            CarrierGtdDate: reader["dtCarrierDeliveryDateGuaranteed"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtCarrierDeliveryDateGuaranteed"]).ToString("MM/dd/yyyy"),
+            DeliveryDate: ReadDate("dtDeliveryDate")?.ToString("MM/dd/yyyy"),
+            OutsourceCost: reader["dblOutSourceCost"] == DBNull.Value ? null : Convert.ToDecimal(reader["dblOutSourceCost"]),
+            DisplayItemDescription: ReadStr("sDisplayItemDescription"),
+            DisplayItemAmount: ReadStr("sDisplayItemAmount"),
+            BillTo: ReadStr("sBillTo"),
+            PsLevel: ReadStr("sPS3"),
+            DaysLastIn: reader["DaysLastIn"] == DBNull.Value ? null : Convert.ToInt32(reader["DaysLastIn"])
         ));
     }
 

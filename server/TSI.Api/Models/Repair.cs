@@ -124,7 +124,22 @@ public record RepairFull(
     bool Outsourced, bool FirstRepair, string? ReworkRequired,
     // Pricing context
     string? PricingCategory, string? PaymentTerms, string? ContractNumber,
-    string? RepairReason, string? Source
+    string? RepairReason, string? Source,
+    // Extended 4-tab fields
+    string? RackPosition,
+    string? RequestSentDate,
+    decimal? DiscountPct,
+    decimal? ShippingClientIn,
+    bool? TrackingNumberRequired,
+    string? GtdDeliveryDate,
+    string? CarrierGtdDate,
+    string? DeliveryDate,
+    decimal? OutsourceCost,
+    string? DisplayItemDescription,
+    string? DisplayItemAmount,
+    string? BillTo,
+    string? PsLevel,
+    int? DaysLastIn
 );
 
 public record RepairInspections(
