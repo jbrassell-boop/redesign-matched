@@ -63,7 +63,7 @@ export const ClientsPage = () => {
   const loadClients = useCallback(async (s: string, sf: string) => {
     setLoading(true);
     try {
-      const result = await getClients({ search: s, pageSize: 500, status: sf === 'all' ? undefined : sf });
+      const result = await getClients({ search: s, pageSize: 500, statusFilter: sf === 'all' ? undefined : sf });
       setClients(result.clients);
     } finally {
       setLoading(false);
