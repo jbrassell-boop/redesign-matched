@@ -73,36 +73,36 @@ Cause and Comments on existing rows can be edited directly without triggering th
 
 ### Access Points
 
-1. **"Amendments" button** in the Details tab action bar — opens the amendment panel for the repair
-2. **Click amount or fix type on an existing row** — opens the amendment panel pre-focused on a new amendment for that item
+1. **"A" badge column** on each line item row in the items table — shown when `lAmendmentNumber > 0` for that item. Clicking the badge opens the amendment pop-out for this repair.
+2. **Clicking amount or fix type on an existing row** — opens the amendment pop-out to create a new amendment for that item.
 
-### Amendment Panel Layout
+### Amendment Pop-out Layout
 
-The panel is a drawer (600px, right side) or an inline section below the items table.
+A standalone modal (not a drawer, not embedded in the Details tab). ~700px wide.
 
 **Left column — Amendment history list**
 - All amendments for this repair, newest first
-- Each row: amendment #, date, type, reason (truncated), and user initials
+- Each row: amendment #, date, type, reason (truncated)
 - Click any row to view its detail on the right
-- Highlighted row = currently selected amendment
+- Highlighted row = currently selected
 
 **Right column — Amendment detail / new amendment form**
 
 *Viewing a past amendment (read-only):*
-- Amendment #, date, user
+- Amendment #, date
 - Type label, Reason label
 - Comment (full text)
-- Which item was affected (item code + description)
+- Item affected (code + description)
 - Old value → New value (fix type and/or amount)
 
-*Creating a new amendment (triggered from row or "+ New Amendment" button):*
-- Item selector (pre-filled if triggered from a row, else dropdown)
-- Amend Type select — populated from `tblAmendRepairTypes`
-- Amend Reason select — filtered to reasons matching selected type (`tblAmendRepairReasons.lAmendRepairTypeKey`)
-- New Fix Type (optional — only if changing fix type)
-- New Amount (optional — only if changing amount)
-- Comment (optional free text)
-- Save button → writes `tblRepairItemTran` (updated values) + inserts `tblAmendRepairComments` in a DB transaction. Amendment number = MAX(lAmendmentNumber) + 1 for this repair.
+*Creating a new amendment:*
+- Item pre-filled (if triggered from a row)
+- Amend Type select — from `tblAmendRepairTypes`
+- Amend Reason select — filtered by selected type (`tblAmendRepairReasons.lAmendRepairTypeKey`)
+- New Fix Type (optional)
+- New Amount (optional)
+- Comment (optional, 80 char max)
+- Save → updates `tblRepairItemTran` + inserts `tblAmendRepairComments` in a transaction. Amendment number = MAX(lAmendmentNumber) + 1 for this repair.
 
 ---
 
@@ -159,19 +159,20 @@ Returns `tblAmendRepairReasons` filtered by type.
 ## Frontend Changes
 
 ### `RepairItemsTable.tsx`
-- Replace Code + Description text inputs with a single `<AutocompleteSearch>` component
+- Replace Code + Description text inputs with a single `<RepairItemAutoComplete>` component
 - Add Cause toggle buttons (UA / NW) in the add row
-- Fix Type row: change from `<select>` to button group (W | NC | C | A)
-- Warranty auto-zero logic: when fixType === 'W', set amount to 0, store defaultPrice as base
-- Add "Amendments" button to trigger the amendment panel
+- Fix Type: change from `<select>` to button group (W | NC | C | A)
+- Warranty auto-zero logic: when fixType === 'W', set amount display to $0, pass `baseAmount = defaultPrice`
+- Add **"A" badge column** — shown on rows where `lAmendmentNumber > 0`; clicking opens `<AmendmentModal>`
+- Clicking amount or fix type cell on existing row also opens `<AmendmentModal>` pre-filled for that item
 
 ### New: `RepairItemAutoComplete.tsx`
-- Calls `GET /api/repair-items?repairKey={key}` on mount (cached)
-- Renders a search input with dropdown list
+- Calls `GET /api/repair-items?repairKey={key}` on mount (cached for session)
+- Renders a search input with filtered dropdown list
 - On select: fires `onSelect({ itemKey, itemCode, description, defaultPrice })`
 
-### New: `AmendmentPanel.tsx`
-- Drawer component (600px)
+### New: `AmendmentModal.tsx`
+- Standalone modal (~700px wide)
 - Left: amendment history list from `GET /api/repairs/{key}/amendments`
 - Right: selected amendment detail (read-only) or new amendment form
 - Form: type → reason (filtered) → new fix type / amount → comment → save
