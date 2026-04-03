@@ -53,3 +53,18 @@
 .split-layout__collapse-btn:hover {
   background: var(--primary);
 }
+
+/* Tablet: narrow the left panel */
+@media (max-width: 1280px) {
+  .split-layout__left {
+    width: 240px;
+  }
+}
+
+/* Small tablet / laptop: collapse left panel by default */
+@media (max-width: 1024px) {
+  .split-layout__left {
+    width: 0;
+    border-right: none;
+  }
+}

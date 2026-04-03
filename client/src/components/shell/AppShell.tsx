@@ -7,7 +7,7 @@ import { CommandPalette } from './CommandPalette';
 const getInitialCollapsed = () => {
   const pref = localStorage.getItem('tsi_sidebarCollapsed');
   if (pref !== null) return pref === '1';
-  return window.innerWidth <= 1440;
+  return window.innerWidth <= 1280;
 };
 
 export const AppShell = () => {

@@ -9,7 +9,20 @@
 .paired-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 900px;
+  min-width: 800px;
+}
+
+/* Scroll shadow hint when table overflows */
+.paired-table-wrap {
+  background:
+    linear-gradient(to right, var(--card) 30%, transparent),
+    linear-gradient(to left, var(--card) 30%, transparent),
+    linear-gradient(to right, rgba(0,0,0,.08), transparent 15px),
+    linear-gradient(to left, rgba(0,0,0,.08), transparent 15px);
+  background-position: left center, right center, left center, right center;
+  background-size: 20px 100%, 20px 100%, 15px 100%, 15px 100%;
+  background-repeat: no-repeat;
+  background-attachment: local, local, scroll, scroll;
 }
 
 /* Header */

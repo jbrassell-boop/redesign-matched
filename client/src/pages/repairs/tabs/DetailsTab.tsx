@@ -126,7 +126,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
       </div>
 
       {/* Main 2-col */}
-      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 10, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 280px) 1fr', gap: 12, alignItems: 'start' }}>
 
         {/* LEFT sidebar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
