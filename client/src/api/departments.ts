@@ -3,6 +3,7 @@ import type {
   DepartmentListResponse, DepartmentDetail, DepartmentSubGroup, DepartmentScope,
   DepartmentFull, DeptKpis, DeptContact, ScopeDetail, DepartmentRepairItem
 } from '../pages/departments/types';
+import type { PrimaryContact } from '../pages/repairs/types';
 
 export const getDepartments = async (params: {
   search?: string;
@@ -69,5 +70,10 @@ export const getDepartmentSubGroups = async (deptKey: number): Promise<Departmen
 
 export const getDepartmentScopes = async (deptKey: number): Promise<DepartmentScope[]> => {
   const { data } = await apiClient.get<DepartmentScope[]>(`/departments/${deptKey}/scopes`);
+  return data;
+};
+
+export const getDepartmentPrimaryContact = async (deptKey: number): Promise<PrimaryContact> => {
+  const { data } = await apiClient.get<PrimaryContact>(`/departments/${deptKey}/contacts/primary`);
   return data;
 };

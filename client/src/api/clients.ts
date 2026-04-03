@@ -1,5 +1,6 @@
 import apiClient from './client';
 import type { ClientListResponse, ClientDetail, ClientContact, ClientDepartment, ClientFlag, ClientFull, ClientKpis, ClientRepairItem } from '../pages/clients/types';
+import type { ClientSummary } from '../pages/repairs/types';
 
 export const getClients = async (params: {
   search?: string;
@@ -97,5 +98,10 @@ export const deleteClientFlag = async (clientKey: number, flagKey: number): Prom
 
 export const getClientRepairs = async (clientKey: number, params?: { page?: number; pageSize?: number }): Promise<{ items: ClientRepairItem[]; totalCount: number; page: number; pageSize: number }> => {
   const { data } = await apiClient.get(`/clients/${clientKey}/repairs`, { params });
+  return data;
+};
+
+export const getClientSummary = async (clientKey: number): Promise<ClientSummary> => {
+  const { data } = await apiClient.get<ClientSummary>(`/clients/${clientKey}/summary`);
   return data;
 };

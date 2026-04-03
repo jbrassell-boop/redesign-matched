@@ -18,7 +18,7 @@ export const getRepairDetail = async (repairKey: number): Promise<RepairDetail> 
   return data;
 };
 
-import type { RepairLineItem, RepairScopeHistory, RepairFinancials } from '../pages/repairs/types';
+import type { RepairLineItem, RepairScopeHistory, RepairFinancials, RepairFull, RepairInspections, LineItemUpdate } from '../pages/repairs/types';
 
 export const getRepairLineItems = async (repairKey: number): Promise<RepairLineItem[]> => {
   const { data } = await apiClient.get<RepairLineItem[]>(`/repairs/${repairKey}/lineitems`);
@@ -66,4 +66,39 @@ export const updateRepairStatus = async (repairKey: number, statusId: number): P
 export const getRepairStatusHistory = async (repairKey: number): Promise<RepairStatusLogEntry[]> => {
   const { data } = await apiClient.get<RepairStatusLogEntry[]>(`/repairs/${repairKey}/status-history`);
   return data;
+};
+
+// ── Cockpit Endpoints ──
+
+export const getRepairFull = async (repairKey: number): Promise<RepairFull> => {
+  const { data } = await apiClient.get<RepairFull>(`/repairs/${repairKey}/full`);
+  return data;
+};
+
+export const getRepairInspections = async (repairKey: number): Promise<RepairInspections> => {
+  const { data } = await apiClient.get<RepairInspections>(`/repairs/${repairKey}/inspections`);
+  return data;
+};
+
+export const updateRepairInspections = async (repairKey: number, inspections: RepairInspections): Promise<void> => {
+  await apiClient.put(`/repairs/${repairKey}/inspections`, inspections);
+};
+
+export const updateRepairPO = async (repairKey: number, po: string): Promise<void> => {
+  await apiClient.put(`/repairs/${repairKey}/po`, JSON.stringify(po), {
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
+
+export const addRepairLineItem = async (repairKey: number, item: LineItemUpdate): Promise<{ tranKey: number }> => {
+  const { data } = await apiClient.post(`/repairs/${repairKey}/lineitems`, item);
+  return data;
+};
+
+export const updateRepairLineItem = async (repairKey: number, tranKey: number, item: LineItemUpdate): Promise<void> => {
+  await apiClient.put(`/repairs/${repairKey}/lineitems/${tranKey}`, item);
+};
+
+export const deleteRepairLineItem = async (repairKey: number, tranKey: number): Promise<void> => {
+  await apiClient.delete(`/repairs/${repairKey}/lineitems/${tranKey}`);
 };
