@@ -32,6 +32,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         if (!await reader.ReadAsync())
@@ -887,56 +888,26 @@ public class DashboardController(IConfiguration config) : ControllerBase
             DECLARE @weekStart DATE = DATEADD(DAY, -7, @today);
 
             SELECT
-              -- Throughput
-              (SELECT COUNT(*) FROM tblRepair WHERE CAST(dtDateIn AS DATE) >= @weekStart) AS ReceivedThisWeek,
-              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @weekStart) AS ShippedThisWeek,
-              (SELECT COUNT(*) FROM tblRepair WHERE CAST(dtDateIn AS DATE) >= @monthStart) AS ReceivedThisMonth,
-              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @monthStart) AS ShippedThisMonth,
-
-              -- Average TAT (shipped this month)
-              (SELECT ISNULL(AVG(CAST(DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) AS DECIMAL(10,1))), 0)
-               FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @monthStart) AS AvgTatThisMonth,
-              (SELECT ISNULL(AVG(CAST(DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) AS DECIMAL(10,1))), 0)
-               FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @lastMonthStart
-               AND CAST(r.dtDateOut AS DATE) <= @lastMonthEnd) AS AvgTatLastMonth,
-
-              -- Backlog aging
-              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-               WHERE rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced')
-               AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) BETWEEN 1 AND 7) AS Backlog1to7,
-              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-               WHERE rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced')
-               AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) BETWEEN 8 AND 14) AS Backlog8to14,
-              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-               WHERE rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced')
-               AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) BETWEEN 15 AND 30) AS Backlog15to30,
-              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-               WHERE rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced')
-               AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) > 30) AS Backlog30Plus,
-
-              -- Revenue
-              (SELECT ISNULL(SUM(dblAmtRepair), 0) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @monthStart) AS RevenueThisMonth,
-              (SELECT ISNULL(SUM(dblAmtRepair), 0) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @lastMonthStart
-               AND CAST(r.dtDateOut AS DATE) <= @lastMonthEnd) AS RevenueLastMonth,
-
-              -- Warranty mix
-              (SELECT COUNT(*) FROM tblRepairItemTran WHERE sFixType = 'W'
-               AND lRepairKey IN (SELECT lRepairKey FROM tblRepair WHERE CAST(dtDateIn AS DATE) >= @monthStart)) AS WarrantyItemsMonth,
-              (SELECT COUNT(*) FROM tblRepairItemTran
-               WHERE lRepairKey IN (SELECT lRepairKey FROM tblRepair WHERE CAST(dtDateIn AS DATE) >= @monthStart)) AS TotalItemsMonth,
-
-              -- On-time delivery % (shipped within 14 days)
-              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @monthStart
-               AND DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) <= 14) AS OnTimeShipped,
-              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @monthStart) AS TotalShippedMonth
+              SUM(CASE WHEN r.dtDateIn >= @weekStart THEN 1 ELSE 0 END) AS ReceivedThisWeek,
+              SUM(CASE WHEN rs.sRepairStatus = 'Shipped' AND r.dtDateOut >= @weekStart THEN 1 ELSE 0 END) AS ShippedThisWeek,
+              SUM(CASE WHEN r.dtDateIn >= @monthStart THEN 1 ELSE 0 END) AS ReceivedThisMonth,
+              SUM(CASE WHEN rs.sRepairStatus = 'Shipped' AND r.dtDateOut >= @monthStart THEN 1 ELSE 0 END) AS ShippedThisMonth,
+              ISNULL(AVG(CASE WHEN rs.sRepairStatus = 'Shipped' AND r.dtDateOut >= @monthStart
+                THEN CAST(DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) AS DECIMAL(10,1)) END), 0) AS AvgTatThisMonth,
+              ISNULL(AVG(CASE WHEN rs.sRepairStatus = 'Shipped' AND r.dtDateOut >= @lastMonthStart AND r.dtDateOut <= @lastMonthEnd
+                THEN CAST(DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) AS DECIMAL(10,1)) END), 0) AS AvgTatLastMonth,
+              SUM(CASE WHEN rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced') AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) BETWEEN 1 AND 7 THEN 1 ELSE 0 END) AS Backlog1to7,
+              SUM(CASE WHEN rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced') AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) BETWEEN 8 AND 14 THEN 1 ELSE 0 END) AS Backlog8to14,
+              SUM(CASE WHEN rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced') AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) BETWEEN 15 AND 30 THEN 1 ELSE 0 END) AS Backlog15to30,
+              SUM(CASE WHEN rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced') AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) > 30 THEN 1 ELSE 0 END) AS Backlog30Plus,
+              ISNULL(SUM(CASE WHEN rs.sRepairStatus = 'Shipped' AND r.dtDateOut >= @monthStart THEN r.dblAmtRepair ELSE 0 END), 0) AS RevenueThisMonth,
+              ISNULL(SUM(CASE WHEN rs.sRepairStatus = 'Shipped' AND r.dtDateOut >= @lastMonthStart AND r.dtDateOut <= @lastMonthEnd THEN r.dblAmtRepair ELSE 0 END), 0) AS RevenueLastMonth,
+              0 AS WarrantyItemsMonth,
+              0 AS TotalItemsMonth,
+              SUM(CASE WHEN rs.sRepairStatus = 'Shipped' AND r.dtDateOut >= @monthStart AND DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) <= 14 THEN 1 ELSE 0 END) AS OnTimeShipped,
+              SUM(CASE WHEN rs.sRepairStatus = 'Shipped' AND r.dtDateOut >= @monthStart THEN 1 ELSE 0 END) AS TotalShippedMonth
+            FROM tblRepair r
+            LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             """;
 
         await using var cmd = new SqlCommand(sql, conn);

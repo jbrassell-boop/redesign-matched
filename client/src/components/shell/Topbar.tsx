@@ -49,6 +49,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
   };
 
   const menuItems = [
+    { label: 'Receiving', desc: 'Check in incoming scopes and create work orders', type: 'receiving', icon: 'repair', border: true },
     { label: 'Repair Order', desc: 'New scope repair work order', type: 'repair', icon: 'repair', border: true },
     { label: 'Instrument Repair', desc: 'New surgical instrument repair order', type: 'instrument', icon: 'repair', border: true },
     { label: 'Product Sale', desc: 'New product sale order', type: 'product-sale', icon: 'sale', border: true },
@@ -109,7 +110,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
                 {menuItems.map((item) => (
                   <div
                     key={item.type}
-                    onClick={() => openWizard(item.type, `New ${item.label}`)}
+                    onClick={() => { setMenuOpen(false); item.type === 'receiving' ? navigate('/receiving') : openWizard(item.type, `New ${item.label}`); }}
                     style={{
                       padding: '10px 14px', cursor: 'pointer',
                       display: 'flex', alignItems: 'center', gap: 10,
