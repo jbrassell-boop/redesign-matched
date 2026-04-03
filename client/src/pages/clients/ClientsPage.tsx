@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { getClients, getClientDetail } from '../../api/clients';
+import { getClients } from '../../api/clients';
 import { ClientsList } from './ClientsList';
 import { ClientDetailPane } from './ClientDetailPane';
-import type { ClientListItem, ClientDetail } from './types';
+import type { ClientListItem } from './types';
 import { ExportButton } from '../../components/common/ExportButton';
 import { useKeyboardNav } from '../../hooks/useKeyboardNav';
 
@@ -20,8 +20,6 @@ export const ClientsPage = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
-  const [detail, setDetail] = useState<ClientDetail | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
 
   const loadClients = useCallback(async (s: string) => {
     setLoading(true);
@@ -38,16 +36,14 @@ export const ClientsPage = () => {
     return () => clearTimeout(timer);
   }, [search, loadClients]);
 
-  const handleSelect = useCallback(async (c: ClientListItem) => {
+  const handleSelect = useCallback((c: ClientListItem) => {
     setSelectedKey(c.clientKey);
-    setDetailLoading(true);
-    try {
-      const d = await getClientDetail(c.clientKey);
-      setDetail(d);
-    } finally {
-      setDetailLoading(false);
-    }
   }, []);
+
+  const handleClientDeleted = useCallback(() => {
+    setSelectedKey(null);
+    loadClients(search);
+  }, [search, loadClients]);
 
   const selectedIndex = useMemo(
     () => clients.findIndex(c => c.clientKey === selectedKey),
@@ -67,7 +63,7 @@ export const ClientsPage = () => {
         <ClientsList clients={clients} loading={loading} selectedKey={selectedKey} search={search} onSearchChange={setSearch} onSelect={handleSelect} />
       </div>
       <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-        <ClientDetailPane detail={detail} loading={detailLoading} />
+        <ClientDetailPane clientKey={selectedKey} onClientDeleted={handleClientDeleted} />
       </div>
     </div>
   );
