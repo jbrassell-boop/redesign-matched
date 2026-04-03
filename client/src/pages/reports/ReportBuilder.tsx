@@ -367,9 +367,15 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
 const REPORT_ENDPOINTS: Record<string, string> = {
   'repair-volume': '/reports/repair-volume',
   'repair-tat': '/reports/tat-analysis',
-  'revenue-client': '/reports/revenue-client',
+  'tech-productivity': '/reports/tech-productivity',
+  'repair-cost': '/reports/revenue-client',
+  'warranty-claims': '/reports/warranty-claims',
+  'scope-repair-list': '/reports/scope-repair-list',
+  'scope-repair-hist': '/reports/scope-repair-list',
   'repair-metrics': '/reports/client-scorecard',
+  'repair-counts-item': '/reports/warranty-claims',
   'billable-report': '/reports/revenue-client',
+  'revenue-client': '/reports/revenue-client',
   'outstanding-aging': '/reports/revenue-client',
   'monthly-revenue': '/reports/repair-volume',
 };

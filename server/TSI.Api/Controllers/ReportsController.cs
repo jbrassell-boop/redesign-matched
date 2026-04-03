@@ -168,6 +168,111 @@ public class ReportsController(IConfiguration config) : ControllerBase
         return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"client-scorecard-{DateTime.Now:yyyyMMdd}.csv");
     }
 
+    // ── Technician Productivity ──
+    [HttpGet("tech-productivity")]
+    public async Task<IActionResult> TechProductivity([FromQuery] int months = 3)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT ISNULL(t.sTechName, 'Unassigned') AS Tech,
+                   COUNT(*) AS RepairsCompleted,
+                   ISNULL(SUM(r.dblAmtRepair), 0) AS Revenue,
+                   AVG(CAST(DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) AS DECIMAL(10,1))) AS AvgTAT,
+                   SUM(CASE WHEN DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) <= 14 THEN 1 ELSE 0 END) AS OnTime
+            FROM tblRepair r
+            JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey
+            WHERE rs.sRepairStatus = 'Shipped'
+              AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
+            GROUP BY t.sTechName
+            ORDER BY COUNT(*) DESC";
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@months", months);
+        cmd.CommandTimeout = 30;
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var csv = new StringBuilder("Technician,Repairs Completed,Revenue,Avg TAT (days),On-Time Count\n");
+        while (await reader.ReadAsync())
+            csv.AppendLine($"{Esc(reader["Tech"])},{reader["RepairsCompleted"]},{Convert.ToDecimal(reader["Revenue"]):F2},{Convert.ToDecimal(reader["AvgTAT"]):F1},{reader["OnTime"]}");
+        return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"tech-productivity-{DateTime.Now:yyyyMMdd}.csv");
+    }
+
+    // ── Warranty Claims ──
+    [HttpGet("warranty-claims")]
+    public async Task<IActionResult> WarrantyClaims([FromQuery] int months = 12)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT c.sClientName1 AS Client,
+                   ISNULL(ri.sItemDescription, 'Unknown') AS RepairItem,
+                   COUNT(*) AS WarrantyCount,
+                   ISNULL(SUM(rit.dblRepairPriceBase), 0) AS ListValue
+            FROM tblRepairItemTran rit
+            JOIN tblRepair r ON r.lRepairKey = rit.lRepairKey
+            JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            JOIN tblClient c ON c.lClientKey = d.lClientKey
+            LEFT JOIN tblRepairItem ri ON ri.lRepairItemKey = rit.lRepairItemKey
+            WHERE rit.sFixType = 'W'
+              AND r.dtDateIn >= DATEADD(MONTH, -@months, GETDATE())
+            GROUP BY c.sClientName1, ri.sItemDescription
+            ORDER BY COUNT(*) DESC";
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@months", months);
+        cmd.CommandTimeout = 30;
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var csv = new StringBuilder("Client,Repair Item,Warranty Count,List Value\n");
+        while (await reader.ReadAsync())
+            csv.AppendLine($"{Esc(reader["Client"])},{Esc(reader["RepairItem"])},{reader["WarrantyCount"]},{Convert.ToDecimal(reader["ListValue"]):F2}");
+        return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"warranty-claims-{DateTime.Now:yyyyMMdd}.csv");
+    }
+
+    // ── Scope Repair List ──
+    [HttpGet("scope-repair-list")]
+    public async Task<IActionResult> ScopeRepairList([FromQuery] int months = 6)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = @"
+            SELECT r.sWorkOrderNumber AS WO,
+                   CONVERT(varchar, r.dtDateIn, 101) AS DateIn,
+                   CONVERT(varchar, r.dtDateOut, 101) AS DateOut,
+                   rs.sRepairStatus AS Status,
+                   ISNULL(c.sClientName1, '') AS Client,
+                   ISNULL(dep.sDepartmentName, '') AS Dept,
+                   ISNULL(st.sScopeTypeDesc, '') AS ScopeType,
+                   ISNULL(s.sSerialNumber, '') AS Serial,
+                   ISNULL(t.sTechName, '') AS Tech,
+                   DATEDIFF(DAY, r.dtDateIn, ISNULL(r.dtDateOut, GETDATE())) AS TAT,
+                   ISNULL(r.dblAmtRepair, 0) AS Amount
+            FROM tblRepair r
+            LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblDepartment dep ON dep.lDepartmentKey = r.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = dep.lClientKey
+            LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey
+            WHERE r.dtDateIn >= DATEADD(MONTH, -@months, GETDATE())
+            ORDER BY r.dtDateIn DESC";
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@months", months);
+        cmd.CommandTimeout = 30;
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var csv = new StringBuilder("WO,Date In,Date Out,Status,Client,Dept,Scope Type,Serial,Tech,TAT (days),Amount\n");
+        while (await reader.ReadAsync())
+            csv.AppendLine($"{reader["WO"]},{reader["DateIn"]},{reader["DateOut"]},{Esc(reader["Status"])},{Esc(reader["Client"])},{Esc(reader["Dept"])},{Esc(reader["ScopeType"])},{reader["Serial"]},{Esc(reader["Tech"])},{reader["TAT"]},{Convert.ToDecimal(reader["Amount"]):F2}");
+        return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", $"scope-repair-list-{DateTime.Now:yyyyMMdd}.csv");
+    }
+
     private static string Esc(object? val) =>
         $"\"{val?.ToString()?.Replace("\"", "\"\"") ?? ""}\"";
 }

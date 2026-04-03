@@ -152,32 +152,48 @@ export const DashboardPage = () => {
     );
   };
 
-  // CSV export for current repairs data
+  // CSV export for any view
   const handleExport = () => {
-    if (toolbarState.view !== 'repairs' || data.length === 0) {
-      message.info('Switch to Repairs view to export');
-      return;
-    }
-    const headers = ['WO', 'Date In', 'Client', 'Dept', 'Scope Type', 'Serial', 'Days In', 'Status', 'Tech', 'Est Delivery', 'Amount'];
-    const rows = (data as DashboardRepair[]).map(r => [
-      r.wo,
-      r.dateIn ? new Date(r.dateIn).toLocaleDateString() : '',
-      r.client,
-      r.dept,
-      r.scopeType,
-      r.serial,
-      r.daysIn,
-      r.status,
-      r.tech ?? '',
-      r.estDelivery ? new Date(r.estDelivery).toLocaleDateString() : '',
-      r.amountApproved != null ? r.amountApproved.toFixed(2) : '',
-    ]);
-    const csv = [headers, ...rows].map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    if (data.length === 0) { message.info('No data to export'); return; }
+    const VIEW_EXPORT: Record<string, { headers: string[]; row: (r: any) => string[] }> = {
+      repairs: {
+        headers: ['WO', 'Date In', 'Client', 'Dept', 'Scope Type', 'Serial', 'Days In', 'Status', 'Tech', 'Date Approved', 'Est Delivery', 'Amount'],
+        row: (r) => [r.wo, r.dateIn, r.client, r.dept, r.scopeType, r.serial, r.daysIn, r.status, r.tech ?? '', r.dateApproved ?? '', r.estDelivery ?? '', r.amountApproved?.toFixed(2) ?? ''],
+      },
+      shipping: {
+        headers: ['WO', 'Client', 'Status', 'Ship Date', 'Tracking #', 'Charge'],
+        row: (r) => [r.wo, r.client, r.status, r.shipDate ?? '', r.trackingNumber ?? '', r.shipCharge?.toFixed(2) ?? ''],
+      },
+      invoices: {
+        headers: ['Invoice #', 'WO', 'Client', 'Status', 'Amount', 'Date'],
+        row: (r) => [r.invoiceNumber, r.wo, r.client, r.status, r.amount?.toFixed(2) ?? '', r.date],
+      },
+      tasks: {
+        headers: ['Title', 'Client', 'Dept', 'Type', 'Priority', 'Status', 'Date'],
+        row: (r) => [r.title, r.client, r.dept, r.taskType, r.priority, r.status, r.date],
+      },
+      emails: {
+        headers: ['Date', 'Type', 'From', 'To', 'Subject', 'Status'],
+        row: (r) => [r.date, r.emailType, r.from, r.to, r.subject, r.status],
+      },
+      flags: {
+        headers: ['Flag', 'Type', 'Owner'],
+        row: (r) => [r.flagText, r.flagType, r.ownerName],
+      },
+      techbench: {
+        headers: ['WO', 'Serial', 'Scope Type', 'Client', 'Days In', 'Status', 'Tech'],
+        row: (r) => [r.wo, r.serial, r.scopeType, r.client, r.daysIn, r.status, r.tech ?? ''],
+      },
+    };
+    const def = VIEW_EXPORT[toolbarState.view];
+    if (!def) { message.info('Export not available for this view'); return; }
+    const rows = data.map(def.row);
+    const csv = [def.headers, ...rows].map(row => row.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `repairs-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `${toolbarState.view}-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
