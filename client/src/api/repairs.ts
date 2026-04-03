@@ -102,3 +102,19 @@ export const updateRepairLineItem = async (repairKey: number, tranKey: number, i
 export const deleteRepairLineItem = async (repairKey: number, tranKey: number): Promise<void> => {
   await apiClient.delete(`/repairs/${repairKey}/lineitems/${tranKey}`);
 };
+
+export interface RepairHeaderPatch {
+  purchaseOrder?: string;
+  rackLocation?: string;
+  complaint?: string;
+  repairReason?: string;
+  inboundTracking?: string;
+  displayCustomerComplaint?: boolean;
+  displayItemizedDesc?: string;
+  displayItemizedAmounts?: string;
+  billToCustomer?: string;
+}
+
+export const patchRepairHeader = async (repairKey: number, patch: RepairHeaderPatch): Promise<void> => {
+  await apiClient.patch(`/repairs/${repairKey}/header`, patch);
+};
