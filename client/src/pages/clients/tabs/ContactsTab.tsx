@@ -35,7 +35,7 @@ export const ContactsTab = ({ clientKey }: ContactsTabProps) => {
 
   const handleSaveRow = async () => {
     if (!editRow) return;
-    const payload = { firstName: editRow.firstName ?? '', lastName: editRow.lastName ?? '', phone: editRow.phone, fax: editRow.fax, email: editRow.email };
+    const payload = { firstName: editRow.firstName ?? '', lastName: editRow.lastName ?? '', phone: editRow.phone ?? undefined, fax: editRow.fax ?? undefined, email: editRow.email ?? undefined };
     if (editRow.isNew) {
       await addClientContact(clientKey, payload);
     } else {

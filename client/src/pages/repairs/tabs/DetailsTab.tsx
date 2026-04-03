@@ -92,7 +92,7 @@ export const DetailsTab = ({ repair }: DetailsTabProps) => (
       </SectionCard>
 
       <SectionCard title="Shipping & Tracking">
-        <FormGrid cols={1}>
+        <FormGrid cols={2}>
           <Field label="Ship Date" value={repair.shipDate} />
           <Field label="Weight" value={repair.shipWeight} />
           <Field label="Service Level" value={repair.deliveryServiceLevel} />

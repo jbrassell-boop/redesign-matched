@@ -34,7 +34,7 @@ export const ClientToolbar = ({ client, saveState, onSave, onToggleActive, onDel
       {saveState === 'saving' ? (
         <Spin size="small" />
       ) : (
-        saveState !== 'saving' && <span className={`client-toolbar__dot client-toolbar__dot--${saveState}`} />
+        <span className={`client-toolbar__dot client-toolbar__dot--${saveState}`} />
       )}
       <span className={`client-toolbar__save-text--${saveState}`}>
         {saveState === 'ready' && 'Ready'}

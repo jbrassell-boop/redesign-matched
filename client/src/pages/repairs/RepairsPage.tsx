@@ -20,7 +20,6 @@ const REPAIR_EXPORT_COLS = [
 
 export const RepairsPage = () => {
   const { repairKey: repairKeyParam } = useParams<{ repairKey: string }>();
-  const navigate = useNavigate();
   const cockpitKey = repairKeyParam ? parseInt(repairKeyParam, 10) : null;
 
   // If we have a repairKey param, render cockpit mode
