@@ -33,7 +33,6 @@ export const WorkflowPipeline = ({ currentStatus }: Props) => {
       {STAGES.map((stage, idx) => {
         const isPast = idx < activeIdx;
         const isActive = idx === activeIdx;
-        const isFuture = idx > activeIdx;
 
         return (
           <div key={stage.label} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
