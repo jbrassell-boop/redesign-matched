@@ -752,7 +752,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
                    ISNULL(ri.sItemDescription, '') AS sItemDescription,
                    ISNULL(pd.dblRepairPrice, 0) AS dblDefaultPrice
             FROM tblRepairItem ri
-            CROSS JOIN (
+            OUTER APPLY (
                 SELECT c.lPricingCategoryKey
                 FROM tblRepair r
                 JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
@@ -761,7 +761,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             ) pricing
             LEFT JOIN tblPricingDetail pd ON pd.lRepairItemKey = ri.lRepairItemKey
                 AND pd.lPricingCategoryKey = pricing.lPricingCategoryKey
-            WHERE ri.bActive = 1
+            WHERE ISNULL(ri.bActive, 1) = 1
             ORDER BY ri.sItemDescription
             """;
 
