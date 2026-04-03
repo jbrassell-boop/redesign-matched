@@ -9,7 +9,7 @@
   Tables migrated (in order):
     Tier 1 (lookups):  tblRepairStatuses, tblServiceLocations, tblRepairLevels,
                        tblDeliveryMethod, tblRepairReasons, tblPaymentTerms,
-                       tblPricingCategory, tblManufacturers, tblScopeTypeCategories
+                       tblPricingCategory, tblPricingDetail, tblManufacturers, tblScopeTypeCategories
     Tier 2 (core):     tblSalesRep, tblScopeType, tblClient, tblTechnicians,
                        tblDepartment, tblScope, tblRepairItem
     Tier 3 (txn):      tblRepair, tblRepairItemTran
@@ -86,6 +86,7 @@ $allTables = @(
     "tblRepairReasons",
     "tblPaymentTerms",
     "tblPricingCategory",
+    "tblPricingDetail",      # FK: tblPricingCategory, tblRepairItem
     "tblManufacturers",
     "tblScopeTypeCategories",
 
