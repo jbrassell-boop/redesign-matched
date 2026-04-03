@@ -6,6 +6,8 @@ import type { StatChipDef } from '../../components/shared';
 import { DashboardToolbar } from './DashboardToolbar';
 import { UnifiedTable } from './UnifiedTable';
 import { QuickEditModal } from './QuickEditModal';
+import { ExecutiveKpi } from './ExecutiveKpi';
+import { OpsBriefing } from './OpsBriefing';
 import {
   getDashboardStats, getDashboardRepairs, getDashboardShipping,
   getDashboardInvoices, getDashboardFlags, getDashboardEmails,
@@ -195,6 +197,7 @@ export const DashboardPage = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+      <ExecutiveKpi />
       <StatStrip
         chips={chips}
         loading={statsLoading}
@@ -208,18 +211,22 @@ export const DashboardPage = () => {
         onExport={handleExport}
       />
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <UnifiedTable
-          view={toolbarState.view}
-          data={data}
-          loading={loading}
-          totalCount={totalCount}
-          page={toolbarState.page}
-          pageSize={toolbarState.pageSize}
-          onPageChange={(page, pageSize) => handleToolbarChange({ page, pageSize })}
-          onRowClick={handleRowClick}
-          selectedKeys={selectedKeys}
-          onSelectionChange={setSelectedKeys}
-        />
+        {toolbarState.view === 'briefing' ? (
+          <OpsBriefing stats={stats} />
+        ) : (
+          <UnifiedTable
+            view={toolbarState.view}
+            data={data}
+            loading={loading}
+            totalCount={totalCount}
+            page={toolbarState.page}
+            pageSize={toolbarState.pageSize}
+            onPageChange={(page, pageSize) => handleToolbarChange({ page, pageSize })}
+            onRowClick={handleRowClick}
+            selectedKeys={selectedKeys}
+            onSelectionChange={setSelectedKeys}
+          />
+        )}
       </div>
 
       <QuickEditModal

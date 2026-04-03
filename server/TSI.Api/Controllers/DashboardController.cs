@@ -871,4 +871,183 @@ public class DashboardController(IConfiguration config) : ControllerBase
         return Ok(new DashboardAnalyticsResponse(metrics,
             new DashboardAnalyticsStats(inHouse, avgTat, 0, throughput)));
     }
+
+    // ── Executive KPI Dashboard ──
+    [HttpGet("executive-kpi")]
+    public async Task<IActionResult> GetExecutiveKpi()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            DECLARE @today DATE = CAST(GETDATE() AS DATE);
+            DECLARE @monthStart DATE = DATEFROMPARTS(YEAR(@today), MONTH(@today), 1);
+            DECLARE @lastMonthStart DATE = DATEADD(MONTH, -1, @monthStart);
+            DECLARE @lastMonthEnd DATE = DATEADD(DAY, -1, @monthStart);
+            DECLARE @weekStart DATE = DATEADD(DAY, -7, @today);
+
+            SELECT
+              -- Throughput
+              (SELECT COUNT(*) FROM tblRepair WHERE CAST(dtDateIn AS DATE) >= @weekStart) AS ReceivedThisWeek,
+              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @weekStart) AS ShippedThisWeek,
+              (SELECT COUNT(*) FROM tblRepair WHERE CAST(dtDateIn AS DATE) >= @monthStart) AS ReceivedThisMonth,
+              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @monthStart) AS ShippedThisMonth,
+
+              -- Average TAT (shipped this month)
+              (SELECT ISNULL(AVG(CAST(DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) AS DECIMAL(10,1))), 0)
+               FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @monthStart) AS AvgTatThisMonth,
+              (SELECT ISNULL(AVG(CAST(DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) AS DECIMAL(10,1))), 0)
+               FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @lastMonthStart
+               AND CAST(r.dtDateOut AS DATE) <= @lastMonthEnd) AS AvgTatLastMonth,
+
+              -- Backlog aging
+              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               WHERE rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced')
+               AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) BETWEEN 1 AND 7) AS Backlog1to7,
+              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               WHERE rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced')
+               AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) BETWEEN 8 AND 14) AS Backlog8to14,
+              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               WHERE rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced')
+               AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) BETWEEN 15 AND 30) AS Backlog15to30,
+              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               WHERE rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced')
+               AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) > 30) AS Backlog30Plus,
+
+              -- Revenue
+              (SELECT ISNULL(SUM(dblAmtRepair), 0) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @monthStart) AS RevenueThisMonth,
+              (SELECT ISNULL(SUM(dblAmtRepair), 0) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @lastMonthStart
+               AND CAST(r.dtDateOut AS DATE) <= @lastMonthEnd) AS RevenueLastMonth,
+
+              -- Warranty mix
+              (SELECT COUNT(*) FROM tblRepairItemTran WHERE sFixType = 'W'
+               AND lRepairKey IN (SELECT lRepairKey FROM tblRepair WHERE CAST(dtDateIn AS DATE) >= @monthStart)) AS WarrantyItemsMonth,
+              (SELECT COUNT(*) FROM tblRepairItemTran
+               WHERE lRepairKey IN (SELECT lRepairKey FROM tblRepair WHERE CAST(dtDateIn AS DATE) >= @monthStart)) AS TotalItemsMonth,
+
+              -- On-time delivery % (shipped within 14 days)
+              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @monthStart
+               AND DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) <= 14) AS OnTimeShipped,
+              (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               WHERE rs.sRepairStatus = 'Shipped' AND CAST(r.dtDateOut AS DATE) >= @monthStart) AS TotalShippedMonth
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        await using var rdr = await cmd.ExecuteReaderAsync();
+        if (!await rdr.ReadAsync()) return Ok(new { });
+
+        return Ok(new {
+            receivedThisWeek = rdr.GetInt32(0),
+            shippedThisWeek = rdr.GetInt32(1),
+            receivedThisMonth = rdr.GetInt32(2),
+            shippedThisMonth = rdr.GetInt32(3),
+            avgTatThisMonth = rdr.GetDecimal(4),
+            avgTatLastMonth = rdr.GetDecimal(5),
+            backlog1to7 = rdr.GetInt32(6),
+            backlog8to14 = rdr.GetInt32(7),
+            backlog15to30 = rdr.GetInt32(8),
+            backlog30Plus = rdr.GetInt32(9),
+            revenueThisMonth = rdr.GetDecimal(10),
+            revenueLastMonth = rdr.GetDecimal(11),
+            warrantyItemsMonth = rdr.GetInt32(12),
+            totalItemsMonth = rdr.GetInt32(13),
+            onTimeShipped = rdr.GetInt32(14),
+            totalShippedMonth = rdr.GetInt32(15),
+        });
+    }
+
+    // ── Client Report Card ──
+    [HttpGet("/api/clients/{clientKey:int}/report-card")]
+    public async Task<IActionResult> GetClientReportCard(int clientKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            DECLARE @monthStart DATE = DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1);
+            DECLARE @yearStart DATE = DATEFROMPARTS(YEAR(GETDATE()), 1, 1);
+
+            SELECT
+              c.sClientName1 AS ClientName,
+              -- Repairs completed (shipped) this year
+              (SELECT COUNT(*) FROM tblRepair r
+               JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+               WHERE d.lClientKey = @ck AND rs.sRepairStatus = 'Shipped'
+               AND CAST(r.dtDateOut AS DATE) >= @yearStart) AS RepairsCompletedYTD,
+              -- Average TAT
+              (SELECT ISNULL(AVG(CAST(DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) AS DECIMAL(10,1))), 0)
+               FROM tblRepair r
+               JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+               WHERE d.lClientKey = @ck AND rs.sRepairStatus = 'Shipped'
+               AND CAST(r.dtDateOut AS DATE) >= @yearStart) AS AvgTatYTD,
+              -- On-time % (within 14 days)
+              (SELECT COUNT(*) FROM tblRepair r
+               JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+               WHERE d.lClientKey = @ck AND rs.sRepairStatus = 'Shipped'
+               AND CAST(r.dtDateOut AS DATE) >= @yearStart
+               AND DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) <= 14) AS OnTimeYTD,
+              -- Total revenue YTD
+              (SELECT ISNULL(SUM(r.dblAmtRepair), 0) FROM tblRepair r
+               JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+               WHERE d.lClientKey = @ck AND rs.sRepairStatus = 'Shipped'
+               AND CAST(r.dtDateOut AS DATE) >= @yearStart) AS RevenueYTD,
+              -- Currently in-house
+              (SELECT COUNT(*) FROM tblRepair r
+               JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+               JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+               WHERE d.lClientKey = @ck AND rs.sRepairStatus NOT IN ('Shipped','Cancelled','Invoiced')) AS InHouseNow,
+              -- Warranty items YTD
+              (SELECT COUNT(*) FROM tblRepairItemTran rit
+               JOIN tblRepair r ON r.lRepairKey = rit.lRepairKey
+               JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+               WHERE d.lClientKey = @ck AND rit.sFixType = 'W'
+               AND CAST(r.dtDateIn AS DATE) >= @yearStart) AS WarrantyItemsYTD,
+              -- Total items YTD
+              (SELECT COUNT(*) FROM tblRepairItemTran rit
+               JOIN tblRepair r ON r.lRepairKey = rit.lRepairKey
+               JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+               WHERE d.lClientKey = @ck
+               AND CAST(r.dtDateIn AS DATE) >= @yearStart) AS TotalItemsYTD,
+              -- Departments served
+              (SELECT COUNT(DISTINCT r.lDepartmentKey) FROM tblRepair r
+               JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+               WHERE d.lClientKey = @ck
+               AND CAST(r.dtDateIn AS DATE) >= @yearStart) AS DepartmentsServedYTD
+            FROM tblClient c WHERE c.lClientKey = @ck
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@ck", clientKey);
+        cmd.CommandTimeout = 30;
+        await using var rdr = await cmd.ExecuteReaderAsync();
+        if (!await rdr.ReadAsync()) return NotFound();
+
+        var repairsCompleted = Convert.ToInt32(rdr["RepairsCompletedYTD"]);
+        var onTime = Convert.ToInt32(rdr["OnTimeYTD"]);
+        var totalItems = Convert.ToInt32(rdr["TotalItemsYTD"]);
+        var warrantyItems = Convert.ToInt32(rdr["WarrantyItemsYTD"]);
+
+        return Ok(new {
+            clientName = rdr["ClientName"]?.ToString() ?? "",
+            repairsCompletedYTD = repairsCompleted,
+            avgTatYTD = Convert.ToDecimal(rdr["AvgTatYTD"]),
+            onTimePctYTD = repairsCompleted > 0 ? Math.Round((decimal)onTime / repairsCompleted * 100, 1) : 0,
+            revenueYTD = Convert.ToDecimal(rdr["RevenueYTD"]),
+            inHouseNow = Convert.ToInt32(rdr["InHouseNow"]),
+            warrantyPctYTD = totalItems > 0 ? Math.Round((decimal)warrantyItems / totalItems * 100, 1) : 0,
+            departmentsServedYTD = Convert.ToInt32(rdr["DepartmentsServedYTD"]),
+        });
+    }
 }

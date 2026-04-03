@@ -21,7 +21,7 @@ import { InlineEditor } from '../../components/common/InlineEditor';
 import {
   updateRepairNotes, getRepairStatuses, updateRepairStatus,
   getRepairLineItems, getRepairScopeHistory, getRepairStatusHistory,
-  getRepairFull,
+  getRepairFull, createDraftInvoice, patchRepairHeader,
 } from '../../api/repairs';
 import { getClientFlags } from '../../api/clients';
 import type { RepairStatusOption } from '../../api/repairs';
@@ -162,7 +162,28 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       return;
     }
     if (nextId === 0) {
-      message.info('Workflow complete — this repair is ready to ship');
+      // Shipping stage — prompt for tracking number
+      const tracking = window.prompt('Enter tracking number (or leave blank to skip):');
+      if (tracking === null) return; // cancelled
+      if (tracking.trim()) {
+        try {
+          await patchRepairHeader(rk, { inboundTracking: tracking.trim() });
+        } catch {
+          message.error('Failed to save tracking number');
+        }
+      }
+      // Auto-create draft invoice
+      try {
+        const inv = await createDraftInvoice(rk);
+        message.success(`Draft invoice #${inv.invoiceKey} created`);
+      } catch {
+        // Invoice creation is optional — don't block the workflow
+      }
+      message.info('Workflow complete — repair shipped and invoiced');
+      onStatusChanged?.(rk);
+      if (isCockpit && resolvedKey) {
+        getRepairFull(resolvedKey).then(setFullRepair).catch(() => {});
+      }
       return;
     }
     try {

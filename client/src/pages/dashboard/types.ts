@@ -37,7 +37,7 @@ export interface DashboardFilters {
   statusFilter: string;
 }
 
-export type DashboardView = 'repairs' | 'shipping' | 'invoices' | 'flags' | 'emails' | 'tasks' | 'techbench';
+export type DashboardView = 'briefing' | 'repairs' | 'shipping' | 'invoices' | 'flags' | 'emails' | 'tasks' | 'techbench';
 
 export type ScopeTypeFilter = 'all' | 'Flexible' | 'Rigid' | 'Instrument' | 'Camera' | 'Carts';
 

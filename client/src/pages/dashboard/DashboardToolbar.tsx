@@ -2,6 +2,7 @@ import type { DashboardToolbarState, DashboardView, ScopeTypeFilter, LocationFil
 import './DashboardToolbar.css';
 
 const VIEWS: { key: DashboardView; label: string }[] = [
+  { key: 'briefing', label: 'Briefing' },
   { key: 'repairs', label: 'Repairs' },
   { key: 'shipping', label: 'Shipping' },
   { key: 'invoices', label: 'Invoices' },
