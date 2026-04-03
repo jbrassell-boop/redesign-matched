@@ -302,8 +302,9 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         if (update.PaysByCreditCard != null) { sets.Add("bPaysByCreditCard = @creditcard"); cmd.Parameters.AddWithValue("@creditcard", update.PaysByCreditCard); }
         if (update.OnsiteService != null) { sets.Add("bOnsiteService = @onsite"); cmd.Parameters.AddWithValue("@onsite", update.OnsiteService); }
         // Billing
-        if (update.DiscountPct != null) { sets.Add("dblShippingAmt = @discpct"); cmd.Parameters.AddWithValue("@discpct", update.DiscountPct); }
+        // DefaultShipping maps to dblShippingAmt (tblDepartment has no separate discount column)
         if (update.DefaultShipping != null) { sets.Add("dblShippingAmt = @defaultship"); cmd.Parameters.AddWithValue("@defaultship", update.DefaultShipping); }
+        else if (update.DiscountPct != null) { sets.Add("dblShippingAmt = @discpct"); cmd.Parameters.AddWithValue("@discpct", update.DiscountPct); }
         // Bill To
         if (update.BillName1 != null) { sets.Add("sBillName1 = @billname1"); cmd.Parameters.AddWithValue("@billname1", update.BillName1); }
         if (update.BillAddr1 != null) { sets.Add("sBillAddr1 = @billaddr1"); cmd.Parameters.AddWithValue("@billaddr1", update.BillAddr1); }
