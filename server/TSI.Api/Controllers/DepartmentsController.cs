@@ -94,7 +94,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
                    (SELECT COUNT(*) FROM tblRepair r
                     JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
                     WHERE r.lDepartmentKey = d.lDepartmentKey
-                      AND r.dtDateOut IS NULL AND rs.sRepairStatus NOT IN ('Cancelled')) AS OpenRepairs,
+                      AND ISNULL(r.sRepairClosed, 'N') != 'Y') AS OpenRepairs,
                    (SELECT COUNT(*) FROM tblScope s WHERE s.lDepartmentKey = d.lDepartmentKey) AS ScopeCount
             FROM tblDepartment d
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
@@ -143,7 +143,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
                    (SELECT COUNT(*) FROM tblRepair r
                     JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
                     WHERE r.lDepartmentKey = d.lDepartmentKey
-                      AND r.dtDateOut IS NULL AND rs.sRepairStatus NOT IN ('Cancelled')) AS OpenRepairs,
+                      AND ISNULL(r.sRepairClosed, 'N') != 'Y') AS OpenRepairs,
                    ISNULL(d.bIncludeConsumptionReportWithReq, 0) AS bShowConsumptionOnReq,
                    ISNULL(d.bEnforceScopeTypeFiltering, 0) AS bEnforceScopeTypeFiltering,
                    ISNULL(d.bDisplayItemDescription, 0) AS bShowItemizedDescriptions,
@@ -238,7 +238,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         const string sql = """
             SELECT
                 COUNT(*) AS TotalRepairs,
-                SUM(CASE WHEN r.dtDateOut IS NULL AND rs.sRepairStatus NOT IN ('Cancelled') THEN 1 ELSE 0 END) AS OpenRepairs,
+                SUM(CASE WHEN ISNULL(r.sRepairClosed, 'N') != 'Y' THEN 1 ELSE 0 END) AS OpenRepairs,
                 ISNULL(AVG(
                     CASE WHEN r.dtShipDate IS NOT NULL AND r.dtDateIn IS NOT NULL
                          THEN CAST(DATEDIFF(day, r.dtDateIn, r.dtShipDate) AS DECIMAL(10,1))

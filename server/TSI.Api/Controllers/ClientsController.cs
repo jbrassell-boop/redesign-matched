@@ -86,7 +86,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
                     JOIN tblDepartment d2 ON d2.lDepartmentKey = r.lDepartmentKey
                     JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
                     WHERE d2.lClientKey = c.lClientKey
-                      AND r.dtDateOut IS NULL AND rs.sRepairStatus NOT IN ('Cancelled')) AS OpenRepairs
+                      AND ISNULL(r.sRepairClosed, 'N') != 'Y') AS OpenRepairs
             FROM tblClient c
             WHERE c.lClientKey = @clientKey
             """;
@@ -280,7 +280,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
                     JOIN tblDepartment d2 ON d2.lDepartmentKey = r.lDepartmentKey
                     JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
                     WHERE d2.lClientKey = c.lClientKey
-                      AND r.dtDateOut IS NULL AND rs.sRepairStatus NOT IN ('Cancelled')) AS OpenRepairs,
+                      AND ISNULL(r.sRepairClosed, 'N') != 'Y') AS OpenRepairs,
                    c.sClientName2, c.sReferenceNum2, c.sReferenceNum3,
                    ISNULL(c.bBlindPS3, 0) AS bBlindPS3,
                    ISNULL(c.bRequisitionTotalsOnly, 0) AS bReqTotalsOnly,
@@ -379,7 +379,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
         const string sql = """
             SELECT
                 COUNT(*) AS TotalRepairs,
-                SUM(CASE WHEN r.dtDateOut IS NULL AND rs.sRepairStatus NOT IN ('Cancelled') THEN 1 ELSE 0 END) AS OpenRepairs,
+                SUM(CASE WHEN ISNULL(r.sRepairClosed, 'N') != 'Y' THEN 1 ELSE 0 END) AS OpenRepairs,
                 ISNULL(AVG(CAST(DATEDIFF(DAY, r.dtDateIn, ISNULL(r.dtDateOut, GETDATE())) AS DECIMAL)), 0) AS AvgTat,
                 ISNULL(SUM(r.dblAmtRepair), 0) AS TotalRevenue
             FROM tblRepair r
