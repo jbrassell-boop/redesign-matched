@@ -801,7 +801,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
     }
 
     // ── Pricing Diagnostic (temporary) ──
-    [HttpGet("pricing-diag")]
+    [HttpGet("items/diag")]
     public async Task<IActionResult> PricingDiag([FromQuery] int repairKey)
     {
         await using var conn = CreateConnection();
