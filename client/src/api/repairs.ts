@@ -18,7 +18,10 @@ export const getRepairDetail = async (repairKey: number): Promise<RepairDetail> 
   return data;
 };
 
-import type { RepairLineItem, RepairScopeHistory, RepairFinancials, RepairFull, RepairInspections, LineItemUpdate } from '../pages/repairs/types';
+import type {
+  RepairLineItem, RepairScopeHistory, RepairFinancials, RepairFull, RepairInspections, LineItemUpdate,
+  RepairCatalogItem, Amendment, AmendType, AmendReason, CreateAmendmentRequest,
+} from '../pages/repairs/types';
 
 export const getRepairLineItems = async (repairKey: number): Promise<RepairLineItem[]> => {
   const { data } = await apiClient.get<RepairLineItem[]>(`/repairs/${repairKey}/lineitems`);
@@ -117,4 +120,50 @@ export interface RepairHeaderPatch {
 
 export const patchRepairHeader = async (repairKey: number, patch: RepairHeaderPatch): Promise<void> => {
   await apiClient.patch(`/repairs/${repairKey}/header`, patch);
+};
+
+// ── Fast Entry ──
+export const getRepairItemCatalog = async (repairKey: number): Promise<RepairCatalogItem[]> => {
+  const { data } = await apiClient.get<RepairCatalogItem[]>('/repairs/items', {
+    params: { repairKey },
+  });
+  return data;
+};
+
+export const patchLineItemCauseComments = async (
+  repairKey: number,
+  tranKey: number,
+  cause: string | null,
+  comments: string | null,
+): Promise<void> => {
+  await apiClient.patch(`/repairs/${repairKey}/lineitems/${tranKey}/causecomments`, {
+    cause,
+    comments,
+  });
+};
+
+// ── Amendments ──
+export const getAmendments = async (repairKey: number): Promise<Amendment[]> => {
+  const { data } = await apiClient.get<Amendment[]>(`/repairs/${repairKey}/amendments`);
+  return data;
+};
+
+export const createAmendment = async (
+  repairKey: number,
+  body: CreateAmendmentRequest,
+): Promise<{ amendmentNumber: number }> => {
+  const { data } = await apiClient.post(`/repairs/${repairKey}/amendments`, body);
+  return data;
+};
+
+export const getAmendTypes = async (): Promise<AmendType[]> => {
+  const { data } = await apiClient.get<AmendType[]>('/amend-types');
+  return data;
+};
+
+export const getAmendReasons = async (typeKey: number): Promise<AmendReason[]> => {
+  const { data } = await apiClient.get<AmendReason[]>('/amend-reasons', {
+    params: { typeKey },
+  });
+  return data;
 };

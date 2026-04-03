@@ -59,6 +59,8 @@ export interface RepairLineItem {
   cause: string;
   fixType: string;
   amount: number;
+  baseAmount: number;
+  amendmentCount: number;
   tech: string;
   comments: string;
 }
@@ -167,15 +169,54 @@ export interface PrimaryContact {
 
 export interface LineItemUpdate {
   approved?: string;
+  itemKey?: number;
   itemCode?: string;
   cause?: string;
   description?: string;
   fixType?: string;
   amount?: number;
+  baseAmount?: number;
   techKey?: number | null;
   tech2Key?: number | null;
   isPrimary?: boolean;
   comments?: string;
+}
+
+// ── Repair Item Catalog ──
+export interface RepairCatalogItem {
+  itemKey: number;
+  itemCode: string;
+  description: string;
+  defaultPrice: number;
+}
+
+// ── Amendments ──
+export interface Amendment {
+  amendKey: number;
+  amendmentNumber: number;
+  date: string;
+  amendType: string;
+  amendReason: string;
+  comment: string;
+}
+
+export interface AmendType {
+  typeKey: number;
+  typeName: string;
+}
+
+export interface AmendReason {
+  reasonKey: number;
+  reasonName: string;
+}
+
+export interface CreateAmendmentRequest {
+  tranKey: number;
+  amendTypeKey: number;
+  amendReasonKey: number;
+  comment?: string;
+  newFixType?: string;
+  newAmount?: number;
 }
 
 // ── Financials ──

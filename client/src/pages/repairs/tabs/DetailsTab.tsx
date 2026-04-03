@@ -4,6 +4,7 @@ import type { RepairFull, RepairLineItem } from '../types';
 import type { ClientFlag } from '../../clients/types';
 import { getRepairLineItems } from '../../../api/repairs';
 import { RepairItemsTable } from '../components/RepairItemsTable';
+import { AmendmentModal } from '../components/AmendmentModal';
 
 interface DetailsTabProps {
   repair: RepairFull;
@@ -29,6 +30,8 @@ const sectionHd: React.CSSProperties = {
 
 export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
   const [items, setItems] = useState<RepairLineItem[]>([]);
+  const [amendOpen, setAmendOpen] = useState(false);
+  const [amendTranKey, setAmendTranKey] = useState<number | undefined>(undefined);
 
   const loadItems = useCallback(() => {
     getRepairLineItems(repair.repairKey)
@@ -37,6 +40,13 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
   }, [repair.repairKey]);
 
   useEffect(() => { loadItems(); }, [loadItems]);
+
+  const hasAmendments = (items ?? []).some(i => i.amendmentCount > 0);
+
+  const handleOpenAmendments = (tranKey?: number) => {
+    setAmendTranKey(tranKey);
+    setAmendOpen(true);
+  };
 
   const actionButtons = [
     { label: 'Consumption',     style: { background: 'var(--primary)', color: '#fff' } },
@@ -254,6 +264,15 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
             repairKey={repair.repairKey}
             items={items}
             onItemsChanged={loadItems}
+            onOpenAmendments={handleOpenAmendments}
+            hasAmendments={hasAmendments}
+          />
+          <AmendmentModal
+            repairKey={repair.repairKey}
+            open={amendOpen}
+            onClose={() => setAmendOpen(false)}
+            onAmendmentCreated={() => { loadItems(); setAmendOpen(false); }}
+            prefillTranKey={amendTranKey}
           />
         </div>
       </div>

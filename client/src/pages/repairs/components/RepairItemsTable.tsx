@@ -1,13 +1,31 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { message } from 'antd';
-import type { RepairLineItem, LineItemUpdate } from '../types';
-import { addRepairLineItem, deleteRepairLineItem } from '../../../api/repairs';
+import type { RepairLineItem, RepairCatalogItem } from '../types';
+import { addRepairLineItem, deleteRepairLineItem, patchLineItemCauseComments } from '../../../api/repairs';
+import { RepairItemAutoComplete } from './RepairItemAutoComplete';
 
 interface RepairItemsTableProps {
   repairKey: number;
   items: RepairLineItem[];
   onItemsChanged: () => void;
+  onOpenAmendments: (tranKey?: number) => void;
+  hasAmendments: boolean;
 }
+
+type FixType = 'W' | 'NC' | 'C' | 'A' | '';
+type CauseType = 'UA' | 'NW' | '';
+
+interface AddState {
+  selectedItem: RepairCatalogItem | null;
+  fixType: FixType;
+  cause: CauseType;
+  amount: number;
+  comment: string;
+}
+
+const EMPTY_ADD: AddState = {
+  selectedItem: null, fixType: 'C', cause: '', amount: 0, comment: '',
+};
 
 const causeBadge = (cause: string) => {
   const styles: Record<string, { bg: string; color: string; border: string }> = {
@@ -50,15 +68,16 @@ const approvalDot = (approved: string) => {
   return <span style={{ width: 9, height: 9, borderRadius: '50%', background: color, display: 'inline-block' }} />;
 };
 
-const EMPTY_ADD: LineItemUpdate = { cause: '', fixType: '', amount: 0, comments: '' };
-
-export const RepairItemsTable = ({ repairKey, items, onItemsChanged }: RepairItemsTableProps) => {
-  const [addRow, setAddRow] = useState<LineItemUpdate>(EMPTY_ADD);
+export const RepairItemsTable = ({
+  repairKey, items, onItemsChanged, onOpenAmendments, hasAmendments,
+}: RepairItemsTableProps) => {
+  const [addRow, setAddRow] = useState<AddState>(EMPTY_ADD);
   const [saving, setSaving] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const warrantyTotal = items
     .filter(i => i.fixType?.toUpperCase() === 'W')
-    .reduce((sum, i) => sum + (i.amount ?? 0), 0);
+    .reduce((sum, i) => sum + (i.baseAmount ?? i.amount ?? 0), 0);
   const customerTotal = items
     .filter(i => i.fixType?.toUpperCase() !== 'W')
     .reduce((sum, i) => sum + (i.amount ?? 0), 0);
@@ -66,28 +85,73 @@ export const RepairItemsTable = ({ repairKey, items, onItemsChanged }: RepairIte
 
   const fmt = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-  const handleAdd = async () => {
-    if (!addRow.cause && !addRow.fixType && !addRow.amount) return;
+  const handleItemSelect = (item: RepairCatalogItem) => {
+    setAddRow(r => ({
+      ...r,
+      selectedItem: item,
+      amount: addRow.fixType === 'W' ? 0 : item.defaultPrice,
+    }));
+  };
+
+  const handleFixType = (ft: FixType) => {
+    setAddRow(r => ({
+      ...r,
+      fixType: ft,
+      amount: ft === 'W' ? 0 : (r.selectedItem?.defaultPrice ?? r.amount),
+    }));
+  };
+
+  const handleAdd = useCallback(async () => {
+    if (!addRow.selectedItem) return;
     setSaving(true);
     try {
-      await addRepairLineItem(repairKey, addRow);
+      await addRepairLineItem(repairKey, {
+        itemKey: addRow.selectedItem.itemKey,
+        itemCode: addRow.selectedItem.itemCode,
+        description: addRow.selectedItem.description,
+        fixType: addRow.fixType || 'C',
+        cause: addRow.cause || undefined,
+        amount: addRow.fixType === 'W' ? 0 : addRow.amount,
+        baseAmount: addRow.selectedItem.defaultPrice,
+        comments: addRow.comment || undefined,
+      });
       setAddRow(EMPTY_ADD);
       onItemsChanged();
-      message.success('Item added');
+      // Refocus search after add
+      setTimeout(() => searchRef.current?.focus(), 50);
     } catch {
       message.error('Failed to add item');
     } finally {
       setSaving(false);
     }
-  };
+  }, [addRow, repairKey, onItemsChanged]);
 
   const handleDelete = async (tranKey: number) => {
     try {
       await deleteRepairLineItem(repairKey, tranKey);
       onItemsChanged();
-      message.success('Item removed');
     } catch {
       message.error('Failed to remove item');
+    }
+  };
+
+  const handlePatchCause = async (tranKey: number, cause: string) => {
+    try {
+      const item = items.find(i => i.tranKey === tranKey);
+      await patchLineItemCauseComments(repairKey, tranKey, cause, item?.comments ?? null);
+      onItemsChanged();
+    } catch {
+      message.error('Failed to update cause');
+    }
+  };
+
+  const handlePatchComment = async (tranKey: number, comments: string) => {
+    try {
+      const item = items.find(i => i.tranKey === tranKey);
+      await patchLineItemCauseComments(repairKey, tranKey, item?.cause ?? null, comments);
+      onItemsChanged();
+    } catch {
+      message.error('Failed to update comment');
     }
   };
 
@@ -100,15 +164,14 @@ export const RepairItemsTable = ({ repairKey, items, onItemsChanged }: RepairIte
   const tdStyle: React.CSSProperties = {
     padding: '5px 8px', borderBottom: '1px solid var(--border)', verticalAlign: 'middle', fontSize: 12,
   };
-  const addTdStyle: React.CSSProperties = {
-    ...tdStyle, background: '#eff6ff',
-  };
-  const addInput: React.CSSProperties = {
-    width: '100%', height: 24,
-    border: '1px solid #93c5fd', borderRadius: 3,
-    fontSize: 10, padding: '0 4px', background: '#fff',
-    boxSizing: 'border-box' as const,
-  };
+  const addTdStyle: React.CSSProperties = { ...tdStyle, background: '#eff6ff' };
+
+  const fixTypeButtons: { label: string; value: FixType }[] = [
+    { label: 'W', value: 'W' },
+    { label: 'NC', value: 'NC' },
+    { label: 'C', value: 'C' },
+    { label: 'A', value: 'A' },
+  ];
 
   return (
     <div style={{ border: '2px solid var(--primary)', borderRadius: 6, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -119,11 +182,25 @@ export const RepairItemsTable = ({ repairKey, items, onItemsChanged }: RepairIte
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <span style={{ fontSize: 13, fontWeight: 800 }}>Repair Items</span>
-        <span style={{ fontSize: 11, opacity: .75 }}>
-          {items.length} item{items.length !== 1 ? 's' : ''} ·{' '}
-          <span style={{ color: '#4ade80' }}>{fmt(warrantyTotal)} warranty</span> ·{' '}
-          <span style={{ color: '#fbbf24' }}>{fmt(customerTotal)} customer</span>
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 11, opacity: .75 }}>
+            {items.length} item{items.length !== 1 ? 's' : ''} ·{' '}
+            <span style={{ color: '#4ade80' }}>{fmt(warrantyTotal)} warranty</span> ·{' '}
+            <span style={{ color: '#fbbf24' }}>{fmt(customerTotal)} customer</span>
+          </span>
+          {hasAmendments && (
+            <button
+              onClick={() => onOpenAmendments()}
+              style={{
+                background: 'rgba(255,255,255,.2)', color: '#fff',
+                border: '1px solid rgba(255,255,255,.4)', borderRadius: 3,
+                padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+              }}
+            >
+              A Amendments
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Table */}
@@ -145,92 +222,109 @@ export const RepairItemsTable = ({ repairKey, items, onItemsChanged }: RepairIte
           </thead>
           <tbody>
             {items.map(item => (
-              <tr key={item.tranKey} style={{ cursor: 'default' }}
-                onMouseEnter={e => (e.currentTarget.style.background = '#f0f6ff')}
-                onMouseLeave={e => (e.currentTarget.style.background = '')}>
-                <td style={{ ...tdStyle, textAlign: 'center' }}>{approvalDot(item.approved)}</td>
-                <td style={tdStyle}>{item.itemCode}</td>
-                <td style={{ ...tdStyle, fontWeight: 500 }}>{item.description}</td>
-                <td style={{ ...tdStyle, textAlign: 'center' }}>{causeBadge(item.cause)}</td>
-                <td style={{ ...tdStyle, textAlign: 'center' }}>{fixBadge(item.fixType)}</td>
-                <td style={{ ...tdStyle, textAlign: 'center' }}>
-                  {item.approved === 'Y'
-                    ? <span style={{ color: 'var(--success)', fontWeight: 700, fontSize: 11 }}>✓ Approved</span>
-                    : <span style={{ color: 'var(--amber)', fontSize: 11 }}>Pending</span>}
-                </td>
-                <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, fontSize: 13 }}>
-                  {fmt(item.amount ?? 0)}
-                </td>
-                <td style={tdStyle}>{item.tech || '—'}</td>
-                <td style={{ ...tdStyle, color: item.comments ? '#374151' : 'var(--muted)', fontSize: 11 }}>
-                  {item.comments || '—'}
-                </td>
-                <td style={{ ...tdStyle, textAlign: 'center' }}>
-                  <button
-                    onClick={() => handleDelete(item.tranKey)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 14, padding: 0 }}
-                    title="Remove item"
-                  >×</button>
-                </td>
-              </tr>
+              <RepairItemRow
+                key={item.tranKey}
+                item={item}
+                fmt={fmt}
+                tdStyle={tdStyle}
+                onDelete={() => handleDelete(item.tranKey)}
+                onOpenAmendments={() => onOpenAmendments(item.tranKey)}
+                onPatchCause={(cause) => handlePatchCause(item.tranKey, cause)}
+                onPatchComment={(comment) => handlePatchComment(item.tranKey, comment)}
+              />
             ))}
 
-            {/* Inline add row */}
+            {/* Fast add row */}
             <tr style={{ borderTop: '2px dashed #93c5fd' }}>
+              {/* Approval dot — empty for new row */}
               <td style={addTdStyle}></td>
-              <td style={addTdStyle}>
-                <input style={addInput} placeholder="Code…"
-                  value={addRow.itemCode ?? ''}
-                  onChange={e => setAddRow(r => ({ ...r, itemCode: e.target.value }))} />
+              {/* Autocomplete search spans Code + Description */}
+              <td style={{ ...addTdStyle, minWidth: 280 }} colSpan={2}>
+                <RepairItemAutoComplete
+                  repairKey={repairKey}
+                  onSelect={handleItemSelect}
+                  inputRef={searchRef}
+                />
               </td>
-              <td style={addTdStyle}>
-                <input style={addInput} placeholder="Repair item…"
-                  value={addRow.description ?? ''}
-                  onChange={e => setAddRow(r => ({ ...r, description: e.target.value }))} />
-              </td>
+              {/* Cause toggles */}
               <td style={{ ...addTdStyle, textAlign: 'center' }}>
-                <select style={{ ...addInput, width: 52 }}
-                  value={addRow.cause ?? ''}
-                  onChange={e => setAddRow(r => ({ ...r, cause: e.target.value }))}>
-                  <option value="">—</option>
-                  <option value="UA">UA</option>
-                  <option value="NW">NW</option>
-                </select>
+                <div style={{ display: 'flex', gap: 3, justifyContent: 'center' }}>
+                  {(['UA', 'NW'] as CauseType[]).map(c => (
+                    <button key={c} onClick={() => setAddRow(r => ({ ...r, cause: r.cause === c ? '' : c }))}
+                      style={{
+                        padding: '1px 5px', fontSize: 10, fontWeight: 700,
+                        borderRadius: 3, cursor: 'pointer',
+                        background: addRow.cause === c ? 'var(--danger)' : 'var(--neutral-50)',
+                        color: addRow.cause === c ? '#fff' : 'var(--muted)',
+                        border: `1px solid ${addRow.cause === c ? 'var(--danger)' : 'var(--border)'}`,
+                      }}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
               </td>
+              {/* Fix Type button group */}
               <td style={{ ...addTdStyle, textAlign: 'center' }}>
-                <select style={{ ...addInput, width: 52 }}
-                  value={addRow.fixType ?? ''}
-                  onChange={e => setAddRow(r => ({ ...r, fixType: e.target.value }))}>
-                  <option value="">—</option>
-                  <option value="W">W</option>
-                  <option value="NC">NC</option>
-                  <option value="C">C</option>
-                  <option value="A">A</option>
-                </select>
+                <div style={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
+                  {fixTypeButtons.map(({ label, value }) => (
+                    <button key={value} onClick={() => handleFixType(value)}
+                      style={{
+                        padding: '1px 5px', fontSize: 10, fontWeight: 700,
+                        borderRadius: 3, cursor: 'pointer',
+                        background: addRow.fixType === value ? 'var(--primary)' : 'var(--neutral-50)',
+                        color: addRow.fixType === value ? '#fff' : 'var(--muted)',
+                        border: `1px solid ${addRow.fixType === value ? 'var(--primary)' : 'var(--border)'}`,
+                      }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </td>
+              {/* Approval — empty */}
               <td style={addTdStyle}></td>
-              <td style={addTdStyle}>
-                <input style={{ ...addInput, textAlign: 'right' }}
-                  placeholder="0.00" type="number" min="0" step="0.01"
-                  value={addRow.amount ?? ''}
-                  onChange={e => setAddRow(r => ({ ...r, amount: parseFloat(e.target.value) || 0 }))} />
-              </td>
-              <td style={addTdStyle}></td>
-              <td style={addTdStyle}>
-                <input style={addInput} placeholder="Comment…"
-                  value={addRow.comments ?? ''}
-                  onChange={e => setAddRow(r => ({ ...r, comments: e.target.value }))} />
-              </td>
-              <td style={addTdStyle}>
-                <button
-                  onClick={handleAdd}
-                  disabled={saving}
+              {/* Amount */}
+              <td style={{ ...addTdStyle, textAlign: 'right' }}>
+                <input
                   style={{
-                    background: 'var(--primary)', color: '#fff', border: 'none',
-                    borderRadius: 3, padding: '3px 8px', fontSize: 10,
-                    fontWeight: 700, cursor: 'pointer',
+                    width: 72, height: 24, textAlign: 'right',
+                    border: '1px solid #93c5fd', borderRadius: 3,
+                    fontSize: 11, padding: '0 4px', background: '#fff',
+                    boxSizing: 'border-box' as const,
                   }}
-                >
+                  type="number" min="0" step="0.01"
+                  value={addRow.fixType === 'W' ? 0 : (addRow.amount || '')}
+                  disabled={addRow.fixType === 'W'}
+                  onChange={e => setAddRow(r => ({ ...r, amount: parseFloat(e.target.value) || 0 }))}
+                  onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
+                />
+              </td>
+              {/* Tech — empty */}
+              <td style={addTdStyle}></td>
+              {/* Comment */}
+              <td style={addTdStyle}>
+                <input
+                  style={{
+                    width: '100%', height: 24,
+                    border: '1px solid #93c5fd', borderRadius: 3,
+                    fontSize: 11, padding: '0 4px', background: '#fff',
+                    boxSizing: 'border-box' as const,
+                  }}
+                  placeholder="Comment…"
+                  maxLength={80}
+                  value={addRow.comment}
+                  onChange={e => setAddRow(r => ({ ...r, comment: e.target.value }))}
+                  onKeyDown={e => { if (e.key === 'Enter') handleAdd(); }}
+                />
+              </td>
+              {/* Add button */}
+              <td style={addTdStyle}>
+                <button onClick={handleAdd} disabled={saving || !addRow.selectedItem}
+                  style={{
+                    background: addRow.selectedItem ? 'var(--primary)' : 'var(--neutral-200)',
+                    color: addRow.selectedItem ? '#fff' : 'var(--muted)',
+                    border: 'none', borderRadius: 3,
+                    padding: '3px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                  }}>
                   {saving ? '…' : '+'}
                 </button>
               </td>
@@ -254,5 +348,87 @@ export const RepairItemsTable = ({ repairKey, items, onItemsChanged }: RepairIte
         <span style={{ fontSize: 14, fontWeight: 900 }}>Total: {fmt(grandTotal)}</span>
       </div>
     </div>
+  );
+};
+
+// ── Sub-component: single row with inline cause/comment editing ──
+interface RowProps {
+  item: RepairLineItem;
+  fmt: (n: number) => string;
+  tdStyle: React.CSSProperties;
+  onDelete: () => void;
+  onOpenAmendments: () => void;
+  onPatchCause: (cause: string) => void;
+  onPatchComment: (comment: string) => void;
+}
+
+const RepairItemRow = ({ item, fmt, tdStyle, onDelete, onOpenAmendments, onPatchCause, onPatchComment }: RowProps) => {
+  const [editingComment, setEditingComment] = useState(false);
+  const [commentDraft, setCommentDraft] = useState(item.comments);
+
+  return (
+    <tr style={{ cursor: 'default' }}
+      onMouseEnter={e => (e.currentTarget.style.background = '#f0f6ff')}
+      onMouseLeave={e => (e.currentTarget.style.background = '')}>
+      <td style={{ ...tdStyle, textAlign: 'center' }}>
+        {approvalDot(item.approved)}
+      </td>
+      <td style={tdStyle}>{item.itemCode}</td>
+      <td style={{ ...tdStyle, fontWeight: 500 }}>{item.description}</td>
+      {/* Cause — click to cycle UA → NW → blank */}
+      <td style={{ ...tdStyle, textAlign: 'center', cursor: 'pointer' }}
+        onClick={() => {
+          const next = item.cause === '' ? 'UA' : item.cause === 'UA' ? 'NW' : '';
+          onPatchCause(next);
+        }}
+        title="Click to change cause">
+        {causeBadge(item.cause)}
+      </td>
+      {/* Fix Type — click to open amendments */}
+      <td style={{ ...tdStyle, textAlign: 'center', cursor: 'pointer' }}
+        onClick={onOpenAmendments} title="Click to amend">
+        {fixBadge(item.fixType)}
+      </td>
+      <td style={{ ...tdStyle, textAlign: 'center' }}>
+        {item.approved === 'Y'
+          ? <span style={{ color: 'var(--success)', fontWeight: 700, fontSize: 11 }}>✓ Approved</span>
+          : <span style={{ color: 'var(--amber)', fontSize: 11 }}>Pending</span>}
+      </td>
+      {/* Amount — click to amend */}
+      <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+        onClick={onOpenAmendments} title="Click to amend">
+        {fmt(item.amount ?? 0)}
+        {item.fixType?.toUpperCase() === 'W' && item.baseAmount > 0 && (
+          <div style={{ fontSize: 9, color: 'var(--muted)', fontWeight: 400 }}>
+            (list: {fmt(item.baseAmount)})
+          </div>
+        )}
+      </td>
+      <td style={tdStyle}>{item.tech || '—'}</td>
+      {/* Comment — click to edit inline */}
+      <td style={{ ...tdStyle, color: item.comments ? '#374151' : 'var(--muted)', fontSize: 11 }}>
+        {editingComment ? (
+          <input
+            autoFocus
+            style={{ width: '100%', fontSize: 11, border: '1px solid var(--primary)', borderRadius: 2, padding: '1px 4px' }}
+            maxLength={80}
+            value={commentDraft}
+            onChange={e => setCommentDraft(e.target.value)}
+            onBlur={() => { setEditingComment(false); onPatchComment(commentDraft); }}
+            onKeyDown={e => { if (e.key === 'Enter') { setEditingComment(false); onPatchComment(commentDraft); } }}
+          />
+        ) : (
+          <span style={{ cursor: 'pointer' }} onClick={() => { setCommentDraft(item.comments); setEditingComment(true); }}
+            title="Click to edit">
+            {item.comments || '—'}
+          </span>
+        )}
+      </td>
+      <td style={{ ...tdStyle, textAlign: 'center' }}>
+        <button onClick={onDelete}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 14, padding: 0 }}
+          title="Remove item">×</button>
+      </td>
+    </tr>
   );
 };

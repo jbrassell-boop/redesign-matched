@@ -429,14 +429,18 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         const string sql = """
-            SELECT rit.lRepairItemTranKey, ISNULL(rit.sApproved,'') AS sApproved,
+            SELECT rit.lRepairItemTranKey,
+                   ISNULL(rit.sApproved,'') AS sApproved,
                    ISNULL(ri.sProblemID,'') AS sProblemID,
                    ISNULL(ri.sItemDescription,'') AS sItemDescription,
                    ISNULL(rit.sProblemID,'') AS sCause,
                    ISNULL(rit.sFixType,'') AS sFixType,
                    ISNULL(rit.dblRepairPrice, 0) AS dblRepairPrice,
+                   ISNULL(rit.dblRepairPriceBase, 0) AS dblRepairPriceBase,
                    ISNULL(t.sTechName,'') AS sTechName,
-                   ISNULL(rit.sComments,'') AS sComments
+                   ISNULL(rit.sComments,'') AS sComments,
+                   (SELECT COUNT(*) FROM tblAmendRepairComments a
+                    WHERE a.lRepairKey = rit.lRepairKey) AS AmendmentCount
             FROM tblRepairItemTran rit
             LEFT JOIN tblRepairItem ri ON ri.lRepairItemKey = rit.lRepairItemKey
             LEFT JOIN tblTechnicians t ON t.lTechnicianKey = rit.lTechnicianKey
@@ -458,8 +462,10 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 Cause: reader["sCause"]?.ToString() ?? "",
                 FixType: reader["sFixType"]?.ToString() ?? "",
                 Amount: reader["dblRepairPrice"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["dblRepairPrice"]),
+                BaseAmount: reader["dblRepairPriceBase"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["dblRepairPriceBase"]),
                 Tech: reader["sTechName"]?.ToString() ?? "",
-                Comments: reader["sComments"]?.ToString() ?? ""
+                Comments: reader["sComments"]?.ToString() ?? "",
+                AmendmentCount: Convert.ToInt32(reader["AmendmentCount"])
             ));
         }
         return Ok(items);
@@ -733,6 +739,49 @@ public class RepairsController(IConfiguration config) : ControllerBase
         return rows > 0 ? NoContent() : NotFound();
     }
 
+    // ── Repair Item Catalog ──
+    [HttpGet("items")]
+    public async Task<IActionResult> GetRepairItemCatalog([FromQuery] int repairKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT ri.lRepairItemKey,
+                   ISNULL(ri.sProblemID, '') AS sProblemID,
+                   ISNULL(ri.sItemDescription, '') AS sItemDescription,
+                   ISNULL(pd.dblRepairPrice, 0) AS dblDefaultPrice
+            FROM tblRepairItem ri
+            CROSS JOIN (
+                SELECT c.lPricingCategoryKey
+                FROM tblRepair r
+                JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+                JOIN tblClient c ON c.lClientKey = d.lClientKey
+                WHERE r.lRepairKey = @repairKey
+            ) pricing
+            LEFT JOIN tblPricingDetail pd ON pd.lRepairItemKey = ri.lRepairItemKey
+                AND pd.lPricingCategoryKey = pricing.lPricingCategoryKey
+            WHERE ri.bActive = 1
+            ORDER BY ri.sItemDescription
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var items = new List<RepairCatalogItem>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new RepairCatalogItem(
+                ItemKey: Convert.ToInt32(reader["lRepairItemKey"]),
+                ItemCode: reader["sProblemID"].ToString()!,
+                Description: reader["sItemDescription"].ToString()!,
+                DefaultPrice: Convert.ToDecimal(reader["dblDefaultPrice"])
+            ));
+        }
+        return Ok(items);
+    }
+
     // ── Line Item CRUD ──
     [HttpPost("{repairKey:int}/lineitems")]
     public async Task<IActionResult> AddLineItem(int repairKey, [FromBody] LineItemUpdate body)
@@ -740,21 +789,34 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // Determine item key: prefer body.ItemKey, fall back to parsing body.ItemCode
+        int? itemKey = body.ItemKey ?? (body.ItemCode != null && int.TryParse(body.ItemCode, out var ik) ? ik : null);
+
+        // Warranty: charge $0, capture base price for reporting
+        var chargedAmount = body.FixType?.ToUpper() == "W" ? 0m : (body.Amount ?? 0m);
+        var baseAmount = body.BaseAmount ?? body.Amount ?? 0m;
+
         const string sql = """
-            INSERT INTO tblRepairItemTran (lRepairKey, lRepairItemKey, sProblemID, sApproved, sFixType, dblRepairPrice, sComments, lTechnicianKey)
+            INSERT INTO tblRepairItemTran
+                (lRepairKey, lRepairItemKey, sProblemID, sApproved, sFixType,
+                 dblRepairPrice, dblRepairPriceBase, sComments, lTechnicianKey)
             OUTPUT INSERTED.lRepairItemTranKey
-            VALUES (@repairKey, @repairItemKey, @cause, @approved, @fixType, @amount, @comments, @techKey)
+            VALUES
+                (@repairKey, @itemKey, @cause, @approved, @fixType,
+                 @amount, @baseAmount, @comments, @techKey)
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
-        cmd.Parameters.AddWithValue("@repairItemKey", body.ItemCode != null && int.TryParse(body.ItemCode, out var ik) ? (object)ik : DBNull.Value);
+        cmd.Parameters.AddWithValue("@itemKey", (object?)itemKey ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@cause", (object?)body.Cause ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@approved", (object?)body.Approved ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@fixType", (object?)body.FixType ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@amount", (object?)body.Amount ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@amount", chargedAmount);
+        cmd.Parameters.AddWithValue("@baseAmount", baseAmount);
         cmd.Parameters.AddWithValue("@comments", (object?)body.Comments ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@techKey", body.TechKey.HasValue ? (object)body.TechKey.Value : DBNull.Value);
+
         var newKey = await cmd.ExecuteScalarAsync();
         return Ok(new { tranKey = Convert.ToInt32(newKey) });
     }
@@ -803,6 +865,182 @@ public class RepairsController(IConfiguration config) : ControllerBase
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         var rows = await cmd.ExecuteNonQueryAsync();
         return rows > 0 ? NoContent() : NotFound();
+    }
+
+    [HttpPatch("{repairKey:int}/lineitems/{tranKey:int}/causecomments")]
+    public async Task<IActionResult> PatchLineItemCauseComments(
+        int repairKey, int tranKey, [FromBody] PatchCauseCommentsRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            UPDATE tblRepairItemTran SET
+                sProblemID = @cause,
+                sComments  = @comments
+            WHERE lRepairItemTranKey = @tranKey AND lRepairKey = @repairKey
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@cause", (object?)body.Cause ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@comments", (object?)body.Comments ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@tranKey", tranKey);
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        var patchRows = await cmd.ExecuteNonQueryAsync();
+        return patchRows > 0 ? NoContent() : NotFound();
+    }
+
+    // ── Amendment Lookups ──
+    [HttpGet("/api/amend-types")]
+    public async Task<IActionResult> GetAmendTypes()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = "SELECT lAmendRepairTypeKey, sAmendRepairType FROM tblAmendRepairTypes ORDER BY sAmendRepairType";
+        await using var cmd = new SqlCommand(sql, conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var items = new List<AmendTypeItem>();
+        while (await reader.ReadAsync())
+            items.Add(new AmendTypeItem(
+                TypeKey: Convert.ToInt32(reader["lAmendRepairTypeKey"]),
+                TypeName: reader["sAmendRepairType"].ToString()!));
+        return Ok(items);
+    }
+
+    [HttpGet("/api/amend-reasons")]
+    public async Task<IActionResult> GetAmendReasons([FromQuery] int typeKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT lAmendRepairReasonKey, sAmendRepairReason
+            FROM tblAmendRepairReasons
+            WHERE lAmendRepairTypeKey = @typeKey
+            ORDER BY sAmendRepairReason
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@typeKey", typeKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var items = new List<AmendReasonItem>();
+        while (await reader.ReadAsync())
+            items.Add(new AmendReasonItem(
+                ReasonKey: Convert.ToInt32(reader["lAmendRepairReasonKey"]),
+                ReasonName: reader["sAmendRepairReason"].ToString()!));
+        return Ok(items);
+    }
+
+    // ── Amendments ──
+    [HttpGet("{repairKey:int}/amendments")]
+    public async Task<IActionResult> GetAmendments(int repairKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT a.lAmendRepairCommentKey,
+                   a.lAmendmentNumber,
+                   CONVERT(varchar, a.dtAmendmentDate, 101) AS dtAmendmentDate,
+                   at2.sAmendRepairType,
+                   ar.sAmendRepairReason,
+                   ISNULL(a.sAmendRepairComment, '') AS sAmendRepairComment
+            FROM tblAmendRepairComments a
+            JOIN tblAmendRepairTypes at2 ON at2.lAmendRepairTypeKey = a.lAmendRepairTypeKey
+            JOIN tblAmendRepairReasons ar ON ar.lAmendRepairReasonKey = a.lAmendRepairReasonKey
+            WHERE a.lRepairKey = @repairKey
+            ORDER BY a.lAmendmentNumber DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var items = new List<AmendmentItem>();
+        while (await reader.ReadAsync())
+            items.Add(new AmendmentItem(
+                AmendKey: Convert.ToInt32(reader["lAmendRepairCommentKey"]),
+                AmendmentNumber: Convert.ToInt32(reader["lAmendmentNumber"]),
+                Date: reader["dtAmendmentDate"].ToString()!,
+                AmendType: reader["sAmendRepairType"].ToString()!,
+                AmendReason: reader["sAmendRepairReason"].ToString()!,
+                Comment: reader["sAmendRepairComment"].ToString()!
+            ));
+        return Ok(items);
+    }
+
+    [HttpPost("{repairKey:int}/amendments")]
+    public async Task<IActionResult> CreateAmendment(int repairKey, [FromBody] CreateAmendmentRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await using var tx = conn.BeginTransaction();
+        try
+        {
+            // 1. Update the line item if new values provided
+            if (body.NewFixType != null || body.NewAmount.HasValue)
+            {
+                var updateSql = new System.Text.StringBuilder(
+                    "UPDATE tblRepairItemTran SET ");
+                var parts = new List<string>();
+                if (body.NewFixType != null) parts.Add("sFixType = @fixType");
+                if (body.NewAmount.HasValue)
+                {
+                    parts.Add("dblRepairPrice = @amount");
+                    parts.Add("dblRepairPriceBase = @baseAmount");
+                }
+                updateSql.Append(string.Join(", ", parts));
+                updateSql.Append(" WHERE lRepairItemTranKey = @tranKey AND lRepairKey = @repairKey");
+
+                await using var updCmd = new SqlCommand(updateSql.ToString(), conn, tx);
+                updCmd.Parameters.AddWithValue("@repairKey", repairKey);
+                updCmd.Parameters.AddWithValue("@tranKey", body.TranKey);
+                if (body.NewFixType != null) updCmd.Parameters.AddWithValue("@fixType", body.NewFixType);
+                if (body.NewAmount.HasValue)
+                {
+                    var charged = body.NewFixType?.ToUpper() == "W" ? 0m : body.NewAmount.Value;
+                    updCmd.Parameters.AddWithValue("@amount", charged);
+                    updCmd.Parameters.AddWithValue("@baseAmount", body.NewAmount.Value);
+                }
+                await updCmd.ExecuteNonQueryAsync();
+            }
+
+            // 2. Get next amendment number
+            await using var numCmd = new SqlCommand(
+                "SELECT ISNULL(MAX(lAmendmentNumber), 0) + 1 FROM tblAmendRepairComments WHERE lRepairKey = @repairKey",
+                conn, tx);
+            numCmd.Parameters.AddWithValue("@repairKey", repairKey);
+            var nextNum = Convert.ToInt32(await numCmd.ExecuteScalarAsync());
+
+            // 3. Insert amendment record
+            const string insertSql = """
+                INSERT INTO tblAmendRepairComments
+                    (lRepairKey, lAmendRepairTypeKey, lAmendRepairReasonKey,
+                     sAmendRepairComment, lAmendmentNumber, dtAmendmentDate)
+                VALUES
+                    (@repairKey, @typeKey, @reasonKey,
+                     @comment, @amendNum, GETDATE())
+                """;
+
+            await using var insCmd = new SqlCommand(insertSql, conn, tx);
+            insCmd.Parameters.AddWithValue("@repairKey", repairKey);
+            insCmd.Parameters.AddWithValue("@typeKey", body.AmendTypeKey);
+            insCmd.Parameters.AddWithValue("@reasonKey", body.AmendReasonKey);
+            insCmd.Parameters.AddWithValue("@comment", (object?)body.Comment ?? DBNull.Value);
+            insCmd.Parameters.AddWithValue("@amendNum", nextNum);
+            await insCmd.ExecuteNonQueryAsync();
+
+            await tx.CommitAsync();
+            return Ok(new { amendmentNumber = nextNum });
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
 
     // ── Financials ──

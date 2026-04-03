@@ -56,8 +56,10 @@ public record RepairLineItem(
     string Cause,
     string FixType,
     decimal Amount,
+    decimal BaseAmount,
     string Tech,
-    string Comments
+    string Comments,
+    int AmendmentCount
 );
 
 // ── Scope History tab ──
@@ -172,8 +174,8 @@ public record PrimaryContact(
 );
 
 public record LineItemUpdate(
-    string? Approved, string? ItemCode, string? Cause, string? Description,
-    string? FixType, decimal? Amount, string? Comments, int? TechKey
+    string? Approved, int? ItemKey, string? ItemCode, string? Cause, string? Description,
+    string? FixType, decimal? Amount, decimal? BaseAmount, string? Comments, int? TechKey
 );
 
 public record PatchRepairHeaderRequest(
@@ -187,6 +189,27 @@ public record PatchRepairHeaderRequest(
     string? DisplayItemizedAmounts,
     string? BillToCustomer
 );
+
+// ── Repair Item Catalog ──
+public record RepairCatalogItem(int ItemKey, string ItemCode, string Description, decimal DefaultPrice);
+
+// ── Amendments ──
+public record AmendmentItem(
+    int AmendKey, int AmendmentNumber, string Date,
+    string AmendType, string AmendReason, string Comment);
+
+public record AmendTypeItem(int TypeKey, string TypeName);
+public record AmendReasonItem(int ReasonKey, string ReasonName);
+
+public record CreateAmendmentRequest(
+    int TranKey,
+    int AmendTypeKey,
+    int AmendReasonKey,
+    string? Comment,
+    string? NewFixType,
+    decimal? NewAmount);
+
+public record PatchCauseCommentsRequest(string? Cause, string? Comments);
 
 // ── Financials tab ──
 public record RepairFinancials(
