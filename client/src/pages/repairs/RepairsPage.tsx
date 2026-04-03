@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getRepairs, getRepairDetail } from '../../api/repairs';
+import { getRepairs } from '../../api/repairs';
 import { RepairsList } from './RepairsList';
 import { RepairDetailPane } from './RepairDetailPane';
-import type { RepairListItem, RepairDetail } from './types';
+import type { RepairListItem } from './types';
 import { ExportButton } from '../../components/common/ExportButton';
 import { useKeyboardNav } from '../../hooks/useKeyboardNav';
 
@@ -22,32 +22,27 @@ export const RepairsPage = () => {
   const { repairKey: repairKeyParam } = useParams<{ repairKey: string }>();
   const cockpitKey = repairKeyParam ? parseInt(repairKeyParam, 10) : null;
 
-  // If we have a repairKey param, render cockpit mode
+  // Cockpit mode — full page repair view
   if (cockpitKey) {
     return (
       <RepairDetailPane
         cockpitMode
         repairKey={cockpitKey}
-        onStatusChanged={() => {
-          // Reload in place — cockpit handles its own refresh
-        }}
+        onStatusChanged={() => {}}
       />
     );
   }
 
-  // Otherwise, render the split-pane list view
+  // List mode — full-width, click goes to cockpit
   return <RepairsListView />;
 };
 
-// Extracted to separate component to avoid hook rules issues with early return
 const RepairsListView = () => {
   const navigate = useNavigate();
   const [repairs, setRepairs] = useState<RepairListItem[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
-  const [detail, setDetail] = useState<RepairDetail | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
 
   const loadRepairs = useCallback(async (s: string) => {
     setListLoading(true);
@@ -64,18 +59,9 @@ const RepairsListView = () => {
     return () => clearTimeout(timer);
   }, [search, loadRepairs]);
 
-  const handleSelect = useCallback(async (r: RepairListItem) => {
+  // Single click → cockpit
+  const handleSelect = useCallback((r: RepairListItem) => {
     setSelectedKey(r.repairKey);
-    setDetailLoading(true);
-    try {
-      const d = await getRepairDetail(r.repairKey);
-      setDetail(d);
-    } finally {
-      setDetailLoading(false);
-    }
-  }, []);
-
-  const handleOpenCockpit = useCallback((r: RepairListItem) => {
     navigate(`/repairs/${r.repairKey}`);
   }, [navigate]);
 
@@ -87,22 +73,23 @@ const RepairsListView = () => {
   useKeyboardNav(repairs, selectedIndex, handleSelect);
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
-      {/* Left panel */}
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', background: 'var(--card)' }}>
+      {/* Toolbar */}
       <div style={{
-        width: 280,
+        padding: '10px 16px',
+        borderBottom: '1px solid var(--border)',
+        display: 'flex', alignItems: 'center', gap: 12,
         flexShrink: 0,
-        borderRight: '1px solid var(--neutral-200)',
-        background: 'var(--card)',
-        display: 'flex',
-        flexDirection: 'column',
       }}>
-        {/* Toolbar */}
-        <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary-dark)' }}>Repairs</span>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>{repairs.length} records</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>Repairs</span>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }}>{repairs.length} records</span>
+        <div style={{ marginLeft: 'auto' }}>
           <ExportButton data={repairs as unknown as Record<string, unknown>[]} columns={REPAIR_EXPORT_COLS} filename="repairs-export" sheetName="Repairs" />
         </div>
+      </div>
+
+      {/* Full-width list */}
+      <div style={{ flex: 1, overflow: 'auto' }}>
         <RepairsList
           repairs={repairs}
           loading={listLoading}
@@ -110,17 +97,8 @@ const RepairsListView = () => {
           search={search}
           onSearchChange={setSearch}
           onSelect={handleSelect}
-          onDoubleClick={handleOpenCockpit}
+          onDoubleClick={handleSelect}
         />
-      </div>
-
-      {/* Right panel */}
-      <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-        <RepairDetailPane detail={detail} loading={detailLoading} onStatusChanged={async (rk) => {
-          const d = await getRepairDetail(rk);
-          setDetail(d);
-          loadRepairs(search);
-        }} />
       </div>
     </div>
   );
