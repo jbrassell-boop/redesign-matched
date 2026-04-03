@@ -109,7 +109,7 @@ $noIdentity = @("tblServiceLocations")
 
 # Resolve table list
 if ($Tables -ne "") {
-    $tableList = $Tables -split "," | ForEach-Object { $_.Trim() }
+    $tableList = @($Tables -split "," | ForEach-Object { $_.Trim() })
 } else {
     $tableList = $allTables
 }
