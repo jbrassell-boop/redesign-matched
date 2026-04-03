@@ -167,6 +167,7 @@ export const InventoryPicklistModal = ({ open, onClose, repair, items }: Invento
             {[
               { label: 'Work Order #', value: repair.wo, minWidth: 120 },
               { label: 'Serial #', value: repair.serial, minWidth: 100 },
+              { label: 'Date', value: repair.dateIn || '', minWidth: 80 },
             ].map(f => (
               <div key={f.label} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: '#555', letterSpacing: '.04em' }}>
