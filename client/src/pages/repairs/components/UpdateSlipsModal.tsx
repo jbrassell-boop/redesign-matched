@@ -135,7 +135,7 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips }: UpdateSlipsMo
               {cat}
             </div>
             <div style={{
-              border: '1px solid #ccc', borderRadius: 3, minHeight: 40,
+              border: '1px solid #ccc', borderRadius: 3, minHeight: 52,
               padding: '4px 8px', fontSize: 10, color: '#9ca3af', fontStyle: 'italic',
             }}>
               {slips.find(s => s.reason?.toLowerCase().includes(cat.toLowerCase()))?.reason || ''}
@@ -143,6 +143,8 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips }: UpdateSlipsMo
           </div>
         ))}
       </div>
+
+      <div style={sBar}>Completed By</div>
 
       {/* Signature block */}
       <div style={{ display: 'flex', gap: 20, marginTop: 16 }}>
