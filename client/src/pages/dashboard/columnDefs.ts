@@ -108,6 +108,7 @@ const techBenchColumns = (onRowClick: (key: number) => void): ColumnsType<any> =
 ];
 
 const VIEW_COLUMNS: Record<DashboardView, (onRowClick: (key: number) => void) => ColumnsType<any>> = {
+  briefing: () => [],
   repairs: repairsColumns,
   shipping: shippingColumns,
   invoices: invoicesColumns,
@@ -123,6 +124,7 @@ export const getColumnsForView = (view: DashboardView, onRowClick: (key: number)
 // Row key extractors per view
 export const getRowKey = (view: DashboardView): string => {
   switch (view) {
+    case 'briefing': return 'id';
     case 'repairs': case 'shipping': case 'techbench': return 'repairKey';
     case 'invoices': return 'invoiceKey';
     case 'flags': return 'flagKey';

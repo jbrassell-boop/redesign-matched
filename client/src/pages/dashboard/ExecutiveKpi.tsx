@@ -21,7 +21,6 @@ interface KpiData {
 }
 
 const fmt$ = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
-const fmtPct = (n: number, d: number) => d > 0 ? `${Math.round((n / d) * 100)}%` : '—';
 const trend = (curr: number, prev: number) => {
   if (prev === 0) return { arrow: '', color: 'var(--muted)' };
   const diff = ((curr - prev) / prev) * 100;
