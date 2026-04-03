@@ -287,7 +287,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
             <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
             <div style={{ flex: 1, overflow: 'auto' }}>
-              {activeTab === 'details'      && <DetailsTab repair={fullRepair} />}
+              {activeTab === 'details'      && <DetailsTab repair={fullRepair} flags={flags} />}
               {activeTab === 'workflow'     && <WorkflowTab repairKey={fullRepair.repairKey} />}
               {activeTab === 'inspections'  && <InspectionsTab repairKey={fullRepair.repairKey} />}
               {activeTab === 'financials'   && <FinancialsTab repairKey={fullRepair.repairKey} />}
