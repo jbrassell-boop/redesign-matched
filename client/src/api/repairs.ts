@@ -167,3 +167,45 @@ export const getAmendReasons = async (typeKey: number): Promise<AmendReason[]> =
   });
   return data;
 };
+
+// ── Repair Notes ──
+export interface RepairNote {
+  noteKey: number;
+  note: string;
+  date: string;
+  user: string;
+}
+
+export const getRepairNotes = async (repairKey: number): Promise<RepairNote[]> => {
+  const { data } = await apiClient.get<RepairNote[]>(`/repairs/${repairKey}/repair-notes`);
+  return data;
+};
+
+export const addRepairNote = async (repairKey: number, note: string): Promise<void> => {
+  await apiClient.post(`/repairs/${repairKey}/repair-notes`, { note });
+};
+
+// ── Technicians Lookup ──
+export interface TechnicianOption {
+  techKey: number;
+  techName: string;
+}
+
+export const getRepairTechnicians = async (): Promise<TechnicianOption[]> => {
+  const { data } = await apiClient.get<TechnicianOption[]>('/repairs/technicians');
+  return data;
+};
+
+// ── Bulk Line Item Approval ──
+export const bulkApproveLineItems = async (repairKey: number, approved: string): Promise<void> => {
+  await apiClient.patch(`/repairs/${repairKey}/lineitems/bulk-approve`, { approved });
+};
+
+// ── Update Techs ──
+export const updateRepairTechs = async (
+  repairKey: number,
+  techKey: number,
+  tech2Key: number | null,
+): Promise<void> => {
+  await apiClient.patch(`/repairs/${repairKey}/techs`, { techKey, tech2Key });
+};

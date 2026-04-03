@@ -1104,6 +1104,96 @@ public class RepairsController(IConfiguration config) : ControllerBase
         }
     }
 
+    // ── Bulk Line Item Approval ──
+    [HttpPatch("{repairKey:int}/lineitems/bulk-approve")]
+    public async Task<IActionResult> BulkApproveLineItems(int repairKey, [FromBody] BulkApproveRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = "UPDATE tblRepairItemTran SET sApproved = @approved WHERE lRepairKey = @repairKey";
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@approved", body.Approved ?? "Y");
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return Ok(new { updated = rows });
+    }
+
+    // ── Update Techs ──
+    [HttpPatch("{repairKey:int}/techs")]
+    public async Task<IActionResult> UpdateTechs(int repairKey, [FromBody] UpdateTechsRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            UPDATE tblRepair SET
+                lTechnicianKey  = @techKey,
+                lTechnician2Key = @tech2Key
+            WHERE lRepairKey = @repairKey
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        cmd.Parameters.AddWithValue("@techKey", body.TechKey);
+        cmd.Parameters.AddWithValue("@tech2Key", body.Tech2Key.HasValue ? (object)body.Tech2Key.Value : DBNull.Value);
+        var rows = await cmd.ExecuteNonQueryAsync();
+        return rows > 0 ? NoContent() : NotFound();
+    }
+
+    // ── Repair Notes ──
+    [HttpGet("{repairKey:int}/repair-notes")]
+    public async Task<IActionResult> GetRepairNotes(int repairKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT n.lNoteKey, n.sNote, n.dtNoteDate,
+                   ISNULL(u.sUserFullName, '') AS sUserFullName
+            FROM tblNotes n
+            LEFT JOIN tblUsers u ON u.lUserKey = n.lUserKey
+            WHERE n.lOwnerKey = @repairKey
+              AND n.lOwnerTypeKey = (SELECT TOP 1 lOwnerTypeKey FROM tblOwnerTypes WHERE sOwnerType = 'Repair')
+            ORDER BY n.dtNoteDate DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var notes = new List<object>();
+        while (await reader.ReadAsync())
+        {
+            notes.Add(new {
+                noteKey = Convert.ToInt32(reader["lNoteKey"]),
+                note = reader["sNote"]?.ToString() ?? "",
+                date = Convert.ToDateTime(reader["dtNoteDate"]).ToString("MM/dd/yyyy h:mm tt"),
+                user = reader["sUserFullName"]?.ToString() ?? "",
+            });
+        }
+        return Ok(notes);
+    }
+
+    [HttpPost("{repairKey:int}/repair-notes")]
+    public async Task<IActionResult> AddRepairNote(int repairKey, [FromBody] AddNoteRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            INSERT INTO tblNotes (lOwnerKey, lOwnerTypeKey, sNote, dtNoteDate, lUserKey)
+            VALUES (@repairKey,
+                    (SELECT TOP 1 lOwnerTypeKey FROM tblOwnerTypes WHERE sOwnerType = 'Repair'),
+                    @note, GETDATE(), 1)
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        cmd.Parameters.AddWithValue("@note", body.Note ?? "");
+        await cmd.ExecuteNonQueryAsync();
+        return Ok(new { success = true });
+    }
+
     // ── Financials ──
     [HttpGet("{repairKey:int}/financials")]
     public async Task<IActionResult> GetFinancials(int repairKey)

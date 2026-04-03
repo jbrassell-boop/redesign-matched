@@ -5,6 +5,7 @@ import type { RepairDetail, RepairFull, RepairLineItem } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import { CommandStrip } from './components/CommandStrip';
+import { WorkflowPipeline } from './components/WorkflowPipeline';
 import { ScopeGlance } from './components/ScopeGlance';
 import { DetailsTab } from './tabs/DetailsTab';
 import { ScopeInTab } from './tabs/ScopeInTab';
@@ -15,6 +16,7 @@ import { InspectionsTab } from './tabs/InspectionsTab';
 import { FinancialsTab } from './tabs/FinancialsTab';
 import { ScopeHistoryTab } from './tabs/ScopeHistoryTab';
 import { StatusHistoryTab } from './tabs/StatusHistoryTab';
+import { NotesTab } from './tabs/NotesTab';
 import { InlineEditor } from '../../components/common/InlineEditor';
 import {
   updateRepairNotes, getRepairStatuses, updateRepairStatus,
@@ -316,6 +318,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         meta={<span style={{ color: tatColor }}>TAT: {detail.daysIn}d</span>}
       />
 
+      <WorkflowPipeline currentStatus={detail.status} />
       <AlertBanner alerts={alerts} onDismiss={dismissAlert} />
 
       {/* Quick Actions Bar */}
@@ -392,7 +395,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       {activeTab === 'financials'   && <FinancialsTab repairKey={detail.repairKey} />}
       {activeTab === 'scopehistory' && <ScopeHistoryTab repairKey={detail.repairKey} currentRepairKey={detail.repairKey} />}
       {activeTab === 'statuslog'    && <StatusHistoryTab repairKey={detail.repairKey} />}
-      {activeTab === 'comments'     && <div style={{ padding: 20, color: 'var(--muted)', fontSize: 13 }}>Comments coming soon</div>}
+      {activeTab === 'comments'     && <NotesTab repairKey={detail.repairKey} />}
     </div>
   );
 };

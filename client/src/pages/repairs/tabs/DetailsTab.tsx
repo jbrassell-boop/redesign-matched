@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import type { RepairFull, RepairLineItem } from '../types';
 import type { ClientFlag } from '../../clients/types';
-import { getRepairLineItems } from '../../../api/repairs';
+import { getRepairLineItems, updateRepairTechs, getRepairTechnicians } from '../../../api/repairs';
+import type { TechnicianOption } from '../../../api/repairs';
 import { RepairItemsTable } from '../components/RepairItemsTable';
 import { AmendmentModal } from '../components/AmendmentModal';
 
@@ -32,6 +33,12 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
   const [items, setItems] = useState<RepairLineItem[]>([]);
   const [amendOpen, setAmendOpen] = useState(false);
   const [amendTranKey, setAmendTranKey] = useState<number | undefined>(undefined);
+  // Update Techs modal
+  const [techModalOpen, setTechModalOpen] = useState(false);
+  const [techList, setTechList] = useState<TechnicianOption[]>([]);
+  const [selectedTech, setSelectedTech] = useState<number>(repair.techKey ?? 0);
+  const [selectedTech2, setSelectedTech2] = useState<number | null>(null);
+  const [techSaving, setTechSaving] = useState(false);
 
   const loadItems = useCallback(() => {
     getRepairLineItems(repair.repairKey)
@@ -55,7 +62,12 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
     { label: 'Update Slips',    style: { background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' } },
     { label: 'Amend Repair',    style: { background: 'var(--amber)', color: '#1a1a1a' } },
     { label: 'Defect Tracking', style: { background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' } },
-    { label: 'Update Techs',    style: { background: 'var(--neutral-50, #f9fafb)', color: 'var(--navy)', border: '1px solid var(--border)' } },
+    { label: 'Update Techs',    style: { background: 'var(--neutral-50, #f9fafb)', color: 'var(--navy)', border: '1px solid var(--border)' }, action: () => {
+      getRepairTechnicians().then(setTechList).catch(() => message.error('Failed to load technicians'));
+      setSelectedTech(repair.techKey ?? 0);
+      setSelectedTech2(null);
+      setTechModalOpen(true);
+    } },
     { label: 'Inventory',       style: { background: 'var(--neutral-50, #f9fafb)', color: 'var(--navy)', border: '1px solid var(--border)' } },
   ];
 
@@ -73,7 +85,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
         {actionButtons.map(btn => (
           <button
             key={btn.label}
-            onClick={() => message.info(`${btn.label} — coming soon`)}
+            onClick={() => (btn as any).action ? (btn as any).action() : message.info(`${btn.label} — coming soon`)}
             style={{
               height: 28, padding: '0 10px', borderRadius: 4,
               fontSize: 11, fontWeight: 600, cursor: 'pointer',
@@ -276,6 +288,64 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
           />
         </div>
       </div>
+
+      {/* Update Techs Modal */}
+      <Modal
+        open={techModalOpen}
+        onCancel={() => setTechModalOpen(false)}
+        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>Update Technicians</span>}
+        footer={null}
+        width={400}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '8px 0' }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Primary Technician *</div>
+            <select
+              style={{ width: '100%', height: 32, border: '1px solid var(--border)', borderRadius: 4, fontSize: 12, padding: '0 8px' }}
+              value={selectedTech}
+              onChange={e => setSelectedTech(Number(e.target.value))}
+            >
+              <option value={0}>Select…</option>
+              {techList.map(t => <option key={t.techKey} value={t.techKey}>{t.techName}</option>)}
+            </select>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Secondary Technician</div>
+            <select
+              style={{ width: '100%', height: 32, border: '1px solid var(--border)', borderRadius: 4, fontSize: 12, padding: '0 8px' }}
+              value={selectedTech2 ?? ''}
+              onChange={e => setSelectedTech2(e.target.value ? Number(e.target.value) : null)}
+            >
+              <option value="">None</option>
+              {techList.map(t => <option key={t.techKey} value={t.techKey}>{t.techName}</option>)}
+            </select>
+          </div>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
+            <button onClick={() => setTechModalOpen(false)}
+              style={{ padding: '5px 14px', borderRadius: 4, border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: 12 }}>
+              Cancel
+            </button>
+            <button
+              disabled={techSaving || !selectedTech}
+              onClick={async () => {
+                if (!selectedTech) return;
+                setTechSaving(true);
+                try {
+                  await updateRepairTechs(repair.repairKey, selectedTech, selectedTech2);
+                  message.success('Technicians updated');
+                  setTechModalOpen(false);
+                } catch {
+                  message.error('Failed to update technicians');
+                } finally {
+                  setTechSaving(false);
+                }
+              }}
+              style={{ padding: '5px 14px', borderRadius: 4, border: 'none', background: 'var(--primary)', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+              {techSaving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

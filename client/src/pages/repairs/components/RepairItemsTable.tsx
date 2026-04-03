@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { message } from 'antd';
 import type { RepairLineItem, RepairCatalogItem } from '../types';
-import { addRepairLineItem, deleteRepairLineItem, patchLineItemCauseComments } from '../../../api/repairs';
+import { addRepairLineItem, deleteRepairLineItem, patchLineItemCauseComments, bulkApproveLineItems } from '../../../api/repairs';
 import { RepairItemAutoComplete } from './RepairItemAutoComplete';
 
 interface RepairItemsTableProps {
@@ -188,6 +188,36 @@ export const RepairItemsTable = ({
             <span style={{ color: '#4ade80' }}>{fmt(warrantyTotal)} warranty</span> ·{' '}
             <span style={{ color: '#fbbf24' }}>{fmt(customerTotal)} customer</span>
           </span>
+          {items.length > 0 && (
+            <>
+              <button
+                onClick={async () => {
+                  try { await bulkApproveLineItems(repairKey, 'Y'); onItemsChanged(); }
+                  catch { message.error('Failed to approve'); }
+                }}
+                style={{
+                  background: 'rgba(255,255,255,.2)', color: '#fff',
+                  border: '1px solid rgba(255,255,255,.4)', borderRadius: 3,
+                  padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                }}
+              >
+                ✓ Approve All
+              </button>
+              <button
+                onClick={async () => {
+                  try { await bulkApproveLineItems(repairKey, ''); onItemsChanged(); }
+                  catch { message.error('Failed to unapprove'); }
+                }}
+                style={{
+                  background: 'rgba(255,255,255,.1)', color: 'rgba(255,255,255,.8)',
+                  border: '1px solid rgba(255,255,255,.3)', borderRadius: 3,
+                  padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                }}
+              >
+                Unapprove All
+              </button>
+            </>
+          )}
           {hasAmendments && (
             <button
               onClick={() => onOpenAmendments()}

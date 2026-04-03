@@ -232,6 +232,10 @@ public record TechnicianOption(
     string TechName
 );
 
+public record AddNoteRequest(string? Note);
+public record BulkApproveRequest(string? Approved);
+public record UpdateTechsRequest(int TechKey, int? Tech2Key);
+
 public record QuickEditRepairRequest(
     int? StatusId,
     int? TechnicianKey,
