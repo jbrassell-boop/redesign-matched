@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { NewOrderWizard } from './NewOrderWizard';
 import { useDensity } from '../../hooks/useDensity';
@@ -20,6 +21,7 @@ interface WizardState {
 }
 
 export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
+  const navigate = useNavigate();
   const { username, logout } = useAuth();
   const { density, toggle: toggleDensity } = useDensity();
   const sidebarWidth = sidebarCollapsed ? 56 : 240;
