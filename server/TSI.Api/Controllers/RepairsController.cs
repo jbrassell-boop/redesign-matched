@@ -363,7 +363,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             ShippingClientIn: reader["dblShippingClientIn"] == DBNull.Value ? null : Convert.ToDecimal(reader["dblShippingClientIn"]),
             TrackingNumberRequired: reader["bTrackingNumberRequired"] == DBNull.Value ? null : Convert.ToBoolean(reader["bTrackingNumberRequired"]),
             GtdDeliveryDate: ReadDate("dtDeliveryDateGuaranteed")?.ToString("MM/dd/yyyy"),
-            CarrierGtdDate: reader["dtCarrierDeliveryDateGuaranteed"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtCarrierDeliveryDateGuaranteed"]).ToString("MM/dd/yyyy"),
+            CarrierGtdDate: ReadDate("dtCarrierDeliveryDateGuaranteed")?.ToString("MM/dd/yyyy"),
             DeliveryDate: ReadDate("dtDeliveryDate")?.ToString("MM/dd/yyyy"),
             OutsourceCost: reader["dblOutSourceCost"] == DBNull.Value ? null : Convert.ToDecimal(reader["dblOutSourceCost"]),
             DisplayItemDescription: ReadStr("sDisplayItemDescription"),
