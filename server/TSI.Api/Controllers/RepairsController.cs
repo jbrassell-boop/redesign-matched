@@ -654,10 +654,10 @@ public class RepairsController(IConfiguration config) : ControllerBase
 
         const string sql = """
             SELECT sl.lRepairStatusLogID, ISNULL(sl.sRepairStatus, '') AS sRepairStatus,
-                   sl.dtStatusChange
+                   sl.ChangeDate
             FROM tblRepairStatusLog sl
             WHERE sl.lRepairKey = @repairKey
-            ORDER BY sl.dtStatusChange DESC
+            ORDER BY sl.ChangeDate DESC
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
@@ -669,7 +669,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             history.Add(new RepairStatusLogEntry(
                 LogId: Convert.ToInt32(reader["lRepairStatusLogID"]),
                 StatusName: reader["sRepairStatus"]?.ToString() ?? "",
-                ChangedAt: reader["dtStatusChange"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["dtStatusChange"]),
+                ChangedAt: reader["ChangeDate"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["ChangeDate"]),
                 ChangedBy: null
             ));
         }

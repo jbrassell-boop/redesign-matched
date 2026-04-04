@@ -13,10 +13,10 @@
   gap: 8px;
   padding: 8px 12px;
   border-right: 1px solid var(--neutral-200);
-  min-width: 0;
+  min-width: 110px;
   cursor: pointer;
   transition: background 150ms ease;
-  flex: 1;
+  flex: 1 0 auto;
 }
 
 .stat-chip:last-child {

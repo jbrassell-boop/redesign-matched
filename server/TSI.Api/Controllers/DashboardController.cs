@@ -670,9 +670,13 @@ public class DashboardController(IConfiguration config) : ControllerBase
 
         var dataSql = $"""
             SELECT f.lFlagKey, f.sFlag, f.lOwnerKey,
-                   ISNULL(ft.sFlagType,'') AS sFlagType
+                   ISNULL(ft.sFlagType,'') AS sFlagType,
+                   COALESCE(c.sClientName1, st.sScopeTypeDesc, s.sSerialNumber, '') AS sOwnerName
             FROM tblFlags f
             LEFT JOIN tblFlagTypes ft ON ft.lFlagTypeKey = f.lFlagTypeKey
+            LEFT JOIN tblClient c ON ft.sFlagType = 'Client' AND c.lClientKey = f.lOwnerKey
+            LEFT JOIN tblScopeType st ON ft.sFlagType = 'Scope Type' AND st.lScopeTypeKey = f.lOwnerKey
+            LEFT JOIN tblScope s ON ft.sFlagType = 'Scope' AND s.lScopeKey = f.lOwnerKey
             {whereClause}
             ORDER BY f.lFlagKey DESC
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
@@ -697,7 +701,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
                 FlagKey: Convert.ToInt32(dataReader["lFlagKey"]),
                 FlagText: dataReader["sFlag"]?.ToString() ?? "",
                 FlagType: dataReader["sFlagType"]?.ToString() ?? "",
-                OwnerName: "",
+                OwnerName: dataReader["sOwnerName"]?.ToString() ?? "",
                 OwnerKey: Convert.ToInt32(dataReader["lOwnerKey"])
             ));
         }
