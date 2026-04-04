@@ -921,10 +921,11 @@ public class DashboardController(IConfiguration config) : ControllerBase
               SUM(CASE WHEN r.dtDateOut IS NOT NULL AND r.dtDateOut >= @monthStart THEN 1 ELSE 0 END) AS TotalShippedMonth
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            WHERE r.dtDateIn >= DATEADD(YEAR, -2, GETDATE())
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
-        cmd.CommandTimeout = 30;
+        cmd.CommandTimeout = 60;
         await using var rdr = await cmd.ExecuteReaderAsync();
         if (!await rdr.ReadAsync()) return Ok(new { });
 
