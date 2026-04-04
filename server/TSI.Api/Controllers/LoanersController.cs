@@ -38,7 +38,7 @@ public class LoanersController(IConfiguration config) : ControllerBase
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "All")
         {
             if (statusFilter == "Overdue")
-                where.Add("lt.sDateIn IS NULL AND lt.sDateOut IS NOT NULL AND DATEDIFF(day, CAST(lt.sDateOut AS datetime), GETDATE()) > 30");
+                where.Add("lt.sDateIn IS NULL AND lt.sDateOut IS NOT NULL AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 30");
             else if (statusFilter == "Out")
                 where.Add("lt.sDateIn IS NULL AND lt.sDateOut IS NOT NULL");
             else if (statusFilter == "Returned")
@@ -74,14 +74,14 @@ public class LoanersController(IConfiguration config) : ControllerBase
                    CASE
                        WHEN lt.sRepairClosed = 'D' THEN 'Declined'
                        WHEN lt.sDateIn IS NOT NULL THEN 'Returned'
-                       WHEN lt.sDateOut IS NOT NULL AND DATEDIFF(day, CAST(lt.sDateOut AS datetime), GETDATE()) > 30 THEN 'Overdue'
+                       WHEN lt.sDateOut IS NOT NULL AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 30 THEN 'Overdue'
                        WHEN lt.sDateOut IS NOT NULL THEN 'Out'
                        ELSE 'Pending'
                    END AS sStatus,
                    CASE
                        WHEN lt.sDateOut IS NOT NULL THEN
-                           DATEDIFF(day, CAST(lt.sDateOut AS datetime),
-                               CASE WHEN lt.sDateIn IS NOT NULL THEN CAST(lt.sDateIn AS datetime) ELSE GETDATE() END)
+                           DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime),
+                               CASE WHEN lt.sDateIn IS NOT NULL THEN TRY_CAST(lt.sDateIn AS datetime) ELSE GETDATE() END)
                        ELSE 0
                    END AS DaysOut
             FROM tblLoanerTran lt
@@ -154,14 +154,14 @@ public class LoanersController(IConfiguration config) : ControllerBase
                    CASE
                        WHEN lt.sRepairClosed = 'D' THEN 'Declined'
                        WHEN lt.sDateIn IS NOT NULL THEN 'Returned'
-                       WHEN lt.sDateOut IS NOT NULL AND DATEDIFF(day, CAST(lt.sDateOut AS datetime), GETDATE()) > 30 THEN 'Overdue'
+                       WHEN lt.sDateOut IS NOT NULL AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 30 THEN 'Overdue'
                        WHEN lt.sDateOut IS NOT NULL THEN 'Out'
                        ELSE 'Pending'
                    END AS sStatus,
                    CASE
                        WHEN lt.sDateOut IS NOT NULL THEN
-                           DATEDIFF(day, CAST(lt.sDateOut AS datetime),
-                               CASE WHEN lt.sDateIn IS NOT NULL THEN CAST(lt.sDateIn AS datetime) ELSE GETDATE() END)
+                           DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime),
+                               CASE WHEN lt.sDateIn IS NOT NULL THEN TRY_CAST(lt.sDateIn AS datetime) ELSE GETDATE() END)
                        ELSE 0
                    END AS DaysOut
             FROM tblLoanerTran lt
@@ -221,9 +221,9 @@ public class LoanersController(IConfiguration config) : ControllerBase
             SELECT
                 COUNT(*) AS Total,
                 SUM(CASE WHEN lt.sDateIn IS NULL AND lt.sDateOut IS NOT NULL AND lt.sRepairClosed IS NULL
-                         AND DATEDIFF(day, CAST(lt.sDateOut AS datetime), GETDATE()) <= 30 THEN 1 ELSE 0 END) AS OutCount,
+                         AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) <= 30 THEN 1 ELSE 0 END) AS OutCount,
                 SUM(CASE WHEN lt.sDateIn IS NULL AND lt.sDateOut IS NOT NULL AND lt.sRepairClosed IS NULL
-                         AND DATEDIFF(day, CAST(lt.sDateOut AS datetime), GETDATE()) > 30 THEN 1 ELSE 0 END) AS OverdueCount,
+                         AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 30 THEN 1 ELSE 0 END) AS OverdueCount,
                 SUM(CASE WHEN lt.sDateIn IS NOT NULL THEN 1 ELSE 0 END) AS ReturnedCount,
                 SUM(CASE WHEN lt.sRepairClosed = 'D' THEN 1 ELSE 0 END) AS DeclinedCount
             FROM tblLoanerTran lt

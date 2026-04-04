@@ -87,7 +87,14 @@ public class DashboardController(IConfiguration config) : ControllerBase
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all")
             where.Add("rs.sRepairStatus = @statusFilter");
         if (type != "all")
-            where.Add("stc.sScopeTypeCategory = @type");
+        {
+            // Map frontend names to sRigidOrFlexible single-letter codes
+            var typeCode = type switch {
+                "Flexible" => "F", "Rigid" => "R", "Instrument" => "I",
+                "Camera" => "C", "Carts" => "C", _ => type
+            };
+            where.Add("st.sRigidOrFlexible = @type");
+        }
         if (location == "inhouse")
             where.Add("ISNULL(r.bOutsourced, 0) = 0 AND ISNULL(r.bHotList, 0) = 0");
         else if (location == "outsourced")
@@ -146,14 +153,14 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var countCmd = new SqlCommand(countSql, conn);
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
-        if (type != "all") countCmd.Parameters.AddWithValue("@type", type);
+        if (type != "all") { var tc = type switch { "Flexible" => "F", "Rigid" => "R", "Instrument" => "I", "Camera" => "C", "Carts" => "C", _ => type }; countCmd.Parameters.AddWithValue("@type", tc); }
 
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
-        if (type != "all") dataCmd.Parameters.AddWithValue("@type", type);
+        if (type != "all") { var tc2 = type switch { "Flexible" => "F", "Rigid" => "R", "Instrument" => "I", "Camera" => "C", "Carts" => "C", _ => type }; dataCmd.Parameters.AddWithValue("@type", tc2); }
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
 

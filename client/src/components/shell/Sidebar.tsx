@@ -301,16 +301,16 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
           </div>
         )}
 
-        {/* Collapse toggle */}
+        {/* Collapse toggle — always visible */}
         <button
           onClick={() => onCollapse(!collapsed)}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           style={{
             marginLeft: collapsed ? 0 : 'auto',
-            background: 'none',
+            background: collapsed ? 'none' : 'rgba(255,255,255,0.1)',
             border: 'none',
             borderRadius: 4,
-            color: 'rgba(255,255,255,0.5)',
+            color: 'rgba(255,255,255,0.7)',
             cursor: 'pointer',
             width: 32,
             height: 32,
@@ -319,6 +319,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
             justifyContent: 'center',
             flexShrink: 0,
             padding: 6,
+            zIndex: 10,
           }}
         >
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">

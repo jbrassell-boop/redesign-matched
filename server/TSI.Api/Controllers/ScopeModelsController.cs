@@ -68,7 +68,7 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblManufacturers m ON m.lManufacturerKey = st.lManufacturerKey
             LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey
             {whereClause}
-            ORDER BY st.sScopeTypeDesc
+            ORDER BY CASE WHEN st.sScopeTypeDesc = '' OR st.sScopeTypeDesc IS NULL THEN 1 ELSE 0 END, st.sScopeTypeDesc
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
             """;
 
