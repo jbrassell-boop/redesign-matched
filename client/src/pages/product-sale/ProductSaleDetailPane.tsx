@@ -110,7 +110,7 @@ export const ProductSaleDetailPane = ({ detail, loading, onClose }: Props) => {
                 <Field label="Phone" value={detail.contactPhone} />
               </FormGrid>
 
-              <FormGrid cols={2} className="mt-2">
+              <FormGrid cols={2}>
                 <div>
                   <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bill To</div>
                   <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>

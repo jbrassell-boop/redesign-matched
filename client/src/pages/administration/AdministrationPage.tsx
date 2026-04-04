@@ -699,7 +699,7 @@ export function AdministrationPage() {
       />
 
       {/* Toolbar */}
-      <div className="tsi-toolbar">
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' }}>
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--muted)' }} />}
           placeholder={`Search ${visibleTabs.find(t => t.key === activeTab)?.label || ''}...`}
