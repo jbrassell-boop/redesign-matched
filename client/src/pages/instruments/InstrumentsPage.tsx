@@ -23,11 +23,7 @@ import type {
 const fmt$ = (v: number) =>
   '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const _fmtDate = (d: string | null) => {
-  if (!d) return '\u2014';
-  const dt = new Date(d);
-  return isNaN(dt.getTime()) ? '\u2014' : dt.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-};
+/* fmtDate available for future use */
 
 const TABS: TabDef[] = [
   { key: 'repairs', label: 'Instrument Repairs' },
