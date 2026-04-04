@@ -580,7 +580,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
 
         var dataSql = $"""
             SELECT i.lInvoiceKey, ISNULL(i.sTranNumber,'') AS sTranNumber,
-                   ISNULL(i.dblInvoiceAmount,0) AS dblInvoiceAmount,
+                   ISNULL(i.dblTranAmount,0) AS dblTranAmount,
                    i.dtTranDate, i.bFinalized,
                    ISNULL(c.sClientName1,'') AS sClientName1
             FROM tblInvoice i
@@ -611,7 +611,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
                 Wo: "",
                 Client: dataReader["sClientName1"]?.ToString() ?? "",
                 Dept: "",
-                Amount: dataReader["dblInvoiceAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(dataReader["dblInvoiceAmount"]),
+                Amount: dataReader["dblTranAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(dataReader["dblTranAmount"]),
                 Status: finalized ? "Finalized" : "Pending",
                 Date: dt?.ToString("MM/dd/yyyy") ?? "",
                 PaidDate: null
@@ -624,8 +624,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
             SELECT
                 SUM(CASE WHEN i.bFinalized = 0 THEN 1 ELSE 0 END) AS ReadyToInvoice,
                 SUM(CASE WHEN i.bFinalized = 1 AND MONTH(i.dtTranDate) = MONTH(GETDATE()) AND YEAR(i.dtTranDate) = YEAR(GETDATE()) THEN 1 ELSE 0 END) AS InvoicedMonth,
-                SUM(ISNULL(i.dblInvoiceAmount, 0)) AS TotalAmount,
-                CASE WHEN COUNT(*) > 0 THEN SUM(ISNULL(i.dblInvoiceAmount,0)) / COUNT(*) ELSE 0 END AS AvgInvoice
+                SUM(ISNULL(i.dblTranAmount, 0)) AS TotalAmount,
+                CASE WHEN COUNT(*) > 0 THEN SUM(ISNULL(i.dblTranAmount,0)) / COUNT(*) ELSE 0 END AS AvgInvoice
             FROM tblInvoice i
             """;
         await using var invStatsCmd = new SqlCommand(invStatsSql, conn);

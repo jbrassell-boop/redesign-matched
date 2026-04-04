@@ -1338,9 +1338,9 @@ public class RepairsController(IConfiguration config) : ControllerBase
                    ISNULL(r.dblAmtRepair, 0) + ISNULL(r.nSalesTax, 0) AS InvoiceTotal,
                    ISNULL(r.dblOutSourceCost, 0) AS Outsource,
                    ISNULL(r.dblAmtShipping, 0) AS Shipping,
-                   ISNULL(r.dblAmtLabor, 0) AS Labor,
-                   ISNULL(r.dblAmtInventory, 0) AS [Inventory],
-                   ISNULL(r.dblAmtGPO, 0) AS Gpo,
+                   ISNULL(r.dblAmtCostLabor, 0) AS Labor,
+                   ISNULL(r.nInventoryCost, 0) AS [Inventory],
+                   0 AS Gpo,
                    ISNULL(r.dblAmtCommission, 0) AS Commission
             FROM tblRepair r
             WHERE r.lRepairKey = @repairKey
