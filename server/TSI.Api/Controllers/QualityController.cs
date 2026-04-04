@@ -97,9 +97,9 @@ public class QualityController(IConfiguration config) : ControllerBase
         var items = new List<QualityInspectionListItem>();
         while (await reader.ReadAsync())
         {
-            var inspDate = reader["dtLastUpdate"] == DBNull.Value
+            var inspDate = reader["dtDateIn"] == DBNull.Value
                 ? ""
-                : Convert.ToDateTime(reader["dtLastUpdate"]).ToString("MM/dd/yyyy");
+                : Convert.ToDateTime(reader["dtDateIn"]).ToString("MM/dd/yyyy");
 
             var typeId = reader["lRepairInspectionType"] == DBNull.Value
                 ? 0
@@ -158,9 +158,9 @@ public class QualityController(IConfiguration config) : ControllerBase
         if (!await reader.ReadAsync())
             return NotFound(new { message = "Inspection not found." });
 
-        var inspDate = reader["dtLastUpdate"] == DBNull.Value
+        var inspDate = reader["dtDateIn"] == DBNull.Value
             ? ""
-            : Convert.ToDateTime(reader["dtLastUpdate"]).ToString("MM/dd/yyyy");
+            : Convert.ToDateTime(reader["dtDateIn"]).ToString("MM/dd/yyyy");
 
         var typeId = reader["lRepairInspectionType"] == DBNull.Value
             ? 0
@@ -196,6 +196,7 @@ public class QualityController(IConfiguration config) : ControllerBase
                 SUM(CASE WHEN {ResultCase} = 'Fail' THEN 1 ELSE 0 END) AS FailCount,
                 SUM(CASE WHEN {ResultCase} = 'Conditional' THEN 1 ELSE 0 END) AS ConditionalCount
             FROM tblRepairInspection ri
+            JOIN tblRepair r ON r.lRepairKey = ri.lRepairKey
             WHERE r.dtDateIn >= DATEADD(day, -30, GETDATE())
             """;
 

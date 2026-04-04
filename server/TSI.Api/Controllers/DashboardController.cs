@@ -565,7 +565,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
 
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("""
-                (ISNULL(i.sInvoiceNumber,'') LIKE @search
+                (ISNULL(i.sTranNumber,'') LIKE @search
                  OR ISNULL(c.sClientName1,'') LIKE @search)
                 """);
 
@@ -579,7 +579,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             """;
 
         var dataSql = $"""
-            SELECT i.lInvoiceKey, ISNULL(i.sInvoiceNumber,'') AS sInvoiceNumber,
+            SELECT i.lInvoiceKey, ISNULL(i.sTranNumber,'') AS sTranNumber,
                    ISNULL(i.dblInvoiceAmount,0) AS dblInvoiceAmount,
                    i.dtTranDate, i.bFinalized,
                    ISNULL(c.sClientName1,'') AS sClientName1
@@ -607,7 +607,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             var finalized = Convert.ToBoolean(dataReader["bFinalized"]);
             invoices.Add(new DashboardInvoice(
                 InvoiceKey: Convert.ToInt32(dataReader["lInvoiceKey"]),
-                InvoiceNumber: dataReader["sInvoiceNumber"]?.ToString() ?? "",
+                InvoiceNumber: dataReader["sTranNumber"]?.ToString() ?? "",
                 Wo: "",
                 Client: dataReader["sClientName1"]?.ToString() ?? "",
                 Dept: "",

@@ -1336,7 +1336,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             SELECT ISNULL(r.dblAmtRepair, 0) AS SaleAmount,
                    ISNULL(r.nSalesTax, 0) AS Tax,
                    ISNULL(r.dblAmtRepair, 0) + ISNULL(r.nSalesTax, 0) AS InvoiceTotal,
-                   ISNULL(r.dblAmtOutsource, 0) AS Outsource,
+                   ISNULL(r.dblOutSourceCost, 0) AS Outsource,
                    ISNULL(r.dblAmtShipping, 0) AS Shipping,
                    ISNULL(r.dblAmtLabor, 0) AS Labor,
                    ISNULL(r.dblAmtInventory, 0) AS [Inventory],
