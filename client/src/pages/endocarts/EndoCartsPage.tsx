@@ -379,7 +379,7 @@ export const EndoCartsPage = () => {
             overflow: 'hidden',
           }}>
             {/* Stat Strip */}
-            <div className="tsi-stat-strip">
+            <div style={{ display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--border)', flexShrink: 0, overflowX: 'auto' }}>
               <StatChip label="Total Quotes" value={stats.total} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconFile />} active={chipFilter === ''} onClick={() => { setChipFilter(''); setPage(1); }} />
               <StatChip label="Draft" value={stats.draft} iconBg="rgba(var(--amber-rgb), 0.13)" iconColor="var(--warning)" valueColor="var(--warning)" icon={<IconPen />} active={chipFilter === 'Draft'} onClick={() => { setChipFilter(f => f === 'Draft' ? '' : 'Draft'); setPage(1); }} />
               <StatChip label="Quoted" value={stats.quoted} iconBg="rgba(var(--primary-rgb), 0.12)" iconColor="var(--primary)" valueColor="var(--primary)" icon={<IconChat />} active={chipFilter === 'Quoted'} onClick={() => { setChipFilter(f => f === 'Quoted' ? '' : 'Quoted'); setPage(1); }} />
@@ -389,7 +389,7 @@ export const EndoCartsPage = () => {
             </div>
 
             {/* Toolbar */}
-            <div className="tsi-toolbar">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' }}>
               <button style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                 New Quote
@@ -505,7 +505,7 @@ export const EndoCartsPage = () => {
       {/* ════════════════════════════════════════════════════════ */}
       {activeTab === 'catalog' && (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <div className="tsi-toolbar">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' }}>
             <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               Add Component
@@ -560,7 +560,7 @@ export const EndoCartsPage = () => {
       {/* ════════════════════════════════════════════════════════ */}
       {activeTab === 'models' && (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <div className="tsi-toolbar">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' }}>
             <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New Model
@@ -640,7 +640,7 @@ export const EndoCartsPage = () => {
       {/* ════════════════════════════════════════════════════════ */}
       {activeTab === 'scope-inventory' && (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <div className="tsi-toolbar">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>Type</span>
             <SegmentedControl
               items={[{ label: 'All', value: '' }, { label: 'Flexible', value: 'F' }, { label: 'Rigid', value: 'R' }]}
@@ -718,7 +718,7 @@ export const EndoCartsPage = () => {
       {/* ════════════════════════════════════════════════════════ */}
       {activeTab === 'service-history' && (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <div className="tsi-toolbar">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' }}>
             <div style={{ position: 'relative', marginLeft: 'auto' }}>
               <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
               <input placeholder="Search WO#, serial#, client..." value={serviceSearch} onChange={e => { setServiceSearch(e.target.value); setServicePage(1); }} style={{
