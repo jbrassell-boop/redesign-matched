@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Drawer, Spin } from 'antd';
+import { Spin } from 'antd';
 import { QUOTES, CATALOG, MODELS, SALES_REPS, CATALOG_CATEGORIES } from './endoCartData';
 import { getEndoCartScopeInventory, getEndoCartServiceHistory } from '../../api/endocarts';
 import type { EndoCartFilters, CatalogPart, CartModel, EndoCartScopeItem, EndoCartServiceHistoryItem } from './types';
@@ -91,13 +91,14 @@ const ColHeader = ({ label, sortKey, currentSort, currentDir, onSort, style }: {
 );
 
 /* ── Table Row Style ─────────────────────────────────────────── */
-const rowStyle = (idx: number, selected: boolean): React.CSSProperties => ({
-  background: selected ? 'var(--primary-light)' : idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)',
+const rowStyle = (idx: number, selected: boolean, detailSelected: boolean): React.CSSProperties => ({
+  background: detailSelected ? 'var(--primary-light)' : selected ? 'var(--row-alt)' : idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)',
   cursor: 'pointer',
+  borderLeft: detailSelected ? '3px solid var(--primary)' : '3px solid transparent',
 });
 const cellStyle: React.CSSProperties = { padding: '7px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
 
-/* ── Section Card (for drawer) ───────────────────────────────── */
+/* ── Section Card (for detail pane) ─────────────────────────── */
 const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <div style={{ background: 'var(--card)', border: '1px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
     <div style={{ background: 'var(--neutral-50)', padding: '6px 12px', fontSize: 10, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{title}</div>
@@ -118,7 +119,6 @@ export const EndoCartsPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState('overview');
   const [chipFilter, setChipFilter] = useState('');
 
@@ -182,7 +182,11 @@ export const EndoCartsPage = () => {
     setSortCol(col);
   }, []);
 
-  const openDrawer = (key: number) => { setSelectedKey(key); setDrawerOpen(true); setDrawerTab('overview'); };
+  const openDetail = (key: number) => {
+    setSelectedKey(key);
+    setDrawerTab('overview');
+  };
+
   const selectedQuote = QUOTES.find(q => q.lQuoteKey === selectedKey);
 
   /* ── Catalog pipeline ─── */
@@ -244,116 +248,255 @@ export const EndoCartsPage = () => {
     { label: 'Approved', value: 'Approved' }, { label: 'Billed', value: 'Billed' }, { label: 'Cancelled', value: 'Cancelled' },
   ];
 
+  /* ── Quote detail pane content ─── */
+  const quoteDetailPane = selectedQuote ? (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Close row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
+        <button
+          onClick={() => setSelectedKey(null)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' }}
+        >
+          &times;
+        </button>
+      </div>
+      <DetailHeader
+        title={selectedQuote.quoteNum}
+        subtitle={selectedQuote.clientName}
+        badges={<StatusBadge status={selectedQuote.status} />}
+      />
+      <TabBar
+        tabs={[
+          { key: 'overview', label: 'Overview' },
+          { key: 'bom', label: 'BOM Items' },
+          { key: 'docs', label: 'Documents' },
+        ]}
+        activeKey={drawerTab}
+        onChange={setDrawerTab}
+      />
+
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        {/* Overview pane */}
+        {drawerTab === 'overview' && (
+          <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <SectionCard title="Quote Info">
+              <FormGrid cols={2}>
+                <Field label="Quote #" value={selectedQuote.quoteNum} />
+                <Field label="Status" value={selectedQuote.status} />
+                <Field label="Client" value={selectedQuote.clientName} />
+                <Field label="Department" value={selectedQuote.deptName} />
+                <Field label="Cart Model" value={selectedQuote.cartModel} />
+                <Field label="Date Created" value={fmtDate(selectedQuote.dateCreated)} />
+              </FormGrid>
+            </SectionCard>
+            <SectionCard title="Settings & Payment">
+              <FormGrid cols={2}>
+                <Field label="Sales Rep" value={selectedQuote.salesRep} />
+                <Field label="Date Quoted" value={fmtDate(selectedQuote.dateQuoted)} />
+                <Field label="Subtotal" value={fmtMoney(selectedQuote.total)} />
+                <Field label="Grand Total" value={fmtMoney(selectedQuote.total)} />
+              </FormGrid>
+            </SectionCard>
+            <SectionCard title="Notes">
+              <span style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>{selectedQuote.notes || '\u2014'}</span>
+            </SectionCard>
+          </div>
+        )}
+
+        {/* BOM pane */}
+        {drawerTab === 'bom' && (
+          <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <SectionCard title="Bill of Materials">
+              <div style={{ margin: '-10px -12px', padding: 0 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                  <thead>
+                    <tr>
+                      <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left', borderBottom: '1px solid var(--neutral-200)' }}>Part #</th>
+                      <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left', borderBottom: '1px solid var(--neutral-200)' }}>Description</th>
+                      <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center', borderBottom: '1px solid var(--neutral-200)' }}>Qty</th>
+                      <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right', borderBottom: '1px solid var(--neutral-200)' }}>Unit Cost</th>
+                      <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right', borderBottom: '1px solid var(--neutral-200)' }}>Line Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {selectedQuote.items.map((it, i) => (
+                      <tr key={i}>
+                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{it.partNum}</td>
+                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{it.desc}</td>
+                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>{it.qty}</td>
+                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', textAlign: 'right' }}>{fmtMoney(it.unitCost)}</td>
+                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', textAlign: 'right' }}>{fmtMoney(it.unitCost * it.qty)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr style={{ fontWeight: 700, background: 'var(--neutral-50)' }}>
+                      <td colSpan={4} style={{ padding: '5px 8px', textAlign: 'right' }}>Subtotal</td>
+                      <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmtMoney(selectedQuote.total)}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </SectionCard>
+          </div>
+        )}
+
+        {/* Documents pane */}
+        {drawerTab === 'docs' && (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', color: 'var(--muted)', textAlign: 'center', gap: 8 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--border-dk)" strokeWidth="1.5" style={{ width: 40, height: 40 }}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14,2 14,8 20,8" /></svg>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}>No documents attached</div>
+            <div style={{ fontSize: 11 }}>Quotes, specs, and supporting documents will appear here.</div>
+          </div>
+        )}
+      </div>
+
+      {/* Detail footer */}
+      <div style={{ padding: '10px 18px', borderTop: '1.5px solid var(--border-dk)', background: 'var(--neutral-50)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }}>Quote detail</span>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
 
       {/* ── Sub-Tab Bar ─── */}
-      <TabBar tabs={tabs} activeKey={activeTab} onChange={k => setActiveTab(k as typeof activeTab)} />
+      <TabBar tabs={tabs} activeKey={activeTab} onChange={k => { setActiveTab(k as typeof activeTab); setSelectedKey(null); }} />
 
       {/* ════════════════════════════════════════════════════════ */}
-      {/* QUOTES TAB                                              */}
+      {/* QUOTES TAB — split-pane                                 */}
       {/* ════════════════════════════════════════════════════════ */}
       {activeTab === 'quotes' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-
-          {/* Stat Strip */}
-          <div className="tsi-stat-strip">
-            <StatChip label="Total Quotes" value={stats.total} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconFile />} active={chipFilter === ''} onClick={() => { setChipFilter(''); setPage(1); }} />
-            <StatChip label="Draft" value={stats.draft} iconBg="rgba(var(--amber-rgb), 0.13)" iconColor="var(--warning)" valueColor="var(--warning)" icon={<IconPen />} active={chipFilter === 'Draft'} onClick={() => { setChipFilter(f => f === 'Draft' ? '' : 'Draft'); setPage(1); }} />
-            <StatChip label="Quoted" value={stats.quoted} iconBg="rgba(var(--primary-rgb), 0.12)" iconColor="var(--primary)" valueColor="var(--primary)" icon={<IconChat />} active={chipFilter === 'Quoted'} onClick={() => { setChipFilter(f => f === 'Quoted' ? '' : 'Quoted'); setPage(1); }} />
-            <StatChip label="Approved" value={stats.approved} iconBg="rgba(var(--success-rgb), 0.12)" iconColor="var(--success)" valueColor="var(--success)" icon={<IconCheck />} active={chipFilter === 'Approved'} onClick={() => { setChipFilter(f => f === 'Approved' ? '' : 'Approved'); setPage(1); }} />
-            <StatChip label="Billed" value={stats.billed} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconDollar />} active={chipFilter === 'Billed'} onClick={() => { setChipFilter(f => f === 'Billed' ? '' : 'Billed'); setPage(1); }} />
-            <StatChip label="Pipeline Value" value={fmtMoneyShort(stats.pipelineValue)} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconTrend />} />
-          </div>
-
-          {/* Toolbar */}
-          <div className="tsi-toolbar">
-            <button style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-              New Quote
-            </button>
-            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>Status</span>
-            <SegmentedControl items={statusSegments} value={filters.status} onChange={v => { setFilters(f => ({ ...f, status: v })); setChipFilter(''); setPage(1); }} />
-            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
-            <select value={filters.rep} onChange={e => { setFilters(f => ({ ...f, rep: e.target.value })); setPage(1); }} style={{
-              height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit',
-              color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 130,
-            }}>
-              <option value="">All Sales Reps</option>
-              {SALES_REPS.map(r => <option key={r} value={r}>{r}</option>)}
-            </select>
-            <div style={{ position: 'relative', marginLeft: 'auto' }}>
-              <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
-              <input placeholder="Search quote#, client, model..." value={filters.search} onChange={e => { setFilters(f => ({ ...f, search: e.target.value })); setPage(1); }} style={{
-                height: 30, width: 200, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
-              }} />
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          {/* Left panel — list */}
+          <div style={{
+            display: 'flex', flexDirection: 'column',
+            width: selectedKey ? 'calc(100% - 520px)' : '100%',
+            minWidth: 0,
+            borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
+            transition: 'width 0.2s ease',
+            overflow: 'hidden',
+          }}>
+            {/* Stat Strip */}
+            <div className="tsi-stat-strip">
+              <StatChip label="Total Quotes" value={stats.total} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconFile />} active={chipFilter === ''} onClick={() => { setChipFilter(''); setPage(1); }} />
+              <StatChip label="Draft" value={stats.draft} iconBg="rgba(var(--amber-rgb), 0.13)" iconColor="var(--warning)" valueColor="var(--warning)" icon={<IconPen />} active={chipFilter === 'Draft'} onClick={() => { setChipFilter(f => f === 'Draft' ? '' : 'Draft'); setPage(1); }} />
+              <StatChip label="Quoted" value={stats.quoted} iconBg="rgba(var(--primary-rgb), 0.12)" iconColor="var(--primary)" valueColor="var(--primary)" icon={<IconChat />} active={chipFilter === 'Quoted'} onClick={() => { setChipFilter(f => f === 'Quoted' ? '' : 'Quoted'); setPage(1); }} />
+              <StatChip label="Approved" value={stats.approved} iconBg="rgba(var(--success-rgb), 0.12)" iconColor="var(--success)" valueColor="var(--success)" icon={<IconCheck />} active={chipFilter === 'Approved'} onClick={() => { setChipFilter(f => f === 'Approved' ? '' : 'Approved'); setPage(1); }} />
+              <StatChip label="Billed" value={stats.billed} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconDollar />} active={chipFilter === 'Billed'} onClick={() => { setChipFilter(f => f === 'Billed' ? '' : 'Billed'); setPage(1); }} />
+              <StatChip label="Pipeline Value" value={fmtMoneyShort(stats.pipelineValue)} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconTrend />} />
             </div>
-          </div>
 
-          {/* Data Table */}
-          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
-              <thead>
-                <tr>
-                  <ColHeader label="Quote #" sortKey="quoteNum" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 100 }} />
-                  <ColHeader label="Client" sortKey="clientName" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: '20%' }} />
-                  <ColHeader label="Department" sortKey="deptName" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: '16%' }} />
-                  <ColHeader label="Cart Model" sortKey="cartModel" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: '16%' }} />
-                  <ColHeader label="Items" sortKey="itemCount" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 55, textAlign: 'center' }} />
-                  <ColHeader label="Total $" sortKey="total" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 100, textAlign: 'right' }} />
-                  <ColHeader label="Status" sortKey="status" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 90 }} />
-                  <ColHeader label="Created" sortKey="dateCreated" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 95 }} />
-                  <ColHeader label="Quoted" sortKey="dateQuoted" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 95 }} />
-                  <ColHeader label="Sales Rep" sortKey="salesRep" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 110 }} />
-                </tr>
-              </thead>
-              <tbody>
-                {displayQuotes.length === 0 ? (
-                  <tr><td colSpan={10} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)' }}>No records match current filters.</td></tr>
-                ) : displayQuotes.map((q, idx) => (
-                  <tr key={q.lQuoteKey} style={rowStyle(idx, q.lQuoteKey === selectedKey)} onClick={() => openDrawer(q.lQuoteKey)}>
-                    <td style={cellStyle}><span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{q.quoteNum}</span></td>
-                    <td style={cellStyle}>{q.clientName}</td>
-                    <td style={cellStyle}>{q.deptName}</td>
-                    <td style={cellStyle}>{q.cartModel}</td>
-                    <td style={{ ...cellStyle, textAlign: 'center' }}>{q.itemCount}</td>
-                    <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 700 }}>{fmtMoney(q.total)}</td>
-                    <td style={cellStyle}><StatusBadge status={q.status} /></td>
-                    <td style={cellStyle}>{fmtDate(q.dateCreated)}</td>
-                    <td style={cellStyle}>{fmtDate(q.dateQuoted)}</td>
-                    <td style={cellStyle}>{q.salesRep}</td>
+            {/* Toolbar */}
+            <div className="tsi-toolbar">
+              <button style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                New Quote
+              </button>
+              <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>Status</span>
+              <SegmentedControl items={statusSegments} value={filters.status} onChange={v => { setFilters(f => ({ ...f, status: v })); setChipFilter(''); setPage(1); }} />
+              <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
+              <select value={filters.rep} onChange={e => { setFilters(f => ({ ...f, rep: e.target.value })); setPage(1); }} style={{
+                height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit',
+                color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 130,
+              }}>
+                <option value="">All Sales Reps</option>
+                {SALES_REPS.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+              <div style={{ position: 'relative', marginLeft: 'auto' }}>
+                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
+                <input placeholder="Search quote#, client, model..." value={filters.search} onChange={e => { setFilters(f => ({ ...f, search: e.target.value })); setPage(1); }} style={{
+                  height: 30, width: 200, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
+                }} />
+              </div>
+            </div>
+
+            {/* Data Table */}
+            <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+                <thead>
+                  <tr>
+                    <ColHeader label="Quote #" sortKey="quoteNum" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 100 }} />
+                    <ColHeader label="Client" sortKey="clientName" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: '20%' }} />
+                    <ColHeader label="Department" sortKey="deptName" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: '16%' }} />
+                    <ColHeader label="Cart Model" sortKey="cartModel" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: '16%' }} />
+                    <ColHeader label="Items" sortKey="itemCount" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 55, textAlign: 'center' }} />
+                    <ColHeader label="Total $" sortKey="total" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 100, textAlign: 'right' }} />
+                    <ColHeader label="Status" sortKey="status" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 90 }} />
+                    <ColHeader label="Created" sortKey="dateCreated" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 95 }} />
+                    <ColHeader label="Quoted" sortKey="dateQuoted" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 95 }} />
+                    <ColHeader label="Sales Rep" sortKey="salesRep" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 110 }} />
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {displayQuotes.length === 0 ? (
+                    <tr><td colSpan={10} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)' }}>No records match current filters.</td></tr>
+                  ) : displayQuotes.map((q, idx) => (
+                    <tr
+                      key={q.lQuoteKey}
+                      style={rowStyle(idx, false, q.lQuoteKey === selectedKey)}
+                      onClick={() => openDetail(q.lQuoteKey)}
+                      onMouseEnter={e => { if (q.lQuoteKey !== selectedKey) (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
+                      onMouseLeave={e => { if (q.lQuoteKey !== selectedKey) (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)'; }}
+                    >
+                      <td style={cellStyle}><span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{q.quoteNum}</span></td>
+                      <td style={cellStyle}>{q.clientName}</td>
+                      <td style={cellStyle}>{q.deptName}</td>
+                      <td style={cellStyle}>{q.cartModel}</td>
+                      <td style={{ ...cellStyle, textAlign: 'center' }}>{q.itemCount}</td>
+                      <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 700 }}>{fmtMoney(q.total)}</td>
+                      <td style={cellStyle}><StatusBadge status={q.status} /></td>
+                      <td style={cellStyle}>{fmtDate(q.dateCreated)}</td>
+                      <td style={cellStyle}>{fmtDate(q.dateQuoted)}</td>
+                      <td style={cellStyle}>{q.salesRep}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-          {/* Table Footer */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' }}>
-            <span style={{ fontWeight: 500 }}>{filtered.length} record{filtered.length !== 1 ? 's' : ''}</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--muted)' }}>
-                Rows:
-                <select value={pageSize} onChange={e => { setPageSize(e.target.value === 'All' ? 9999 : Number(e.target.value)); setPage(1); }} style={{ height: 26, border: '1px solid var(--border-dk)', borderRadius: 4, padding: '0 6px', fontSize: 11, fontFamily: 'inherit', cursor: 'pointer' }}>
-                  <option value={15}>15</option>
-                  <option value={25}>25</option>
-                  <option value={50}>50</option>
-                  <option value="All">All</option>
-                </select>
-              </div>
-              <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: page <= 1 ? 0.4 : 1 }}>&laquo;</button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 5).map(p => (
-                  <button key={p} onClick={() => setPage(p)} style={{
-                    height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
-                    background: p === page ? 'var(--navy)' : 'var(--card)', color: p === page ? 'var(--card)' : 'var(--muted)', fontWeight: p === page ? 600 : 400,
-                  }}>{p}</button>
-                ))}
-                <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: page >= totalPages ? 0.4 : 1 }}>&raquo;</button>
+            {/* Table Footer */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' }}>
+              <span style={{ fontWeight: 500 }}>{filtered.length} record{filtered.length !== 1 ? 's' : ''}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--muted)' }}>
+                  Rows:
+                  <select value={pageSize} onChange={e => { setPageSize(e.target.value === 'All' ? 9999 : Number(e.target.value)); setPage(1); }} style={{ height: 26, border: '1px solid var(--border-dk)', borderRadius: 4, padding: '0 6px', fontSize: 11, fontFamily: 'inherit', cursor: 'pointer' }}>
+                    <option value={15}>15</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value="All">All</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+                  <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: page <= 1 ? 0.4 : 1 }}>&laquo;</button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 5).map(p => (
+                    <button key={p} onClick={() => setPage(p)} style={{
+                      height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
+                      background: p === page ? 'var(--navy)' : 'var(--card)', color: p === page ? 'var(--card)' : 'var(--muted)', fontWeight: p === page ? 600 : 400,
+                    }}>{p}</button>
+                  ))}
+                  <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: page >= totalPages ? 0.4 : 1 }}>&raquo;</button>
+                </div>
               </div>
             </div>
           </div>
+
+          {/* Right panel — quote detail */}
+          {selectedKey && (
+            <div style={{
+              width: 520,
+              minWidth: 520,
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+              background: 'var(--card)',
+            }}>
+              {quoteDetailPane}
+            </div>
+          )}
         </div>
       )}
 
@@ -636,117 +779,6 @@ export const EndoCartsPage = () => {
           </div>
         </div>
       )}
-
-      {/* ════════════════════════════════════════════════════════ */}
-      {/* QUOTE DETAIL DRAWER                                     */}
-      {/* ════════════════════════════════════════════════════════ */}
-      <Drawer
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        width={600}
-        title={selectedQuote ? selectedQuote.quoteNum : '\u2014'}
-        styles={{ header: { background: 'var(--navy)', padding: '14px 18px' }, body: { padding: 0 } }}
-      >
-        {selectedQuote && (
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            {/* Drawer Header */}
-            <DetailHeader
-              title={selectedQuote.quoteNum}
-              subtitle={selectedQuote.clientName}
-              badges={<StatusBadge status={selectedQuote.status} />}
-            />
-            {/* Drawer Tabs */}
-            <TabBar
-              tabs={[
-                { key: 'overview', label: 'Overview' },
-                { key: 'bom', label: 'BOM Items' },
-                { key: 'docs', label: 'Documents' },
-              ]}
-              activeKey={drawerTab}
-              onChange={setDrawerTab}
-            />
-
-            {/* Overview pane */}
-            {drawerTab === 'overview' && (
-              <div style={{ flex: 1, overflow: 'auto', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <SectionCard title="Quote Info">
-                  <FormGrid cols={2}>
-                    <Field label="Quote #" value={selectedQuote.quoteNum} />
-                    <Field label="Status" value={selectedQuote.status} />
-                    <Field label="Client" value={selectedQuote.clientName} />
-                    <Field label="Department" value={selectedQuote.deptName} />
-                    <Field label="Cart Model" value={selectedQuote.cartModel} />
-                    <Field label="Date Created" value={fmtDate(selectedQuote.dateCreated)} />
-                  </FormGrid>
-                </SectionCard>
-                <SectionCard title="Settings & Payment">
-                  <FormGrid cols={2}>
-                    <Field label="Sales Rep" value={selectedQuote.salesRep} />
-                    <Field label="Date Quoted" value={fmtDate(selectedQuote.dateQuoted)} />
-                    <Field label="Subtotal" value={fmtMoney(selectedQuote.total)} />
-                    <Field label="Grand Total" value={fmtMoney(selectedQuote.total)} />
-                  </FormGrid>
-                </SectionCard>
-                <SectionCard title="Notes">
-                  <span style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>{selectedQuote.notes || '\u2014'}</span>
-                </SectionCard>
-              </div>
-            )}
-
-            {/* BOM pane */}
-            {drawerTab === 'bom' && (
-              <div style={{ flex: 1, overflow: 'auto', padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <SectionCard title="Bill of Materials">
-                  <div style={{ margin: '-10px -12px', padding: 0 }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
-                      <thead>
-                        <tr>
-                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left', borderBottom: '1px solid var(--neutral-200)' }}>Part #</th>
-                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left', borderBottom: '1px solid var(--neutral-200)' }}>Description</th>
-                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center', borderBottom: '1px solid var(--neutral-200)' }}>Qty</th>
-                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right', borderBottom: '1px solid var(--neutral-200)' }}>Unit Cost</th>
-                          <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right', borderBottom: '1px solid var(--neutral-200)' }}>Line Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedQuote.items.map((it, i) => (
-                          <tr key={i}>
-                            <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{it.partNum}</td>
-                            <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{it.desc}</td>
-                            <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>{it.qty}</td>
-                            <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', textAlign: 'right' }}>{fmtMoney(it.unitCost)}</td>
-                            <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', textAlign: 'right' }}>{fmtMoney(it.unitCost * it.qty)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                      <tfoot>
-                        <tr style={{ fontWeight: 700, background: 'var(--neutral-50)' }}>
-                          <td colSpan={4} style={{ padding: '5px 8px', textAlign: 'right' }}>Subtotal</td>
-                          <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmtMoney(selectedQuote.total)}</td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
-                </SectionCard>
-              </div>
-            )}
-
-            {/* Documents pane */}
-            {drawerTab === 'docs' && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', color: 'var(--muted)', textAlign: 'center', gap: 8 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--border-dk)" strokeWidth="1.5" style={{ width: 40, height: 40 }}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14,2 14,8 20,8" /></svg>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}>No documents attached</div>
-                <div style={{ fontSize: 11 }}>Quotes, specs, and supporting documents will appear here.</div>
-              </div>
-            )}
-
-            {/* Drawer Footer */}
-            <div style={{ padding: '10px 18px', borderTop: '1.5px solid var(--border-dk)', background: 'var(--neutral-50)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-              <span style={{ fontSize: 11, color: 'var(--muted)' }}>Quote detail</span>
-            </div>
-          </div>
-        )}
-      </Drawer>
     </div>
   );
 };

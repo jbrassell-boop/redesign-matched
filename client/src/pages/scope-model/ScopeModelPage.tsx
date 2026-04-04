@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Spin, Select, Drawer, Table, message } from 'antd';
+import { Input, Spin, Select, Table, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { getScopeModels, getScopeModelDetail, getScopeModelStats, getManufacturers, getScopeModelInventory, getScopeModelFlags } from '../../api/scopeModels';
 import { RepairItemsTab } from './tabs/RepairItemsTab';
@@ -60,8 +60,8 @@ const IconFlex = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor
 const IconRigid = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><line x1="8" y1="2" x2="8" y2="14" /><line x1="5" y1="4" x2="11" y2="4" /><line x1="5" y1="12" x2="11" y2="12" /></svg>;
 const IconCamera = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><rect x="2" y="4" width="12" height="9" rx="1.5" /><circle cx="8" cy="8.5" r="2.5" /><path d="M5.5 4L6.5 2h3l1 2" /></svg>;
 
-/* ── Drawer Tabs ─────────────────────────────────────────────── */
-const DRAWER_TABS: TabDef[] = [
+/* ── Detail Tabs ─────────────────────────────────────────────── */
+const DETAIL_TABS: TabDef[] = [
   { key: 'specs',       label: 'Specifications' },
   { key: 'repairItems', label: 'Repair Items' },
   { key: 'maxCharges',  label: 'Max Charges' },
@@ -85,8 +85,8 @@ export const ScopeModelPage = () => {
   const [page, setPage] = useState(1);
   const pageSize = 25;
 
-  // Detail drawer
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  // Inline detail pane (replaces Drawer)
+  const [selectedKey, setSelectedKey] = useState<number | null>(null);
   const [detail, setDetail] = useState<ScopeModelDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('specs');
@@ -119,7 +119,7 @@ export const ScopeModelPage = () => {
   }, [search, typeFilter, statusFilter, mfgKey, page, loadData]);
 
   const handleRowClick = async (item: ScopeModelListItem) => {
-    setDrawerOpen(true);
+    setSelectedKey(item.scopeTypeKey);
     setDetailLoading(true);
     setActiveTab('specs');
     setInventoryItems([]);
@@ -159,7 +159,7 @@ export const ScopeModelPage = () => {
   const isActive = (tf: string, sf: string) => typeFilter === tf && statusFilter === sf;
 
   const statStrip = (
-    <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' }}>
+    <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
       <StatChip label="Total Models" value={stats?.total ?? 0} iconBg="rgba(var(--navy-rgb), 0.10)" iconColor="var(--navy)" valueColor="var(--navy)" active={isActive('', '')} onClick={() => chipFilter('', '')} icon={<IconTotal />} />
       <StatChip label="Active" value={stats?.activeCount ?? 0} iconBg="rgba(var(--success-rgb), 0.10)" iconColor="var(--success)" valueColor="var(--success)" active={isActive('', 'active')} onClick={() => chipFilter('', 'active')} icon={<IconActive />} />
       <StatChip label="Inactive" value={stats?.inactiveCount ?? 0} iconBg="rgba(var(--danger-rgb), 0.10)" iconColor="var(--danger)" valueColor="var(--danger)" active={isActive('', 'inactive')} onClick={() => chipFilter('', 'inactive')} icon={<IconInactive />} />
@@ -179,7 +179,7 @@ export const ScopeModelPage = () => {
   );
 
   const toolbar = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap', flexShrink: 0 }}>
       <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Type</span>
       <div style={{ display: 'flex' }}>
         {[{ l: 'All', v: '' }, { l: 'Flexible', v: 'F' }, { l: 'Rigid', v: 'R' }, { l: 'Camera', v: 'C' }].map(({ l, v }) => (
@@ -216,7 +216,7 @@ export const ScopeModelPage = () => {
     </div>
   );
 
-  /* ── Table ───────────────────────────────────────────────── */
+  /* ── Table columns ───────────────────────────────────────── */
   const columns = [
     { key: 'description', label: 'Model Name', width: '20%' },
     { key: 'type', label: 'Type', width: 78 },
@@ -229,73 +229,7 @@ export const ScopeModelPage = () => {
     { key: 'directionOfView', label: 'DOV', width: 60 },
   ];
 
-  const dataTable = (
-    <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1040, tableLayout: 'fixed' }}>
-        <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
-          <tr>
-            {columns.map(col => (
-              <th key={col.key} style={{
-                background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px',
-                textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(180,200,220,0.3)',
-                borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase',
-                fontSize: 10, width: col.width,
-              }}>
-                {col.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr><td colSpan={columns.length} style={{ textAlign: 'center', padding: 30 }}><Spin size="small" /></td></tr>
-          ) : items.length === 0 ? (
-            <tr><td colSpan={columns.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No scope models match your filters</td></tr>
-          ) : items.map((item, idx) => (
-            <tr
-              key={item.scopeTypeKey}
-              onClick={() => handleRowClick(item)}
-              style={{ cursor: 'pointer', background: idx % 2 === 0 ? '#fff' : 'var(--neutral-50)' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? '#fff' : 'var(--neutral-50)'; }}
-            >
-              <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{item.description || '\u2014'}</span></td>
-              <td style={tdStyle}><TypeBadge type={item.type} /></td>
-              <td style={tdStyle}>{item.manufacturer || '\u2014'}</td>
-              <td style={tdStyle}>{item.category || '\u2014'}</td>
-              <td style={tdStyle}><StatusBadge status={item.active ? 'Active' : 'Inactive'} /></td>
-              <td style={tdStyle}>{item.insertTubeLength || '\u2014'}</td>
-              <td style={tdStyle}>{item.insertTubeDiameter || '\u2014'}</td>
-              <td style={tdStyle}>{item.fieldOfView || '\u2014'}</td>
-              <td style={tdStyle}>{item.directionOfView || '\u2014'}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-
-  /* ── Pagination Footer ───────────────────────────────────── */
-  const footer = (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' }}>
-      <div>
-        Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{totalCount}</strong> models
-      </div>
-      {totalPages > 1 && (
-        <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-          <PgBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{'\u2039'}</PgBtn>
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            const start = Math.max(1, Math.min(page - 2, totalPages - 4));
-            const p = start + i;
-            return p <= totalPages ? <PgBtn key={p} active={p === page} onClick={() => setPage(p)}>{p}</PgBtn> : null;
-          })}
-          <PgBtn disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>{'\u203A'}</PgBtn>
-        </div>
-      )}
-    </div>
-  );
-
-  /* ── Drawer Content ──────────────────────────────────────── */
+  /* ── Specs content (for detail pane) ─────────────────────── */
   const specsContent = detail ? (
     <div style={{ padding: '16px 20px' }}>
       <FormGrid cols={2}>
@@ -350,10 +284,20 @@ export const ScopeModelPage = () => {
     </div>
   ) : null;
 
-  const drawerBody = detailLoading ? (
+  /* ── Detail pane body ────────────────────────────────────── */
+  const detailPaneBody = detailLoading ? (
     <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
   ) : detail ? (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Close row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
+        <button
+          onClick={() => { setSelectedKey(null); setDetail(null); }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' }}
+        >
+          &times;
+        </button>
+      </div>
       <DetailHeader
         title={detail.description}
         badges={
@@ -363,86 +307,167 @@ export const ScopeModelPage = () => {
           </>
         }
       />
-      <TabBar tabs={DRAWER_TABS} activeKey={activeTab} onChange={handleTabChange} />
-      {activeTab === 'specs'       && specsContent}
-      {activeTab === 'repairItems' && <RepairItemsTab scopeTypeKey={detail.scopeTypeKey} />}
-      {activeTab === 'maxCharges'  && <MaxChargesTab scopeTypeKey={detail.scopeTypeKey} />}
-      {activeTab === 'inventory'   && (
-        inventoryLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
-        ) : (
-          <Table
-            dataSource={inventoryItems}
-            rowKey="inventoryKey"
-            size="small"
-            pagination={false}
-            scroll={{ y: 400 }}
-            locale={{ emptyText: 'No inventory items linked to this scope type' }}
-            columns={[
-              { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true },
-              { title: 'Type', dataIndex: 'flexOrRigid', key: 'flexOrRigid', width: 80 },
-              { title: 'On Hand', dataIndex: 'levelCurrent', key: 'levelCurrent', width: 80, align: 'center' as const },
-              { title: 'Min', dataIndex: 'levelMinimum', key: 'levelMinimum', width: 60, align: 'center' as const },
-              { title: 'Max', dataIndex: 'levelMaximum', key: 'levelMaximum', width: 60, align: 'center' as const },
-              {
-                title: 'Status', dataIndex: 'isActive', key: 'isActive', width: 80,
-                render: (v: boolean) => <StatusBadge status={v ? 'Active' : 'Inactive'} />,
-              },
-            ]}
-            style={{ padding: '0 16px' }}
-          />
-        )
-      )}
-      {activeTab === 'flags' && (
-        flagsLoading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
-        ) : (
-          <Table
-            dataSource={flagItems}
-            rowKey="flagKey"
-            size="small"
-            pagination={false}
-            scroll={{ y: 400 }}
-            locale={{ emptyText: 'No flags linked to this scope type' }}
-            columns={[
-              { title: 'Flag', dataIndex: 'flag', key: 'flag', ellipsis: true },
-              { title: 'Type', dataIndex: 'flagType', key: 'flagType', width: 120 },
-              {
-                title: 'On DI', dataIndex: 'visibleOnDI', key: 'visibleOnDI', width: 70, align: 'center' as const,
-                render: (v: boolean) => v ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Yes</span> : <span style={{ color: 'var(--muted)' }}>—</span>,
-              },
-              {
-                title: 'On Blank', dataIndex: 'visibleOnBlank', key: 'visibleOnBlank', width: 80, align: 'center' as const,
-                render: (v: boolean) => v ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Yes</span> : <span style={{ color: 'var(--muted)' }}>—</span>,
-              },
-            ]}
-            style={{ padding: '0 16px' }}
-          />
-        )
-      )}
+      <TabBar tabs={DETAIL_TABS} activeKey={activeTab} onChange={handleTabChange} />
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        {activeTab === 'specs'       && specsContent}
+        {activeTab === 'repairItems' && <RepairItemsTab scopeTypeKey={detail.scopeTypeKey} />}
+        {activeTab === 'maxCharges'  && <MaxChargesTab scopeTypeKey={detail.scopeTypeKey} />}
+        {activeTab === 'inventory'   && (
+          inventoryLoading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+          ) : (
+            <Table
+              dataSource={inventoryItems}
+              rowKey="inventoryKey"
+              size="small"
+              pagination={false}
+              scroll={{ y: 400 }}
+              locale={{ emptyText: 'No inventory items linked to this scope type' }}
+              columns={[
+                { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true },
+                { title: 'Type', dataIndex: 'flexOrRigid', key: 'flexOrRigid', width: 80 },
+                { title: 'On Hand', dataIndex: 'levelCurrent', key: 'levelCurrent', width: 80, align: 'center' as const },
+                { title: 'Min', dataIndex: 'levelMinimum', key: 'levelMinimum', width: 60, align: 'center' as const },
+                { title: 'Max', dataIndex: 'levelMaximum', key: 'levelMaximum', width: 60, align: 'center' as const },
+                {
+                  title: 'Status', dataIndex: 'isActive', key: 'isActive', width: 80,
+                  render: (v: boolean) => <StatusBadge status={v ? 'Active' : 'Inactive'} />,
+                },
+              ]}
+              style={{ padding: '0 16px' }}
+            />
+          )
+        )}
+        {activeTab === 'flags' && (
+          flagsLoading ? (
+            <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+          ) : (
+            <Table
+              dataSource={flagItems}
+              rowKey="flagKey"
+              size="small"
+              pagination={false}
+              scroll={{ y: 400 }}
+              locale={{ emptyText: 'No flags linked to this scope type' }}
+              columns={[
+                { title: 'Flag', dataIndex: 'flag', key: 'flag', ellipsis: true },
+                { title: 'Type', dataIndex: 'flagType', key: 'flagType', width: 120 },
+                {
+                  title: 'On DI', dataIndex: 'visibleOnDI', key: 'visibleOnDI', width: 70, align: 'center' as const,
+                  render: (v: boolean) => v ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Yes</span> : <span style={{ color: 'var(--muted)' }}>—</span>,
+                },
+                {
+                  title: 'On Blank', dataIndex: 'visibleOnBlank', key: 'visibleOnBlank', width: 80, align: 'center' as const,
+                  render: (v: boolean) => v ? <span style={{ color: 'var(--success)', fontWeight: 700 }}>Yes</span> : <span style={{ color: 'var(--muted)' }}>—</span>,
+                },
+              ]}
+              style={{ padding: '0 16px' }}
+            />
+          )
+        )}
+      </div>
     </div>
   ) : null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
-      {statStrip}
-      {toolbar}
-      {dataTable}
-      {footer}
-      <Drawer
-        title={<span style={{ color: '#fff', fontWeight: 700 }}>{detail?.description || 'Scope Model'}</span>}
-        placement="right"
-        width={600}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        styles={{
-          header: { background: 'var(--primary-dark)', borderBottom: '1px solid var(--border)' },
-          body: { padding: 0 },
-        }}
-        closeIcon={<span style={{ color: '#fff' }}>&times;</span>}
-      >
-        {drawerBody}
-      </Drawer>
+    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+      {/* Left panel — stat strip + toolbar + table */}
+      <div style={{
+        display: 'flex', flexDirection: 'column',
+        width: selectedKey ? 'calc(100% - 560px)' : '100%',
+        minWidth: 0,
+        borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
+        transition: 'width 0.2s ease',
+        overflow: 'hidden',
+        background: 'var(--card)',
+      }}>
+        {statStrip}
+        {toolbar}
+
+        {/* Data table */}
+        <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: selectedKey ? 700 : 1040, tableLayout: 'fixed' }}>
+            <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
+              <tr>
+                {columns.map(col => (
+                  <th key={col.key} style={{
+                    background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px',
+                    textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(180,200,220,0.3)',
+                    borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase',
+                    fontSize: 10, width: col.width,
+                  }}>
+                    {col.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={columns.length} style={{ textAlign: 'center', padding: 30 }}><Spin size="small" /></td></tr>
+              ) : items.length === 0 ? (
+                <tr><td colSpan={columns.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No scope models match your filters</td></tr>
+              ) : items.map((item, idx) => {
+                const isSelected = item.scopeTypeKey === selectedKey;
+                return (
+                  <tr
+                    key={item.scopeTypeKey}
+                    onClick={() => handleRowClick(item)}
+                    style={{
+                      cursor: 'pointer',
+                      background: isSelected ? 'var(--primary-light)' : idx % 2 === 0 ? '#fff' : 'var(--neutral-50)',
+                      borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
+                    }}
+                    onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
+                    onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? '#fff' : 'var(--neutral-50)'; }}
+                  >
+                    <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{item.description || '\u2014'}</span></td>
+                    <td style={tdStyle}><TypeBadge type={item.type} /></td>
+                    <td style={tdStyle}>{item.manufacturer || '\u2014'}</td>
+                    <td style={tdStyle}>{item.category || '\u2014'}</td>
+                    <td style={tdStyle}><StatusBadge status={item.active ? 'Active' : 'Inactive'} /></td>
+                    <td style={tdStyle}>{item.insertTubeLength || '\u2014'}</td>
+                    <td style={tdStyle}>{item.insertTubeDiameter || '\u2014'}</td>
+                    <td style={tdStyle}>{item.fieldOfView || '\u2014'}</td>
+                    <td style={tdStyle}>{item.directionOfView || '\u2014'}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination footer */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' }}>
+          <div>
+            Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{totalCount}</strong> models
+          </div>
+          {totalPages > 1 && (
+            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+              <PgBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{'\u2039'}</PgBtn>
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+                const p = start + i;
+                return p <= totalPages ? <PgBtn key={p} active={p === page} onClick={() => setPage(p)}>{p}</PgBtn> : null;
+              })}
+              <PgBtn disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>{'\u203A'}</PgBtn>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Right panel — detail pane */}
+      {selectedKey && (
+        <div style={{
+          width: 560,
+          minWidth: 560,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          background: 'var(--card)',
+        }}>
+          {detailPaneBody}
+        </div>
+      )}
     </div>
   );
 };

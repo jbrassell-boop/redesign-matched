@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Spin, Drawer, Modal, message } from 'antd';
+import { Input, Spin, Modal, message } from 'antd';
 import { SearchOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { getLoaners, getLoanerDetail, getLoanerStats, getLoanerRequests, fulfillLoanerRequest, declineLoanerRequest, bulkUpdateLoanerRequests, getLoanerScopeNeeds } from '../../api/loaners';
 import type { LoanerListItem, LoanerDetail, LoanerStats, LoanerRequest, LoanerScopeNeedItem } from './types';
@@ -589,9 +589,6 @@ const reqTdStyle: React.CSSProperties = {
 };
 
 /* ═════════════════════════════════════════════════════════════ */
-/*  LOANERS PAGE                                                */
-/* ═════════════════════════════════════════════════════════════ */
-/* ═════════════════════════════════════════════════════════════ */
 /*  TABS DEFINITION                                             */
 /* ═════════════════════════════════════════════════════════════ */
 const PAGE_TABS: TabDef[] = [
@@ -601,6 +598,9 @@ const PAGE_TABS: TabDef[] = [
   { key: 'requests',  label: 'Requests' },
 ];
 
+/* ═════════════════════════════════════════════════════════════ */
+/*  LOANERS PAGE                                                */
+/* ═════════════════════════════════════════════════════════════ */
 export const LoanersPage = () => {
   const [items, setItems] = useState<LoanerListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -611,8 +611,9 @@ export const LoanersPage = () => {
   const [page, setPage] = useState(1);
   const [activeTab, setActiveTab] = useState('loaners');
   const bulk = useBulkSelect<number>();
-  // Detail drawer
-  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Inline detail pane (replaces Drawer)
+  const [selectedKey, setSelectedKey] = useState<number | null>(null);
   const [detail, setDetail] = useState<LoanerDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
@@ -648,7 +649,7 @@ export const LoanersPage = () => {
   };
 
   const handleRowClick = async (item: LoanerListItem) => {
-    setDrawerOpen(true);
+    setSelectedKey(item.loanerTranKey);
     setDetailLoading(true);
     try {
       setDetail(await getLoanerDetail(item.loanerTranKey));
@@ -673,7 +674,7 @@ export const LoanersPage = () => {
 
   /* ── Toolbar ─────────────────────────────────────────────── */
   const toolbar = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap', flexShrink: 0 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</span>
         <div style={{ display: 'flex', gap: 0 }}>
@@ -717,7 +718,7 @@ export const LoanersPage = () => {
     </div>
   );
 
-  /* ── Table ───────────────────────────────────────────────── */
+  /* ── Table columns ───────────────────────────────────────── */
   const columns = [
     { key: 'workOrder', label: 'Work Order', width: 130 },
     { key: 'scopeType', label: 'Scope Type', width: 180 },
@@ -733,9 +734,10 @@ export const LoanersPage = () => {
 
   const colCount = columns.length + 1; // +1 for checkbox
 
+  /* ── Loaner list (left panel content for Task Loaners tab) ── */
   const dataTable = (
     <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1200 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: selectedKey ? 800 : 1200 }}>
         <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
           <tr>
             <th style={{
@@ -768,16 +770,18 @@ export const LoanersPage = () => {
             <tr><td colSpan={colCount} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No loaner records match your filters</td></tr>
           ) : items.map((item, idx) => {
             const selected = bulk.isSelected(item.loanerTranKey);
+            const isDetailSelected = item.loanerTranKey === selectedKey;
             return (
               <tr
                 key={item.loanerTranKey}
                 onClick={() => handleRowClick(item)}
                 style={{
                   cursor: 'pointer',
-                  background: selected ? 'rgba(var(--primary-rgb), 0.06)' : idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)',
+                  background: isDetailSelected ? 'var(--primary-light)' : selected ? 'rgba(var(--primary-rgb), 0.06)' : idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)',
+                  borderLeft: isDetailSelected ? '3px solid var(--primary)' : '3px solid transparent',
                 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = selected ? 'rgba(var(--primary-rgb), 0.06)' : idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}
+                onMouseEnter={e => { if (!isDetailSelected) (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
+                onMouseLeave={e => { if (!isDetailSelected) (e.currentTarget as HTMLTableRowElement).style.background = selected ? 'rgba(var(--primary-rgb), 0.06)' : idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}
               >
                 <td style={{ ...tdStyle, textAlign: 'center', padding: '6px' }} onClick={e => e.stopPropagation()}>
                   <input
@@ -825,47 +829,85 @@ export const LoanersPage = () => {
     </div>
   );
 
-  /* ── Detail Drawer ───────────────────────────────────────── */
-  const drawerContent = detailLoading ? (
+  /* ── Inline Detail Pane content ──────────────────────────── */
+  const detailPane = detailLoading ? (
     <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
   ) : detail ? (
-    <div>
-      <DetailHeader
-        title={detail.workOrder || `Loaner #${detail.loanerTranKey}`}
-        badges={
-          <>
-            <StatusBadge status={detail.status} />
-            {detail.daysOut > 0 && <DaysChip days={detail.daysOut} status={detail.status} />}
-          </>
-        }
-      />
-      <FormGrid cols={2}>
-        <Field label="Scope Type" value={detail.scopeType} />
-        <Field label="Serial #" value={detail.serial} />
-        <Field label="Client" value={detail.client} />
-        <Field label="Department" value={detail.dept} />
-        <Field label="Date Out" value={detail.dateOut} />
-        <Field label="Date In" value={detail.dateIn} />
-        <Field label="Tracking #" value={detail.trackingNumber} />
-        <Field label="Purchase Order" value={detail.purchaseOrder} />
-        <Field label="Sales Rep" value={detail.salesRep} />
-        <Field label="Delivery Method" value={detail.deliveryMethod} />
-        <Field label="Rack Position" value={detail.rackPosition} />
-        <Field label="Created" value={detail.createdDate} />
-      </FormGrid>
+    <div style={{ overflow: 'auto', height: '100%' }}>
+      {/* Close button */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{detail.workOrder || `Loaner #${detail.loanerTranKey}`}</span>
+        <button
+          onClick={() => { setSelectedKey(null); setDetail(null); }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' }}
+        >
+          &times;
+        </button>
+      </div>
+      <div style={{ padding: '0 0 16px' }}>
+        <DetailHeader
+          title={detail.workOrder || `Loaner #${detail.loanerTranKey}`}
+          badges={
+            <>
+              <StatusBadge status={detail.status} />
+              {detail.daysOut > 0 && <DaysChip days={detail.daysOut} status={detail.status} />}
+            </>
+          }
+        />
+        <div style={{ padding: '0 16px' }}>
+          <FormGrid cols={2}>
+            <Field label="Scope Type" value={detail.scopeType} />
+            <Field label="Serial #" value={detail.serial} />
+            <Field label="Client" value={detail.client} />
+            <Field label="Department" value={detail.dept} />
+            <Field label="Date Out" value={detail.dateOut} />
+            <Field label="Date In" value={detail.dateIn} />
+            <Field label="Tracking #" value={detail.trackingNumber} />
+            <Field label="Purchase Order" value={detail.purchaseOrder} />
+            <Field label="Sales Rep" value={detail.salesRep} />
+            <Field label="Delivery Method" value={detail.deliveryMethod} />
+            <Field label="Rack Position" value={detail.rackPosition} />
+            <Field label="Created" value={detail.createdDate} />
+          </FormGrid>
+        </div>
+      </div>
     </div>
   ) : null;
-
 
   /* ── Tab content ─────────────────────────────────────────────────── */
   const renderTab = () => {
     switch (activeTab) {
       case 'loaners':
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-            {toolbar}
-            {dataTable}
-            {footer}
+          /* Split-pane layout for Task Loaners tab */
+          <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+            {/* Left panel — list */}
+            <div style={{
+              display: 'flex', flexDirection: 'column',
+              width: selectedKey ? 'calc(100% - 400px)' : '100%',
+              minWidth: 0,
+              borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
+              transition: 'width 0.2s ease',
+              overflow: 'hidden',
+            }}>
+              {toolbar}
+              {dataTable}
+              {footer}
+            </div>
+
+            {/* Right panel — detail */}
+            {selectedKey && (
+              <div style={{
+                width: 400,
+                minWidth: 400,
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+                background: 'var(--card)',
+              }}>
+                {detailPane}
+              </div>
+            )}
           </div>
         );
       case 'active':
@@ -882,24 +924,10 @@ export const LoanersPage = () => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
       {statStrip}
-      <TabBar tabs={PAGE_TABS} activeKey={activeTab} onChange={setActiveTab} />
+      <TabBar tabs={PAGE_TABS} activeKey={activeTab} onChange={tab => { setActiveTab(tab); setSelectedKey(null); setDetail(null); }} />
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
         {renderTab()}
       </div>
-      <Drawer
-        title={<span style={{ color: 'var(--card)', fontWeight: 700 }}>{detail?.workOrder || 'Loaner Detail'}</span>}
-        placement="right"
-        width={600}
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        styles={{
-          header: { background: 'var(--primary-dark)', borderBottom: '1px solid var(--border)' },
-          body: { padding: '16px 20px' },
-        }}
-        closeIcon={<span style={{ color: 'var(--card)' }}>&times;</span>}
-      >
-        {drawerContent}
-      </Drawer>
     </div>
   );
 };
