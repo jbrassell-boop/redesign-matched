@@ -239,35 +239,108 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Repair not found</div>;
     }
 
+    const cockpitTabs = [
+      { key: 'scope-in', label: 'Scope In', num: '1' },
+      { key: 'details',  label: 'Details',  num: '2' },
+      { key: 'outgoing', label: 'Outgoing', num: '3' },
+      { key: 'expense',  label: 'Expense',  num: '4' },
+      { key: 'inspections', label: 'Inspections', num: '5' },
+      { key: 'financials', label: 'Financials', num: '6' },
+      { key: 'scopehistory', label: 'History', num: '7' },
+      { key: 'statuslog', label: 'Status Log', num: '8' },
+      { key: 'comments', label: 'Notes', num: '9' },
+    ] as const;
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
         <CommandStrip repair={fullRepair} />
+        <WorkflowPipeline currentStatus={fullRepair.status} />
         <ScopeGlance repair={fullRepair} flags={flags} />
+
+        {/* Quick action bar */}
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px',
+          background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0,
+        }}>
+          {hasNext && (
+            <button onClick={handleAdvance} style={{
+              height: 26, padding: '0 12px', border: 'none', borderRadius: 4,
+              background: 'var(--primary)', color: '#fff',
+              fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 11, height: 11 }}>
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+              {nextStatusName ?? 'Next Stage'}
+            </button>
+          )}
+          <div ref={statusMenuRef} style={{ position: 'relative' }}>
+            <button onClick={() => setStatusMenuOpen(!statusMenuOpen)} style={{
+              height: 26, padding: '0 10px', border: '1px solid var(--neutral-200)',
+              borderRadius: 4, background: 'var(--card)', color: 'var(--muted)',
+              fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 3,
+            }}>
+              Change Status
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            {statusMenuOpen && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, marginTop: 4,
+                background: 'var(--card)', border: '1px solid var(--neutral-200)',
+                borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                minWidth: 220, maxHeight: 300, overflowY: 'auto', zIndex: 100,
+              }}>
+                {statuses.map(s => (
+                  <div key={s.statusId} onClick={() => handleSetStatus(s.statusId)} style={{
+                    padding: '6px 12px', cursor: 'pointer', fontSize: 11,
+                    color: s.statusId === currentStatusId ? 'var(--primary)' : 'var(--text)',
+                    fontWeight: s.statusId === currentStatusId ? 700 : 400,
+                    background: s.statusId === currentStatusId ? 'var(--primary-light)' : undefined,
+                    borderBottom: '1px solid var(--neutral-100)',
+                  }}
+                  onMouseEnter={e => { if (s.statusId !== currentStatusId) e.currentTarget.style.background = 'var(--neutral-50)'; }}
+                  onMouseLeave={e => { if (s.statusId !== currentStatusId) e.currentTarget.style.background = ''; }}
+                  >{s.statusName}</div>
+                ))}
+              </div>
+            )}
+          </div>
+          <div style={{ flex: 1 }} />
+          <span style={{ fontSize: 10, color: 'var(--muted)' }}>
+            {fullRepair.status} · TAT: <span style={{ fontWeight: 700, color: tatColor }}>{fullRepair.daysIn}d</span>
+          </span>
+        </div>
 
         {/* Tab bar */}
         <div style={{
           background: '#fff', borderBottom: '2px solid var(--border)',
-          display: 'flex', padding: '0 14px', flexShrink: 0,
+          display: 'flex', padding: '0 8px', flexShrink: 0, overflowX: 'auto',
         }}>
-          {([
-            { key: 'scope-in', label: '1 — Scope In' },
-            { key: 'details',  label: '2 — Details' },
-            { key: 'outgoing', label: '3 — Outgoing' },
-            { key: 'expense',  label: '4 — Expense' },
-          ] as const).map(t => (
+          {cockpitTabs.map(t => (
             <div
               key={t.key}
               onClick={() => setActiveTab(t.key)}
               style={{
-                padding: '9px 18px',
-                fontSize: 12, fontWeight: 600,
+                padding: '7px 12px',
+                fontSize: 11, fontWeight: 600,
                 color: activeTab === t.key ? 'var(--primary)' : 'var(--muted)',
                 borderBottom: activeTab === t.key ? '2px solid var(--primary)' : '2px solid transparent',
                 marginBottom: -2,
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
+                display: 'flex', alignItems: 'center', gap: 4,
               }}
             >
+              <span style={{
+                fontSize: 9, fontWeight: 700, width: 16, height: 16, borderRadius: '50%',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                background: activeTab === t.key ? 'var(--primary)' : 'var(--neutral-200)',
+                color: activeTab === t.key ? '#fff' : 'var(--muted)',
+              }}>{t.num}</span>
               {t.label}
             </div>
           ))}
@@ -275,10 +348,15 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
 
         {/* Tab content */}
         <div style={{ flex: 1, overflow: 'auto' }}>
-          {activeTab === 'scope-in' && <ScopeInTab repair={fullRepair} />}
-          {activeTab === 'details'  && <DetailsTab repair={fullRepair} flags={flags} />}
-          {activeTab === 'outgoing' && <OutgoingTab repair={fullRepair} items={lineItems} />}
-          {activeTab === 'expense'  && <ExpenseTab repairKey={fullRepair.repairKey} />}
+          {activeTab === 'scope-in'    && <ScopeInTab repair={fullRepair} />}
+          {activeTab === 'details'     && <DetailsTab repair={fullRepair} flags={flags} />}
+          {activeTab === 'outgoing'    && <OutgoingTab repair={fullRepair} items={lineItems} />}
+          {activeTab === 'expense'     && <ExpenseTab repairKey={fullRepair.repairKey} />}
+          {activeTab === 'inspections' && <InspectionsTab repairKey={fullRepair.repairKey} />}
+          {activeTab === 'financials'  && <FinancialsTab repairKey={fullRepair.repairKey} />}
+          {activeTab === 'scopehistory' && <ScopeHistoryTab repairKey={fullRepair.repairKey} currentRepairKey={fullRepair.repairKey} />}
+          {activeTab === 'statuslog'   && <StatusHistoryTab repairKey={fullRepair.repairKey} />}
+          {activeTab === 'comments'    && <NotesTab repairKey={fullRepair.repairKey} />}
         </div>
       </div>
     );
