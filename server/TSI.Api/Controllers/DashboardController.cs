@@ -213,7 +213,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await rdr.ReadAsync();
         return Ok(new BriefingStats(
             rdr.GetInt32(0), rdr.GetInt32(1), rdr.GetInt32(2),
-            rdr.GetDecimal(3), rdr.GetDecimal(4), rdr.GetInt32(5)
+            Convert.ToDecimal(rdr.GetValue(3)), Convert.ToDecimal(rdr.GetValue(4)), rdr.GetInt32(5)
         ));
     }
 
