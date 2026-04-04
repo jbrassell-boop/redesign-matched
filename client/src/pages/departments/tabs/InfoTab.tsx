@@ -1,5 +1,8 @@
+import { useState, useEffect } from 'react';
 import type { DepartmentFull } from '../types';
 import { SectionCard } from '../../../components/shared';
+import { getSalesReps, getPricingCategories } from '../../../api/lookups';
+import type { LookupOption } from '../../../api/lookups';
 
 interface InfoTabProps {
   dept: DepartmentFull;
@@ -78,7 +81,16 @@ const ReadonlyField = ({ label, value }: { label: string; value: string | undefi
   </div>
 );
 
-export const InfoTab = ({ dept, onChange }: InfoTabProps) => (
+export const InfoTab = ({ dept, onChange }: InfoTabProps) => {
+  const [salesReps, setSalesReps] = useState<LookupOption[]>([]);
+  const [pricingCats, setPricingCats] = useState<LookupOption[]>([]);
+
+  useEffect(() => {
+    getSalesReps().then(setSalesReps).catch(() => {});
+    getPricingCategories().then(setPricingCats).catch(() => {});
+  }, []);
+
+  return (
   <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
     <div>
       <SectionCard title="Department Information">
@@ -99,8 +111,24 @@ export const InfoTab = ({ dept, onChange }: InfoTabProps) => (
 
       <div style={{ marginTop: 16 }}>
         <SectionCard title="Billing &amp; Defaults">
-          <ReadonlyField label="Sales Rep" value={dept.salesRep} />
-          <ReadonlyField label="Pricing Category" value={dept.pricingCategory} />
+          <div style={fieldWrap}>
+            <div style={labelStyle}>Sales Rep</div>
+            <select style={{ ...inputStyle, height: 30, cursor: 'pointer' }}
+              value={(dept as any).salesRepKey ?? ''}
+              onChange={e => (onChange as any)('salesRepKey', e.target.value ? Number(e.target.value) : null)}>
+              <option value="">— Select —</option>
+              {salesReps.map(o => <option key={o.key} value={o.key}>{o.name}</option>)}
+            </select>
+          </div>
+          <div style={fieldWrap}>
+            <div style={labelStyle}>Pricing Category</div>
+            <select style={{ ...inputStyle, height: 30, cursor: 'pointer' }}
+              value={(dept as any).pricingCategoryKey ?? ''}
+              onChange={e => (onChange as any)('pricingCategoryKey', e.target.value ? Number(e.target.value) : null)}>
+              <option value="">— Select —</option>
+              {pricingCats.map(o => <option key={o.key} value={o.key}>{o.name}</option>)}
+            </select>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <EditField label="Discount %" value={dept.discountPct} field="discountPct" onChange={onChange} type="number" />
             <EditField label="Default Shipping" value={dept.defaultShipping} field="defaultShipping" onChange={onChange} type="number" />
@@ -133,4 +161,4 @@ export const InfoTab = ({ dept, onChange }: InfoTabProps) => (
       </div>
     </div>
   </div>
-);
+); };

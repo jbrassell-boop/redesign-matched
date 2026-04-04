@@ -1,5 +1,8 @@
+import { useState, useEffect } from 'react';
 import type { ClientFull } from '../types';
 import { SectionCard } from '../../../components/shared';
+import { getSalesReps, getPricingCategories, getPaymentTerms } from '../../../api/lookups';
+import type { LookupOption } from '../../../api/lookups';
 
 interface InfoTabProps {
   client: ClientFull;
@@ -80,7 +83,35 @@ const ReadonlyField = ({ label, value }: { label: string; value: string | undefi
   </div>
 );
 
-export const InfoTab = ({ client, onChange }: InfoTabProps) => (
+const SelectField = ({ label, value, options, field, onChange }: {
+  label: string; value: number | undefined | null; options: LookupOption[];
+  field: string; onChange: (field: string, value: number | null) => void;
+}) => (
+  <div style={fieldWrap}>
+    <div style={labelStyle}>{label}</div>
+    <select
+      style={{ ...inputStyle, height: 30, cursor: 'pointer' }}
+      value={value ?? ''}
+      onChange={e => onChange(field, e.target.value ? Number(e.target.value) : null)}
+    >
+      <option value="">— Select —</option>
+      {options.map(o => <option key={o.key} value={o.key}>{o.name}</option>)}
+    </select>
+  </div>
+);
+
+export const InfoTab = ({ client, onChange }: InfoTabProps) => {
+  const [salesReps, setSalesReps] = useState<LookupOption[]>([]);
+  const [pricingCats, setPricingCats] = useState<LookupOption[]>([]);
+  const [payTerms, setPayTerms] = useState<LookupOption[]>([]);
+
+  useEffect(() => {
+    getSalesReps().then(setSalesReps).catch(() => {});
+    getPricingCategories().then(setPricingCats).catch(() => {});
+    getPaymentTerms().then(setPayTerms).catch(() => {});
+  }, []);
+
+  return (
   <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
     <div>
       <SectionCard title="Company Information">
@@ -122,9 +153,9 @@ export const InfoTab = ({ client, onChange }: InfoTabProps) => (
     <div>
       <SectionCard title="Account Settings">
         <ReadonlyField label="Customer Since" value={client.customerSince ? new Date(client.customerSince).toLocaleDateString() : undefined} />
-        <ReadonlyField label="Sales Rep" value={client.salesRep} />
-        <ReadonlyField label="Pricing Category" value={client.pricingCategory} />
-        <ReadonlyField label="Payment Terms" value={client.paymentTerms} />
+        <SelectField label="Sales Rep" value={client.salesRepKey} options={salesReps} field="salesRepKey" onChange={onChange as any} />
+        <SelectField label="Pricing Category" value={client.pricingCategoryKey} options={pricingCats} field="pricingCategoryKey" onChange={onChange as any} />
+        <SelectField label="Payment Terms" value={client.paymentTermsKey} options={payTerms} field="paymentTermsKey" onChange={onChange as any} />
         <ReadonlyField label="Distributor" value={client.distributor} />
       </SectionCard>
 
@@ -158,4 +189,4 @@ export const InfoTab = ({ client, onChange }: InfoTabProps) => (
       )}
     </div>
   </div>
-);
+); };
