@@ -88,12 +88,16 @@ public class DashboardController(IConfiguration config) : ControllerBase
             where.Add("rs.sRepairStatus = @statusFilter");
         if (type != "all")
         {
-            // Map frontend names to sRigidOrFlexible single-letter codes
-            var typeCode = type switch {
-                "Flexible" => "F", "Rigid" => "R", "Instrument" => "I",
-                "Camera" => "C", "Carts" => "C", _ => type
-            };
-            where.Add("st.sRigidOrFlexible = @type");
+            if (type == "Carts")
+                where.Add("stc.sScopeTypeCategory = 'Cart'");
+            else
+            {
+                var typeCode = type switch {
+                    "Flexible" => "F", "Rigid" => "R", "Instrument" => "I",
+                    "Camera" => "C", _ => type
+                };
+                where.Add("st.sRigidOrFlexible = @type");
+            }
         }
         if (location == "inhouse")
             where.Add("ISNULL(r.bOutsourced, 0) = 0 AND ISNULL(r.bHotList, 0) = 0");
@@ -153,14 +157,14 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var countCmd = new SqlCommand(countSql, conn);
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
-        if (type != "all") { var tc = type switch { "Flexible" => "F", "Rigid" => "R", "Instrument" => "I", "Camera" => "C", "Carts" => "C", _ => type }; countCmd.Parameters.AddWithValue("@type", tc); }
+        if (type != "all" && type != "Carts") { var tc = type switch { "Flexible" => "F", "Rigid" => "R", "Instrument" => "I", "Camera" => "C", _ => type }; countCmd.Parameters.AddWithValue("@type", tc); }
 
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
-        if (type != "all") { var tc2 = type switch { "Flexible" => "F", "Rigid" => "R", "Instrument" => "I", "Camera" => "C", "Carts" => "C", _ => type }; dataCmd.Parameters.AddWithValue("@type", tc2); }
+        if (type != "all" && type != "Carts") { var tc2 = type switch { "Flexible" => "F", "Rigid" => "R", "Instrument" => "I", "Camera" => "C", _ => type }; dataCmd.Parameters.AddWithValue("@type", tc2); }
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
 
