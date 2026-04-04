@@ -3,6 +3,7 @@ import { message } from 'antd';
 import type { RepairLineItem, RepairCatalogItem } from '../types';
 import { addRepairLineItem, deleteRepairLineItem, patchLineItemCauseComments, bulkApproveLineItems } from '../../../api/repairs';
 import { RepairItemAutoComplete } from './RepairItemAutoComplete';
+import { RepairItemPicker } from './RepairItemPicker';
 
 interface RepairItemsTableProps {
   repairKey: number;
@@ -73,6 +74,7 @@ export const RepairItemsTable = ({
 }: RepairItemsTableProps) => {
   const [addRow, setAddRow] = useState<AddState>(EMPTY_ADD);
   const [saving, setSaving] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const warrantyTotal = items
@@ -181,7 +183,14 @@ export const RepairItemsTable = ({
         padding: '8px 12px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <span style={{ fontSize: 13, fontWeight: 800 }}>Repair Items</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 13, fontWeight: 800 }}>Repair Items</span>
+          <button onClick={() => setPickerOpen(true)} style={{
+            background: 'rgba(255,255,255,.2)', color: '#fff',
+            border: '1px solid rgba(255,255,255,.4)', borderRadius: 3,
+            padding: '2px 10px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+          }}>+ Add Items</button>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontSize: 11, opacity: .75 }}>
             {items.length} item{items.length !== 1 ? 's' : ''} ·{' '}
@@ -377,6 +386,13 @@ export const RepairItemsTable = ({
         </span>
         <span style={{ fontSize: 14, fontWeight: 900 }}>Total: {fmt(grandTotal)}</span>
       </div>
+
+      <RepairItemPicker
+        repairKey={repairKey}
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onItemsAdded={onItemsChanged}
+      />
     </div>
   );
 };
