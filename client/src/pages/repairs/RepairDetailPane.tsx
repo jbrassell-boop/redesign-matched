@@ -311,7 +311,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           </div>
           <div style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: 'var(--muted)' }}>
-            {fullRepair.status} · TAT: <span style={{ fontWeight: 700, color: tatColor }}>{fullRepair.daysIn}d</span>
+            {fullRepair.status} · TAT: <span style={{ fontWeight: 700, color: fullRepair.daysIn > 14 ? 'var(--danger)' : fullRepair.daysIn > 7 ? 'var(--amber)' : 'var(--muted)' }}>{fullRepair.daysIn}d</span>
           </span>
         </div>
 

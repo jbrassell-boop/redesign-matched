@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Input, Spin } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { getAcquisitions, getAcquisitionsSold, getAcquisitionStats, getAcquisitionDetail } from '../../api/acquisitions';
-import { DetailHeader, TabBar, Field, FormGrid, StatusBadge } from '../../components/shared';
+import { TabBar, Field, FormGrid, StatusBadge } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import type { AcquisitionListItem, AcquisitionSoldItem, AcquisitionStats, AcquisitionDetail } from './types';
 
