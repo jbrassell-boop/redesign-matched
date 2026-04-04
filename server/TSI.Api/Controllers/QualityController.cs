@@ -43,10 +43,10 @@ public class QualityController(IConfiguration config) : ControllerBase
             where.Add("(r.sWorkOrderNumber LIKE @search OR c.sClientName1 LIKE @search OR s.sSerialNumber LIKE @search)");
 
         if (!string.IsNullOrWhiteSpace(dateFrom))
-            where.Add("ri.dtLastUpdate >= @dateFrom");
+            where.Add("r.dtDateIn >= @dateFrom");
 
         if (!string.IsNullOrWhiteSpace(dateTo))
-            where.Add("ri.dtLastUpdate < DATEADD(day, 1, @dateTo)");
+            where.Add("r.dtDateIn < DATEADD(day, 1, @dateTo)");
 
         if (!string.IsNullOrWhiteSpace(resultFilter) && resultFilter != "all")
             where.Add($"({ResultCase}) = @resultFilter");
@@ -71,7 +71,7 @@ public class QualityController(IConfiguration config) : ControllerBase
                 ri.lRepairInspectionType,
                 {ResultCase} AS Result,
                 ri.lTechnicianKey,
-                ri.dtLastUpdate,
+                r.dtDateIn,
                 ISNULL(c.sClientName1, '') AS sClientName1,
                 s.sSerialNumber
             FROM tblRepairInspection ri
@@ -80,7 +80,7 @@ public class QualityController(IConfiguration config) : ControllerBase
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             {whereClause}
-            ORDER BY ri.dtLastUpdate DESC
+            ORDER BY r.dtDateIn DESC
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
             """;
 
@@ -137,7 +137,7 @@ public class QualityController(IConfiguration config) : ControllerBase
                 {ResultCase} AS Result,
                 ri.lTechnicianKey,
                 ISNULL(t.sTechName, '') AS sTechName,
-                ri.dtLastUpdate,
+                r.dtDateIn,
                 ISNULL(c.sClientName1, '') AS sClientName1,
                 s.sSerialNumber,
                 ri.bHotColdLeakTestPass,
@@ -196,7 +196,7 @@ public class QualityController(IConfiguration config) : ControllerBase
                 SUM(CASE WHEN {ResultCase} = 'Fail' THEN 1 ELSE 0 END) AS FailCount,
                 SUM(CASE WHEN {ResultCase} = 'Conditional' THEN 1 ELSE 0 END) AS ConditionalCount
             FROM tblRepairInspection ri
-            WHERE ri.dtLastUpdate >= DATEADD(day, -30, GETDATE())
+            WHERE r.dtDateIn >= DATEADD(day, -30, GETDATE())
             """;
 
         await using var cmd = new SqlCommand(sql, conn);

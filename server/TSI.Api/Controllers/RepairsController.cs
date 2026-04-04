@@ -1334,8 +1334,8 @@ public class RepairsController(IConfiguration config) : ControllerBase
 
         const string sql = """
             SELECT ISNULL(r.dblAmtRepair, 0) AS SaleAmount,
-                   ISNULL(r.dblAmtTax, 0) AS Tax,
-                   ISNULL(r.dblAmtRepair, 0) + ISNULL(r.dblAmtTax, 0) AS InvoiceTotal,
+                   ISNULL(r.nSalesTax, 0) AS Tax,
+                   ISNULL(r.dblAmtRepair, 0) + ISNULL(r.nSalesTax, 0) AS InvoiceTotal,
                    ISNULL(r.dblAmtOutsource, 0) AS Outsource,
                    ISNULL(r.dblAmtShipping, 0) AS Shipping,
                    ISNULL(r.dblAmtLabor, 0) AS Labor,

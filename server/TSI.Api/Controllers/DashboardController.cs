@@ -559,9 +559,9 @@ public class DashboardController(IConfiguration config) : ControllerBase
 
         var where = new List<string>();
         if (segment == "ready")
-            where.Add("i.bInvoiceFinalized = 0");
+            where.Add("i.bFinalized = 0");
         else if (segment == "invoiced")
-            where.Add("i.bInvoiceFinalized = 1");
+            where.Add("i.bFinalized = 1");
 
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("""
@@ -581,12 +581,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
         var dataSql = $"""
             SELECT i.lInvoiceKey, ISNULL(i.sInvoiceNumber,'') AS sInvoiceNumber,
                    ISNULL(i.dblInvoiceAmount,0) AS dblInvoiceAmount,
-                   i.dtInvoiceDate, i.bInvoiceFinalized,
+                   i.dtTranDate, i.bFinalized,
                    ISNULL(c.sClientName1,'') AS sClientName1
             FROM tblInvoice i
             LEFT JOIN tblClient c ON c.lClientKey = i.lClientKey
             {whereClause}
-            ORDER BY i.dtInvoiceDate DESC
+            ORDER BY i.dtTranDate DESC
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
             """;
 
@@ -603,8 +603,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
         var invoices = new List<DashboardInvoice>();
         while (await dataReader.ReadAsync())
         {
-            var dt = dataReader["dtInvoiceDate"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(dataReader["dtInvoiceDate"]);
-            var finalized = Convert.ToBoolean(dataReader["bInvoiceFinalized"]);
+            var dt = dataReader["dtTranDate"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(dataReader["dtTranDate"]);
+            var finalized = Convert.ToBoolean(dataReader["bFinalized"]);
             invoices.Add(new DashboardInvoice(
                 InvoiceKey: Convert.ToInt32(dataReader["lInvoiceKey"]),
                 InvoiceNumber: dataReader["sInvoiceNumber"]?.ToString() ?? "",
@@ -622,8 +622,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
         // Stats
         const string invStatsSql = """
             SELECT
-                SUM(CASE WHEN i.bInvoiceFinalized = 0 THEN 1 ELSE 0 END) AS ReadyToInvoice,
-                SUM(CASE WHEN i.bInvoiceFinalized = 1 AND MONTH(i.dtInvoiceDate) = MONTH(GETDATE()) AND YEAR(i.dtInvoiceDate) = YEAR(GETDATE()) THEN 1 ELSE 0 END) AS InvoicedMonth,
+                SUM(CASE WHEN i.bFinalized = 0 THEN 1 ELSE 0 END) AS ReadyToInvoice,
+                SUM(CASE WHEN i.bFinalized = 1 AND MONTH(i.dtTranDate) = MONTH(GETDATE()) AND YEAR(i.dtTranDate) = YEAR(GETDATE()) THEN 1 ELSE 0 END) AS InvoicedMonth,
                 SUM(ISNULL(i.dblInvoiceAmount, 0)) AS TotalAmount,
                 CASE WHEN COUNT(*) > 0 THEN SUM(ISNULL(i.dblInvoiceAmount,0)) / COUNT(*) ELSE 0 END AS AvgInvoice
             FROM tblInvoice i
@@ -949,14 +949,14 @@ public class DashboardController(IConfiguration config) : ControllerBase
             shippedThisWeek = rdr.GetInt32(1),
             receivedThisMonth = rdr.GetInt32(2),
             shippedThisMonth = rdr.GetInt32(3),
-            avgTatThisMonth = rdr.GetDecimal(4),
-            avgTatLastMonth = rdr.GetDecimal(5),
+            avgTatThisMonth = Convert.ToDecimal(rdr.GetValue(4)),
+            avgTatLastMonth = Convert.ToDecimal(rdr.GetValue(5)),
             backlog1to7 = rdr.GetInt32(6),
             backlog8to14 = rdr.GetInt32(7),
             backlog15to30 = rdr.GetInt32(8),
             backlog30Plus = rdr.GetInt32(9),
-            revenueThisMonth = rdr.GetDecimal(10),
-            revenueLastMonth = rdr.GetDecimal(11),
+            revenueThisMonth = Convert.ToDecimal(rdr.GetValue(10)),
+            revenueLastMonth = Convert.ToDecimal(rdr.GetValue(11)),
             warrantyItemsMonth = rdr.GetInt32(12),
             totalItemsMonth = rdr.GetInt32(13),
             onTimeShipped = rdr.GetInt32(14),
