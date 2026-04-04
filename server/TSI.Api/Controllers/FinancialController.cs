@@ -366,7 +366,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
         await using var arReader = await arCmd.ExecuteReaderAsync();
         double totalAR = 0;
         if (await arReader.ReadAsync())
-            totalAR = Convert.ToDouble(arReader["TotalAR"]);
+            totalAR = arReader["TotalAR"] == DBNull.Value ? 0 : Convert.ToDouble(arReader["TotalAR"]);
         await arReader.CloseAsync();
 
         // Overdue: invoices where due date > 90 days ago
@@ -402,7 +402,8 @@ public class FinancialController(IConfiguration config) : ControllerBase
             WHERE dtPaymentDate >= DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)
             """;
         await using var paidCmd = new SqlCommand(paidSql, conn);
-        var paidMTD = Convert.ToDouble(await paidCmd.ExecuteScalarAsync());
+        var paidResult = await paidCmd.ExecuteScalarAsync();
+        var paidMTD = paidResult == null || paidResult == DBNull.Value ? 0.0 : Convert.ToDouble(paidResult);
 
         return Ok(new FinancialStats(
             OutstandingAR: totalAR,
