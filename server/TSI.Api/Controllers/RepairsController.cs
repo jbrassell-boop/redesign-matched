@@ -224,8 +224,9 @@ public class RepairsController(IConfiguration config) : ControllerBase
                    ISNULL(rs.sRepairStatus, '') AS sRepairStatus,
                    ISNULL(s.sSerialNumber, '') AS sSerialNumber,
                    ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
-                   st.sScopeTypeLongDesc,
+                   ISNULL(stc2.sScopeTypeCategory, '') AS sScopeTypeCategory,
                    ISNULL(mfr.sManufacturer, '') AS sManufacturer,
+                   CASE WHEN r.lContractKey IS NOT NULL AND r.lContractKey > 0 THEN 'Contracted' ELSE 'Non-Contract' END AS sCapFfs,
                    ISNULL(c.sClientName1, '') AS sClientName1,
                    c.lClientKey,
                    ISNULL(d.sDepartmentName, '') AS sDepartmentName,
@@ -261,6 +262,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblScopeTypeCategories stc2 ON stc2.lScopeTypeCategoryKey = st.lScopeTypeCatKey
             LEFT JOIN tblManufacturers mfr ON mfr.lManufacturerKey = st.lManufacturerKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
@@ -295,9 +297,10 @@ public class RepairsController(IConfiguration config) : ControllerBase
             ClientKey: reader["lClientKey"] == DBNull.Value ? 0 : Convert.ToInt32(reader["lClientKey"]),
             Dept: ReadStr("sDepartmentName") ?? "",
             DeptKey: reader["lDepartmentKey"] == DBNull.Value ? 0 : Convert.ToInt32(reader["lDepartmentKey"]),
-            ScopeType: ReadStr("sScopeTypeDesc") ?? "",
+            ScopeType: ReadStr("sScopeTypeCategory") ?? ReadStr("sScopeTypeDesc") ?? "",
             Serial: ReadStr("sSerialNumber") ?? "",
-            ScopeModel: ReadStr("sScopeTypeLongDesc"),
+            ScopeModel: ReadStr("sScopeTypeDesc"),
+            CapFfs: ReadStr("sCapFfs"),
             Manufacturer: ReadStr("sManufacturer"),
             DateIn: ReadDate("dtDateIn")?.ToString("MM/dd/yyyy") ?? "",
             DateApproved: ReadDate("dtAprRecvd")?.ToString("MM/dd/yyyy"),

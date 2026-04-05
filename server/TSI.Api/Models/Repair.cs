@@ -96,7 +96,7 @@ public record RepairFull(
     int RepairKey, string Wo, string Status, int StatusId, bool IsUrgent,
     // Related entities
     string Client, int ClientKey, string Dept, int DeptKey,
-    string ScopeType, string Serial, string? ScopeModel, string? Manufacturer,
+    string ScopeType, string Serial, string? ScopeModel, string? Manufacturer, string? CapFfs,
     // Dates
     string DateIn, string? DateApproved, string? EstDelivery, string? ShipDate, string? DateOut,
     int DaysIn,
