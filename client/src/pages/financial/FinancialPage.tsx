@@ -14,7 +14,7 @@ import {
   getTrending,
 } from '../../api/financial';
 import { FinancialDetailPane } from './FinancialDetailPane';
-import { TabBar, StatusBadge } from '../../components/shared';
+import { TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import type {
   InvoiceListItem,
@@ -86,9 +86,9 @@ export const FinancialPage = () => {
   const [invoices, setInvoices] = useState<InvoiceListItem[]>([]);
   const [invoiceTotal, setInvoiceTotal] = useState(0);
   const [payments, setPayments] = useState<InvoicePaymentItem[]>([]);
-  const [paymentTotal, setPaymentTotal] = useState(0);
+  const [, setPaymentTotal] = useState(0);
   const [holds, setHolds] = useState<ClientOnHold[]>([]);
-  const [holdTotal, setHoldTotal] = useState(0);
+  const [, setHoldTotal] = useState(0);
   const [glAccounts, setGlAccounts] = useState<GLAccountItem[]>([]);
 
   // At Risk
@@ -115,7 +115,7 @@ export const FinancialPage = () => {
   const [detailOpen, setDetailOpen] = useState(false);
 
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize] = useState(50);
 
   // Load stats once
   useEffect(() => {
@@ -222,173 +222,9 @@ export const FinancialPage = () => {
     { key: 'dueDate', label: 'Due Date' },
   ];
 
-  const outstandingColumns = [
-    {
-      title: 'Invoice #',
-      dataIndex: 'invoiceNumber',
-      key: 'invoiceNumber',
-      render: (v: string) => <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{v}</span>,
-    },
-    { title: 'Client', dataIndex: 'clientName', key: 'clientName' },
-    {
-      title: 'Amount',
-      dataIndex: 'amount',
-      key: 'amount',
-      align: 'right' as const,
-      render: (v: number, r: InvoiceListItem) => (
-        <span style={{ fontWeight: 700, color: r.status.toLowerCase().includes('overdue') ? 'var(--danger)' : r.status === 'Paid' ? 'var(--success)' : 'var(--navy)' }}>
-          {fmt$(v)}
-        </span>
-      ),
-      sorter: (a: InvoiceListItem, b: InvoiceListItem) => a.amount - b.amount,
-      defaultSortOrder: 'descend' as const,
-    },
-    {
-      title: 'Tax',
-      dataIndex: 'taxAmount',
-      key: 'taxAmount',
-      align: 'right' as const,
-      render: (v: number) => <span style={{ color: 'var(--muted)' }}>{v ? fmt$(v) : '\u2014'}</span>,
-    },
-    { title: 'Terms', dataIndex: 'paymentTerms', key: 'paymentTerms', render: (v: string) => v || '\u2014' },
-    {
-      title: 'Issued',
-      dataIndex: 'issuedDate',
-      key: 'issuedDate',
-      render: (v: string | null) => <span style={{ color: 'var(--muted)' }}>{fmtDate(v)}</span>,
-    },
-    {
-      title: 'Due Date',
-      dataIndex: 'dueDate',
-      key: 'dueDate',
-      render: (v: string | null, r: InvoiceListItem) => (
-        <span style={{ color: r.agingDays > 90 ? 'var(--danger)' : undefined, fontWeight: r.agingDays > 90 ? 600 : undefined }}>
-          {fmtDate(v)}
-        </span>
-      ),
-    },
-    {
-      title: 'Aging',
-      dataIndex: 'agingDays',
-      key: 'agingDays',
-      align: 'right' as const,
-      render: (v: number) => (
-        <span style={{ color: v > 30 ? 'var(--danger)' : v > 14 ? 'var(--amber)' : 'var(--muted)', fontWeight: v > 30 ? 700 : v > 14 ? 600 : 400 }}>
-          {v}d
-        </span>
-      ),
-      sorter: (a: InvoiceListItem, b: InvoiceListItem) => a.agingDays - b.agingDays,
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: (v: string) => <StatusBadge status={v} />,
-    },
-    {
-      title: '',
-      key: 'actions',
-      width: 80,
-      render: (_: unknown, r: InvoiceListItem) => (
-        <button
-          onClick={() => handleViewInvoice(r.invoiceKey)}
-          style={{
-            padding: '3px 10px',
-            fontSize: 11,
-            fontWeight: 600,
-            border: '1px solid var(--border)',
-            borderRadius: 4,
-            background: 'var(--card)',
-            color: 'var(--primary)',
-            cursor: 'pointer',
-          }}
-        >
-          View
-        </button>
-      ),
-    },
-  ];
 
-  const draftsColumns = [
-    {
-      title: 'Invoice #',
-      dataIndex: 'invoiceNumber',
-      key: 'invoiceNumber',
-      render: (v: string) => <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{v}</span>,
-    },
-    { title: 'Client', dataIndex: 'clientName', key: 'clientName' },
-    {
-      title: 'Amount',
-      dataIndex: 'amount',
-      key: 'amount',
-      align: 'right' as const,
-      render: (v: number) => <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{fmt$(v)}</span>,
-    },
-    {
-      title: 'Created',
-      dataIndex: 'issuedDate',
-      key: 'issuedDate',
-      render: (v: string | null) => <span style={{ color: 'var(--muted)' }}>{fmtDate(v)}</span>,
-    },
-    { title: 'Delivery', dataIndex: 'deliveryMethod', key: 'deliveryMethod', render: (v: string) => v || '\u2014' },
-    {
-      title: 'Status',
-      key: 'status',
-      render: () => <StatusBadge status="Draft" />,
-    },
-    {
-      title: '',
-      key: 'actions',
-      width: 80,
-      render: (_: unknown, r: InvoiceListItem) => (
-        <button
-          onClick={() => handleViewInvoice(r.invoiceKey)}
-          style={{
-            padding: '3px 10px',
-            fontSize: 11,
-            fontWeight: 600,
-            border: '1px solid var(--border)',
-            borderRadius: 4,
-            background: 'var(--card)',
-            color: 'var(--primary)',
-            cursor: 'pointer',
-          }}
-        >
-          Edit
-        </button>
-      ),
-    },
-  ];
 
-  const paymentsColumns = [
-    {
-      title: 'Invoice #',
-      dataIndex: 'invoiceNumber',
-      key: 'invoiceNumber',
-      render: (v: string) => <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{v}</span>,
-    },
-    { title: 'Client', dataIndex: 'clientName', key: 'clientName' },
-    {
-      title: 'Amount',
-      dataIndex: 'paymentAmount',
-      key: 'paymentAmount',
-      align: 'right' as const,
-      render: (v: number) => <span style={{ fontWeight: 700, color: 'var(--success)' }}>{fmt$(v)}</span>,
-    },
-    {
-      title: 'Payment Date',
-      dataIndex: 'paymentDate',
-      key: 'paymentDate',
-      render: (v: string | null) => <span style={{ color: 'var(--muted)' }}>{fmtDate(v)}</span>,
-    },
-  ];
 
-  const holdColumns = [
-    { title: 'Client', dataIndex: 'clientName', key: 'clientName', render: (v: string) => <span style={{ fontWeight: 600 }}>{v}</span> },
-    { title: 'Department', dataIndex: 'departmentName', key: 'departmentName' },
-    { title: 'On Hold Since', dataIndex: 'onHoldDate', key: 'onHoldDate', render: (v: string | null) => <span style={{ color: 'var(--muted)' }}>{fmtDate(v)}</span> },
-    { title: 'Reason', dataIndex: 'reason', key: 'reason' },
-  ];
 
   const glColumns = [
     { title: 'Account #', dataIndex: 'accountNumber', key: 'accountNumber', render: (v: string) => <span style={{ fontWeight: 600 }}>{v}</span> },
