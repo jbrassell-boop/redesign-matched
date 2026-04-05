@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { message } from 'antd';
+import { message, Modal, Form, Input, Select } from 'antd';
 import { getQualityInspections, getQualityStats, getQualityNcr, getQualityRework } from '../../api/quality';
 import type { QualityInspectionListItem, QualityStats, QualityFilters, NcrListItem, ReworkListItem } from './types';
 import { ExportButton } from '../../components/common/ExportButton';
@@ -149,6 +149,14 @@ export const QualityPage = () => {
   const [reworkSearch, setReworkSearch] = useState('');
   const [reworkStatusFilter, setReworkStatusFilter] = useState('');
   const [reworkPage, setReworkPage] = useState(1);
+
+  // NCR modal
+  const [ncrModalOpen, setNcrModalOpen] = useState(false);
+  const [ncrForm] = Form.useForm();
+
+  // CAPA modal
+  const [capaModalOpen, setCapaModalOpen] = useState(false);
+  const [capaForm] = Form.useForm();
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -632,7 +640,7 @@ export const QualityPage = () => {
             background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
           }}>
             <button
-              onClick={() => message.info('New NCR — requires ISO complaint workflow configuration')}
+              onClick={() => setNcrModalOpen(true)}
               style={{
                 height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
                 background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
@@ -758,7 +766,7 @@ export const QualityPage = () => {
             background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
           }}>
             <button
-              onClick={() => message.info('New CAPA — requires corrective action workflow configuration')}
+              onClick={() => setCapaModalOpen(true)}
               style={{
                 height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
                 background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
@@ -940,6 +948,90 @@ export const QualityPage = () => {
           </div>
         </div>
       )}
+
+      {/* NCR Modal */}
+      <Modal
+        title="New Non-Conformance Report"
+        open={ncrModalOpen}
+        onCancel={() => { setNcrModalOpen(false); ncrForm.resetFields(); }}
+        onOk={() => {
+          ncrForm.validateFields().then(() => {
+            message.success('NCR submitted (demo — no backend call)');
+            setNcrModalOpen(false);
+            ncrForm.resetFields();
+          }).catch(() => {});
+        }}
+        okText="Submit NCR"
+        okButtonProps={{ style: { background: 'var(--navy)', borderColor: 'var(--navy)' } }}
+        width={480}
+        destroyOnClose
+      >
+        <Form form={ncrForm} layout="vertical" style={{ marginTop: 8 }}>
+          <Form.Item name="description" label="Description" rules={[{ required: true, message: 'Description is required' }]}>
+            <Input.TextArea rows={3} placeholder="Describe the non-conformance..." />
+          </Form.Item>
+          <Form.Item name="category" label="Category" rules={[{ required: true, message: 'Category is required' }]}>
+            <Select placeholder="Select category" options={[
+              { value: 'Process', label: 'Process' },
+              { value: 'Material', label: 'Material' },
+              { value: 'Equipment', label: 'Equipment' },
+              { value: 'Documentation', label: 'Documentation' },
+              { value: 'Other', label: 'Other' },
+            ]} />
+          </Form.Item>
+          <Form.Item name="severity" label="Severity" rules={[{ required: true, message: 'Severity is required' }]}>
+            <Select placeholder="Select severity" options={[
+              { value: 'Critical', label: 'Critical' },
+              { value: 'Major', label: 'Major' },
+              { value: 'Minor', label: 'Minor' },
+            ]} />
+          </Form.Item>
+          <Form.Item name="notes" label="Notes">
+            <Input.TextArea rows={2} placeholder="Additional notes..." />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* CAPA Modal */}
+      <Modal
+        title="New Corrective / Preventive Action"
+        open={capaModalOpen}
+        onCancel={() => { setCapaModalOpen(false); capaForm.resetFields(); }}
+        onOk={() => {
+          capaForm.validateFields().then(() => {
+            message.success('CAPA submitted (demo — no backend call)');
+            setCapaModalOpen(false);
+            capaForm.resetFields();
+          }).catch(() => {});
+        }}
+        okText="Submit CAPA"
+        okButtonProps={{ style: { background: 'var(--navy)', borderColor: 'var(--navy)' } }}
+        width={480}
+        destroyOnClose
+      >
+        <Form form={capaForm} layout="vertical" style={{ marginTop: 8 }}>
+          <Form.Item name="description" label="Description" rules={[{ required: true, message: 'Description is required' }]}>
+            <Input.TextArea rows={3} placeholder="Describe the corrective or preventive action..." />
+          </Form.Item>
+          <Form.Item name="type" label="Type" rules={[{ required: true, message: 'Type is required' }]}>
+            <Select placeholder="Select type" options={[
+              { value: 'Corrective', label: 'Corrective' },
+              { value: 'Preventive', label: 'Preventive' },
+            ]} />
+          </Form.Item>
+          <Form.Item name="severity" label="Severity">
+            <Select placeholder="Select severity" options={[
+              { value: 'Critical', label: 'Critical' },
+              { value: 'High', label: 'High' },
+              { value: 'Medium', label: 'Medium' },
+              { value: 'Low', label: 'Low' },
+            ]} />
+          </Form.Item>
+          <Form.Item name="notes" label="Notes">
+            <Input.TextArea rows={2} placeholder="Additional notes..." />
+          </Form.Item>
+        </Form>
+      </Modal>
 
       {activeTab === 'Reports' && (
         <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Input, Spin, Select, Table, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { getScopeModels, getScopeModelDetail, getScopeModelStats, getManufacturers, getScopeModelInventory, getScopeModelFlags } from '../../api/scopeModels';
@@ -7,6 +7,8 @@ import { MaxChargesTab } from './tabs/MaxChargesTab';
 import type { ScopeModelListItem, ScopeModelDetail, ScopeModelStats, Manufacturer, ScopeTypeInventoryItem, ScopeTypeFlag } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
+import { ContextMenu } from '../../components/common/ContextMenu';
+import type { ContextMenuItem } from '../../components/common/ContextMenu';
 
 /* ── Type label map ──────────────────────────────────────────── */
 const TYPE_LABEL: Record<string, string> = {
@@ -96,6 +98,46 @@ export const ScopeModelPage = () => {
   const [inventoryLoading, setInventoryLoading] = useState(false);
   const [flagItems, setFlagItems] = useState<ScopeTypeFlag[]>([]);
   const [flagsLoading, setFlagsLoading] = useState(false);
+
+  // Context menu
+  const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const [menuItem, setMenuItem] = useState<ScopeModelListItem | null>(null);
+  const contextMenuRef = useRef<ScopeModelListItem | null>(null);
+
+  const handleRowContextMenu = (e: React.MouseEvent, item: ScopeModelListItem) => {
+    e.preventDefault();
+    contextMenuRef.current = item;
+    setMenuItem(item);
+    setMenuPosition({ x: e.clientX, y: e.clientY });
+  };
+
+  const closeMenu = () => {
+    setMenuPosition(null);
+    setMenuItem(null);
+    contextMenuRef.current = null;
+  };
+
+  const contextMenuItems: ContextMenuItem[] = menuItem ? [
+    {
+      label: 'View Details',
+      onClick: () => {
+        if (contextMenuRef.current) handleRowClick(contextMenuRef.current);
+      },
+    },
+    {
+      label: 'Print Spec Sheet',
+      onClick: () => message.info('Coming soon'),
+    },
+    {
+      label: 'Deactivate',
+      onClick: () => message.info('Coming soon'),
+    },
+    {
+      label: 'Delete',
+      danger: true,
+      onClick: () => message.info('Coming soon'),
+    },
+  ] : [];
 
   const loadData = useCallback(async (s: string, tf: string, sf: string, mk: number | null, p: number) => {
     setLoading(true);
@@ -213,6 +255,17 @@ export const ScopeModelPage = () => {
         style={{ height: 30, width: 240, fontSize: 11, marginLeft: 'auto' }}
         allowClear
       />
+      <button
+        onClick={() => message.info('New scope model form coming soon')}
+        style={{
+          height: 30, padding: '0 12px', fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
+          background: 'var(--navy)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer',
+          display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0,
+        }}
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={11} height={11}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+        New Model
+      </button>
     </div>
   );
 
@@ -412,6 +465,7 @@ export const ScopeModelPage = () => {
                   <tr
                     key={item.scopeTypeKey}
                     onClick={() => handleRowClick(item)}
+                    onContextMenu={e => handleRowContextMenu(e, item)}
                     style={{
                       cursor: 'pointer',
                       background: isSelected ? 'var(--primary-light)' : idx % 2 === 0 ? '#fff' : 'var(--neutral-50)',
@@ -468,6 +522,12 @@ export const ScopeModelPage = () => {
           {detailPaneBody}
         </div>
       )}
+
+      <ContextMenu
+        items={contextMenuItems}
+        position={menuPosition}
+        onClose={closeMenu}
+      />
     </div>
   );
 };

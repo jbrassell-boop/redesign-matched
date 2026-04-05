@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { message } from 'antd';
 import { getInventoryList, getInventoryDetail, getInventoryStats } from '../../api/inventory';
 import { InventoryList } from './InventoryList';
 import { InventoryDetailPane } from './InventoryDetailPane';
@@ -169,6 +170,17 @@ export const InventoryPage = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 10, color: 'var(--muted)' }}>{totalCount} items</span>
               <ExportButton data={items as unknown as Record<string, unknown>[]} columns={INVENTORY_EXPORT_COLS} filename="inventory-export" sheetName="Inventory" />
+              <button
+                onClick={() => message.info('Draft PO form coming soon')}
+                style={{
+                  height: 24, padding: '0 8px', fontSize: 10, fontWeight: 700, fontFamily: 'inherit',
+                  background: 'var(--navy)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 3,
+                }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={9} height={9}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                Draft PO
+              </button>
             </div>
           </div>
           <InventoryList

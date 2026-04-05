@@ -4,6 +4,7 @@ import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../compon
 import type { TabDef } from '../../components/shared';
 import { InventorySuppliedTab } from './tabs/InventorySuppliedTab';
 import { DocumentsTab } from './tabs/DocumentsTab';
+import { RecentPosTab } from './tabs/RecentPosTab';
 import type { SupplierDetail } from './types';
 
 const ToggleField = ({ label, value }: { label: string; value: boolean }) => (
@@ -134,38 +135,6 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
     </div>
   );
 
-  const posTab = (
-    <div style={{ padding: '12px 16px' }}>
-      {detail.recentPos.length === 0 ? (
-        <div style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No purchase orders found</div>
-      ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-          <thead>
-            <tr style={{ borderBottom: '2px solid var(--neutral-200)' }}>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>PO #</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Date</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Amount</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Status</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Type</th>
-            </tr>
-          </thead>
-          <tbody>
-            {detail.recentPos.map(po => (
-              <tr key={po.supplierPoKey} style={{ borderBottom: '1px solid var(--neutral-200)' }}>
-                <td style={{ padding: '6px 8px', fontWeight: 600, color: 'var(--primary)' }}>{po.poNumber}</td>
-                <td style={{ padding: '6px 8px', color: 'var(--text)' }}>{po.date ?? '\u2014'}</td>
-                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 600 }}>${po.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                <td style={{ padding: '6px 8px' }}>
-                  <StatusBadge status={po.status} />
-                </td>
-                <td style={{ padding: '6px 8px', color: 'var(--muted)' }}>{po.poType ?? '\u2014'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
@@ -208,7 +177,7 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
       />
       <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
       {activeTab === 'main' && contactTab}
-      {activeTab === 'pos'  && posTab}
+      {activeTab === 'pos'  && <RecentPosTab pos={detail.recentPos} />}
       {activeTab === 'inv'  && <InventorySuppliedTab supplierKey={detail.supplierKey} />}
       {activeTab === 'docs' && <DocumentsTab supplierKey={detail.supplierKey} />}
     </div>
