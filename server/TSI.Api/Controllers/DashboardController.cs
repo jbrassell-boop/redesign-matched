@@ -222,10 +222,43 @@ public class DashboardController(IConfiguration config) : ControllerBase
         cmd.Parameters.AddWithValue("@yesterday", yesterday);
         await using var rdr = await cmd.ExecuteReaderAsync();
         await rdr.ReadAsync();
-        return Ok(new BriefingStats(
+        var briefing = new BriefingStats(
             rdr.GetInt32(0), rdr.GetInt32(1), rdr.GetInt32(2),
             Convert.ToDecimal(rdr.GetValue(3)), Convert.ToDecimal(rdr.GetValue(4)), rdr.GetInt32(5)
-        ));
+        );
+        await rdr.CloseAsync();
+
+        // Flow breakdown by scope type
+        await using var flowCmd = new SqlCommand(@"
+            SELECT
+                ISNULL(st.sRigidOrFlexible, 'O') AS ScopeCategory,
+                SUM(CASE WHEN CAST(r.dtDateIn AS DATE) = @yesterday THEN 1 ELSE 0 END) AS ReceivedYesterday,
+                SUM(CASE WHEN CAST(r.dtDateOut AS DATE) = @yesterday THEN 1 ELSE 0 END) AS ShippedYesterday
+            FROM tblRepair r
+            LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            WHERE CAST(r.dtDateIn AS DATE) = @yesterday OR CAST(r.dtDateOut AS DATE) = @yesterday
+            GROUP BY st.sRigidOrFlexible
+        ", conn);
+        flowCmd.Parameters.AddWithValue("@yesterday", yesterday);
+        flowCmd.CommandTimeout = 15;
+        await using var flowRdr = await flowCmd.ExecuteReaderAsync();
+        var flow = new List<object>();
+        while (await flowRdr.ReadAsync())
+        {
+            var cat = flowRdr["ScopeCategory"]?.ToString() ?? "O";
+            flow.Add(new {
+                category = cat switch { "F" => "Flexible", "R" => "Rigid", "I" => "Instrument", "C" => "Camera", _ => "Other" },
+                received = Convert.ToInt32(flowRdr["ReceivedYesterday"]),
+                shipped = Convert.ToInt32(flowRdr["ShippedYesterday"]),
+            });
+        }
+
+        return Ok(new {
+            briefing.Received, briefing.Shipped, briefing.Approved,
+            briefing.Revenue, briefing.AvgTat, briefing.Overdue,
+            flow
+        });
     }
 
     // ── Tasks sub-tab ──

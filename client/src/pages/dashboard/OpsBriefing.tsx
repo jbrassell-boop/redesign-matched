@@ -61,6 +61,7 @@ const FlowRow = ({ type, inn, closed, missed, net, bold }: {
 
 export const OpsBriefing = ({ stats }: Props) => {
   const [briefing, setBriefing] = useState<BriefingStats | null>(null);
+  const [flow, setFlow] = useState<{ category: string; received: number; shipped: number }[]>([]);
   const [kpi, setKpi] = useState<{ backlog1to7: number; backlog8to14: number; backlog15to30: number; backlog30Plus: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -68,7 +69,12 @@ export const OpsBriefing = ({ stats }: Props) => {
     Promise.all([
       getDashboardBriefing(),
       apiClient.get('/dashboard/executive-kpi').then(r => r.data).catch(() => null),
-    ]).then(([b, k]) => { setBriefing(b); setKpi(k); })
+    ]).then(([b, k]) => {
+      setBriefing(b);
+      setKpi(k);
+      // Flow data comes back with the briefing now
+      if ((b as any)?.flow) setFlow((b as any).flow);
+    })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
@@ -139,9 +145,10 @@ export const OpsBriefing = ({ stats }: Props) => {
               </tr>
             </thead>
             <tbody>
-              <FlowRow type="Flexible" inn={received} closed={shipped} missed={0} net={netFlow} />
-              <FlowRow type="Rigid" inn={0} closed={0} missed={0} net={0} />
-              <FlowRow type="Instruments" inn={0} closed={0} missed={0} net={0} />
+              {(['Flexible', 'Rigid', 'Instrument', 'Camera'] as const).map(cat => {
+                const f = flow.find(x => x.category === cat);
+                return f ? <FlowRow key={cat} type={cat} inn={f.received} closed={f.shipped} missed={0} net={f.received - f.shipped} /> : null;
+              })}
               <FlowRow type="Total" inn={received} closed={shipped} missed={0} net={netFlow} bold />
             </tbody>
           </table>

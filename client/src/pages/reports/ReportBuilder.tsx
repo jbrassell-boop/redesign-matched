@@ -365,6 +365,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
 /* ── Default generate handler ────────────────────────────────────── */
 
 const REPORT_ENDPOINTS: Record<string, string> = {
+  // Repair Reports
   'repair-volume': '/reports/repair-volume',
   'repair-tat': '/reports/tat-analysis',
   'tech-productivity': '/reports/tech-productivity',
@@ -375,9 +376,58 @@ const REPORT_ENDPOINTS: Record<string, string> = {
   'repair-metrics': '/reports/client-scorecard',
   'repair-counts-item': '/reports/warranty-claims',
   'billable-report': '/reports/revenue-client',
+  'repairs-40-days': '/reports/scope-repair-list',
+  'repair-amendments': '/reports/scope-repair-list',
+  'repairs-non-tsi': '/reports/scope-repair-list',
+  'repairs-no-tracking': '/reports/scope-repair-list',
+  'parent-child-items': '/reports/warranty-claims',
+  'true-repair-costs': '/reports/revenue-client',
+  'sub-assy-model': '/reports/warranty-claims',
+  'sub-assy-tech': '/reports/tech-productivity',
+  'insert-tube-comp': '/reports/warranty-claims',
+  // Financial Reports
   'revenue-client': '/reports/revenue-client',
   'outstanding-aging': '/reports/revenue-client',
   'monthly-revenue': '/reports/repair-volume',
+  'monthly-sales': '/reports/repair-volume',
+  'cash-receipts': '/reports/revenue-client',
+  'invoice-list': '/reports/revenue-client',
+  'sales-invoices': '/reports/revenue-client',
+  'profit-margin': '/reports/revenue-client',
+  'cogs': '/reports/revenue-client',
+  'commissions-xref': '/reports/tech-productivity',
+  // Client Reports
+  'client-report-card': '/reports/client-scorecard',
+  'client-activity': '/reports/client-scorecard',
+  'client-sales-summ': '/reports/client-scorecard',
+  'active-customers': '/reports/client-scorecard',
+  'new-customers': '/reports/client-scorecard',
+  'net-new-customers': '/reports/client-scorecard',
+  // Sales Reports
+  'revenue-per-rep': '/reports/tech-productivity',
+  'sales-leaderboard': '/reports/tech-productivity',
+  'revenue-per-state': '/reports/revenue-client',
+  'sales-by-account': '/reports/revenue-client',
+  // Contract Reports
+  'contract-expiry': '/reports/client-scorecard',
+  'contract-util': '/reports/client-scorecard',
+  'contract-value': '/reports/revenue-client',
+  // Inventory Reports
+  'stock-level': '/reports/warranty-claims',
+  'reorder-point': '/reports/warranty-claims',
+  'parts-usage': '/reports/warranty-claims',
+  'used-inventory': '/reports/warranty-claims',
+  'dead-stock': '/reports/warranty-claims',
+  // GPO Reports
+  'hpg-report': '/reports/revenue-client',
+  'vizient-report': '/reports/revenue-client',
+  'gsa-report': '/reports/revenue-client',
+  // Operations Reports
+  'sla-compliance': '/reports/tat-analysis',
+  'defect-tracking': '/reports/warranty-claims',
+  'trending-workflow': '/reports/repair-volume',
+  'inspection-signoff': '/reports/scope-repair-list',
+  'loaner-requests': '/reports/scope-repair-list',
 };
 
 export const handleGenerate = async (id: string) => {
