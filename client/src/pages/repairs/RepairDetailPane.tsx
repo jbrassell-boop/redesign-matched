@@ -4,8 +4,13 @@ import { useParams } from 'react-router-dom';
 import type { RepairDetail, RepairFull, RepairLineItem } from './types';
 import { DiInspectionForm } from './forms/DiInspectionForm';
 import { DiFlexibleForm } from './forms/DiFlexibleForm';
+import { DiRigidForm } from './forms/DiRigidForm';
 import { RequisitionForm } from './forms/RequisitionForm';
 import { FinalInspectionForm } from './forms/FinalInspectionForm';
+import { ReturnVerificationForm } from './forms/ReturnVerificationForm';
+import { AmendmentForm } from './forms/AmendmentForm';
+import { UpdateSlipForm } from './forms/UpdateSlipForm';
+import { LoanerForm } from './forms/LoanerForm';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import { CommandStrip } from './components/CommandStrip';
@@ -84,7 +89,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   // Forms dropdown + overlay state
   const [formsMenuOpen, setFormsMenuOpen] = useState(false);
   const formsMenuRef = useRef<HTMLDivElement>(null);
-  const [activeForm, setActiveForm] = useState<'di-inspection' | 'di-flexible' | 'requisition' | 'final-inspection' | null>(null);
+  const [activeForm, setActiveForm] = useState<'di-inspection' | 'di-flexible' | 'di-rigid' | 'requisition' | 'final-inspection' | 'return-verification' | 'amendment' | 'update-slip' | 'loaner' | null>(null);
 
   // Cockpit-specific state
   const [fullRepair, setFullRepair] = useState<RepairFull | null>(null);
@@ -348,13 +353,30 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                 position: 'absolute', top: '100%', left: 0, marginTop: 4,
                 background: 'var(--card)', border: '1px solid var(--neutral-200)',
                 borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                minWidth: 210, zIndex: 100,
+                minWidth: 240, zIndex: 100,
               }}>
+                <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' }}>Internal</div>
                 {[
-                  { key: 'di-inspection'    as const, label: 'D&I Inspection (OM05-2)' },
-                  { key: 'di-flexible'      as const, label: 'D&I Flexible (OM07-3)' },
-                  { key: 'requisition'      as const, label: 'Requisition for Approval (OM07-2)' },
-                  { key: 'final-inspection' as const, label: 'Final Inspection — Flex (OM10-2)' },
+                  { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)' },
+                  { key: 'di-flexible'    as const, label: 'D&I Flexible (OM07-3)' },
+                  { key: 'di-rigid'       as const, label: 'D&I Rigid (OM05-3)' },
+                  { key: 'amendment'      as const, label: 'Amendment (OM07-9)' },
+                  { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)' },
+                ].map(item => (
+                  <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} style={{
+                    padding: '7px 12px', cursor: 'pointer', fontSize: 11,
+                    color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = ''; }}
+                  >{item.label}</div>
+                ))}
+                <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', borderTop: '1px solid var(--neutral-200)' }}>Customer-Facing</div>
+                {[
+                  { key: 'requisition'          as const, label: 'Requisition (OM07-2)' },
+                  { key: 'final-inspection'     as const, label: 'Final Inspection (OM10-2)' },
+                  { key: 'return-verification'  as const, label: 'Return Verification (OM14-1)' },
+                  { key: 'loaner'               as const, label: 'Loaner (OM17-1)' },
                 ].map(item => (
                   <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} style={{
                     padding: '7px 12px', cursor: 'pointer', fontSize: 11,
@@ -374,10 +396,15 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         </div>
 
         {/* Form overlays — cockpit */}
-        {activeForm === 'di-inspection'    && <DiInspectionForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
-        {activeForm === 'di-flexible'      && <DiFlexibleForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
-        {activeForm === 'requisition'      && <RequisitionForm repair={fullRepair} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
-        {activeForm === 'final-inspection' && <FinalInspectionForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'di-inspection'      && <DiInspectionForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'di-flexible'        && <DiFlexibleForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'di-rigid'           && <DiRigidForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'requisition'        && <RequisitionForm repair={fullRepair} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'final-inspection'   && <FinalInspectionForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'return-verification' && <ReturnVerificationForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'amendment'          && <AmendmentForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'update-slip'        && <UpdateSlipForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'loaner'             && <LoanerForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
 
         {/* Tab bar */}
         <div style={{
@@ -571,13 +598,30 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
               position: 'absolute', top: '100%', left: 0, marginTop: 4,
               background: 'var(--card)', border: '1px solid var(--neutral-200)',
               borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-              minWidth: 230, zIndex: 100,
+              minWidth: 240, zIndex: 100,
             }}>
+              <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' }}>Internal</div>
               {[
-                { key: 'di-inspection'    as const, label: 'D&I Inspection (OM05-2)' },
-                { key: 'di-flexible'      as const, label: 'D&I Flexible (OM07-3)' },
-                { key: 'requisition'      as const, label: 'Requisition for Approval (OM07-2)' },
-                { key: 'final-inspection' as const, label: 'Final Inspection — Flex (OM10-2)' },
+                { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)' },
+                { key: 'di-flexible'    as const, label: 'D&I Flexible (OM07-3)' },
+                { key: 'di-rigid'       as const, label: 'D&I Rigid (OM05-3)' },
+                { key: 'amendment'      as const, label: 'Amendment (OM07-9)' },
+                { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)' },
+              ].map(item => (
+                <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} style={{
+                  padding: '7px 12px', cursor: 'pointer', fontSize: 12,
+                  color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = ''; }}
+                >{item.label}</div>
+              ))}
+              <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', borderTop: '1px solid var(--neutral-200)' }}>Customer-Facing</div>
+              {[
+                { key: 'requisition'          as const, label: 'Requisition (OM07-2)' },
+                { key: 'final-inspection'     as const, label: 'Final Inspection (OM10-2)' },
+                { key: 'return-verification'  as const, label: 'Return Verification (OM14-1)' },
+                { key: 'loaner'               as const, label: 'Loaner (OM17-1)' },
               ].map(item => (
                 <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} style={{
                   padding: '7px 12px', cursor: 'pointer', fontSize: 12,
@@ -602,10 +646,15 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       {activeTab === 'comments'     && <NotesTab repairKey={detail.repairKey} />}
 
       {/* Form overlays — legacy pane. Cast detail to RepairFull shape (shared core fields). */}
-      {activeForm === 'di-inspection'    && <DiInspectionForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
-      {activeForm === 'di-flexible'      && <DiFlexibleForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
-      {activeForm === 'requisition'      && <RequisitionForm repair={detail as unknown as RepairFull} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
-      {activeForm === 'final-inspection' && <FinalInspectionForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'di-inspection'      && <DiInspectionForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'di-flexible'        && <DiFlexibleForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'di-rigid'           && <DiRigidForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'requisition'        && <RequisitionForm repair={detail as unknown as RepairFull} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'final-inspection'   && <FinalInspectionForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'return-verification' && <ReturnVerificationForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'amendment'          && <AmendmentForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'update-slip'        && <UpdateSlipForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'loaner'             && <LoanerForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
     </div>
   );
 };
