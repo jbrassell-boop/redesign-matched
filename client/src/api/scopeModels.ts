@@ -49,3 +49,25 @@ export const getScopeModelFlags = async (id: number): Promise<ScopeTypeFlag[]> =
   const { data } = await apiClient.get<ScopeTypeFlag[]>(`/scope-models/${id}/flags`);
   return data;
 };
+
+export interface PatchScopeModelPayload {
+  description?: string;
+  insertTubeLength?: string;
+  insertTubeDiameter?: string;
+  forcepChannelSize?: string;
+  fieldOfView?: string;
+  directionOfView?: string;
+  depthOfField?: string;
+  lengthSpec?: string;
+  angUp?: string;
+  angDown?: string;
+  angLeft?: string;
+  angRight?: string;
+  notes?: string;
+  contractCost?: number | null;
+  maxCharge?: number | null;
+}
+
+export const updateScopeModel = async (id: number, patch: PatchScopeModelPayload): Promise<void> => {
+  await apiClient.patch(`/scope-models/${id}`, patch);
+};

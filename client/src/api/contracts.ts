@@ -84,3 +84,18 @@ export const getContractAffiliates = async (contractKey: number): Promise<Contra
   const { data } = await apiClient.get<ContractAffiliate[]>(`/contracts/${contractKey}/affiliates`);
   return data;
 };
+
+export interface PatchContractPayload {
+  name?: string;
+  contractNumber?: string;
+  contractId?: string;
+  effectiveDate?: string | null;
+  terminationDate?: string | null;
+  lengthInMonths?: number;
+  totalAmount?: number;
+  comments?: string;
+}
+
+export const updateContract = async (contractKey: number, patch: PatchContractPayload): Promise<void> => {
+  await apiClient.patch(`/contracts/${contractKey}`, patch);
+};

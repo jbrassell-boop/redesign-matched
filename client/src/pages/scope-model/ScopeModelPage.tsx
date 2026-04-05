@@ -1,13 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Input, Spin, Select, Table, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { getScopeModels, getScopeModelDetail, getScopeModelStats, getManufacturers, getScopeModelInventory, getScopeModelFlags } from '../../api/scopeModels';
+import { getScopeModels, getScopeModelDetail, getScopeModelStats, getManufacturers, getScopeModelInventory, getScopeModelFlags, updateScopeModel } from '../../api/scopeModels';
+import type { PatchScopeModelPayload } from '../../api/scopeModels';
 import { RepairItemsTab } from './tabs/RepairItemsTab';
 import { MaxChargesTab } from './tabs/MaxChargesTab';
 import type { ScopeModelListItem, ScopeModelDetail, ScopeModelStats, Manufacturer, ScopeTypeInventoryItem, ScopeTypeFlag } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import { ContextMenu } from '../../components/common/ContextMenu';
+import { useAutosave } from '../../hooks/useAutosave';
+import { AutosaveIndicator } from '../../components/common/AutosaveIndicator';
 import type { ContextMenuItem } from '../../components/common/ContextMenu';
 
 /* ── Type label map ──────────────────────────────────────────── */
@@ -90,6 +93,7 @@ export const ScopeModelPage = () => {
   // Inline detail pane (replaces Drawer)
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
   const [detail, setDetail] = useState<ScopeModelDetail | null>(null);
+  const [localDetail, setLocalDetail] = useState<ScopeModelDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('specs');
 
@@ -139,6 +143,31 @@ export const ScopeModelPage = () => {
     },
   ] : [];
 
+  // Autosave for scope model specs
+  const scopeSaveFn = useCallback(
+    async (data: Partial<PatchScopeModelPayload>) => {
+      if (!localDetail) return;
+      await updateScopeModel(localDetail.scopeTypeKey, data as PatchScopeModelPayload);
+    },
+    [localDetail],
+  );
+
+  const { handleChange: autosaveHandleChange, status: autosaveStatus, reset: resetAutosave } = useAutosave<PatchScopeModelPayload>(scopeSaveFn);
+
+  // Sync localDetail when server detail changes, reset autosave
+  useEffect(() => {
+    if (detail) {
+      setLocalDetail(detail);
+      resetAutosave();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detail?.scopeTypeKey]);
+
+  const handleSpecFieldChange = useCallback((field: keyof PatchScopeModelPayload, value: string) => {
+    setLocalDetail(prev => prev ? { ...prev, [field]: value } as ScopeModelDetail : null);
+    autosaveHandleChange(field, value);
+  }, [autosaveHandleChange]);
+
   const loadData = useCallback(async (s: string, tf: string, sf: string, mk: number | null, p: number) => {
     setLoading(true);
     try {
@@ -166,7 +195,11 @@ export const ScopeModelPage = () => {
     setActiveTab('specs');
     setInventoryItems([]);
     setFlagItems([]);
-    try { setDetail(await getScopeModelDetail(item.scopeTypeKey)); } finally { setDetailLoading(false); }
+    try {
+      const d = await getScopeModelDetail(item.scopeTypeKey);
+      setDetail(d);
+      setLocalDetail(d);
+    } finally { setDetailLoading(false); }
   };
 
   const handleTabChange = async (tab: string) => {
@@ -282,33 +315,63 @@ export const ScopeModelPage = () => {
     { key: 'directionOfView', label: 'DOV', width: 60 },
   ];
 
+  /* ── Inline edit input for scope specs ──────────────────── */
+  const scopeInputStyle: React.CSSProperties = {
+    fontSize: 12, color: 'var(--text)', background: 'var(--card)',
+    border: '1px solid var(--neutral-200)', borderRadius: 4,
+    padding: '3px 6px', fontFamily: 'inherit', outline: 'none',
+    width: '100%', boxSizing: 'border-box',
+  };
+  const SEditField = ({ label, value, field }: { label: string; value: string | null | undefined; field: keyof PatchScopeModelPayload }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '2px 0' }}>
+      <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em' }}>{label}</span>
+      <input
+        value={value ?? ''}
+        onChange={e => handleSpecFieldChange(field, e.target.value)}
+        style={scopeInputStyle}
+        onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
+        onBlur={e => (e.target.style.borderColor = 'var(--neutral-200)')}
+      />
+    </div>
+  );
+
   /* ── Specs content (for detail pane) ─────────────────────── */
-  const specsContent = detail ? (
+  const specsContent = localDetail ? (
     <div style={{ padding: '16px 20px' }}>
       <FormGrid cols={2}>
-        <Field label="Manufacturer" value={detail.manufacturer} />
-        <Field label="Category" value={detail.category} />
-        <Field label="Type ID" value={detail.typeId} />
-        <Field label="Item Code" value={detail.itemCode} />
-        <Field label="Insert Tube Length" value={detail.insertTubeLength} />
-        <Field label="Insert Tube Diameter" value={detail.insertTubeDiameter} />
-        <Field label="Forcep Channel Size" value={detail.forcepChannelSize} />
-        <Field label="Length Spec" value={detail.lengthSpec} />
-        <Field label="Field of View" value={detail.fieldOfView} />
-        <Field label="Direction of View" value={detail.directionOfView} />
-        <Field label="Depth of Field" value={detail.depthOfField} />
-        <Field label="Degree" value={detail.degree} />
+        <Field label="Manufacturer" value={localDetail.manufacturer} />
+        <Field label="Category" value={localDetail.category} />
+        <Field label="Type ID" value={localDetail.typeId} />
+        <Field label="Item Code" value={localDetail.itemCode} />
+        <SEditField label="Insert Tube Length" value={localDetail.insertTubeLength} field="insertTubeLength" />
+        <SEditField label="Insert Tube Diameter" value={localDetail.insertTubeDiameter} field="insertTubeDiameter" />
+        <SEditField label="Forcep Channel Size" value={localDetail.forcepChannelSize} field="forcepChannelSize" />
+        <SEditField label="Length Spec" value={localDetail.lengthSpec} field="lengthSpec" />
+        <SEditField label="Field of View" value={localDetail.fieldOfView} field="fieldOfView" />
+        <SEditField label="Direction of View" value={localDetail.directionOfView} field="directionOfView" />
+        <SEditField label="Depth of Field" value={localDetail.depthOfField} field="depthOfField" />
+        <Field label="Degree" value={localDetail.degree} />
       </FormGrid>
 
-      {/* Angulation Grid */}
+      {/* Angulation Grid — editable */}
       <div style={{ marginTop: 12, background: 'var(--neutral-50)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
         <div style={{ padding: '6px 12px', fontSize: 10, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>Angulation</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 0 }}>
-          {[{ dir: 'Up', val: detail.angUp }, { dir: 'Down', val: detail.angDown }, { dir: 'Left', val: detail.angLeft }, { dir: 'Right', val: detail.angRight }].map(a => (
-            <div key={a.dir} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '6px 4px', borderRight: '1px solid var(--border)' }}>
+          {([
+            { dir: 'Up', val: localDetail.angUp, field: 'angUp' as keyof PatchScopeModelPayload },
+            { dir: 'Down', val: localDetail.angDown, field: 'angDown' as keyof PatchScopeModelPayload },
+            { dir: 'Left', val: localDetail.angLeft, field: 'angLeft' as keyof PatchScopeModelPayload },
+            { dir: 'Right', val: localDetail.angRight, field: 'angRight' as keyof PatchScopeModelPayload },
+          ]).map(a => (
+            <div key={a.dir} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 8px', borderRight: '1px solid var(--border)' }}>
               <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.04em' }}>{a.dir}</span>
-              <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--navy)' }}>{a.val || '\u2014'}</span>
-              <span style={{ fontSize: 9, color: 'var(--muted)' }}>{a.val ? '\u00B0' : ''}</span>
+              <input
+                value={a.val ?? ''}
+                onChange={e => handleSpecFieldChange(a.field, e.target.value)}
+                style={{ ...scopeInputStyle, textAlign: 'center', fontWeight: 800, fontSize: 14 }}
+                onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
+                onBlur={e => (e.target.style.borderColor = 'var(--neutral-200)')}
+              />
             </div>
           ))}
         </div>
@@ -317,54 +380,60 @@ export const ScopeModelPage = () => {
       {/* Configuration */}
       <div style={{ marginTop: 12 }}>
         <FormGrid cols={2}>
-          <Field label="Tube System" value={detail.tubeSystem} />
-          <Field label="Lens System" value={detail.lensSystem} />
-          <Field label="ID Band" value={detail.idBand} />
-          <Field label="Eye Cup Mount" value={detail.eyeCupMount} />
-          <Field label="Contract Cost" value={detail.contractCost != null ? `$${detail.contractCost.toFixed(2)}` : null} />
-          <Field label="Max Charge" value={detail.maxCharge != null ? `$${detail.maxCharge.toFixed(2)}` : null} />
-          <Field label="GL Account" value={detail.glAccount} />
-          <Field label="Last Updated" value={detail.lastUpdated} />
+          <Field label="Tube System" value={localDetail.tubeSystem} />
+          <Field label="Lens System" value={localDetail.lensSystem} />
+          <Field label="ID Band" value={localDetail.idBand} />
+          <Field label="Eye Cup Mount" value={localDetail.eyeCupMount} />
+          <Field label="Contract Cost" value={localDetail.contractCost != null ? `$${localDetail.contractCost.toFixed(2)}` : null} />
+          <Field label="Max Charge" value={localDetail.maxCharge != null ? `$${localDetail.maxCharge.toFixed(2)}` : null} />
+          <Field label="GL Account" value={localDetail.glAccount} />
+          <Field label="Last Updated" value={localDetail.lastUpdated} />
         </FormGrid>
       </div>
 
-      {detail.notes && (
-        <div style={{ marginTop: 8 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 }}>Notes</div>
-          <div style={{ fontSize: 13, color: 'var(--text)', padding: '8px 10px', background: 'var(--neutral-50)', border: '1px solid var(--neutral-200)', borderRadius: 4, whiteSpace: 'pre-wrap' }}>{detail.notes}</div>
-        </div>
-      )}
+      <div style={{ marginTop: 8 }}>
+        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 }}>Notes</div>
+        <textarea
+          value={localDetail.notes ?? ''}
+          onChange={e => handleSpecFieldChange('notes', e.target.value)}
+          rows={3}
+          style={{ ...scopeInputStyle, resize: 'vertical', whiteSpace: 'pre-wrap' }}
+          onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
+          onBlur={e => (e.target.style.borderColor = 'var(--neutral-200)')}
+        />
+      </div>
     </div>
   ) : null;
 
   /* ── Detail pane body ────────────────────────────────────── */
   const detailPaneBody = detailLoading ? (
     <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
-  ) : detail ? (
+  ) : localDetail ? (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       {/* Close row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
         <button
-          onClick={() => { setSelectedKey(null); setDetail(null); }}
+          onClick={() => { setSelectedKey(null); setDetail(null); setLocalDetail(null); }}
           style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' }}
         >
           &times;
         </button>
       </div>
       <DetailHeader
-        title={detail.description}
+        title={localDetail.description}
         badges={
           <>
-            <TypeBadge type={detail.type} />
-            <StatusBadge status={detail.active ? 'Active' : 'Inactive'} />
+            <TypeBadge type={localDetail.type} />
+            <StatusBadge status={localDetail.active ? 'Active' : 'Inactive'} />
+            <AutosaveIndicator status={autosaveStatus} />
           </>
         }
       />
       <TabBar tabs={DETAIL_TABS} activeKey={activeTab} onChange={handleTabChange} />
       <div style={{ flex: 1, overflow: 'auto' }}>
         {activeTab === 'specs'       && specsContent}
-        {activeTab === 'repairItems' && <RepairItemsTab scopeTypeKey={detail.scopeTypeKey} />}
-        {activeTab === 'maxCharges'  && <MaxChargesTab scopeTypeKey={detail.scopeTypeKey} />}
+        {activeTab === 'repairItems' && <RepairItemsTab scopeTypeKey={localDetail.scopeTypeKey} />}
+        {activeTab === 'maxCharges'  && <MaxChargesTab scopeTypeKey={localDetail.scopeTypeKey} />}
         {activeTab === 'inventory'   && (
           inventoryLoading ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>

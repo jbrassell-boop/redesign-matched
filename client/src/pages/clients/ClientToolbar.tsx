@@ -1,16 +1,16 @@
-import { Spin } from 'antd';
-import type { ClientFull, SaveState } from './types';
+import type { ClientFull } from './types';
+import type { AutosaveStatus } from '../../hooks/useAutosave';
+import { AutosaveIndicator } from '../../components/common/AutosaveIndicator';
 import './ClientToolbar.css';
 
 interface ClientToolbarProps {
   client: ClientFull;
-  saveState: SaveState;
-  onSave: () => void;
+  autosaveStatus: AutosaveStatus;
   onToggleActive: () => void;
   onDelete: () => void;
 }
 
-export const ClientToolbar = ({ client, saveState, onSave, onToggleActive, onDelete }: ClientToolbarProps) => (
+export const ClientToolbar = ({ client, autosaveStatus, onToggleActive, onDelete }: ClientToolbarProps) => (
   <div className="client-toolbar">
     <span className="client-toolbar__name">{client.name}</span>
     <span className="client-toolbar__id">#{client.clientKey}</span>
@@ -30,27 +30,7 @@ export const ClientToolbar = ({ client, saveState, onSave, onToggleActive, onDel
 
     <div className="client-toolbar__spacer" />
 
-    <div className="client-toolbar__save-indicator">
-      {saveState === 'saving' ? (
-        <Spin size="small" />
-      ) : (
-        <span className={`client-toolbar__dot client-toolbar__dot--${saveState}`} />
-      )}
-      <span className={`client-toolbar__save-text--${saveState}`}>
-        {saveState === 'ready' && 'Ready'}
-        {saveState === 'unsaved' && 'Unsaved'}
-        {saveState === 'saving' && 'Saving...'}
-        {saveState === 'saved' && 'Saved'}
-      </span>
-    </div>
-
-    <button
-      className="client-toolbar__btn"
-      disabled={saveState !== 'unsaved'}
-      onClick={onSave}
-    >
-      Save
-    </button>
+    <AutosaveIndicator status={autosaveStatus} />
 
     <button
       className="client-toolbar__btn client-toolbar__btn--danger"

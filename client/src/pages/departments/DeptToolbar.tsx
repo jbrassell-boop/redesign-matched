@@ -1,16 +1,16 @@
-import { Spin } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import type { DepartmentFull, SaveState } from './types';
+import type { DepartmentFull } from './types';
+import type { AutosaveStatus } from '../../hooks/useAutosave';
+import { AutosaveIndicator } from '../../components/common/AutosaveIndicator';
 import './DeptToolbar.css';
 
 interface DeptToolbarProps {
   dept: DepartmentFull;
-  saveState: SaveState;
-  onSave: () => void;
+  autosaveStatus: AutosaveStatus;
   onToggleActive: () => void;
 }
 
-export const DeptToolbar = ({ dept, saveState, onSave, onToggleActive }: DeptToolbarProps) => {
+export const DeptToolbar = ({ dept, autosaveStatus, onToggleActive }: DeptToolbarProps) => {
   const navigate = useNavigate();
 
   return (
@@ -39,27 +39,7 @@ export const DeptToolbar = ({ dept, saveState, onSave, onToggleActive }: DeptToo
 
       <div className="dept-toolbar__spacer" />
 
-      <div className="dept-toolbar__save-indicator">
-        {saveState === 'saving' ? (
-          <Spin size="small" />
-        ) : (
-          <span className={`dept-toolbar__dot dept-toolbar__dot--${saveState}`} />
-        )}
-        <span className={`dept-toolbar__save-text--${saveState}`}>
-          {saveState === 'ready' && 'Ready'}
-          {saveState === 'unsaved' && 'Unsaved'}
-          {saveState === 'saving' && 'Saving...'}
-          {saveState === 'saved' && 'Saved'}
-        </span>
-      </div>
-
-      <button
-        className="dept-toolbar__btn"
-        disabled={saveState !== 'unsaved'}
-        onClick={onSave}
-      >
-        Save
-      </button>
+      <AutosaveIndicator status={autosaveStatus} />
 
       <button
         className="dept-toolbar__btn dept-toolbar__btn--toggle"

@@ -408,6 +408,44 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
         return Ok(flags);
     }
 
+    [HttpPatch("{id:int}")]
+    public async Task<IActionResult> PatchScopeModel(int id, [FromBody] PatchScopeModelRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var sets = new List<string>();
+        var cmd = new SqlCommand();
+        cmd.Connection = conn;
+
+        if (body.Description is not null)       { sets.Add("sScopeTypeDesc = @desc");          cmd.Parameters.AddWithValue("@desc",    body.Description); }
+        if (body.InsertTubeLength is not null)   { sets.Add("sInsertTubeLength = @len");        cmd.Parameters.AddWithValue("@len",     body.InsertTubeLength); }
+        if (body.InsertTubeDiameter is not null) { sets.Add("sInsertTubeDiameter = @diam");     cmd.Parameters.AddWithValue("@diam",    body.InsertTubeDiameter); }
+        if (body.ForcepChannelSize is not null)  { sets.Add("sForcepChannelSize = @fcs");       cmd.Parameters.AddWithValue("@fcs",     body.ForcepChannelSize); }
+        if (body.FieldOfView is not null)        { sets.Add("sFieldOfView = @fov");             cmd.Parameters.AddWithValue("@fov",     body.FieldOfView); }
+        if (body.DirectionOfView is not null)    { sets.Add("sDirectionOfView = @dov");         cmd.Parameters.AddWithValue("@dov",     body.DirectionOfView); }
+        if (body.DepthOfField is not null)       { sets.Add("sDepthOfField = @dof");            cmd.Parameters.AddWithValue("@dof",     body.DepthOfField); }
+        if (body.LengthSpec is not null)         { sets.Add("sLengthSpec = @lspec");            cmd.Parameters.AddWithValue("@lspec",   body.LengthSpec); }
+        if (body.AngUp is not null)              { sets.Add("sAngUp = @au");                    cmd.Parameters.AddWithValue("@au",      body.AngUp); }
+        if (body.AngDown is not null)            { sets.Add("sAngDown = @ad");                  cmd.Parameters.AddWithValue("@ad",      body.AngDown); }
+        if (body.AngLeft is not null)            { sets.Add("sAngLeft = @al");                  cmd.Parameters.AddWithValue("@al",      body.AngLeft); }
+        if (body.AngRight is not null)           { sets.Add("sAngRight = @ar");                 cmd.Parameters.AddWithValue("@ar",      body.AngRight); }
+        if (body.Notes is not null)              { sets.Add("sNotes = @notes");                 cmd.Parameters.AddWithValue("@notes",   body.Notes); }
+        if (body.ContractCost.HasValue)          { sets.Add("nContractCost = @ccost");          cmd.Parameters.AddWithValue("@ccost",   body.ContractCost.Value); }
+        if (body.MaxCharge.HasValue)             { sets.Add("mMaxCharge = @mchg");              cmd.Parameters.AddWithValue("@mchg",    body.MaxCharge.Value); }
+
+        if (sets.Count == 0) return NoContent();
+
+        sets.Add("dtLastUpdate = GETDATE()");
+        cmd.CommandText = $"UPDATE tblScopeType SET {string.Join(", ", sets)} WHERE lScopeTypeKey = @id";
+        cmd.Parameters.AddWithValue("@id", id);
+
+        var rows = await cmd.ExecuteNonQueryAsync();
+        if (rows == 0) return NotFound(new { message = "Scope model not found." });
+
+        return NoContent();
+    }
+
     private static void AddParams(SqlCommand cmd, string? search, string? typeFilter, string? statusFilter, int? manufacturerKey)
     {
         if (!string.IsNullOrWhiteSpace(search)) cmd.Parameters.AddWithValue("@search", $"%{search}%");

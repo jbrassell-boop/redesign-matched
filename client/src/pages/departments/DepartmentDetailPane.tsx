@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Spin } from 'antd';
-import type { DepartmentFull, DeptKpis, SaveState } from './types';
+import type { DepartmentFull, DeptKpis } from './types';
 import type { TabDef } from '../../components/shared';
 import { TabBar } from '../../components/shared';
 import { DeptToolbar } from './DeptToolbar';
@@ -24,6 +24,7 @@ import {
   getDeptFlags,
 } from '../../api/departments';
 import { useTabBadges } from '../../hooks/useTabBadges';
+import { useAutosave } from '../../hooks/useAutosave';
 
 interface DepartmentDetailPaneProps {
   deptKey: number | null;
@@ -49,19 +50,31 @@ export const DepartmentDetailPane = ({ deptKey }: DepartmentDetailPaneProps) => 
   const [kpis, setKpis] = useState<DeptKpis | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
-  const [saveState, setSaveState] = useState<SaveState>('ready');
-  const [dirtyFields, setDirtyFields] = useState<Record<string, unknown>>({});
   const [scopeDrawerKey, setScopeDrawerKey] = useState<number | null>(null);
 
   const dk = deptKey ?? 0;
+
+  // Autosave hook
+  const saveFn = useCallback(
+    async (data: Partial<DepartmentFull>) => {
+      if (!dk) return;
+      await updateDepartment(dk, data);
+      // Refresh data after save
+      const [fullData, kpiData] = await Promise.all([getDepartmentFull(dk), getDepartmentKpis(dk)]);
+      setDept(fullData);
+      setKpis(kpiData);
+    },
+    [dk],
+  );
+
+  const { handleChange: autosaveHandleChange, status: autosaveStatus, reset: resetAutosave } = useAutosave<DepartmentFull>(saveFn);
 
   // Load full department + KPIs
   useEffect(() => {
     if (!dk) { setDept(null); setKpis(null); return; }
     let cancelled = false;
     setLoading(true);
-    setSaveState('ready');
-    setDirtyFields({});
+    resetAutosave();
     setActiveTab('info');
     setScopeDrawerKey(null);
 
@@ -74,7 +87,7 @@ export const DepartmentDetailPane = ({ deptKey }: DepartmentDetailPaneProps) => 
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [dk]);
+  }, [dk]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Tab badges
   const badgeCounts = useTabBadges(
@@ -92,41 +105,11 @@ export const DepartmentDetailPane = ({ deptKey }: DepartmentDetailPaneProps) => 
     [badgeCounts],
   );
 
-  // Handle field change from InfoTab
+  // Handle field change — update local state immediately, autosave debounces
   const handleFieldChange = useCallback((field: string, value: unknown) => {
-    setDirtyFields(prev => ({ ...prev, [field]: value }));
-    setSaveState('unsaved');
     setDept(prev => prev ? { ...prev, [field]: value } as DepartmentFull : null);
-  }, []);
-
-  // Save flow
-  const handleSave = useCallback(async () => {
-    if (!dk || Object.keys(dirtyFields).length === 0) return;
-    setSaveState('saving');
-    try {
-      await updateDepartment(dk, dirtyFields as Partial<DepartmentFull>);
-      setDirtyFields({});
-      setSaveState('saved');
-      const [fullData, kpiData] = await Promise.all([getDepartmentFull(dk), getDepartmentKpis(dk)]);
-      setDept(fullData);
-      setKpis(kpiData);
-      setTimeout(() => setSaveState('ready'), 2000);
-    } catch {
-      setSaveState('unsaved');
-    }
-  }, [dk, dirtyFields]);
-
-  // Ctrl+S keyboard shortcut
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        if (saveState === 'unsaved') handleSave();
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [saveState, handleSave]);
+    autosaveHandleChange(field as keyof DepartmentFull, value);
+  }, [autosaveHandleChange]);
 
   // Toggle active
   const handleToggleActive = useCallback(async () => {
@@ -154,8 +137,7 @@ export const DepartmentDetailPane = ({ deptKey }: DepartmentDetailPaneProps) => 
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <DeptToolbar
         dept={dept}
-        saveState={saveState}
-        onSave={handleSave}
+        autosaveStatus={autosaveStatus}
         onToggleActive={handleToggleActive}
       />
       <DeptKpiStrip dept={dept} kpis={kpis} loading={loading} />

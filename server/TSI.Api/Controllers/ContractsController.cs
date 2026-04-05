@@ -217,6 +217,37 @@ public class ContractsController(IConfiguration config) : ControllerBase
         ));
     }
 
+    [HttpPatch("{contractKey:int}")]
+    public async Task<IActionResult> PatchContract(int contractKey, [FromBody] PatchContractRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var sets = new List<string>();
+        var cmd = new SqlCommand();
+        cmd.Connection = conn;
+
+        if (body.Name is not null)           { sets.Add("sContractName1 = @name");      cmd.Parameters.AddWithValue("@name",       body.Name); }
+        if (body.ContractNumber is not null) { sets.Add("sContractNumber = @cnum");      cmd.Parameters.AddWithValue("@cnum",       body.ContractNumber); }
+        if (body.ContractId is not null)     { sets.Add("sContractID = @cid");           cmd.Parameters.AddWithValue("@cid",        body.ContractId); }
+        if (body.EffectiveDate.HasValue)     { sets.Add("dtDateEffective = @eff");       cmd.Parameters.AddWithValue("@eff",        body.EffectiveDate.Value); }
+        if (body.TerminationDate.HasValue)   { sets.Add("dtDateTermination = @term");    cmd.Parameters.AddWithValue("@term",       body.TerminationDate.Value); }
+        if (body.LengthInMonths.HasValue)    { sets.Add("lContractLengthInMonths = @len"); cmd.Parameters.AddWithValue("@len",     body.LengthInMonths.Value); }
+        if (body.TotalAmount.HasValue)       { sets.Add("dblAmtTotal = @total");         cmd.Parameters.AddWithValue("@total",      body.TotalAmount.Value); }
+        if (body.Comments is not null)       { sets.Add("mComments = @comments");        cmd.Parameters.AddWithValue("@comments",   body.Comments); }
+
+        if (sets.Count == 0) return NoContent();
+
+        sets.Add("dtLastUpdate = GETDATE()");
+        cmd.CommandText = $"UPDATE tblContract SET {string.Join(", ", sets)} WHERE lContractKey = @contractKey";
+        cmd.Parameters.AddWithValue("@contractKey", contractKey);
+
+        var rows = await cmd.ExecuteNonQueryAsync();
+        if (rows == 0) return NotFound(new { message = "Contract not found." });
+
+        return NoContent();
+    }
+
     [HttpGet("{contractKey:int}/departments")]
     public async Task<IActionResult> GetDepartments(int contractKey)
     {

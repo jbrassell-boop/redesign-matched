@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Spin } from 'antd';
-import type { ClientFull, ClientKpis, SaveState } from './types';
+import type { ClientFull, ClientKpis } from './types';
 import type { TabDef } from '../../components/shared';
 import { TabBar } from '../../components/shared';
 import { ClientToolbar } from './ClientToolbar';
@@ -18,6 +18,7 @@ import {
   getClientContacts, getClientDepartments, getClientFlags,
 } from '../../api/clients';
 import { useTabBadges } from '../../hooks/useTabBadges';
+import { useAutosave } from '../../hooks/useAutosave';
 
 interface ClientDetailPaneProps {
   clientKey: number | null;
@@ -40,18 +41,30 @@ export const ClientDetailPane = ({ clientKey, onClientDeleted }: ClientDetailPan
   const [kpis, setKpis] = useState<ClientKpis | null>(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
-  const [saveState, setSaveState] = useState<SaveState>('ready');
-  const [dirtyFields, setDirtyFields] = useState<Record<string, unknown>>({});
 
   const ck = clientKey ?? 0;
+
+  // Autosave hook — save function created per-client-key
+  const saveFn = useCallback(
+    async (data: Partial<ClientFull>) => {
+      if (!ck) return;
+      await updateClient(ck, data);
+      // Refresh data after save
+      const [fullData, kpiData] = await Promise.all([getClientFull(ck), getClientKpis(ck)]);
+      setClient(fullData);
+      setKpis(kpiData);
+    },
+    [ck],
+  );
+
+  const { handleChange: autosaveHandleChange, status: autosaveStatus, reset: resetAutosave } = useAutosave<ClientFull>(saveFn);
 
   // Load full client + KPIs
   useEffect(() => {
     if (!ck) { setClient(null); setKpis(null); return; }
     let cancelled = false;
     setLoading(true);
-    setSaveState('ready');
-    setDirtyFields({});
+    resetAutosave();
     setActiveTab('info');
 
     Promise.all([getClientFull(ck), getClientKpis(ck)])
@@ -63,7 +76,7 @@ export const ClientDetailPane = ({ clientKey, onClientDeleted }: ClientDetailPan
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
-  }, [ck]);
+  }, [ck]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Tab badges
   const badgeCounts = useTabBadges(
@@ -80,43 +93,11 @@ export const ClientDetailPane = ({ clientKey, onClientDeleted }: ClientDetailPan
     [badgeCounts],
   );
 
-  // Handle field change from InfoTab
+  // Handle field change — update local state immediately, autosave debounces
   const handleFieldChange = useCallback((field: string, value: unknown) => {
-    setDirtyFields(prev => ({ ...prev, [field]: value }));
-    setSaveState('unsaved');
-    // Also update the local client for immediate UI feedback
     setClient(prev => prev ? { ...prev, [field]: value } as ClientFull : null);
-  }, []);
-
-  // Save flow
-  const handleSave = useCallback(async () => {
-    if (!ck || Object.keys(dirtyFields).length === 0) return;
-    setSaveState('saving');
-    try {
-      await updateClient(ck, dirtyFields as Partial<ClientFull>);
-      setDirtyFields({});
-      setSaveState('saved');
-      // Refresh data
-      const [fullData, kpiData] = await Promise.all([getClientFull(ck), getClientKpis(ck)]);
-      setClient(fullData);
-      setKpis(kpiData);
-      setTimeout(() => setSaveState('ready'), 2000);
-    } catch {
-      setSaveState('unsaved');
-    }
-  }, [ck, dirtyFields]);
-
-  // Ctrl+S keyboard shortcut
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        if (saveState === 'unsaved') handleSave();
-      }
-    };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [saveState, handleSave]);
+    autosaveHandleChange(field as keyof ClientFull, value);
+  }, [autosaveHandleChange]);
 
   // Deactivate / Delete
   const handleToggleActive = useCallback(async () => {
@@ -148,8 +129,7 @@ export const ClientDetailPane = ({ clientKey, onClientDeleted }: ClientDetailPan
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <ClientToolbar
         client={client}
-        saveState={saveState}
-        onSave={handleSave}
+        autosaveStatus={autosaveStatus}
         onToggleActive={handleToggleActive}
         onDelete={handleDelete}
       />

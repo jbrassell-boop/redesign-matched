@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Spin, DatePicker, InputNumber, message } from 'antd';
-import { getContractScopes, getContractRepairs, getContractInvoices, getContractNotes, getContractDocuments, getContractHealth, getContractDepartments, getContractAmendments, createContractAmendment, getContractAffiliates } from '../../api/contracts';
+import { getContractScopes, getContractRepairs, getContractInvoices, getContractNotes, getContractDocuments, getContractHealth, getContractDepartments, getContractAmendments, createContractAmendment, getContractAffiliates, updateContract } from '../../api/contracts';
+import type { PatchContractPayload } from '../../api/contracts';
 import type { ContractDetail, ContractStats, ContractScope, ContractRepair, ContractInvoice, ContractNote, ContractDocument, ContractHealth, ContractDepartment, ContractAmendment, ContractAffiliate } from './types';
 import dayjs from 'dayjs';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
+import { useAutosave } from '../../hooks/useAutosave';
+import { AutosaveIndicator } from '../../components/common/AutosaveIndicator';
 
 const fmtDate = (d: string | null | undefined) => {
   if (!d) return '—';
@@ -939,15 +942,77 @@ const TABS: TabDef[] = [
   { key: 'reportcard',  label: 'Report Card' },
 ];
 
+/* ── Inline editable input for contract fields ──────────────── */
+const contractInputStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: 'var(--text)',
+  background: 'var(--card)',
+  border: '1px solid var(--neutral-200)',
+  borderRadius: 4,
+  padding: '4px 8px',
+  fontFamily: 'inherit',
+  outline: 'none',
+  width: '100%',
+  boxSizing: 'border-box',
+};
+
+interface CEditFieldProps {
+  label: string;
+  value: string | number | null | undefined;
+  field: keyof PatchContractPayload;
+  onChange: (field: keyof PatchContractPayload, value: string) => void;
+}
+
+const CEditField = ({ label, value, field, onChange }: CEditFieldProps) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '3px 0' }}>
+    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em' }}>{label}</span>
+    <input
+      value={value ?? ''}
+      onChange={e => onChange(field, e.target.value)}
+      style={contractInputStyle}
+      onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
+      onBlur={e => (e.target.style.borderColor = 'var(--neutral-200)')}
+    />
+  </div>
+);
+
 export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPaneProps) => {
   const [activeTab, setActiveTab] = useState('specs');
+  const [localDetail, setLocalDetail] = useState<ContractDetail | null>(null);
+
+  useEffect(() => {
+    setLocalDetail(detail);
+  }, [detail]);
+
+  const saveFn = useCallback(
+    async (data: Partial<PatchContractPayload>) => {
+      if (!localDetail) return;
+      await updateContract(localDetail.contractKey, data as PatchContractPayload);
+    },
+    [localDetail],
+  );
+
+  const { handleChange: autosaveHandleChange, status: autosaveStatus, reset: resetAutosave } = useAutosave<PatchContractPayload>(saveFn);
+
+  useEffect(() => {
+    resetAutosave();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [detail?.contractKey]);
+
+  const handleFieldChange = useCallback((field: keyof PatchContractPayload, value: string) => {
+    setLocalDetail(prev => prev ? { ...prev, [field]: value } as ContractDetail : null);
+    autosaveHandleChange(field, value);
+  }, [autosaveHandleChange]);
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
-  if (!detail) return (
+  if (!localDetail) return (
     <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
       Select a contract to view details
     </div>
   );
+
+  // Use localDetail alias for all existing references below
+  const d = localDetail;
 
   const specsContent = (
     <div style={{ padding: '14px 16px' }}>
@@ -960,25 +1025,25 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
             <div style={{ padding: '12px 14px' }}>
               <FormGrid cols={2}>
                 <div className="span-2">
-                  <Field label="Contract Name" value={detail.name} />
+                  <CEditField label="Contract Name" value={d.name} field="name" onChange={handleFieldChange} />
                 </div>
-                <Field label="Contract #" value={detail.contractNumber} />
-                <Field label="Contract ID" value={detail.contractId} />
-                <Field label="Contract Type" value={detail.contractType > 0 ? `Type ${detail.contractType}` : '—'} />
-                <Field label="Length (Months)" value={detail.lengthInMonths || '—'} />
+                <CEditField label="Contract #" value={d.contractNumber} field="contractNumber" onChange={handleFieldChange} />
+                <CEditField label="Contract ID" value={d.contractId} field="contractId" onChange={handleFieldChange} />
+                <Field label="Contract Type" value={d.contractType > 0 ? `Type ${d.contractType}` : '—'} />
+                <CEditField label="Length (Months)" value={d.lengthInMonths || ''} field="lengthInMonths" onChange={(f, v) => handleFieldChange(f, v)} />
               </FormGrid>
               <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-                {detail.servicePlan && (
+                {d.servicePlan && (
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 9999, background: 'rgba(var(--primary-rgb), 0.1)', border: '1px solid rgba(var(--primary-rgb), 0.3)', color: 'var(--primary)' }}>
                     Service Plan
                   </span>
                 )}
-                {detail.sharedRisk && (
+                {d.sharedRisk && (
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 9999, background: 'rgba(var(--amber-rgb), 0.1)', border: '1px solid rgba(var(--amber-rgb), 0.3)', color: 'var(--warning)' }}>
                     Shared Risk
                   </span>
                 )}
-                {detail.taxExempt && (
+                {d.taxExempt && (
                   <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 9999, background: 'var(--neutral-100)', border: '1px solid var(--neutral-200)', color: 'var(--muted)' }}>
                     Tax Exempt
                   </span>
@@ -988,11 +1053,11 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
           </Panel>
 
           {/* Notes */}
-          {detail.comments && (
+          {d.comments && (
             <Panel>
               <PanelHead><span>Notes</span></PanelHead>
               <div style={{ padding: '12px 14px', fontSize: 13, color: 'var(--text)', lineHeight: 1.5 }}>
-                {detail.comments}
+                {d.comments}
               </div>
             </Panel>
           )}
@@ -1001,19 +1066,19 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
         {/* Right column */}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {/* Health indicator */}
-          <HealthIndicator contractKey={detail.contractKey} />
+          <HealthIndicator contractKey={d.contractKey} />
 
           {/* Term & Financials */}
           <Panel>
             <PanelHead><span>Term &amp; Financials</span></PanelHead>
             <div style={{ padding: '12px 14px' }}>
               <FormGrid cols={2}>
-                <Field label="Start Date" value={fmtDate(detail.effectiveDate)} />
-                <Field label="End Date" value={fmtDate(detail.terminationDate)} />
-                <Field label="Contract Total" value={detail.totalAmount > 0 ? fmtMoney(detail.totalAmount) : '—'} />
-                <Field label="Invoiced" value={detail.amtInvoiced > 0 ? fmtMoney(detail.amtInvoiced) : '—'} />
-                <Field label="Installments Total" value={detail.installmentsTotal || '—'} />
-                <Field label="Installments Invoiced" value={detail.installmentsInvoiced || '—'} />
+                <Field label="Start Date" value={fmtDate(d.effectiveDate)} />
+                <Field label="End Date" value={fmtDate(d.terminationDate)} />
+                <Field label="Contract Total" value={d.totalAmount > 0 ? fmtMoney(d.totalAmount) : '—'} />
+                <Field label="Invoiced" value={d.amtInvoiced > 0 ? fmtMoney(d.amtInvoiced) : '—'} />
+                <Field label="Installments Total" value={d.installmentsTotal || '—'} />
+                <Field label="Installments Invoiced" value={d.installmentsInvoiced || '—'} />
               </FormGrid>
             </div>
           </Panel>
@@ -1023,29 +1088,29 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
             <PanelHead><span>Scope Coverage</span></PanelHead>
             <div style={{ padding: '12px 14px' }}>
               <FormGrid cols={4}>
-                <Field label="Total" value={detail.countAll || '—'} />
-                <Field label="Flexible" value={detail.countFlexible || '—'} />
-                <Field label="Rigid" value={detail.countRigid || '—'} />
-                <Field label="Camera" value={detail.countCamera || '—'} />
+                <Field label="Total" value={d.countAll || '—'} />
+                <Field label="Flexible" value={d.countFlexible || '—'} />
+                <Field label="Rigid" value={d.countRigid || '—'} />
+                <Field label="Camera" value={d.countCamera || '—'} />
               </FormGrid>
-              {detail.countInstrument > 0 && (
-                <Field label="Instrument" value={detail.countInstrument} />
+              {d.countInstrument > 0 && (
+                <Field label="Instrument" value={d.countInstrument} />
               )}
             </div>
           </Panel>
 
           {/* Bill To */}
-          {(detail.billName || detail.billAddress) && (
+          {(d.billName || d.billAddress) && (
             <Panel>
               <PanelHead><span>Bill To</span></PanelHead>
               <div style={{ padding: '12px 14px' }}>
                 <FormGrid cols={2}>
-                  {detail.billName && <div className="span-2"><Field label="Name" value={detail.billName} /></div>}
-                  {detail.billAddress && <div className="span-2"><Field label="Address" value={detail.billAddress} /></div>}
-                  <Field label="City" value={detail.billCity} />
-                  <Field label="State / Zip" value={[detail.billState, detail.billZip].filter(Boolean).join(' ')} />
-                  {detail.phone && <Field label="Phone" value={detail.phone} />}
-                  {detail.billEmail && <Field label="Bill Email" value={detail.billEmail} />}
+                  {d.billName && <div className="span-2"><Field label="Name" value={d.billName} /></div>}
+                  {d.billAddress && <div className="span-2"><Field label="Address" value={d.billAddress} /></div>}
+                  <Field label="City" value={d.billCity} />
+                  <Field label="State / Zip" value={[d.billState, d.billZip].filter(Boolean).join(' ')} />
+                  {d.phone && <Field label="Phone" value={d.phone} />}
+                  {d.billEmail && <Field label="Bill Email" value={d.billEmail} />}
                 </FormGrid>
               </div>
             </Panel>
@@ -1058,9 +1123,9 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <DetailHeader
-        title={detail.name || '(Unnamed)'}
-        subtitle={detail.contractNumber || undefined}
-        badges={<StatusBadge status={detail.status} />}
+        title={d.name || '(Unnamed)'}
+        subtitle={d.contractNumber || undefined}
+        badges={<><StatusBadge status={d.status} /><AutosaveIndicator status={autosaveStatus} /></>}
         actions={
           <div style={{ display: 'flex', gap: 6 }}>
             <button style={{
@@ -1141,18 +1206,18 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {activeTab === 'specs'       && specsContent}
-        {activeTab === 'departments' && <DepartmentsTab contractKey={detail.contractKey} />}
-        {activeTab === 'scopes'      && <ScopesTab contractKey={detail.contractKey} />}
-        {activeTab === 'repairs'     && <RepairsTab contractKey={detail.contractKey} />}
-        {activeTab === 'notes'       && <NotesTab contractKey={detail.contractKey} />}
-        {activeTab === 'amendments'  && <AmendmentsTab contractKey={detail.contractKey} detail={detail} />}
-        {activeTab === 'renewal'     && <RenewalTab detail={detail} />}
-        {activeTab === 'affiliates'  && <AffiliatesTab contractKey={detail.contractKey} />}
-        {activeTab === 'invoices'    && <InvoicesTab contractKey={detail.contractKey} detail={detail} />}
-        {activeTab === 'documents'   && <DocumentsTab contractKey={detail.contractKey} />}
-        {activeTab === 'address'     && <AddressTab detail={detail} />}
-        {activeTab === 'expense'     && <ExpenseTrendingTab contractKey={detail.contractKey} />}
-        {activeTab === 'reportcard'  && <ContractReportCardTab detail={detail} />}
+        {activeTab === 'departments' && <DepartmentsTab contractKey={d.contractKey} />}
+        {activeTab === 'scopes'      && <ScopesTab contractKey={d.contractKey} />}
+        {activeTab === 'repairs'     && <RepairsTab contractKey={d.contractKey} />}
+        {activeTab === 'notes'       && <NotesTab contractKey={d.contractKey} />}
+        {activeTab === 'amendments'  && <AmendmentsTab contractKey={d.contractKey} detail={d} />}
+        {activeTab === 'renewal'     && <RenewalTab detail={d} />}
+        {activeTab === 'affiliates'  && <AffiliatesTab contractKey={d.contractKey} />}
+        {activeTab === 'invoices'    && <InvoicesTab contractKey={d.contractKey} detail={d} />}
+        {activeTab === 'documents'   && <DocumentsTab contractKey={d.contractKey} />}
+        {activeTab === 'address'     && <AddressTab detail={d} />}
+        {activeTab === 'expense'     && <ExpenseTrendingTab contractKey={d.contractKey} />}
+        {activeTab === 'reportcard'  && <ContractReportCardTab detail={d} />}
       </div>
     </div>
   );

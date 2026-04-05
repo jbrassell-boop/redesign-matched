@@ -233,6 +233,41 @@ public class SuppliersController(IConfiguration config) : ControllerBase
         return Ok(detail with { Roles = roles, RecentPos = pos });
     }
 
+    [HttpPatch("{id:int}")]
+    public async Task<IActionResult> PatchSupplier(int id, [FromBody] PatchSupplierRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var sets = new List<string>();
+        var cmd = new SqlCommand();
+        cmd.Connection = conn;
+
+        if (body.Name is not null)        { sets.Add("sSupplierName1 = @name");  cmd.Parameters.AddWithValue("@name",  body.Name); }
+        if (body.ShipAddr1 is not null)   { sets.Add("sShipAddr1 = @addr1");     cmd.Parameters.AddWithValue("@addr1", body.ShipAddr1); }
+        if (body.ShipAddr2 is not null)   { sets.Add("sShipAddr2 = @addr2");     cmd.Parameters.AddWithValue("@addr2", body.ShipAddr2); }
+        if (body.ShipCity is not null)    { sets.Add("sShipCity = @city");       cmd.Parameters.AddWithValue("@city",  body.ShipCity); }
+        if (body.ShipState is not null)   { sets.Add("sShipState = @state");     cmd.Parameters.AddWithValue("@state", body.ShipState); }
+        if (body.ShipZip is not null)     { sets.Add("sShipZip = @zip");         cmd.Parameters.AddWithValue("@zip",   body.ShipZip); }
+        if (body.Phone is not null)       { sets.Add("sPhoneVoice = @phone");    cmd.Parameters.AddWithValue("@phone", body.Phone); }
+        if (body.Fax is not null)         { sets.Add("sPhoneFAX = @fax");        cmd.Parameters.AddWithValue("@fax",   body.Fax); }
+        if (body.Email is not null)       { sets.Add("sContactEMail = @email");  cmd.Parameters.AddWithValue("@email", body.Email); }
+        if (body.ContactFirst is not null){ sets.Add("sContactFirst = @cfirst"); cmd.Parameters.AddWithValue("@cfirst",body.ContactFirst); }
+        if (body.ContactLast is not null) { sets.Add("sContactLast = @clast");   cmd.Parameters.AddWithValue("@clast", body.ContactLast); }
+        if (body.Comments is not null)    { sets.Add("mComments = @comments");   cmd.Parameters.AddWithValue("@comments", body.Comments); }
+
+        if (sets.Count == 0) return NoContent();
+
+        sets.Add("dtLastUpdate = GETDATE()");
+        cmd.CommandText = $"UPDATE tblSupplier SET {string.Join(", ", sets)} WHERE lSupplierKey = @id";
+        cmd.Parameters.AddWithValue("@id", id);
+
+        var rows = await cmd.ExecuteNonQueryAsync();
+        if (rows == 0) return NotFound(new { message = "Supplier not found." });
+
+        return NoContent();
+    }
+
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {

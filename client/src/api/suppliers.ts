@@ -25,3 +25,22 @@ export const getSupplierDocuments = async (id: number): Promise<SupplierDocument
   const { data } = await apiClient.get<SupplierDocument[]>(`/suppliers/${id}/documents`);
   return data;
 };
+
+export interface PatchSupplierPayload {
+  name?: string;
+  shipAddr1?: string;
+  shipAddr2?: string;
+  shipCity?: string;
+  shipState?: string;
+  shipZip?: string;
+  phone?: string;
+  fax?: string;
+  email?: string;
+  contactFirst?: string;
+  contactLast?: string;
+  comments?: string;
+}
+
+export const updateSupplier = async (id: number, patch: PatchSupplierPayload): Promise<void> => {
+  await apiClient.patch(`/suppliers/${id}`, patch);
+};
