@@ -1,4 +1,4 @@
-import { Drawer, Spin, Table } from 'antd';
+import { Spin, Table } from 'antd';
 import type { InvoiceDetail } from './types';
 import { Field, FormGrid, StatusBadge } from '../../components/shared';
 
@@ -43,106 +43,124 @@ export const FinancialDetailPane = ({ detail, loading, open, onClose }: Props) =
     },
   ];
 
+  if (!open) return null;
+
   return (
-    <Drawer
-      title={
-        detail ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 16, fontWeight: 800, color: 'var(--card)' }}>
-              Invoice {detail.invoiceNumber}
-            </span>
-            <StatusBadge status={detail.status} />
-          </div>
-        ) : 'Invoice Detail'
-      }
-      placement="right"
-      width={600}
-      open={open}
-      onClose={onClose}
-      styles={{
-        header: { background: 'var(--primary-dark)', borderBottom: 'none' },
-        body: { padding: '16px 20px' },
-      }}
-    >
-      {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
-      ) : !detail ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-          No invoice selected
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+      {/* Navy header */}
+      <div style={{
+        background: 'var(--primary-dark)',
+        padding: '12px 16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexShrink: 0,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--card)' }}>
+            {detail ? `Invoice ${detail.invoiceNumber}` : 'Invoice Detail'}
+          </span>
+          {detail && <StatusBadge status={detail.status} />}
         </div>
-      ) : (
-        <>
-          {/* Summary row */}
-          <div style={{ display: 'flex', gap: 16, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--neutral-200)' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Amount</div>
-              <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>{fmt$(detail.amount)}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Aging</div>
-              <div style={{
-                fontSize: 20,
-                fontWeight: 800,
-                color: detail.agingDays > 30 ? 'var(--danger)' : detail.agingDays > 14 ? 'var(--amber)' : 'var(--muted)',
-              }}>
-                {detail.agingDays}d
-              </div>
-            </div>
+        <button
+          onClick={onClose}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'rgba(255,255,255,0.7)',
+            fontSize: 18,
+            cursor: 'pointer',
+            lineHeight: 1,
+            padding: '0 4px',
+          }}
+          aria-label="Close detail"
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Body */}
+      <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px' }}>
+        {loading ? (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+        ) : !detail ? (
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
+            No invoice selected
           </div>
-
-          {/* Fields grid */}
-          <FormGrid cols={2}>
-            <Field label="Client" value={detail.clientName} />
-            <Field label="PO #" value={detail.purchaseOrder} />
-            <Field label="Terms" value={detail.paymentTerms} />
-            <Field label="Delivery" value={detail.deliveryMethod} />
-            <Field label="Issued" value={fmtDate(detail.issuedDate)} />
-            <Field label="Due Date" value={fmtDate(detail.dueDate)} />
-            <Field label="Scope Type" value={detail.scopeType} />
-            <Field label="Serial #" value={detail.serialNumber} />
-            <Field label="Sales Rep" value={detail.salesRep} />
-            <Field label="Shipping" value={fmt$(detail.shippingAmount)} />
-            <Field label="Tax" value={fmt$(detail.taxAmount)} />
-          </FormGrid>
-
-          {/* Bill To / Ship To */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 8 }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bill To</div>
-              <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>
-                {detail.billName}<br />
-                {detail.billAddress}<br />
-                {detail.billCity}, {detail.billState} {detail.billZip}
+        ) : (
+          <>
+            {/* Summary row */}
+            <div style={{ display: 'flex', gap: 16, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--neutral-200)' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Amount</div>
+                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>{fmt$(detail.amount)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Aging</div>
+                <div style={{
+                  fontSize: 20,
+                  fontWeight: 800,
+                  color: detail.agingDays > 30 ? 'var(--danger)' : detail.agingDays > 14 ? 'var(--amber)' : 'var(--muted)',
+                }}>
+                  {detail.agingDays}d
+                </div>
               </div>
             </div>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ship To</div>
-              <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>
-                {detail.shipName}<br />
-                {detail.shipAddress}<br />
-                {detail.shipCity}, {detail.shipState} {detail.shipZip}
-              </div>
-            </div>
-          </div>
 
-          {/* Line items */}
-          {detail.lineItems.length > 0 && (
-            <div style={{ marginTop: 20 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Line Items
+            {/* Fields grid */}
+            <FormGrid cols={2}>
+              <Field label="Client" value={detail.clientName} />
+              <Field label="PO #" value={detail.purchaseOrder} />
+              <Field label="Terms" value={detail.paymentTerms} />
+              <Field label="Delivery" value={detail.deliveryMethod} />
+              <Field label="Issued" value={fmtDate(detail.issuedDate)} />
+              <Field label="Due Date" value={fmtDate(detail.dueDate)} />
+              <Field label="Scope Type" value={detail.scopeType} />
+              <Field label="Serial #" value={detail.serialNumber} />
+              <Field label="Sales Rep" value={detail.salesRep} />
+              <Field label="Shipping" value={fmt$(detail.shippingAmount)} />
+              <Field label="Tax" value={fmt$(detail.taxAmount)} />
+            </FormGrid>
+
+            {/* Bill To / Ship To */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 20px', marginTop: 8 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Bill To</div>
+                <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>
+                  {detail.billName}<br />
+                  {detail.billAddress}<br />
+                  {detail.billCity}, {detail.billState} {detail.billZip}
+                </div>
               </div>
-              <Table
-                dataSource={detail.lineItems}
-                columns={lineItemColumns}
-                rowKey="detailKey"
-                size="small"
-                pagination={false}
-                style={{ fontSize: 12 }}
-              />
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Ship To</div>
+                <div style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>
+                  {detail.shipName}<br />
+                  {detail.shipAddress}<br />
+                  {detail.shipCity}, {detail.shipState} {detail.shipZip}
+                </div>
+              </div>
             </div>
-          )}
-        </>
-      )}
-    </Drawer>
+
+            {/* Line items */}
+            {detail.lineItems.length > 0 && (
+              <div style={{ marginTop: 20 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Line Items
+                </div>
+                <Table
+                  dataSource={detail.lineItems}
+                  columns={lineItemColumns}
+                  rowKey="detailKey"
+                  size="small"
+                  pagination={false}
+                  style={{ fontSize: 12 }}
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
   );
 };
