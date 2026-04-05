@@ -257,7 +257,9 @@ public class RepairsController(IConfiguration config) : ControllerBase
                     WHERE r2.lScopeKey = r.lScopeKey
                       AND r2.lRepairKey < r.lRepairKey
                       AND r2.dtDateIn IS NOT NULL
-                    ORDER BY r2.lRepairKey DESC) AS DaysLastIn
+                    ORDER BY r2.lRepairKey DESC) AS DaysLastIn,
+                   ISNULL(dist.sDistName1, '') AS sDistributor,
+                   ISNULL(pkg.sPackageType, '') AS sPackageType
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
@@ -273,6 +275,8 @@ public class RepairsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblPricingCategory pc ON pc.lPricingCategoryKey = r.lPricingCategoryKey
             LEFT JOIN tblPaymentTerms pt ON pt.lPaymentTermsKey = r.lPaymentTermsKey
             LEFT JOIN tblRepairReasons rr ON rr.lRepairReasonKey = r.lRepairReasonKey
+            LEFT JOIN tblDistributor dist ON dist.lDistributorKey = r.lDistributorKey
+            LEFT JOIN tblPackageTypes pkg ON pkg.lPackageTypeKey = r.lPackageTypeKey
             WHERE r.lRepairKey = @repairKey
             """;
 
