@@ -134,7 +134,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
         {actionButtons.map(btn => (
           <button
             key={btn.label}
-            onClick={() => (btn as any).action ? (btn as any).action() : message.info(`${btn.label} — coming soon`)}
+            onClick={() => (btn as any).action ? (btn as any).action() : message.warning('Action not configured')}
             style={{
               height: 28, padding: '0 10px', borderRadius: 4,
               fontSize: 11, fontWeight: 600, cursor: 'pointer',

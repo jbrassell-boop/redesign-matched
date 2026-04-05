@@ -1,9 +1,11 @@
 import { useState, useCallback } from 'react';
-import { Table, message } from 'antd';
+import { Table, message, Modal } from 'antd';
 import type { DashboardView } from './types';
 import { getColumnsForView, getRowKey } from './columnDefs';
 import { ContextMenu } from '../../components/common/ContextMenu';
 import type { ContextMenuItem } from '../../components/common/ContextMenu';
+import { patchRepairHeader, addRepairNote, updateRepairTechs, getRepairTechnicians } from '../../api/repairs';
+import type { TechnicianOption } from '../../api/repairs';
 
 interface UnifiedTableProps {
   view: DashboardView;
@@ -35,6 +37,10 @@ export const UnifiedTable = ({
 
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [menuRecord, setMenuRecord] = useState<any>(null);
+  const [techList, setTechList] = useState<TechnicianOption[]>([]);
+  const [techModalOpen, setTechModalOpen] = useState(false);
+  const [techRecord, setTechRecord] = useState<any>(null);
+  const [selectedTech, setSelectedTech] = useState<number>(0);
 
   const handleContextMenu = useCallback((e: React.MouseEvent, record: any) => {
     e.preventDefault();
@@ -63,15 +69,69 @@ export const UnifiedTable = ({
     },
     {
       label: 'Add to Hot List',
-      onClick: () => message.info('Coming soon'),
+      onClick: () => {
+        const repairKey = record?.repairKey;
+        if (!repairKey) return;
+        Modal.confirm({
+          title: 'Add to Hot List',
+          content: `Add repair #${repairKey} to the hot list?`,
+          okText: 'Add',
+          onOk: async () => {
+            try {
+              await patchRepairHeader(repairKey, { isUrgent: true });
+              message.success('Added to hot list');
+            } catch {
+              message.error('Failed to add to hot list');
+            }
+          },
+        });
+      },
     },
     {
       label: 'Assign Tech',
-      onClick: () => message.info('Coming soon'),
+      onClick: async () => {
+        const repairKey = record?.repairKey;
+        if (!repairKey) return;
+        try {
+          const techs = await getRepairTechnicians();
+          setTechList(techs);
+          setSelectedTech(0);
+          setTechRecord(record);
+          setTechModalOpen(true);
+        } catch {
+          message.error('Failed to load technicians');
+        }
+      },
     },
     {
       label: 'Add Note',
-      onClick: () => message.info('Coming soon'),
+      onClick: () => {
+        const repairKey = record?.repairKey;
+        if (!repairKey) return;
+        Modal.confirm({
+          title: 'Add Note',
+          content: (
+            <textarea
+              id="dashboard-note-input"
+              placeholder="Enter note..."
+              rows={3}
+              style={{ width: '100%', marginTop: 8, padding: '6px 8px', fontSize: 12, border: '1px solid #d1d5db', borderRadius: 4, fontFamily: 'inherit', resize: 'vertical' }}
+            />
+          ),
+          okText: 'Save Note',
+          onOk: async () => {
+            const el = document.getElementById('dashboard-note-input') as HTMLTextAreaElement | null;
+            const note = el?.value?.trim();
+            if (!note) { message.warning('Note cannot be empty'); return Promise.reject('empty'); }
+            try {
+              await addRepairNote(repairKey, note);
+              message.success('Note added');
+            } catch {
+              message.error('Failed to add note');
+            }
+          },
+        });
+      },
     },
   ];
 
@@ -132,6 +192,36 @@ export const UnifiedTable = ({
           onClose={closeMenu}
         />
       )}
+
+      <Modal
+        open={techModalOpen}
+        onCancel={() => setTechModalOpen(false)}
+        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>Assign Technician</span>}
+        okText="Assign"
+        okButtonProps={{ disabled: !selectedTech }}
+        onOk={async () => {
+          if (!techRecord?.repairKey || !selectedTech) return;
+          try {
+            await updateRepairTechs(techRecord.repairKey, selectedTech, null);
+            message.success('Technician assigned');
+            setTechModalOpen(false);
+          } catch {
+            message.error('Failed to assign technician');
+          }
+        }}
+      >
+        <div style={{ paddingTop: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 6 }}>Select Technician</div>
+          <select
+            style={{ width: '100%', height: 32, border: '1px solid var(--border)', borderRadius: 4, fontSize: 12, padding: '0 8px' }}
+            value={selectedTech}
+            onChange={e => setSelectedTech(Number(e.target.value))}
+          >
+            <option value={0}>Select…</option>
+            {techList.map(t => <option key={t.techKey} value={t.techKey}>{t.techName}</option>)}
+          </select>
+        </div>
+      </Modal>
     </>
   );
 };

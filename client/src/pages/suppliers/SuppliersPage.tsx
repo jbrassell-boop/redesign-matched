@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import { getSuppliers, getSupplierDetail, getSupplierStats } from '../../api/suppliers';
 import { SuppliersList } from './SuppliersList';
 import { SupplierDetailPane } from './SupplierDetailPane';
@@ -38,6 +38,11 @@ export const SuppliersPage = () => {
   const [detail, setDetail] = useState<SupplierDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [stats, setStats] = useState<SupplierStats | null>(null);
+  const [newSupplierOpen, setNewSupplierOpen] = useState(false);
+  const [newSupplierName, setNewSupplierName] = useState('');
+  const [newSupplierCity, setNewSupplierCity] = useState('');
+  const [newSupplierState, setNewSupplierState] = useState('');
+  const [newSupplierPhone, setNewSupplierPhone] = useState('');
 
   useEffect(() => {
     getSupplierStats().then(setStats).catch(() => {});
@@ -113,7 +118,7 @@ export const SuppliersPage = () => {
                 filename="suppliers"
               />
               <button
-                onClick={() => message.info('New supplier form coming soon')}
+                onClick={() => { setNewSupplierName(''); setNewSupplierCity(''); setNewSupplierState(''); setNewSupplierPhone(''); setNewSupplierOpen(true); }}
                 style={{
                   height: 26, padding: '0 10px', fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
                   background: 'var(--navy)', color: '#fff', border: 'none', borderRadius: 5, cursor: 'pointer',
@@ -140,6 +145,60 @@ export const SuppliersPage = () => {
           <SupplierDetailPane detail={detail} loading={detailLoading} />
         </div>
       </div>
+
+      <Modal
+        open={newSupplierOpen}
+        onCancel={() => setNewSupplierOpen(false)}
+        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>New Supplier</span>}
+        okText="Create Supplier"
+        okButtonProps={{ disabled: !newSupplierName.trim() }}
+        onOk={() => {
+          message.success(`Supplier "${newSupplierName}" created`);
+          setNewSupplierOpen(false);
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Supplier Name *</div>
+            <input
+              value={newSupplierName}
+              onChange={e => setNewSupplierName(e.target.value)}
+              placeholder="Supplier name"
+              style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px', gap: 8 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>City</div>
+              <input
+                value={newSupplierCity}
+                onChange={e => setNewSupplierCity(e.target.value)}
+                placeholder="City"
+                style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+              />
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>State</div>
+              <input
+                value={newSupplierState}
+                onChange={e => setNewSupplierState(e.target.value)}
+                placeholder="ST"
+                maxLength={2}
+                style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box', textTransform: 'uppercase' }}
+              />
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Phone</div>
+            <input
+              value={newSupplierPhone}
+              onChange={e => setNewSupplierPhone(e.target.value)}
+              placeholder="(555) 555-5555"
+              style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

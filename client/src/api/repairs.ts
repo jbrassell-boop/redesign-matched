@@ -111,6 +111,7 @@ export interface RepairHeaderPatch {
   rackLocation?: string;
   complaint?: string;
   repairReason?: string;
+  isUrgent?: boolean;
   inboundTracking?: string;
   displayCustomerComplaint?: boolean;
   displayItemizedDesc?: string;

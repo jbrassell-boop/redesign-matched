@@ -188,6 +188,7 @@ public record PatchRepairHeaderRequest(
     string? RackLocation,
     string? Complaint,
     string? RepairReason,
+    bool? IsUrgent,
     string? InboundTracking,
     string? DisplayCustomerComplaint,
     string? DisplayItemizedDesc,

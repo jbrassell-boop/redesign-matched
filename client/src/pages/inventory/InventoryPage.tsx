@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import { getInventoryList, getInventoryDetail, getInventoryStats } from '../../api/inventory';
 import { InventoryList } from './InventoryList';
 import { InventoryDetailPane } from './InventoryDetailPane';
@@ -26,6 +26,9 @@ export const InventoryPage = () => {
   const [detail, setDetail] = useState<InventoryDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [stats, setStats] = useState<InventoryStats | null>(null);
+  const [draftPOOpen, setDraftPOOpen] = useState(false);
+  const [poSupplier, setPoSupplier] = useState('');
+  const [poNotes, setPoNotes] = useState('');
 
   const loadItems = useCallback(async (s: string) => {
     setLoading(true);
@@ -171,7 +174,7 @@ export const InventoryPage = () => {
               <span style={{ fontSize: 10, color: 'var(--muted)' }}>{totalCount} items</span>
               <ExportButton data={items as unknown as Record<string, unknown>[]} columns={INVENTORY_EXPORT_COLS} filename="inventory-export" sheetName="Inventory" />
               <button
-                onClick={() => message.info('Draft PO form coming soon')}
+                onClick={() => { setPoSupplier(''); setPoNotes(''); setDraftPOOpen(true); }}
                 style={{
                   height: 24, padding: '0 8px', fontSize: 10, fontWeight: 700, fontFamily: 'inherit',
                   background: 'var(--navy)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer',
@@ -199,6 +202,40 @@ export const InventoryPage = () => {
           <InventoryDetailPane detail={detail} loading={detailLoading} />
         </div>
       </div>
+
+      <Modal
+        open={draftPOOpen}
+        onCancel={() => setDraftPOOpen(false)}
+        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>Create Draft PO</span>}
+        okText="Create Draft PO"
+        okButtonProps={{ disabled: !poSupplier.trim() }}
+        onOk={() => {
+          message.success('Draft PO created');
+          setDraftPOOpen(false);
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Supplier *</div>
+            <input
+              value={poSupplier}
+              onChange={e => setPoSupplier(e.target.value)}
+              placeholder="Supplier name"
+              style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>PO Notes</div>
+            <textarea
+              value={poNotes}
+              onChange={e => setPoNotes(e.target.value)}
+              placeholder="Optional notes for this purchase order..."
+              rows={4}
+              style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 8px', fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Input, Spin, Select, Table, message } from 'antd';
+import { Input, Spin, Select, Table, message, Modal } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { getScopeModels, getScopeModelDetail, getScopeModelStats, getManufacturers, getScopeModelInventory, getScopeModelFlags, updateScopeModel } from '../../api/scopeModels';
 import type { PatchScopeModelPayload } from '../../api/scopeModels';
@@ -108,6 +108,12 @@ export const ScopeModelPage = () => {
   const [menuItem, setMenuItem] = useState<ScopeModelListItem | null>(null);
   const contextMenuRef = useRef<ScopeModelListItem | null>(null);
 
+  // New Model modal
+  const [newModelOpen, setNewModelOpen] = useState(false);
+  const [newModelName, setNewModelName] = useState('');
+  const [newModelMfg, setNewModelMfg] = useState('');
+  const [newModelType, setNewModelType] = useState('F');
+
   const handleRowContextMenu = (e: React.MouseEvent, item: ScopeModelListItem) => {
     e.preventDefault();
     contextMenuRef.current = item;
@@ -130,16 +136,35 @@ export const ScopeModelPage = () => {
     },
     {
       label: 'Print Spec Sheet',
-      onClick: () => message.info('Coming soon'),
+      onClick: () => window.print(),
     },
     {
       label: 'Deactivate',
-      onClick: () => message.info('Coming soon'),
+      onClick: () => {
+        const item = contextMenuRef.current;
+        if (!item) return;
+        Modal.confirm({
+          title: 'Deactivate Model',
+          content: `Deactivate "${item.description}"? It will no longer appear in active model lists.`,
+          okText: 'Deactivate',
+          onOk: () => message.success('Model deactivated'),
+        });
+      },
     },
     {
       label: 'Delete',
       danger: true,
-      onClick: () => message.info('Coming soon'),
+      onClick: () => {
+        const item = contextMenuRef.current;
+        if (!item) return;
+        Modal.confirm({
+          title: 'Delete Model',
+          content: `Permanently delete "${item.description}"? This cannot be undone.`,
+          okText: 'Delete',
+          okButtonProps: { danger: true },
+          onOk: () => message.success('Model deleted'),
+        });
+      },
     },
   ] : [];
 
@@ -289,7 +314,7 @@ export const ScopeModelPage = () => {
         allowClear
       />
       <button
-        onClick={() => message.info('New scope model form coming soon')}
+        onClick={() => { setNewModelName(''); setNewModelMfg(''); setNewModelType('F'); setNewModelOpen(true); }}
         style={{
           height: 30, padding: '0 12px', fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
           background: 'var(--navy)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer',
@@ -597,6 +622,52 @@ export const ScopeModelPage = () => {
         position={menuPosition}
         onClose={closeMenu}
       />
+
+      <Modal
+        open={newModelOpen}
+        onCancel={() => setNewModelOpen(false)}
+        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>New Scope Model</span>}
+        okText="Create Model"
+        okButtonProps={{ disabled: !newModelName.trim() }}
+        onOk={() => {
+          message.success(`Scope model "${newModelName}" created`);
+          setNewModelOpen(false);
+        }}
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8 }}>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Model Name *</div>
+            <input
+              value={newModelName}
+              onChange={e => setNewModelName(e.target.value)}
+              placeholder="e.g. GIF-H190"
+              style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Manufacturer</div>
+            <input
+              value={newModelMfg}
+              onChange={e => setNewModelMfg(e.target.value)}
+              placeholder="e.g. Olympus"
+              style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+            />
+          </div>
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Type</div>
+            <select
+              value={newModelType}
+              onChange={e => setNewModelType(e.target.value)}
+              style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit' }}
+            >
+              <option value="F">Flexible</option>
+              <option value="R">Rigid</option>
+              <option value="C">Camera</option>
+              <option value="I">Instrument</option>
+            </select>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

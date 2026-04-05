@@ -411,6 +411,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
         await using var cmd = new SqlCommand("""
             UPDATE tblRepair SET
+                bHotList                  = COALESCE(@isUrgent, bHotList),
                 sPurchaseOrder            = COALESCE(@po, sPurchaseOrder),
                 sRackPosition             = COALESCE(@rack, sRackPosition),
                 sComplaintDesc            = COALESCE(@complaint, sComplaintDesc),
@@ -445,6 +446,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             WHERE lRepairKey = @id
             """, conn);
         cmd.Parameters.AddWithValue("@id", repairKey);
+        cmd.Parameters.AddWithValue("@isUrgent", body.IsUrgent.HasValue ? (object)body.IsUrgent.Value : DBNull.Value);
         cmd.Parameters.AddWithValue("@po", (object?)body.PurchaseOrder ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@rack", (object?)body.RackLocation ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@complaint", (object?)body.Complaint ?? DBNull.Value);

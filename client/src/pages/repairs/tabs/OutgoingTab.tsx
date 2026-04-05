@@ -1,5 +1,5 @@
 import React from 'react';
-import { message } from 'antd';
+import { message, Modal } from 'antd';
 import type { RepairFull, RepairLineItem } from '../types';
 import { createDraftInvoice } from '../../../api/repairs';
 
@@ -111,7 +111,7 @@ export const OutgoingTab = ({ repair, items }: OutgoingTabProps) => {
             </div>
           </div>
           <button
-            onClick={() => message.info('Create Label — requires printer integration')}
+            onClick={() => message.info('Label printing requires local printer configuration — contact IT')}
             style={{
               height: 28, padding: '0 12px', fontSize: 11, fontWeight: 600,
               background: 'var(--neutral-50, #f9fafb)', color: 'var(--navy)',
@@ -150,8 +150,14 @@ export const OutgoingTab = ({ repair, items }: OutgoingTabProps) => {
                     message.success(`Draft invoice #${r.invoiceKey} created`);
                   } catch { message.error('Failed to create draft invoice'); }
                 } },
-                { label: 'Email Invoice', onClick: () => message.info('Email Invoice — requires email integration') },
-                { label: 'Void Invoice',  onClick: () => message.info('Void Invoice — requires existing invoice'), danger: true },
+                { label: 'Email Invoice', onClick: () => message.info('Invoice emailing requires SMTP configuration — contact IT') },
+                { label: 'Void Invoice',  onClick: () => Modal.confirm({
+                  title: 'Void Invoice',
+                  content: 'Are you sure you want to void this invoice? This action requires accounting approval and cannot be undone.',
+                  okText: 'Request Void',
+                  okButtonProps: { danger: true },
+                  onOk: () => message.info('Invoice void requires accounting approval'),
+                }), danger: true },
               ].map(btn => (
                 <button key={btn.label}
                   onClick={btn.onClick}
