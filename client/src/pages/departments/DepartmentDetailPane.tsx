@@ -14,6 +14,10 @@ import { SubGroupsTab } from './tabs/SubGroupsTab';
 import { RepairsTab } from './tabs/RepairsTab';
 import { FlagsTab } from './tabs/FlagsTab';
 import { ContractsTab } from './tabs/ContractsTab';
+import { InstrumentsTab } from './tabs/InstrumentsTab';
+import { TechniciansTab } from './tabs/TechniciansTab';
+import { GposTab } from './tabs/GposTab';
+import { ScopeTypesTab } from './tabs/ScopeTypesTab';
 import {
   getDepartmentFull, getDepartmentKpis, updateDepartment,
   getDepartmentScopes, getDepartmentSubGroups, getDepartmentContacts,
@@ -33,7 +37,11 @@ const BASE_TABS: TabDef[] = [
   { key: 'sub-groups', label: 'Sub-Groups' },
   { key: 'repairs',    label: 'Repairs' },
   { key: 'flags',      label: 'Flags' },
-  { key: 'contracts',  label: 'Contracts' },
+  { key: 'contracts',   label: 'Contracts' },
+  { key: 'instruments', label: 'Instruments' },
+  { key: 'technicians', label: 'Technicians' },
+  { key: 'gpos',        label: "GPO's" },
+  { key: 'scopetypes',  label: 'Scope Types' },
 ];
 
 export const DepartmentDetailPane = ({ deptKey }: DepartmentDetailPaneProps) => {
@@ -160,7 +168,11 @@ export const DepartmentDetailPane = ({ deptKey }: DepartmentDetailPaneProps) => 
         {activeTab === 'sub-groups' && <SubGroupsTab deptKey={dept.deptKey} />}
         {activeTab === 'repairs'    && <RepairsTab deptKey={dept.deptKey} />}
         {activeTab === 'flags'      && <FlagsTab deptKey={dept.deptKey} />}
-        {activeTab === 'contracts'  && <ContractsTab deptKey={dept.deptKey} />}
+        {activeTab === 'contracts'   && <ContractsTab deptKey={dept.deptKey} />}
+        {activeTab === 'instruments' && <InstrumentsTab deptKey={dept.deptKey} />}
+        {activeTab === 'technicians' && <TechniciansTab deptKey={dept.deptKey} />}
+        {activeTab === 'gpos'        && <GposTab deptKey={dept.deptKey} />}
+        {activeTab === 'scopetypes'  && <ScopeTypesTab deptKey={dept.deptKey} />}
       </div>
 
       <ScopeDrawer

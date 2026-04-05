@@ -26,6 +26,8 @@ import { FinancialsTab } from './tabs/FinancialsTab';
 import { ScopeHistoryTab } from './tabs/ScopeHistoryTab';
 import { StatusHistoryTab } from './tabs/StatusHistoryTab';
 import { NotesTab } from './tabs/NotesTab';
+import { ImagesTab } from './tabs/ImagesTab';
+import { DocumentsTab } from './tabs/DocumentsTab';
 import { InlineEditor } from '../../components/common/InlineEditor';
 import {
   updateRepairNotes, getRepairStatuses, updateRepairStatus,
@@ -80,7 +82,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   const isCockpit = cockpitMode || !!params.repairKey;
   const resolvedKey = repairKeyProp ?? (params.repairKey ? parseInt(params.repairKey, 10) : null);
 
-  const [activeTab, setActiveTab] = useState<'scope-in' | 'details' | 'outgoing' | 'expense' | 'workflow' | 'inspections' | 'financials' | 'scopehistory' | 'statuslog' | 'comments'>('details');
+  const [activeTab, setActiveTab] = useState<'scope-in' | 'details' | 'outgoing' | 'expense' | 'workflow' | 'inspections' | 'financials' | 'scopehistory' | 'statuslog' | 'comments' | 'images' | 'documents'>('details');
   const [lineItems, setLineItems] = useState<RepairLineItem[]>([]);
   const [statuses, setStatuses] = useState<RepairStatusOption[]>([]);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
@@ -274,7 +276,9 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       { key: 'financials', label: 'Financials', num: '6' },
       { key: 'scopehistory', label: 'History', num: '7' },
       { key: 'statuslog', label: 'Status Log', num: '8' },
-      { key: 'comments', label: 'Notes', num: '9' },
+      { key: 'comments',  label: 'Notes',      num: '9' },
+      { key: 'images',    label: 'Images',     num: '10' },
+      { key: 'documents', label: 'Documents',  num: '11' },
     ] as const;
 
     return (
@@ -448,6 +452,8 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           {activeTab === 'scopehistory' && <ScopeHistoryTab repairKey={fullRepair.repairKey} currentRepairKey={fullRepair.repairKey} />}
           {activeTab === 'statuslog'   && <StatusHistoryTab repairKey={fullRepair.repairKey} />}
           {activeTab === 'comments'    && <NotesTab repairKey={fullRepair.repairKey} />}
+          {activeTab === 'images'      && <ImagesTab repairKey={fullRepair.repairKey} />}
+          {activeTab === 'documents'   && <DocumentsTab repairKey={fullRepair.repairKey} />}
         </div>
       </div>
     );
@@ -636,7 +642,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         </div>
       </div>
 
-      <TabBar tabs={[...tabs, { key: 'comments', label: 'Comments' }]} activeKey={activeTab} onChange={k => setActiveTab(k as Parameters<typeof setActiveTab>[0])} />
+      <TabBar tabs={[...tabs, { key: 'comments', label: 'Comments' }, { key: 'images', label: 'Images' }, { key: 'documents', label: 'Documents' }]} activeKey={activeTab} onChange={k => setActiveTab(k as Parameters<typeof setActiveTab>[0])} />
       {activeTab === 'details'      && detailsContent}
       {activeTab === 'workflow'     && <WorkflowTab repairKey={detail.repairKey} />}
       {activeTab === 'inspections'  && <InspectionsTab repairKey={detail.repairKey} />}
@@ -644,6 +650,8 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       {activeTab === 'scopehistory' && <ScopeHistoryTab repairKey={detail.repairKey} currentRepairKey={detail.repairKey} />}
       {activeTab === 'statuslog'    && <StatusHistoryTab repairKey={detail.repairKey} />}
       {activeTab === 'comments'     && <NotesTab repairKey={detail.repairKey} />}
+      {activeTab === 'images'       && <ImagesTab repairKey={detail.repairKey} />}
+      {activeTab === 'documents'    && <DocumentsTab repairKey={detail.repairKey} />}
 
       {/* Form overlays — legacy pane. Cast detail to RepairFull shape (shared core fields). */}
       {activeForm === 'di-inspection'      && <DiInspectionForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}

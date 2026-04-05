@@ -12,6 +12,7 @@ import { DepartmentsTab } from './tabs/DepartmentsTab';
 import { FlagsTab } from './tabs/FlagsTab';
 import { RepairHistoryTab } from './tabs/RepairHistoryTab';
 import { ReportCardTab } from './tabs/ReportCardTab';
+import { ActivityTab } from './tabs/ActivityTab';
 import {
   getClientFull, getClientKpis, updateClient, deactivateClient, deleteClient,
   getClientContacts, getClientDepartments, getClientFlags,
@@ -31,6 +32,7 @@ const BASE_TABS: TabDef[] = [
   { key: 'flags', label: 'Flags' },
   { key: 'repairs', label: 'Repair History' },
   { key: 'reportcard', label: 'Report Card' },
+  { key: 'activity',   label: 'Activity' },
 ];
 
 export const ClientDetailPane = ({ clientKey, onClientDeleted }: ClientDetailPaneProps) => {
@@ -161,6 +163,7 @@ export const ClientDetailPane = ({ clientKey, onClientDeleted }: ClientDetailPan
         {activeTab === 'flags' && <FlagsTab clientKey={client.clientKey} />}
         {activeTab === 'repairs' && <RepairHistoryTab clientKey={client.clientKey} />}
         {activeTab === 'reportcard' && <ReportCardTab clientKey={client.clientKey} />}
+        {activeTab === 'activity'   && <ActivityTab clientKey={client.clientKey} />}
       </div>
     </div>
   );

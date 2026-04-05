@@ -808,6 +808,121 @@ const AffiliatesTab = ({ contractKey }: { contractKey: number }) => {
   );
 };
 
+// ===== ADDRESS TAB =====
+const AddressTab = ({ detail }: { detail: ContractDetail }) => (
+  <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <Panel>
+      <PanelHead><span>Bill To</span></PanelHead>
+      <div style={{ padding: '12px 14px' }}>
+        <FormGrid cols={2}>
+          {detail.billName && <div className="span-2"><Field label="Name" value={detail.billName} /></div>}
+          {detail.billAddress && <div className="span-2"><Field label="Address" value={detail.billAddress} /></div>}
+          <Field label="City" value={detail.billCity || '\u2014'} />
+          <Field label="State / Zip" value={[detail.billState, detail.billZip].filter(Boolean).join(' ') || '\u2014'} />
+          {detail.phone && <Field label="Phone" value={detail.phone} />}
+          {detail.billEmail && <Field label="Email" value={detail.billEmail} />}
+        </FormGrid>
+        {!detail.billName && !detail.billAddress && (
+          <div style={{ color: 'var(--muted)', fontSize: 12, fontStyle: 'italic' }}>No billing address on file.</div>
+        )}
+      </div>
+    </Panel>
+    <Panel>
+      <PanelHead><span>Ship To</span></PanelHead>
+      <div style={{ padding: '12px 14px' }}>
+        <div style={{ color: 'var(--muted)', fontSize: 12, fontStyle: 'italic' }}>
+          No separate shipping address configured. Shipments default to the billing address above.
+        </div>
+      </div>
+    </Panel>
+  </div>
+);
+
+// ===== EXPENSE TRENDING TAB =====
+const ExpenseTrendingTab = ({ contractKey }: { contractKey: number }) => {
+  void contractKey; // reserved for future endpoint wiring
+  return (
+    <div style={{ padding: '10px 14px' }}>
+      <Panel>
+        <PanelHead><span>Expense Trending</span></PanelHead>
+        <div style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--muted)' }}>
+          <div style={{ marginBottom: 12 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+              style={{ width: 40, height: 40, margin: '0 auto', display: 'block', color: 'var(--neutral-300)' }}>
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+          </div>
+          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--navy)', marginBottom: 6 }}>
+            Expense trending data will appear here
+          </div>
+          <div style={{ fontSize: 12, lineHeight: 1.6, maxWidth: 300, margin: '0 auto' }}>
+            Monthly expense analysis and cost trending for this contract will be shown
+            once the reporting endpoint is available.
+          </div>
+        </div>
+      </Panel>
+    </div>
+  );
+};
+
+// ===== REPORT CARD TAB =====
+const ContractReportCardTab = ({ detail }: { detail: ContractDetail }) => {
+  const daysUntilExpiry = detail.terminationDate
+    ? Math.ceil((new Date(detail.terminationDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+
+  const metrics = [
+    { label: 'Contract Status', value: detail.status, color: detail.status === 'Active' ? 'var(--success)' : detail.status === 'Expiring' ? 'var(--warning)' : 'var(--danger)' },
+    { label: 'Total Value', value: detail.totalAmount > 0 ? fmtMoney(detail.totalAmount) : '—', color: 'var(--navy)' },
+    { label: 'Invoiced', value: detail.amtInvoiced > 0 ? fmtMoney(detail.amtInvoiced) : '—', color: 'var(--primary)' },
+    { label: 'Scopes Covered', value: detail.countAll > 0 ? String(detail.countAll) : '—', color: 'var(--navy)' },
+    {
+      label: 'Days Remaining',
+      value: daysUntilExpiry != null ? (daysUntilExpiry < 0 ? 'Expired' : `${daysUntilExpiry}d`) : '—',
+      color: daysUntilExpiry == null ? 'var(--muted)' : daysUntilExpiry < 0 ? 'var(--danger)' : daysUntilExpiry <= 90 ? 'var(--warning)' : 'var(--success)',
+    },
+  ];
+
+  return (
+    <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <Panel>
+        <PanelHead><span>Performance Summary</span></PanelHead>
+        <div style={{ padding: '12px 14px' }}>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {metrics.map(m => (
+              <div key={m.label} style={{
+                flex: '1 1 140px', padding: '12px 14px',
+                border: '1px solid var(--neutral-200)', borderRadius: 8,
+                background: 'var(--card)', textAlign: 'center',
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.04em', marginBottom: 4 }}>
+                  {m.label}
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: m.color, lineHeight: 1.1 }}>
+                  {m.value}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Panel>
+      <Panel>
+        <PanelHead><span>Contract Details</span></PanelHead>
+        <div style={{ padding: '12px 14px' }}>
+          <FormGrid cols={2}>
+            <Field label="Contract #" value={detail.contractNumber || '\u2014'} />
+            <Field label="Contract ID" value={detail.contractId || '\u2014'} />
+            <Field label="Start Date" value={fmtDate(detail.effectiveDate)} />
+            <Field label="End Date" value={fmtDate(detail.terminationDate)} />
+            <Field label="Length" value={detail.lengthInMonths ? `${detail.lengthInMonths} months` : '\u2014'} />
+            <Field label="Service Plan" value={detail.servicePlan ? 'Yes' : 'No'} />
+          </FormGrid>
+        </div>
+      </Panel>
+    </div>
+  );
+};
+
 const TABS: TabDef[] = [
   { key: 'specs',       label: 'Specifications' },
   { key: 'departments', label: 'Departments' },
@@ -819,6 +934,9 @@ const TABS: TabDef[] = [
   { key: 'affiliates',  label: 'Affiliates' },
   { key: 'invoices',    label: 'Invoices' },
   { key: 'documents',   label: 'Documents' },
+  { key: 'address',     label: 'Address' },
+  { key: 'expense',     label: 'Expense Trending' },
+  { key: 'reportcard',  label: 'Report Card' },
 ];
 
 export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPaneProps) => {
@@ -1032,6 +1150,9 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
         {activeTab === 'affiliates'  && <AffiliatesTab contractKey={detail.contractKey} />}
         {activeTab === 'invoices'    && <InvoicesTab contractKey={detail.contractKey} detail={detail} />}
         {activeTab === 'documents'   && <DocumentsTab contractKey={detail.contractKey} />}
+        {activeTab === 'address'     && <AddressTab detail={detail} />}
+        {activeTab === 'expense'     && <ExpenseTrendingTab contractKey={detail.contractKey} />}
+        {activeTab === 'reportcard'  && <ContractReportCardTab detail={detail} />}
       </div>
     </div>
   );
