@@ -107,3 +107,18 @@ public record SupplierDocument(
     string DocumentType,
     string? DocumentDate
 );
+
+public record PatchSupplierRequest(
+    string? Name,
+    string? ShipAddr1,
+    string? ShipAddr2,
+    string? ShipCity,
+    string? ShipState,
+    string? ShipZip,
+    string? Phone,
+    string? Fax,
+    string? Email,
+    string? ContactFirst,
+    string? ContactLast,
+    string? Comments
+);

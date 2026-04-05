@@ -169,3 +169,14 @@ public record CreateContractAmendmentRequest(
     decimal NewInvoiceAmount,
     int RemainingMonths
 );
+
+public record PatchContractRequest(
+    string? Name,
+    string? ContractNumber,
+    string? ContractId,
+    DateTime? EffectiveDate,
+    DateTime? TerminationDate,
+    int? LengthInMonths,
+    double? TotalAmount,
+    string? Comments
+);

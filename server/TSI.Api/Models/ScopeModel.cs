@@ -110,3 +110,21 @@ public record ScopeTypeFlag(
     bool VisibleOnDI,
     bool VisibleOnBlank
 );
+
+public record PatchScopeModelRequest(
+    string? Description,
+    string? InsertTubeLength,
+    string? InsertTubeDiameter,
+    string? ForcepChannelSize,
+    string? FieldOfView,
+    string? DirectionOfView,
+    string? DepthOfField,
+    string? LengthSpec,
+    string? AngUp,
+    string? AngDown,
+    string? AngLeft,
+    string? AngRight,
+    string? Notes,
+    decimal? ContractCost,
+    decimal? MaxCharge
+);
