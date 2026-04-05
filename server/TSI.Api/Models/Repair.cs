@@ -141,7 +141,12 @@ public record RepairFull(
     string? DisplayItemAmount,
     string? BillTo,
     string? PsLevel,
-    int? DaysLastIn
+    int? DaysLastIn,
+    int? SalesRepKey,
+    int? PricingCategoryKey,
+    int? PaymentTermsKey,
+    int? DistributorKey,
+    string? Requisition
 );
 
 public record RepairInspections(
@@ -187,7 +192,27 @@ public record PatchRepairHeaderRequest(
     string? DisplayCustomerComplaint,
     string? DisplayItemizedDesc,
     string? DisplayItemizedAmounts,
-    string? BillToCustomer
+    string? BillToCustomer,
+    int? SalesRepKey,
+    int? PricingCategoryKey,
+    int? PaymentTermsKey,
+    decimal? DiscountPct,
+    string? PsLevel,
+    int? DistributorKey,
+    decimal? ShippingCostIn,
+    string? Requisition,
+    string? ShipName,
+    string? ShipAddr1,
+    string? ShipAddr2,
+    string? ShipCity,
+    string? ShipState,
+    string? ShipZip,
+    string? BillName,
+    string? BillAddr1,
+    string? BillAddr2,
+    string? BillCity,
+    string? BillState,
+    string? BillZip
 );
 
 // ── Repair Item Catalog ──

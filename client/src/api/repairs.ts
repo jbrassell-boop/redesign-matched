@@ -116,6 +116,26 @@ export interface RepairHeaderPatch {
   displayItemizedDesc?: string;
   displayItemizedAmounts?: string;
   billToCustomer?: string;
+  salesRepKey?: number;
+  pricingCategoryKey?: number;
+  paymentTermsKey?: number;
+  discountPct?: number;
+  psLevel?: string;
+  distributorKey?: number;
+  shippingCostIn?: number;
+  requisition?: string;
+  shipName?: string;
+  shipAddr1?: string;
+  shipAddr2?: string;
+  shipCity?: string;
+  shipState?: string;
+  shipZip?: string;
+  billName?: string;
+  billAddr1?: string;
+  billAddr2?: string;
+  billCity?: string;
+  billState?: string;
+  billZip?: string;
 }
 
 export const patchRepairHeader = async (repairKey: number, patch: RepairHeaderPatch): Promise<void> => {

@@ -141,6 +141,10 @@ export interface RepairFull {
   includesCamera: boolean; includesHood: boolean; includesLightPostAdapter: boolean;
   includesSuctionValve: boolean; includesWaterProofCap: boolean; includesAirWaterValve: boolean;
   firstRepair: boolean; reworkRequired?: string; source?: string;
+  salesRepKey?: number | null;
+  pricingCategoryKey?: number | null;
+  paymentTermsKey?: number | null;
+  distributorKey?: number | null;
 }
 
 export interface RepairInspections {

@@ -252,6 +252,11 @@ public class RepairsController(IConfiguration config) : ControllerBase
                    r.sDisplayItemAmount,
                    r.sBillTo,
                    r.sPS3,
+                   r.lSalesRepKey,
+                   r.lPricingCategoryKey,
+                   r.lPaymentTermsKey,
+                   r.lDistributorKey,
+                   r.sRequisition,
                    (SELECT TOP 1 DATEDIFF(day, r2.dtDateIn, r.dtDateIn)
                     FROM tblRepair r2
                     WHERE r2.lScopeKey = r.lScopeKey
@@ -377,7 +382,12 @@ public class RepairsController(IConfiguration config) : ControllerBase
             DisplayItemAmount: ReadStr("sDisplayItemAmount"),
             BillTo: ReadStr("sBillTo"),
             PsLevel: ReadStr("sPS3"),
-            DaysLastIn: reader["DaysLastIn"] == DBNull.Value ? null : Convert.ToInt32(reader["DaysLastIn"])
+            DaysLastIn: reader["DaysLastIn"] == DBNull.Value ? null : Convert.ToInt32(reader["DaysLastIn"]),
+            SalesRepKey: reader["lSalesRepKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lSalesRepKey"]),
+            PricingCategoryKey: reader["lPricingCategoryKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lPricingCategoryKey"]),
+            PaymentTermsKey: reader["lPaymentTermsKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lPaymentTermsKey"]),
+            DistributorKey: reader["lDistributorKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lDistributorKey"]),
+            Requisition: ReadStr("sRequisition")
         ));
     }
 
@@ -411,7 +421,27 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 sDisplayCustomerComplaint = COALESCE(@displayCustomerComplaint, sDisplayCustomerComplaint),
                 sDisplayItemDescription   = COALESCE(@displayItemDesc, sDisplayItemDescription),
                 sDisplayItemAmount        = COALESCE(@displayItemAmt, sDisplayItemAmount),
-                sBillTo                   = COALESCE(@billTo, sBillTo)
+                sBillTo                   = COALESCE(@billTo, sBillTo),
+                lSalesRepKey              = COALESCE(@salesRepKey, lSalesRepKey),
+                lPricingCategoryKey       = COALESCE(@pricingCategoryKey, lPricingCategoryKey),
+                lPaymentTermsKey          = COALESCE(@paymentTermsKey, lPaymentTermsKey),
+                dblDiscountPct            = COALESCE(@discountPct, dblDiscountPct),
+                sPS3                      = COALESCE(@psLevel, sPS3),
+                lDistributorKey           = COALESCE(@distributorKey, lDistributorKey),
+                dblShippingClientIn       = COALESCE(@shippingCostIn, dblShippingClientIn),
+                sRequisition              = COALESCE(@requisition, sRequisition),
+                sShipName1                = COALESCE(@shipName, sShipName1),
+                sShipAddr1                = COALESCE(@shipAddr1, sShipAddr1),
+                sShipAddr2                = COALESCE(@shipAddr2, sShipAddr2),
+                sShipCity                 = COALESCE(@shipCity, sShipCity),
+                sShipState                = COALESCE(@shipState, sShipState),
+                sShipZip                  = COALESCE(@shipZip, sShipZip),
+                sBillName1                = COALESCE(@billName, sBillName1),
+                sBillAddr1                = COALESCE(@billAddr1, sBillAddr1),
+                sBillAddr2                = COALESCE(@billAddr2, sBillAddr2),
+                sBillCity                 = COALESCE(@billCity, sBillCity),
+                sBillState                = COALESCE(@billState, sBillState),
+                sBillZip                  = COALESCE(@billZip, sBillZip)
             WHERE lRepairKey = @id
             """, conn);
         cmd.Parameters.AddWithValue("@id", repairKey);
@@ -424,6 +454,26 @@ public class RepairsController(IConfiguration config) : ControllerBase
         cmd.Parameters.AddWithValue("@displayItemDesc", (object?)body.DisplayItemizedDesc ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@displayItemAmt", (object?)body.DisplayItemizedAmounts ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@billTo", (object?)body.BillToCustomer ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@salesRepKey", (object?)body.SalesRepKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@pricingCategoryKey", (object?)body.PricingCategoryKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@paymentTermsKey", (object?)body.PaymentTermsKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@discountPct", (object?)body.DiscountPct ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@psLevel", (object?)body.PsLevel ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@distributorKey", (object?)body.DistributorKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@shippingCostIn", (object?)body.ShippingCostIn ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@requisition", (object?)body.Requisition ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@shipName", (object?)body.ShipName ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@shipAddr1", (object?)body.ShipAddr1 ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@shipAddr2", (object?)body.ShipAddr2 ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@shipCity", (object?)body.ShipCity ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@shipState", (object?)body.ShipState ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@shipZip", (object?)body.ShipZip ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billName", (object?)body.BillName ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billAddr1", (object?)body.BillAddr1 ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billAddr2", (object?)body.BillAddr2 ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billCity", (object?)body.BillCity ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billState", (object?)body.BillState ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@billZip", (object?)body.BillZip ?? DBNull.Value);
         await cmd.ExecuteNonQueryAsync();
         return NoContent();
     }

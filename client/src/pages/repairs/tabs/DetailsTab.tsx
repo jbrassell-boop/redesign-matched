@@ -2,8 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { message, Modal } from 'antd';
 import type { RepairFull, RepairLineItem } from '../types';
 import type { ClientFlag } from '../../clients/types';
-import { getRepairLineItems, updateRepairTechs, getRepairTechnicians, bulkApproveLineItems, getUpdateSlips, getDefectTracking, getRepairInventoryUsage } from '../../../api/repairs';
+import { getRepairLineItems, updateRepairTechs, getRepairTechnicians, bulkApproveLineItems, getUpdateSlips, getDefectTracking, getRepairInventoryUsage, patchRepairHeader, type RepairHeaderPatch } from '../../../api/repairs';
 import type { TechnicianOption } from '../../../api/repairs';
+import { getRepairReasonOptions, type LookupOption } from '../../../api/lookups';
+import { useAutosave } from '../../../hooks/useAutosave';
+import { AutosaveIndicator } from '../../../components/common/AutosaveIndicator';
 import { RepairItemsTable } from '../components/RepairItemsTable';
 import { AmendmentModal } from '../components/AmendmentModal';
 import { UpdateSlipsModal } from '../components/UpdateSlipsModal';
@@ -49,6 +52,22 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
   const [selectedTech, setSelectedTech] = useState<number>(repair.techKey ?? 0);
   const [selectedTech2, setSelectedTech2] = useState<number | null>(null);
   const [techSaving, setTechSaving] = useState(false);
+
+  // ── Complaint section: editable state ──
+  const [repairReasons, setRepairReasons] = useState<LookupOption[]>([]);
+  const [repairReason, setRepairReason] = useState(repair.repairReason ?? '');
+  const [psLevel, setPsLevel] = useState(repair.psLevel ?? '');
+  const [complaint, setComplaint] = useState(repair.complaint ?? '');
+
+  useEffect(() => {
+    getRepairReasonOptions().then(setRepairReasons).catch(() => {});
+  }, []);
+
+  const detailsSaveFn = useCallback(
+    (data: Partial<RepairHeaderPatch>) => patchRepairHeader(repair.repairKey, data),
+    [repair.repairKey],
+  );
+  const { handleChange: detailsChange, status: detailsStatus } = useAutosave<RepairHeaderPatch>(detailsSaveFn, 800);
 
   const loadItems = useCallback(() => {
     getRepairLineItems(repair.repairKey)
@@ -134,26 +153,47 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
         {/* LEFT sidebar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
 
-          {/* Complaint form */}
+          {/* Complaint form — editable */}
           <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
-            <div style={sectionHd}>Customer Complaint</div>
+            <div style={{ ...sectionHd, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>Customer Complaint</span>
+              <AutosaveIndicator status={detailsStatus} />
+            </div>
             <div style={{ padding: 10 }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px', marginBottom: 8 }}>
                 <div>
                   <div style={lblStyle}>Repair Reason</div>
-                  <div style={fieldStyle}>{repair.repairReason || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>—</span>}</div>
+                  <select
+                    style={{ ...fieldStyle, width: '100%', appearance: 'auto', fontFamily: 'inherit' }}
+                    value={repairReason}
+                    onChange={e => { setRepairReason(e.target.value); detailsChange('repairReason', e.target.value || undefined); }}
+                  >
+                    <option value="">—</option>
+                    {repairReasons.map(r => <option key={r.key} value={r.name}>{r.name}</option>)}
+                  </select>
                 </div>
                 <div>
                   <div style={lblStyle}>PS Level</div>
-                  <div style={fieldStyle}>{repair.psLevel || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>—</span>}</div>
+                  <select
+                    style={{ ...fieldStyle, width: '100%', appearance: 'auto', fontFamily: 'inherit' }}
+                    value={psLevel}
+                    onChange={e => { setPsLevel(e.target.value); detailsChange('psLevel', e.target.value || undefined); }}
+                  >
+                    <option value="">—</option>
+                    {['PS1', 'PS2', 'PS3', 'PS4', 'PS5'].map(v => <option key={v} value={v}>{v}</option>)}
+                  </select>
                 </div>
               </div>
-              <div style={{
-                minHeight: 64, border: '1px solid #d1d5db', borderRadius: 3,
-                background: '#fff', padding: '6px 7px', fontSize: 11, color: '#374151', lineHeight: 1.4,
-              }}>
-                {repair.complaint || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>No complaint recorded</span>}
-              </div>
+              <textarea
+                style={{
+                  minHeight: 64, width: '100%', border: '1px solid #d1d5db', borderRadius: 3,
+                  background: '#fff', padding: '6px 7px', fontSize: 11, color: '#374151', lineHeight: 1.4,
+                  resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box',
+                }}
+                value={complaint}
+                onChange={e => { setComplaint(e.target.value); detailsChange('complaint', e.target.value || undefined); }}
+                placeholder="No complaint recorded"
+              />
             </div>
           </div>
 
