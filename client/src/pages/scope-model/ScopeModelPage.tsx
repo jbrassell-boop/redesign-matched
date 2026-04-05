@@ -324,7 +324,7 @@ export const ScopeModelPage = () => {
               scroll={{ y: 400 }}
               locale={{ emptyText: 'No inventory items linked to this scope type' }}
               columns={[
-                { title: 'Description', dataIndex: 'description', key: 'description', ellipsis: true },
+                { title: 'Description', dataIndex: 'description', key: 'description' },
                 { title: 'Type', dataIndex: 'flexOrRigid', key: 'flexOrRigid', width: 80 },
                 { title: 'On Hand', dataIndex: 'levelCurrent', key: 'levelCurrent', width: 80, align: 'center' as const },
                 { title: 'Min', dataIndex: 'levelMinimum', key: 'levelMinimum', width: 60, align: 'center' as const },
@@ -350,7 +350,7 @@ export const ScopeModelPage = () => {
               scroll={{ y: 400 }}
               locale={{ emptyText: 'No flags linked to this scope type' }}
               columns={[
-                { title: 'Flag', dataIndex: 'flag', key: 'flag', ellipsis: true },
+                { title: 'Flag', dataIndex: 'flag', key: 'flag' },
                 { title: 'Type', dataIndex: 'flagType', key: 'flagType', width: 120 },
                 {
                   title: 'On DI', dataIndex: 'visibleOnDI', key: 'visibleOnDI', width: 70, align: 'center' as const,

@@ -16,12 +16,12 @@ const COLUMNS: ColumnsType<RepairLineItem> = [
     return <span style={{ display: 'inline-flex', width: 22, height: 22, borderRadius: 4, alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, background: s.bg, color: s.color }}>{v || '\u2014'}</span>;
   }},
   { title: 'Code', dataIndex: 'itemCode', key: 'itemCode', width: 70 },
-  { title: 'Repair Item', dataIndex: 'description', key: 'description', ellipsis: true },
+  { title: 'Repair Item', dataIndex: 'description', key: 'description' },
   { title: 'Cause', dataIndex: 'cause', key: 'cause', width: 68, align: 'center' },
   { title: 'Fix Type', dataIndex: 'fixType', key: 'fixType', width: 68, align: 'center' },
   { title: 'Amount', dataIndex: 'amount', key: 'amount', width: 85, align: 'right', render: (v: number) => `$${v.toFixed(2)}` },
-  { title: 'Tech', dataIndex: 'tech', key: 'tech', width: 80, ellipsis: true },
-  { title: 'Comments', dataIndex: 'comments', key: 'comments', ellipsis: true },
+  { title: 'Tech', dataIndex: 'tech', key: 'tech', width: 80 },
+  { title: 'Comments', dataIndex: 'comments', key: 'comments' },
 ];
 
 export const WorkflowTab = ({ repairKey }: { repairKey: number }) => {

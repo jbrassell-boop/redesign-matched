@@ -33,7 +33,6 @@
   font-weight: 600;
   padding: 8px 12px;
   text-align: left;
-  white-space: nowrap;
   border-right: 1px solid var(--neutral-100);
   border-bottom: 1px solid var(--neutral-200);
   letter-spacing: 0.04em;

@@ -18,8 +18,8 @@ const COLUMNS: ColumnsType<RepairScopeHistory> = [
     const s = STATUS_COLORS[v] ?? { bg: 'var(--neutral-100)', color: 'var(--muted)' };
     return <span style={{ display: 'inline-flex', padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600, background: s.bg, color: s.color }}>{v}</span>;
   }},
-  { title: 'Scope Type', dataIndex: 'scopeType', key: 'scopeType', ellipsis: true },
-  { title: 'Client', dataIndex: 'client', key: 'client', ellipsis: true },
+  { title: 'Scope Type', dataIndex: 'scopeType', key: 'scopeType' },
+  { title: 'Client', dataIndex: 'client', key: 'client' },
   { title: 'TAT', dataIndex: 'daysIn', key: 'daysIn', width: 60, align: 'center', render: (v: number) => `${v}d` },
   { title: 'Amount', dataIndex: 'amount', key: 'amount', width: 90, align: 'right', render: (v: number | null) => v != null ? `$${v.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : '\u2014' },
 ];

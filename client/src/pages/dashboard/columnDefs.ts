@@ -37,10 +37,10 @@ const hotBadge = (text: string, record: { isUrgent?: boolean }) =>
 
 const repairsColumns = (onRowClick: (key: number) => void): ColumnsType<any> => [
   { title: 'DATE IN', dataIndex: 'dateIn', key: 'dateIn', width: 90 },
-  { title: 'CLIENT', dataIndex: 'client', key: 'client', ellipsis: true, render: hotBadge },
-  { title: 'DEPT', dataIndex: 'dept', key: 'dept', ellipsis: true },
+  { title: 'CLIENT', dataIndex: 'client', key: 'client', render: hotBadge },
+  { title: 'DEPT', dataIndex: 'dept', key: 'dept' },
   woLink(onRowClick),
-  { title: 'SCOPE TYPE', dataIndex: 'scopeType', key: 'scopeType', ellipsis: true },
+  { title: 'SCOPE TYPE', dataIndex: 'scopeType', key: 'scopeType' },
   { title: 'SERIAL', dataIndex: 'serial', key: 'serial', width: 100 },
   { title: 'TAT', dataIndex: 'daysIn', key: 'daysIn', width: 60, align: 'center', render: tatRender },
   { title: 'STATUS', dataIndex: 'status', key: 'status', width: 130, render: statusRender },
@@ -53,7 +53,7 @@ const repairsColumns = (onRowClick: (key: number) => void): ColumnsType<any> => 
 // ── Shipping ──
 const shippingColumns = (onRowClick: (key: number) => void): ColumnsType<any> => [
   woLink(onRowClick),
-  { title: 'CLIENT', dataIndex: 'client', key: 'client', ellipsis: true },
+  { title: 'CLIENT', dataIndex: 'client', key: 'client' },
   { title: 'STATUS', dataIndex: 'status', key: 'status', width: 130, render: statusRender },
   { title: 'SHIP DATE', dataIndex: 'shipDate', key: 'shipDate', width: 100, render: nullDash },
   { title: 'TRACKING #', dataIndex: 'trackingNumber', key: 'trackingNumber', width: 140, render: nullDash },
@@ -64,7 +64,7 @@ const shippingColumns = (onRowClick: (key: number) => void): ColumnsType<any> =>
 const invoicesColumns = (_onRowClick: (key: number) => void): ColumnsType<any> => [
   { title: 'INVOICE #', dataIndex: 'invoiceNumber', key: 'invoiceNumber', width: 110 },
   { title: 'WO#', dataIndex: 'wo', key: 'wo', width: 110 },
-  { title: 'CLIENT', dataIndex: 'client', key: 'client', ellipsis: true },
+  { title: 'CLIENT', dataIndex: 'client', key: 'client' },
   { title: 'STATUS', dataIndex: 'status', key: 'status', width: 130, render: statusRender },
   { title: 'AMOUNT', dataIndex: 'amount', key: 'amount', width: 100, align: 'right', render: moneyRender },
   { title: 'DATE', dataIndex: 'date', key: 'date', width: 100 },
@@ -72,26 +72,26 @@ const invoicesColumns = (_onRowClick: (key: number) => void): ColumnsType<any> =
 
 // ── Flags ──
 const flagsColumns = (_onRowClick: (key: number) => void): ColumnsType<any> => [
-  { title: 'OWNER', dataIndex: 'ownerName', key: 'ownerName', ellipsis: true },
+  { title: 'OWNER', dataIndex: 'ownerName', key: 'ownerName' },
   { title: 'FLAG TYPE', dataIndex: 'flagType', key: 'flagType', width: 120, render: statusRender },
-  { title: 'FLAG', dataIndex: 'flagText', key: 'flagText', ellipsis: true },
+  { title: 'FLAG', dataIndex: 'flagText', key: 'flagText' },
 ];
 
 // ── Emails ──
 const emailsColumns = (_onRowClick: (key: number) => void): ColumnsType<any> => [
   { title: 'DATE', dataIndex: 'date', key: 'date', width: 100 },
   { title: 'TYPE', dataIndex: 'emailType', key: 'emailType', width: 120 },
-  { title: 'FROM', dataIndex: 'from', key: 'from', ellipsis: true },
-  { title: 'TO', dataIndex: 'to', key: 'to', ellipsis: true },
-  { title: 'SUBJECT', dataIndex: 'subject', key: 'subject', ellipsis: true },
+  { title: 'FROM', dataIndex: 'from', key: 'from' },
+  { title: 'TO', dataIndex: 'to', key: 'to' },
+  { title: 'SUBJECT', dataIndex: 'subject', key: 'subject' },
   { title: 'STATUS', dataIndex: 'status', key: 'status', width: 100, render: statusRender },
 ];
 
 // ── Tasks ──
 const tasksColumns = (_onRowClick: (key: number) => void): ColumnsType<any> => [
   { title: 'PRIORITY', dataIndex: 'priority', key: 'priority', width: 90, render: statusRender },
-  { title: 'TASK', dataIndex: 'title', key: 'title', ellipsis: true },
-  { title: 'CLIENT', dataIndex: 'client', key: 'client', ellipsis: true },
+  { title: 'TASK', dataIndex: 'title', key: 'title' },
+  { title: 'CLIENT', dataIndex: 'client', key: 'client' },
   { title: 'TYPE', dataIndex: 'taskType', key: 'taskType', width: 120 },
   { title: 'DATE', dataIndex: 'date', key: 'date', width: 100 },
   { title: 'STATUS', dataIndex: 'status', key: 'status', width: 130, render: statusRender },
@@ -100,8 +100,8 @@ const tasksColumns = (_onRowClick: (key: number) => void): ColumnsType<any> => [
 // ── Tech Bench ──
 const techBenchColumns = (onRowClick: (key: number) => void): ColumnsType<any> => [
   woLink(onRowClick),
-  { title: 'CLIENT', dataIndex: 'client', key: 'client', ellipsis: true },
-  { title: 'SCOPE TYPE', dataIndex: 'scopeType', key: 'scopeType', ellipsis: true },
+  { title: 'CLIENT', dataIndex: 'client', key: 'client' },
+  { title: 'SCOPE TYPE', dataIndex: 'scopeType', key: 'scopeType' },
   { title: 'TECH', dataIndex: 'tech', key: 'tech', width: 100, render: nullDash },
   { title: 'STATUS', dataIndex: 'status', key: 'status', width: 130, render: statusRender },
   { title: 'TAT', dataIndex: 'daysIn', key: 'daysIn', width: 60, align: 'center', render: tatRender },
