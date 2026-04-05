@@ -2,6 +2,9 @@ import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Spin, message } from 'antd';
 import { useParams } from 'react-router-dom';
 import type { RepairDetail, RepairFull, RepairLineItem } from './types';
+import { DiInspectionForm } from './forms/DiInspectionForm';
+import { DiFlexibleForm } from './forms/DiFlexibleForm';
+import { RequisitionForm } from './forms/RequisitionForm';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import { CommandStrip } from './components/CommandStrip';
@@ -77,6 +80,11 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const statusMenuRef = useRef<HTMLDivElement>(null);
 
+  // Forms dropdown + overlay state
+  const [formsMenuOpen, setFormsMenuOpen] = useState(false);
+  const formsMenuRef = useRef<HTMLDivElement>(null);
+  const [activeForm, setActiveForm] = useState<'di-inspection' | 'di-flexible' | 'requisition' | null>(null);
+
   // Cockpit-specific state
   const [fullRepair, setFullRepair] = useState<RepairFull | null>(null);
   const [flags, setFlags] = useState<ClientFlag[]>([]);
@@ -151,6 +159,18 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
     document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
   }, [statusMenuOpen]);
+
+  // Close forms menu on outside click
+  useEffect(() => {
+    if (!formsMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (formsMenuRef.current && !formsMenuRef.current.contains(e.target as Node)) {
+        setFormsMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [formsMenuOpen]);
 
   const currentStatusId = isCockpit ? (fullRepair?.statusId ?? 0) : (detail?.statusId ?? 0);
   const currentStatus = isCockpit ? (fullRepair?.status ?? '') : (detail?.status ?? '');
@@ -309,11 +329,52 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
               </div>
             )}
           </div>
+          {/* Forms dropdown — cockpit */}
+          <div ref={formsMenuRef} style={{ position: 'relative' }}>
+            <button onClick={() => setFormsMenuOpen(!formsMenuOpen)} style={{
+              height: 26, padding: '0 10px', border: '1px solid var(--neutral-200)',
+              borderRadius: 4, background: 'var(--card)', color: 'var(--muted)',
+              fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 3,
+            }}>
+              Forms
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            </button>
+            {formsMenuOpen && (
+              <div style={{
+                position: 'absolute', top: '100%', left: 0, marginTop: 4,
+                background: 'var(--card)', border: '1px solid var(--neutral-200)',
+                borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+                minWidth: 210, zIndex: 100,
+              }}>
+                {[
+                  { key: 'di-inspection' as const, label: 'D&I Inspection (OM05-2)' },
+                  { key: 'di-flexible'  as const, label: 'D&I Flexible (OM05-2F)' },
+                  { key: 'requisition'  as const, label: 'Requisition for Approval (OM07-2)' },
+                ].map(item => (
+                  <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} style={{
+                    padding: '7px 12px', cursor: 'pointer', fontSize: 11,
+                    color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = ''; }}
+                  >{item.label}</div>
+                ))}
+              </div>
+            )}
+          </div>
           <div style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: 'var(--muted)' }}>
             {fullRepair.status} · TAT: <span style={{ fontWeight: 700, color: fullRepair.daysIn > 14 ? 'var(--danger)' : fullRepair.daysIn > 7 ? 'var(--amber)' : 'var(--muted)' }}>{fullRepair.daysIn}d</span>
           </span>
         </div>
+
+        {/* Form overlays — cockpit */}
+        {activeForm === 'di-inspection' && <DiInspectionForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'di-flexible'   && <DiFlexibleForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'requisition'   && <RequisitionForm repair={fullRepair} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
 
         {/* Tab bar */}
         <div style={{
@@ -485,6 +546,46 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             </div>
           )}
         </div>
+
+        {/* Forms dropdown — legacy pane */}
+        <div ref={formsMenuRef} style={{ position: 'relative' }}>
+          <button
+            onClick={() => setFormsMenuOpen(!formsMenuOpen)}
+            style={{
+              height: 28, padding: '0 10px', border: '1px solid var(--neutral-200)',
+              borderRadius: 5, background: 'var(--card)', color: 'var(--muted)',
+              fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 4,
+            }}
+          >
+            Forms
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          {formsMenuOpen && (
+            <div style={{
+              position: 'absolute', top: '100%', left: 0, marginTop: 4,
+              background: 'var(--card)', border: '1px solid var(--neutral-200)',
+              borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+              minWidth: 230, zIndex: 100,
+            }}>
+              {[
+                { key: 'di-inspection' as const, label: 'D&I Inspection (OM05-2)' },
+                { key: 'di-flexible'  as const, label: 'D&I Flexible (OM05-2F)' },
+                { key: 'requisition'  as const, label: 'Requisition for Approval (OM07-2)' },
+              ].map(item => (
+                <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} style={{
+                  padding: '7px 12px', cursor: 'pointer', fontSize: 12,
+                  color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = ''; }}
+                >{item.label}</div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <TabBar tabs={[...tabs, { key: 'comments', label: 'Comments' }]} activeKey={activeTab} onChange={k => setActiveTab(k as Parameters<typeof setActiveTab>[0])} />
@@ -495,6 +596,11 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       {activeTab === 'scopehistory' && <ScopeHistoryTab repairKey={detail.repairKey} currentRepairKey={detail.repairKey} />}
       {activeTab === 'statuslog'    && <StatusHistoryTab repairKey={detail.repairKey} />}
       {activeTab === 'comments'     && <NotesTab repairKey={detail.repairKey} />}
+
+      {/* Form overlays — legacy pane. Cast detail to RepairFull shape (shared core fields). */}
+      {activeForm === 'di-inspection' && <DiInspectionForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'di-flexible'   && <DiFlexibleForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'requisition'   && <RequisitionForm repair={detail as unknown as RepairFull} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
     </div>
   );
 };
