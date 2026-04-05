@@ -7,58 +7,75 @@ interface Props {
   onClose: () => void;
 }
 
-const sectionHeader: React.CSSProperties = {
+// ── Styles matching OM07-2 exactly ──
+const sectionBar: React.CSSProperties = {
   background: '#2E75B6',
   color: '#fff',
   fontSize: 9,
   fontWeight: 700,
   textTransform: 'uppercase',
-  letterSpacing: '0.08em',
-  padding: '4px 8px',
+  letterSpacing: '0.06em',
+  padding: '4px 10px',
+  marginTop: 8,
 };
 
-const fieldLabel: React.CSSProperties = {
+const fl: React.CSSProperties = {
   fontSize: 8.5,
-  color: '#555',
+  fontWeight: 700,
   textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  fontWeight: 600,
-  marginBottom: 1,
+  color: '#555',
+  letterSpacing: '0.04em',
 };
 
-const fieldValue: React.CSSProperties = {
-  fontSize: 11,
-  color: '#1a1a1a',
-  borderBottom: '1px solid #bbb',
+const fv: React.CSSProperties = {
+  borderBottom: '1px solid #999',
   minHeight: 18,
-  paddingBottom: 1,
+  fontSize: 11,
+  padding: '1px 2px',
 };
 
-const sectionBox: React.CSSProperties = {
-  border: '1px solid #ccc',
-  borderRadius: 3,
-  overflow: 'hidden',
-  marginBottom: 8,
+const ynBox: React.CSSProperties = {
+  display: 'inline-block',
+  width: 18,
+  height: 14,
+  border: '1px solid #999',
+  borderRadius: 2,
+  textAlign: 'center',
+  lineHeight: '14px',
+  margin: '0 2px',
+  fontSize: 9,
+  fontWeight: 700,
 };
-
-const sectionBody: React.CSSProperties = {
-  padding: '6px 8px',
-};
-
-const fmt$ = (n: number) => '$' + n.toFixed(2);
 
 export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
-  const today = new Date().toLocaleDateString('en-US');
+  const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 
   const subtotal = lineItems.reduce((sum, li) => sum + (li.amount ?? 0), 0);
-  const shipping = 0; // placeholder
-  const tax = 0;      // placeholder
-  const total = subtotal + shipping + tax;
 
-  const billAddr = [repair.billAddr1, repair.billAddr2].filter(Boolean).join(', ');
-  const billCityLine = [repair.billCity, repair.billState, repair.billZip].filter(Boolean).join(' ');
-  const shipAddr = [repair.shipAddr1, repair.shipAddr2].filter(Boolean).join(', ');
-  const shipCityLine = [repair.shipCity, repair.shipState, repair.shipZip].filter(Boolean).join(' ');
+  // Bill To
+  const billName = repair.billName ?? repair.client ?? '';
+  const billAddr = repair.billAddr1 ?? '';
+  const billCityState = [repair.billCity, repair.billState].filter(Boolean).join(', ');
+  const billCSZ = billCityState + (repair.billZip ? ' ' + repair.billZip : '');
+  const billLine = [billName, billAddr, billCSZ].filter(Boolean).join(', ');
+
+  // Ship To
+  const shipName = repair.shipName ?? repair.client ?? '';
+  const shipAddr = repair.shipAddr1 ?? '';
+  const shipCityState = [repair.shipCity, repair.shipState].filter(Boolean).join(', ');
+  const shipCSZ = shipCityState + (repair.shipZip ? ' ' + repair.shipZip : '');
+  const shipLine = [shipName, shipAddr, shipCSZ].filter(Boolean).join(', ');
+
+  // Pad to at least 6 rows, up to 8 blank rows if no items
+  const MIN_ROWS = 6;
+  const MAX_ROWS = 8;
+  const displayRows: Array<{ problem: string; description: string } | null> =
+    lineItems.length > 0
+      ? [
+          ...lineItems.map(li => ({ problem: li.itemCode ?? '', description: li.description ?? '' })),
+          ...Array(Math.max(0, MIN_ROWS - lineItems.length)).fill(null),
+        ]
+      : Array(MAX_ROWS).fill(null);
 
   return (
     <div
@@ -70,7 +87,7 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
         padding: '24px 16px', overflowY: 'auto',
       }}
     >
-      {/* No-print action bar */}
+      {/* Action bar */}
       <div className="no-print" style={{
         position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200,
       }}>
@@ -92,203 +109,201 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
         >Close</button>
       </div>
 
-      {/* The printable form */}
+      {/* Printable page */}
       <div
         className="print-form"
         style={{
-          width: '8.5in', maxWidth: '100%',
-          background: '#fff', padding: '0.4in',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
-          fontFamily: 'Arial, sans-serif',
+          width: '8.5in',
+          minHeight: '11in',
+          background: '#fff',
+          padding: '0.5in',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+          fontFamily: "'Inter', Arial, sans-serif",
           fontSize: 11,
-          color: '#1a1a1a',
+          color: '#111',
+          boxSizing: 'border-box',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
         }}
       >
-        {/* ── Header ── */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12, borderBottom: '2px solid #2E75B6', paddingBottom: 8 }}>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#2E75B6', letterSpacing: '-0.02em' }}>Total Scope Inc.</div>
-            <div style={{ fontSize: 10, color: '#555', marginTop: 1 }}>Medical Device Repair Services</div>
+        {/* ── Form Header ── */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
+          <div style={{ fontWeight: 800, fontSize: 16, color: '#1B3A5C' }}>
+            <span style={{ color: '#2E75B6' }}>T</span>otal <span style={{ color: '#2E75B6' }}>S</span>cope <span style={{ color: '#2E75B6' }}>I</span>nc.
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>Requisition for Approval</div>
-            <div style={{ fontSize: 9, color: '#777', marginTop: 2 }}>Form: OM07-2</div>
-            <div style={{ fontSize: 9, color: '#777' }}>Date: {today}</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: '#1B3A5C' }}>Requisition for Approval</div>
+            <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM07-2 (12/2020)</div>
           </div>
         </div>
 
-        {/* ── Repair Info Grid ── */}
-        <div style={sectionBox}>
-          <div style={sectionHeader}>Repair Information</div>
-          <div style={sectionBody}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 16px' }}>
-              <div>
-                <div style={fieldLabel}>To / Customer</div>
-                <div style={fieldValue}>{repair.client}</div>
-              </div>
-              <div>
-                <div style={fieldLabel}>Department</div>
-                <div style={fieldValue}>{repair.dept}</div>
-              </div>
-              <div>
-                <div style={fieldLabel}>Work Order #</div>
-                <div style={fieldValue}>{repair.wo}</div>
-              </div>
-            </div>
+        {/* ── Repair Information ── */}
+        <div style={{ ...sectionBar, marginTop: 0 }}>Repair Information</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 12px', padding: '8px 0 4px' }}>
+          {/* To (Customer) — span 2 */}
+          <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={fl}>To (Customer)</span>
+            <div style={fv}>{repair.client ?? ''}</div>
+          </div>
+          {/* Date */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={fl}>Date</span>
+            <div style={fv}>{today}</div>
+          </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 16px', marginTop: 6 }}>
-              <div>
-                <div style={fieldLabel}>Bill To</div>
-                <div style={{ fontSize: 11, color: '#1a1a1a', borderBottom: '1px solid #bbb', minHeight: 36, paddingBottom: 1 }}>
-                  {repair.billName && <div>{repair.billName}</div>}
-                  {billAddr && <div>{billAddr}</div>}
-                  {billCityLine && <div>{billCityLine}</div>}
-                </div>
-              </div>
-              <div>
-                <div style={fieldLabel}>Ship To</div>
-                <div style={{ fontSize: 11, color: '#1a1a1a', borderBottom: '1px solid #bbb', minHeight: 36, paddingBottom: 1 }}>
-                  {repair.shipName && <div>{repair.shipName}</div>}
-                  {shipAddr && <div>{shipAddr}</div>}
-                  {shipCityLine && <div>{shipCityLine}</div>}
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <div>
-                  <div style={fieldLabel}>Scope Type</div>
-                  <div style={fieldValue}>{repair.scopeType}</div>
-                </div>
-                <div>
-                  <div style={fieldLabel}>Serial #</div>
-                  <div style={fieldValue}>{repair.serial}</div>
-                </div>
-              </div>
-            </div>
+          {/* Bill To — span 2 */}
+          <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={fl}>Bill To</span>
+            <div style={fv}>{billLine}</div>
+          </div>
+          {/* Work Order # */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={fl}>Work Order #</span>
+            <div style={fv}>{repair.wo ?? ''}</div>
+          </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 16px', marginTop: 6 }}>
-              <div>
-                <div style={fieldLabel}>PO #</div>
-                <div style={fieldValue}>{repair.purchaseOrder ?? ''}</div>
-              </div>
-              <div>
-                <div style={fieldLabel}>Contract #</div>
-                <div style={fieldValue}>{repair.contractNumber ?? ''}</div>
-              </div>
-              <div>
-                <div style={fieldLabel}>Date In</div>
-                <div style={fieldValue}>{repair.dateIn}</div>
-              </div>
-            </div>
+          {/* Ship To — span 2 */}
+          <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={fl}>Ship To</span>
+            <div style={fv}>{shipLine}</div>
+          </div>
+          {/* PO # */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={fl}>PO #</span>
+            <div style={fv}>{repair.purchaseOrder ?? ''}</div>
+          </div>
 
-            {repair.complaint && (
-              <div style={{ marginTop: 6 }}>
-                <div style={fieldLabel}>Complaint / Description</div>
-                <div style={{ ...fieldValue, minHeight: 28, whiteSpace: 'pre-wrap' }}>{repair.complaint}</div>
-              </div>
-            )}
+          {/* Scope / Equipment — span 2 */}
+          <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={fl}>Scope / Equipment</span>
+            <div style={fv}>{repair.scopeModel ?? repair.scopeType ?? ''}</div>
+          </div>
+          {/* Serial # */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={fl}>Serial #</span>
+            <div style={fv}>{repair.serial ?? ''}</div>
+          </div>
+
+          {/* Complaint — span 2, no third column */}
+          <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={fl}>Complaint / Reason for Repair</span>
+            <div style={{ ...fv, minHeight: 28 }}>{repair.complaint ?? ''}</div>
           </div>
         </div>
 
-        {/* ── Repair Items Table ── */}
-        <div style={sectionBox}>
-          <div style={sectionHeader}>Repair Items</div>
-          <div style={{ padding: 0 }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
-              <thead>
-                <tr style={{ background: '#f0f0f0' }}>
-                  <th style={{ textAlign: 'left', padding: '5px 8px', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', color: '#555', width: '10%' }}>Code</th>
-                  <th style={{ textAlign: 'left', padding: '5px 8px', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', color: '#555' }}>Description</th>
-                  <th style={{ textAlign: 'right', padding: '5px 8px', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', color: '#555', width: '12%' }}>Amount</th>
-                  <th style={{ textAlign: 'center', padding: '5px 8px', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', color: '#555', width: '8%' }}>Approve</th>
-                  <th style={{ textAlign: 'center', padding: '5px 8px', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', color: '#555', width: '8%' }}>Decline</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lineItems.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} style={{ padding: '12px 8px', textAlign: 'center', color: '#999', fontSize: 11, fontStyle: 'italic' }}>
-                      No line items
-                    </td>
-                  </tr>
-                ) : (
-                  lineItems.map((li, idx) => (
-                    <tr key={li.tranKey} style={{ borderBottom: '1px solid #eee', background: idx % 2 === 1 ? '#fafafa' : '#fff' }}>
-                      <td style={{ padding: '4px 8px', fontSize: 10, color: '#555' }}>{li.itemCode}</td>
-                      <td style={{ padding: '4px 8px' }}>{li.description}</td>
-                      <td style={{ padding: '4px 8px', textAlign: 'right', fontWeight: 600 }}>{fmt$(li.amount)}</td>
-                      <td style={{ padding: '4px 8px', textAlign: 'center' }}>
-                        <input type="checkbox" style={{ width: 14, height: 14 }} />
-                      </td>
-                      <td style={{ padding: '4px 8px', textAlign: 'center' }}>
-                        <input type="checkbox" style={{ width: 14, height: 14 }} />
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        {/* ── Repair Items ── */}
+        <div style={sectionBar}>Repair Items — Customer Authorization Required</div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4 }}>
+          <thead>
+            <tr>
+              <th style={{
+                background: '#2E75B6', color: '#fff', fontSize: 8.5, fontWeight: 700,
+                textTransform: 'uppercase', padding: '5px 8px', textAlign: 'left',
+                letterSpacing: '0.04em', width: '40%',
+              }}>Problem / Item</th>
+              <th style={{
+                background: '#2E75B6', color: '#fff', fontSize: 8.5, fontWeight: 700,
+                textTransform: 'uppercase', padding: '5px 8px', textAlign: 'left',
+                letterSpacing: '0.04em',
+              }}>Description of Work</th>
+              <th style={{
+                background: '#2E75B6', color: '#fff', fontSize: 8.5, fontWeight: 700,
+                textTransform: 'uppercase', padding: '5px 8px', textAlign: 'center',
+                letterSpacing: '0.04em', width: 60,
+              }}>Approve<br /><span style={{ fontSize: 7, fontWeight: 400 }}>Y / N</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {displayRows.map((row, i) => (
+              <tr key={i} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+                <td style={{ padding: '5px 8px', fontSize: 10.5, borderBottom: '1px solid #ddd', verticalAlign: 'middle', minHeight: 22 }}>
+                  {row?.problem ?? ''}
+                </td>
+                <td style={{ padding: '5px 8px', fontSize: 10.5, borderBottom: '1px solid #ddd', verticalAlign: 'middle' }}>
+                  {row?.description ?? ''}
+                </td>
+                <td style={{ padding: '5px 8px', fontSize: 10, borderBottom: '1px solid #ddd', verticalAlign: 'middle', textAlign: 'center', color: '#555' }}>
+                  <span style={ynBox}>Y</span>
+                  <span style={ynBox}>N</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
         {/* ── Totals ── */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-          <table style={{ fontSize: 11, borderCollapse: 'collapse', minWidth: 220 }}>
+        <div style={{ marginTop: 6, display: 'flex', justifyContent: 'flex-end' }}>
+          <table style={{ width: 260, borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '2px 12px 2px 0', color: '#555', textAlign: 'right' }}>Subtotal</td>
-                <td style={{ padding: '2px 0', textAlign: 'right', fontWeight: 600, borderBottom: '1px solid #eee' }}>{fmt$(subtotal)}</td>
+                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', color: '#555', fontWeight: 600, textAlign: 'right', width: 140 }}>Subtotal</td>
+                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', textAlign: 'right', fontWeight: 700, borderBottomColor: '#999' }}>
+                  {subtotal > 0 ? '$' + subtotal.toFixed(2) : '$'}
+                </td>
               </tr>
               <tr>
-                <td style={{ padding: '2px 12px 2px 0', color: '#555', textAlign: 'right' }}>Shipping</td>
-                <td style={{ padding: '2px 0', textAlign: 'right', borderBottom: '1px solid #eee' }}>{fmt$(shipping)}</td>
+                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', color: '#555', fontWeight: 600, textAlign: 'right' }}>Shipping</td>
+                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', textAlign: 'right', fontWeight: 700, borderBottomColor: '#999' }}>$</td>
               </tr>
               <tr>
-                <td style={{ padding: '2px 12px 2px 0', color: '#555', textAlign: 'right' }}>Tax</td>
-                <td style={{ padding: '2px 0', textAlign: 'right', borderBottom: '1px solid #eee' }}>{fmt$(tax)}</td>
+                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', color: '#555', fontWeight: 600, textAlign: 'right' }}>Tax</td>
+                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', textAlign: 'right', fontWeight: 700, borderBottomColor: '#999' }}>$</td>
               </tr>
-              <tr>
-                <td style={{ padding: '4px 12px 0 0', color: '#1a1a1a', fontWeight: 700, textAlign: 'right', fontSize: 12 }}>Total</td>
-                <td style={{ padding: '4px 0 0', textAlign: 'right', fontWeight: 800, fontSize: 12, borderTop: '2px solid #2E75B6', color: '#2E75B6' }}>{fmt$(total)}</td>
+              <tr style={{ fontSize: 12, fontWeight: 800, borderTop: '2px solid #2E75B6', background: '#F0F6FF' }}>
+                <td style={{ padding: '3px 8px', color: '#555', fontWeight: 600, textAlign: 'right' }}>Total</td>
+                <td style={{ padding: '3px 8px', textAlign: 'right', fontWeight: 800, fontSize: 12 }}>$</td>
               </tr>
             </tbody>
           </table>
         </div>
 
         {/* ── Disclaimer ── */}
-        <div style={{ border: '1px solid #ddd', borderRadius: 3, padding: '6px 8px', marginBottom: 8, background: '#fafafa', fontSize: 9, color: '#666', lineHeight: 1.5 }}>
-          <strong>Authorization Notice:</strong> By signing below, the customer authorizes Total Scope Inc. to proceed with the repairs described above at the indicated pricing.
-          Approval of individual line items is indicated by the checkboxes in the table above. Items marked as declined will not be repaired.
-          Total Scope Inc. is not responsible for any delays resulting from partial approvals.
-          All repairs are performed in accordance with TSI quality standards and applicable regulatory requirements.
+        <div style={{
+          marginTop: 10, fontSize: 8.5, color: '#555', lineHeight: 1.4,
+          padding: '6px 10px', background: '#F9FAFB', border: '1px solid #ddd', borderRadius: 3,
+        }}>
+          By signing below, customer authorizes Technical Services Inc. (TSI) to proceed with the approved repair items listed above.
+          Items marked "N" will not be repaired and will be returned as-is. TSI's standard Terms &amp; Conditions apply.
+          Payment is due net 30 days from invoice date. Unapproved items returned to customer at customer's expense.
+          TSI is not responsible for damage to equipment during transit when customer-arranged shipping is used.
         </div>
 
         {/* ── Customer Authorization ── */}
-        <div style={sectionBox}>
-          <div style={sectionHeader}>Customer Authorization</div>
-          <div style={{ ...sectionBody, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 24px' }}>
-            <div>
-              <div style={fieldLabel}>Authorized Name (Print)</div>
-              <div style={{ ...fieldValue, minHeight: 22 }}></div>
-            </div>
-            <div>
-              <div style={fieldLabel}>Title / Position</div>
-              <div style={{ ...fieldValue, minHeight: 22 }}></div>
-            </div>
-            <div>
-              <div style={fieldLabel}>Signature</div>
-              <div style={{ ...fieldValue, minHeight: 28 }}></div>
-            </div>
-            <div>
-              <div style={fieldLabel}>Date</div>
-              <div style={{ ...fieldValue, minHeight: 28 }}></div>
-            </div>
+        <div style={{ ...sectionBar, marginTop: 10 }}>Customer Authorization</div>
+        <div style={{ display: 'flex', gap: 24, marginTop: 10 }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ borderBottom: '1px solid #999', minHeight: 32 }}></div>
+            <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Authorized Signature</div>
+          </div>
+          <div style={{ flex: 1, maxWidth: 180, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ borderBottom: '1px solid #999', minHeight: 32 }}></div>
+            <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Printed Name</div>
+          </div>
+          <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ borderBottom: '1px solid #999', minHeight: 32 }}></div>
+            <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Title</div>
+          </div>
+          <div style={{ flex: 1, maxWidth: 110, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ borderBottom: '1px solid #999', minHeight: 32 }}></div>
+            <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
           </div>
         </div>
 
-        {/* Footer */}
-        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 8, color: '#aaa' }}>
-          <span>Total Scope Inc. — Confidential</span>
-          <span>OM07-2 Rev. A</span>
+        {/* ── Form Footer ── */}
+        <div style={{
+          marginTop: 'auto',
+          paddingTop: 10,
+          borderTop: '1px solid #ccc',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          fontSize: 8,
+          color: '#888',
+        }}>
+          <span>ISO 13485 Certified</span>
+          <span>Technical Services Inc.&nbsp;|&nbsp;17 Creek Pkwy, Upper Chichester PA 19061&nbsp;|&nbsp;(610) 485-3838</span>
+          <span>OM07-2 (12/2020)</span>
         </div>
       </div>
     </div>

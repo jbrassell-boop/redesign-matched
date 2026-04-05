@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import './print.css';
 import type { RepairFull } from '../types';
 
@@ -7,106 +6,270 @@ interface Props {
   onClose: () => void;
 }
 
-const FLEX_CHECKLIST: string[] = [
-  'Leak Test',
-  'Insertion Tube — Kinks / Damage',
-  'Insertion Tube — Bending Section',
-  'Light Guide Bundle',
-  'Image Quality / Fiber Optics',
-  'Angulation (Up / Down / Left / Right)',
-  'Suction Channel',
-  'Air / Water Channel',
-  'Forcep Channel',
-  'Universal Cord',
-  'Connector / Light Guide',
-  'Eyepiece / Ocular',
-  'Control Body / Knobs',
-  'Biopsy Valve',
-  'Air / Water Valve',
+// Shared inline styles matching OM07-3 exactly
+const s = {
+  page: {
+    width: '8.5in',
+    minHeight: '11in',
+    background: '#fff',
+    padding: '0.5in',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: 8,
+    fontFamily: "'Inter', Arial, sans-serif",
+    fontSize: 11,
+    color: '#111',
+    boxSizing: 'border-box' as const,
+  },
+  formHeader: {
+    display: 'flex',
+    alignItems: 'flex-start' as const,
+    justifyContent: 'space-between' as const,
+    marginBottom: 6,
+  },
+  formTitle: { fontSize: 15, fontWeight: 800, color: '#1B3A5C' },
+  formSubtitle: { fontSize: 11, fontWeight: 600, color: '#2E75B6', marginTop: 1 },
+  formNumber: { fontSize: 10, color: '#666', marginTop: 2 },
+  sectionBar: {
+    background: '#2E75B6',
+    color: '#fff',
+    fontSize: 9,
+    fontWeight: 700 as const,
+    textTransform: 'uppercase' as const,
+    letterSpacing: '0.06em',
+    padding: '4px 10px',
+  },
+  fl: {
+    fontSize: 8.5,
+    fontWeight: 700 as const,
+    textTransform: 'uppercase' as const,
+    color: '#555',
+    letterSpacing: '0.04em',
+  },
+  fv: {
+    borderBottom: '1px solid #999',
+    minHeight: 17,
+    fontSize: 11,
+    padding: '1px 2px',
+  },
+  cbBox: {
+    width: 12,
+    height: 12,
+    border: '1px solid #999',
+    borderRadius: 2,
+    display: 'inline-block' as const,
+    flexShrink: 0,
+    verticalAlign: 'middle' as const,
+  },
+  costField: {
+    borderBottom: '1px solid #aaa',
+    minWidth: 60,
+    display: 'inline-block' as const,
+    height: 14,
+    verticalAlign: 'middle' as const,
+  },
+  sigMini: {
+    borderBottom: '1px solid #aaa',
+    minWidth: 100,
+    display: 'inline-block' as const,
+    height: 14,
+    verticalAlign: 'middle' as const,
+  },
+  textField: {
+    border: '1px solid #ccc',
+    borderRadius: 3,
+    minHeight: 28,
+    padding: '3px 6px',
+    fontSize: 10.5,
+    width: '100%',
+    boxSizing: 'border-box' as const,
+  },
+  formFooter: {
+    marginTop: 'auto' as const,
+    paddingTop: 8,
+    borderTop: '1px solid #ccc',
+    display: 'flex',
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+    fontSize: 8,
+    color: '#888',
+  },
+};
+
+const REPAIR_ITEMS = [
+  'Pressure Test / Leak Test',
+  'Angulation Repair (U/D/R/L)',
+  'Bending Rubber Replacement',
+  'Distal Tip Repair / Replacement',
+  'Insertion Tube Repair / Replacement',
+  'Universal Cord Repair / Replacement',
+  'Light Guide Connector Repair',
+  'Control Body Repair',
+  'A/W Channel Repair',
+  'Suction / Forcep Channel Repair',
+  'Image Bundle Repair',
+  'Light Bundle Repair',
+  'Elevator / Forcep Raiser Repair',
+  'IT Tensioner Adjustment',
+  'Eyepiece Repair / Replacement',
+  'Video Component Repair',
+  'Control Knob / Switch Repair',
+  'Other: _________________________',
 ];
 
-type PfVal = 'P' | 'F' | 'N' | null;
+// P/F inspection checklist items for page 3 (24-point)
+const PF_CATEGORIES = [
+  {
+    cat: 'Leak & Pressure',
+    items: ['1. Pressure Test (pass)'],
+  },
+  {
+    cat: 'Water & Channels',
+    items: [
+      '2. Auxiliary Water Function',
+      '3. A/W Flow — Air',
+      '4. A/W Flow — Water',
+      '5. Forcep Channel',
+      '6. Suction Channel',
+      '7. Elevator / Forcep Raiser',
+    ],
+  },
+  {
+    cat: 'Control Body & Switches',
+    items: [
+      '8. Control Body Condition',
+      '9. Control Switches Function',
+    ],
+  },
+  {
+    cat: 'Angulation',
+    items: [
+      '10. Angulation — Up (factory: 180°)',
+      '11. Angulation — Down (factory: 180°)',
+      '12. Angulation — Right (factory: 160°)',
+      '13. Angulation — Left (factory: 160°)',
+      '14. Angulation Tightness',
+      '15. Angulation Orientation',
+      '16. Angulation Knobs',
+    ],
+  },
+  {
+    cat: 'Insertion Tube, Cord & Connector',
+    items: [
+      '17. IT Tensioner',
+      '18. Insertion Tube Condition',
+      '19. Universal Cord Condition',
+      '20. Light Guide Connector',
+      '21. Bending Rubber (max epoxy 13.64)',
+    ],
+  },
+  {
+    cat: 'Optics & Image',
+    items: [
+      '22. Distal Tip Condition',
+      '23. Eyepiece Condition',
+      '24. Light Bundle Transmission',
+    ],
+  },
+  {
+    cat: 'Video Image',
+    items: [
+      '25. Video Image Quality',
+      '26. Video Features / Functions',
+      '27. Image Bundle — Broken Fibers',
+      '28. Image Bundle — Half Tones',
+    ],
+  },
+];
 
-const sectionHeader: React.CSSProperties = {
+const ACCESSORIES = [
+  'Scope Only',
+  'Light Cable',
+  'Soak Cap',
+  'Elevator Cap',
+  'Suction Valve',
+  'A/W Valve',
+  'Biopsy Cap',
+  'Storage Case',
+  'Other: ___________',
+];
+
+const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+
+const repairTableTh: React.CSSProperties = {
   background: '#2E75B6',
   color: '#fff',
-  fontSize: 9,
+  fontSize: 8,
   fontWeight: 700,
   textTransform: 'uppercase',
-  letterSpacing: '0.08em',
   padding: '4px 8px',
+  textAlign: 'left',
+  letterSpacing: '0.03em',
+  borderRight: '1px solid rgba(255,255,255,0.2)',
 };
 
-const fieldLabel: React.CSSProperties = {
-  fontSize: 8.5,
-  color: '#555',
+const repairTableTd: React.CSSProperties = {
+  padding: '4px 8px',
+  borderBottom: '1px solid #e8e8e8',
+  verticalAlign: 'middle',
+  borderRight: '1px solid #eee',
+  fontSize: 10,
+};
+
+const pfTableTh: React.CSSProperties = {
+  background: '#2E75B6',
+  color: '#fff',
+  fontSize: 8,
+  fontWeight: 700,
   textTransform: 'uppercase',
-  letterSpacing: '0.05em',
-  fontWeight: 600,
-  marginBottom: 1,
+  padding: '3px 8px',
+  textAlign: 'left',
+  letterSpacing: '0.03em',
+  borderRight: '1px solid rgba(255,255,255,0.2)',
 };
 
-const fieldValue: React.CSSProperties = {
-  fontSize: 11,
-  color: '#1a1a1a',
-  borderBottom: '1px solid #bbb',
-  minHeight: 18,
-  paddingBottom: 1,
+const pfTableTd: React.CSSProperties = {
+  padding: '3px 8px',
+  borderBottom: '1px solid #e8e8e8',
+  verticalAlign: 'middle',
+  borderRight: '1px solid #eee',
+  fontSize: 10,
 };
 
-const sectionBox: React.CSSProperties = {
-  border: '1px solid #ccc',
-  borderRadius: 3,
-  overflow: 'hidden',
-  marginBottom: 8,
-};
+const pfBtn = (type: 'p' | 'f' | 'na') => ({
+  display: 'inline-block' as const,
+  width: 24,
+  height: 15,
+  border: type === 'p' ? '1px solid #16A34A' : type === 'f' ? '1px solid #B71234' : '1px solid #aaa',
+  borderRadius: 2,
+  textAlign: 'center' as const,
+  lineHeight: '15px',
+  fontSize: 8,
+  fontWeight: 700 as const,
+  margin: '0 1px',
+  color: type === 'p' ? '#16A34A' : type === 'f' ? '#B71234' : '#666',
+});
 
-const sectionBody: React.CSSProperties = {
-  padding: '6px 8px',
-};
+const LogoBlock = () => (
+  <div style={{ fontWeight: 800, fontSize: 16, color: '#1B3A5C', letterSpacing: '-0.01em' }}>
+    <span style={{ color: '#2E75B6' }}>T</span>otal <span style={{ color: '#2E75B6' }}>S</span>cope <span style={{ color: '#2E75B6' }}>I</span>nc.
+  </div>
+);
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  border: '1px solid #ddd',
-  borderRadius: 3,
-  padding: '2px 5px',
-  fontSize: 11,
-  fontFamily: 'Arial, sans-serif',
-  color: '#1a1a1a',
-  boxSizing: 'border-box',
-};
+const FormFooter = ({ page }: { page: string }) => (
+  <div style={s.formFooter}>
+    <span>ISO 13485 Certified</span>
+    <span>Technical Services Inc.&nbsp;|&nbsp;17 Creek Pkwy, Upper Chichester PA 19061&nbsp;|&nbsp;(610) 485-3838</span>
+    <span>{page}</span>
+  </div>
+);
 
 export const DiFlexibleForm = ({ repair, onClose }: Props) => {
-  const [condition, setCondition] = useState<'clean' | 'unclean' | null>(null);
-  const [pfState, setPfState] = useState<PfVal[]>(FLEX_CHECKLIST.map(() => null));
-  const [angulation, setAngulation] = useState({ up: '', down: '', left: '', right: '' });
-  const [fiberBrokenIn, setFiberBrokenIn] = useState('');
-  const [fiberBrokenOut, setFiberBrokenOut] = useState('');
-  const [needsRepair, setNeedsRepair] = useState('');
-  const [comments, setComments] = useState('');
-
-  const today = new Date().toLocaleDateString('en-US');
-
-  const setPf = (idx: number, val: PfVal) => {
-    setPfState(prev => {
-      const next = [...prev];
-      next[idx] = next[idx] === val ? null : val;
-      return next;
-    });
-  };
-
-  const pfBtn = (idx: number, val: PfVal, label: string, activeColor: string) => (
-    <button
-      className="no-print"
-      onClick={() => setPf(idx, val)}
-      style={{
-        width: 32, height: 22, border: '1px solid #ccc', borderRadius: 3,
-        fontSize: 9, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-        background: pfState[idx] === val ? activeColor : '#f9f9f9',
-        color: pfState[idx] === val ? '#fff' : '#666',
-      }}
-    >{label}</button>
-  );
+  const woNum = repair.wo ?? '';
+  const serialNum = repair.serial ?? '';
+  const clientName = repair.client ?? '';
+  const model = repair.scopeModel ?? repair.scopeType ?? '';
+  const complaint = repair.complaint ?? '';
 
   return (
     <div
@@ -118,7 +281,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
         padding: '24px 16px', overflowY: 'auto',
       }}
     >
-      {/* No-print action bar */}
+      {/* Action bar */}
       <div className="no-print" style={{
         position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200,
       }}>
@@ -140,245 +303,336 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
         >Close</button>
       </div>
 
-      {/* The printable form */}
-      <div
-        className="print-form"
-        style={{
-          width: '8.5in', maxWidth: '100%',
-          background: '#fff', padding: '0.4in',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
-          fontFamily: 'Arial, sans-serif',
-          fontSize: 11,
-          color: '#1a1a1a',
-        }}
-      >
-        {/* ── Header ── */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12, borderBottom: '2px solid #2E75B6', paddingBottom: 8 }}>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: '#2E75B6', letterSpacing: '-0.02em' }}>Total Scope Inc.</div>
-            <div style={{ fontSize: 10, color: '#555', marginTop: 1 }}>Medical Device Repair Services</div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: '#1a1a1a' }}>D&I Inspection — Flexible Endoscope</div>
-            <div style={{ fontSize: 9, color: '#777', marginTop: 2 }}>Form: OM05-2F</div>
-            <div style={{ fontSize: 9, color: '#777' }}>Date: {today}</div>
-          </div>
-        </div>
+      <div className="print-form flex-col" style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
 
-        {/* ── Scope Information ── */}
-        <div style={sectionBox}>
-          <div style={sectionHeader}>Scope Information</div>
-          <div style={sectionBody}>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: '6px 12px' }}>
-              <div>
-                <div style={fieldLabel}>Client / Facility</div>
-                <div style={fieldValue}>{repair.client}</div>
-              </div>
-              <div>
-                <div style={fieldLabel}>Work Order #</div>
-                <div style={fieldValue}>{repair.wo}</div>
-              </div>
-              <div>
-                <div style={fieldLabel}>Serial #</div>
-                <div style={fieldValue}>{repair.serial}</div>
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '6px 12px', marginTop: 6 }}>
-              <div>
-                <div style={fieldLabel}>Date In</div>
-                <div style={fieldValue}>{repair.dateIn}</div>
-              </div>
-              <div>
-                <div style={fieldLabel}>Rack #</div>
-                <div style={fieldValue}>{repair.rackLocation ?? ''}</div>
-              </div>
-              <div>
-                <div style={fieldLabel}>Scope Type</div>
-                <div style={fieldValue}>{repair.scopeType}</div>
-              </div>
-              <div>
-                <div style={fieldLabel}>Department</div>
-                <div style={fieldValue}>{repair.dept}</div>
-              </div>
-            </div>
-            {repair.complaint && (
-              <div style={{ marginTop: 6 }}>
-                <div style={fieldLabel}>Complaint / Description</div>
-                <div style={{ ...fieldValue, minHeight: 28, whiteSpace: 'pre-wrap' }}>{repair.complaint}</div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Received Condition ── */}
-        <div style={sectionBox}>
-          <div style={sectionHeader}>Item Received Condition</div>
-          <div style={{ ...sectionBody, display: 'flex', gap: 32, alignItems: 'center' }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 11 }}>
-              <input
-                type="checkbox"
-                checked={condition === 'clean'}
-                onChange={() => setCondition(prev => prev === 'clean' ? null : 'clean')}
-                style={{ width: 14, height: 14, cursor: 'pointer' }}
-              />
-              Clean
-            </label>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 11 }}>
-              <input
-                type="checkbox"
-                checked={condition === 'unclean'}
-                onChange={() => setCondition(prev => prev === 'unclean' ? null : 'unclean')}
-                style={{ width: 14, height: 14, cursor: 'pointer' }}
-              />
-              Unclean / Contaminated
-            </label>
-          </div>
-        </div>
-
-        {/* ── Angulation Measurements + Fiber Counts side by side ── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-          {/* Angulation */}
-          <div style={sectionBox}>
-            <div style={sectionHeader}>Angulation Measurements</div>
-            <div style={sectionBody}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                {(['up', 'down', 'left', 'right'] as const).map(dir => (
-                  <div key={dir}>
-                    <div style={fieldLabel}>{dir.charAt(0).toUpperCase() + dir.slice(1)}</div>
-                    <input
-                      type="text"
-                      value={angulation[dir]}
-                      onChange={e => setAngulation(prev => ({ ...prev, [dir]: e.target.value }))}
-                      placeholder="°"
-                      style={{ ...inputStyle, width: '100%' }}
-                    />
-                  </div>
-                ))}
-              </div>
+        {/* ══════════════════════════════════════════════════════
+            PAGE 1 — Items Found / Approved + Comments
+        ══════════════════════════════════════════════════════ */}
+        <div className="print-page" style={s.page}>
+          {/* Header */}
+          <div style={s.formHeader}>
+            <LogoBlock />
+            <div style={{ textAlign: 'right' }}>
+              <div style={s.formTitle}>Blank Inspection Report</div>
+              <div style={s.formSubtitle}>Flexible Endoscope</div>
+              <div style={s.formNumber}>OM07-3 &nbsp;|&nbsp; Page 1 of 3</div>
             </div>
           </div>
 
-          {/* Fiber Counts */}
-          <div style={sectionBox}>
-            <div style={sectionHeader}>Fiber Count</div>
-            <div style={sectionBody}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div>
-                  <div style={fieldLabel}>Broken Fibers In</div>
-                  <input
-                    type="text"
-                    value={fiberBrokenIn}
-                    onChange={e => setFiberBrokenIn(e.target.value)}
-                    style={{ ...inputStyle, width: '100%' }}
-                  />
-                </div>
-                <div>
-                  <div style={fieldLabel}>Broken Fibers Out</div>
-                  <input
-                    type="text"
-                    value={fiberBrokenOut}
-                    onChange={e => setFiberBrokenOut(e.target.value)}
-                    style={{ ...inputStyle, width: '100%' }}
-                  />
-                </div>
-              </div>
+          {/* Scope Information */}
+          <div style={s.sectionBar}>Scope Information</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px 12px', padding: '6px 0 2px' }}>
+            <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={s.fl}>Client / Facility</span>
+              <div style={s.fv}>{clientName}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={s.fl}>Date</span>
+              <div style={s.fv}>{today}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={s.fl}>Work Order #</span>
+              <div style={s.fv}>{woNum}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={s.fl}>Serial #</span>
+              <div style={s.fv}>{serialNum}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, gridColumn: 'span 2' }}>
+              <span style={s.fl}>Scope Model</span>
+              <div style={s.fv}>{model}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={s.fl}>Rack #</span>
+              <div style={s.fv}></div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, gridColumn: 'span 2' }}>
+              <span style={s.fl}>Complaint</span>
+              <div style={{ ...s.fv, minHeight: 24 }}>{complaint}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={s.fl}>Cust. Expected Delivery</span>
+              <div style={s.fv}></div>
             </div>
           </div>
-        </div>
 
-        {/* ── Inspection Checklist ── */}
-        <div style={sectionBox}>
-          <div style={sectionHeader}>Flexible Endoscope Inspection Checklist</div>
-          <div style={sectionBody}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
-              <thead>
-                <tr style={{ background: '#f0f0f0' }}>
-                  <th style={{ textAlign: 'left', padding: '4px 6px', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', color: '#555', width: '60%' }}>Inspection Item</th>
-                  <th style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', color: '#555' }}>Pass</th>
-                  <th style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', color: '#555' }}>Fail</th>
-                  <th style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 700, fontSize: 9, textTransform: 'uppercase', color: '#555' }}>N/A</th>
+          {/* Items Found to be in Need of Repair */}
+          <div style={s.sectionBar}>Items Found to be in Need of Repair</div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 10 }}>
+            <thead>
+              <tr>
+                <th style={{ ...repairTableTh, width: 22 }}></th>
+                <th style={repairTableTh}>Item</th>
+                <th style={{ ...repairTableTh, textAlign: 'center', width: 80 }}>Est. Cost</th>
+                <th style={{ ...repairTableTh, textAlign: 'center', width: 60 }}>Approved</th>
+              </tr>
+            </thead>
+            <tbody>
+              {REPAIR_ITEMS.map((item, i) => (
+                <tr key={i} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+                  <td style={{ ...repairTableTd, borderRight: '1px solid #eee' }}><span style={s.cbBox}></span></td>
+                  <td style={repairTableTd}>{item}</td>
+                  <td style={{ ...repairTableTd, textAlign: 'center' }}><span style={s.costField}></span></td>
+                  <td style={{ ...repairTableTd, textAlign: 'center', borderRight: 'none' }}><span style={s.cbBox}></span></td>
                 </tr>
-              </thead>
-              <tbody>
-                {FLEX_CHECKLIST.map((item, idx) => (
-                  <tr key={idx} style={{ borderBottom: '1px solid #eee', background: idx % 2 === 1 ? '#fafafa' : '#fff' }}>
-                    <td style={{ padding: '4px 6px', fontSize: 11 }}>{item}</td>
-                    <td style={{ padding: '4px 6px', textAlign: 'center' }}>
-                      {pfBtn(idx, 'P', 'P', '#4CAF50')}
-                    </td>
-                    <td style={{ padding: '4px 6px', textAlign: 'center' }}>
-                      {pfBtn(idx, 'F', 'F', '#f44336')}
-                    </td>
-                    <td style={{ padding: '4px 6px', textAlign: 'center' }}>
-                      {pfBtn(idx, 'N', 'N/A', '#9e9e9e')}
-                    </td>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Subtotal */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4, gap: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
+              <span style={s.fl}>Subtotal Estimate</span>
+              <div style={{ borderBottom: '1px solid #999', minWidth: 100, height: 17 }}></div>
+            </div>
+          </div>
+
+          {/* Comments */}
+          <div style={s.sectionBar}>Comments / Additional Notes</div>
+          <div style={{ ...s.textField, minHeight: 36 }}></div>
+
+          {/* Signature block */}
+          <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
+              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Technician / Estimator</div>
+            </div>
+            <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
+              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
+            </div>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
+              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Customer Authorization</div>
+            </div>
+            <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
+              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
+            </div>
+          </div>
+
+          <FormFooter page="OM07-3 | Page 1" />
+        </div>
+
+        {/* ══════════════════════════════════════════════════════
+            PAGE 2 — Items Approved and Repaired
+        ══════════════════════════════════════════════════════ */}
+        <div className="print-page" style={s.page}>
+          {/* Header */}
+          <div style={s.formHeader}>
+            <LogoBlock />
+            <div style={{ textAlign: 'right' }}>
+              <div style={s.formTitle}>Blank Inspection Report</div>
+              <div style={s.formSubtitle}>Flexible Endoscope — Items Approved &amp; Repaired</div>
+              <div style={s.formNumber}>OM07-3 &nbsp;|&nbsp; Page 2 of 3</div>
+            </div>
+          </div>
+
+          {/* Mini header fields */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 12px', padding: '4px 0 6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={s.fl}>Work Order #</span>
+              <div style={s.fv}>{woNum}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={s.fl}>Serial #</span>
+              <div style={s.fv}>{serialNum}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={s.fl}>Date</span>
+              <div style={s.fv}>{today}</div>
+            </div>
+          </div>
+
+          {/* Items Approved and Repaired */}
+          <div style={s.sectionBar}>Items Approved and Repaired</div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 10 }}>
+            <thead>
+              <tr>
+                <th style={{ ...repairTableTh, width: 22 }}></th>
+                <th style={repairTableTh}>Item Repaired</th>
+                <th style={{ ...repairTableTh, textAlign: 'center', width: 80 }}>Actual Cost</th>
+                <th style={repairTableTh}>Repaired By (Initials)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {REPAIR_ITEMS.map((item, i) => (
+                <tr key={i} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+                  <td style={{ ...repairTableTd, borderRight: '1px solid #eee' }}><span style={s.cbBox}></span></td>
+                  <td style={repairTableTd}>{item}</td>
+                  <td style={{ ...repairTableTd, textAlign: 'center' }}><span style={s.costField}></span></td>
+                  <td style={{ ...repairTableTd, borderRight: 'none' }}><span style={s.sigMini}></span></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {/* Total */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4, gap: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
+              <span style={s.fl}>Total Repair Cost</span>
+              <div style={{ borderBottom: '2px solid #2E75B6', minWidth: 100, height: 17, fontWeight: 700 }}></div>
+            </div>
+          </div>
+
+          {/* Additional Notes */}
+          <div style={s.sectionBar}>Additional Repair Notes</div>
+          <div style={{ ...s.textField, minHeight: 48 }}></div>
+
+          {/* Signature */}
+          <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
+              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Lead Technician / Signature</div>
+            </div>
+            <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
+              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
+            </div>
+          </div>
+
+          <FormFooter page="OM07-3 | Page 2" />
+        </div>
+
+        {/* ══════════════════════════════════════════════════════
+            PAGE 3 — Final Inspection
+        ══════════════════════════════════════════════════════ */}
+        <div className="print-page" style={{ ...s.page, minHeight: 'auto' }}>
+          {/* Header */}
+          <div style={s.formHeader}>
+            <LogoBlock />
+            <div style={{ textAlign: 'right' }}>
+              <div style={s.formTitle}>Blank Inspection Report</div>
+              <div style={s.formSubtitle}>Flexible Endoscope — Final Inspection</div>
+              <div style={s.formNumber}>OM07-3 &nbsp;|&nbsp; Page 3 of 3</div>
+            </div>
+          </div>
+
+          {/* Mini header */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 12px', padding: '4px 0 6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={s.fl}>Work Order #</span>
+              <div style={s.fv}>{woNum}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={s.fl}>Serial #</span>
+              <div style={s.fv}>{serialNum}</div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <span style={s.fl}>Date</span>
+              <div style={s.fv}>{today}</div>
+            </div>
+          </div>
+
+          {/* 24-Point Checklist */}
+          <div style={s.sectionBar}>Final Inspection Checklist — 24-Point</div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 10 }}>
+            <thead>
+              <tr>
+                <th style={{ ...pfTableTh, width: '46%' }}>Item</th>
+                <th style={{ ...pfTableTh, textAlign: 'center', width: 40 }}>Y</th>
+                <th style={{ ...pfTableTh, textAlign: 'center', width: 40 }}>N</th>
+                <th style={{ ...pfTableTh, textAlign: 'center', width: 40 }}>N/A</th>
+                <th style={pfTableTh}>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {PF_CATEGORIES.map(cat => (
+                <>
+                  <tr key={`cat-${cat.cat}`} style={{ background: '#E8F0FE' }}>
+                    <td colSpan={5} style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: '#1B3A5C', letterSpacing: '0.04em', padding: '3px 8px' }}>{cat.cat}</td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  {cat.items.map((item, ii) => (
+                    <tr key={`${cat.cat}-${ii}`} style={{ background: ii % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+                      <td style={pfTableTd}>{item}</td>
+                      <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfBtn('p')}>Y</span></td>
+                      <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfBtn('f')}>N</span></td>
+                      <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfBtn('na')}>N/A</span></td>
+                      <td style={{ ...pfTableTd, borderRight: 'none' }}></td>
+                    </tr>
+                  ))}
+                </>
+              ))}
+            </tbody>
+          </table>
 
-        {/* ── Items in Need of Repair ── */}
-        <div style={sectionBox}>
-          <div style={sectionHeader}>Items in Need of Repair</div>
-          <div style={sectionBody}>
-            <textarea
-              value={needsRepair}
-              onChange={e => setNeedsRepair(e.target.value)}
-              rows={3}
-              placeholder="Describe items requiring repair..."
-              style={{
-                width: '100%', resize: 'vertical', border: '1px solid #ddd', borderRadius: 3,
-                padding: '4px 6px', fontSize: 11, fontFamily: 'Arial, sans-serif',
-                color: '#1a1a1a', boxSizing: 'border-box',
-              }}
-            />
+          {/* Scope Includes */}
+          <div style={s.sectionBar}>Scope Includes</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px 12px', padding: '5px 0' }}>
+            {ACCESSORIES.map((acc, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10 }}>
+                <span style={s.cbBox}></span> {acc}
+              </div>
+            ))}
           </div>
-        </div>
 
-        {/* ── Comments ── */}
-        <div style={sectionBox}>
-          <div style={sectionHeader}>Comments</div>
-          <div style={sectionBody}>
-            <textarea
-              value={comments}
-              onChange={e => setComments(e.target.value)}
-              rows={3}
-              placeholder="Additional comments..."
-              style={{
-                width: '100%', resize: 'vertical', border: '1px solid #ddd', borderRadius: 3,
-                padding: '4px 6px', fontSize: 11, fontFamily: 'Arial, sans-serif',
-                color: '#1a1a1a', boxSizing: 'border-box',
-              }}
-            />
-          </div>
-        </div>
-
-        {/* ── Signature Block ── */}
-        <div style={sectionBox}>
-          <div style={sectionHeader}>Authorization</div>
-          <div style={{ ...sectionBody, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px 24px' }}>
-            <div>
-              <div style={fieldLabel}>Inspector Name</div>
-              <div style={{ ...fieldValue, minHeight: 22 }}></div>
+          {/* QC Sign-Off */}
+          <div style={s.sectionBar}>QC Sign-Off</div>
+          <div style={{
+            display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px 10px',
+            padding: '8px 10px', border: '1px solid #ddd', borderRadius: 3,
+            background: '#F9FAFB', marginTop: 6,
+          }}>
+            {/* Scope Usable */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={s.fl}>Scope Usable</span>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> Y</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> N</span>
+              </div>
             </div>
-            <div>
-              <div style={fieldLabel}>Signature</div>
-              <div style={{ ...fieldValue, minHeight: 22 }}></div>
+            {/* Rework Required */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={s.fl}>Rework Required</span>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> Y</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> N</span>
+              </div>
             </div>
-            <div>
-              <div style={fieldLabel}>Date</div>
-              <div style={{ ...fieldValue, minHeight: 22 }}></div>
+            {/* Alcohol Wipe */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={s.fl}>Alcohol Wipe</span>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> Done</span>
+              </div>
+            </div>
+            {/* Responsible Tech */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={s.fl}>Responsible Tech</span>
+              <div style={{ borderBottom: '1px solid #999', minHeight: 18, marginTop: 2 }}></div>
+            </div>
+            {/* QC Initials */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={s.fl}>QC Initials</span>
+              <div style={{ borderBottom: '1px solid #999', minHeight: 18, marginTop: 2 }}></div>
+            </div>
+            {/* Test Equipment — span 2 */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, gridColumn: 'span 2' }}>
+              <span style={s.fl}>Test Equipment Used</span>
+              <div style={{ borderBottom: '1px solid #999', minHeight: 18, marginTop: 2 }}></div>
+            </div>
+            {/* Commercial QC */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={s.fl}>Commercial QC</span>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+                  <span style={{ ...pfBtn('p'), width: 20, height: 13, lineHeight: '13px', fontSize: 8 }}>P</span>
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+                  <span style={{ ...pfBtn('f'), width: 20, height: 13, lineHeight: '13px', fontSize: 8 }}>F</span>
+                </span>
+              </div>
+            </div>
+            {/* Inspected By */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <span style={s.fl}>Inspected By</span>
+              <div style={{ borderBottom: '1px solid #999', minHeight: 18, marginTop: 2 }}></div>
             </div>
           </div>
+
+          <FormFooter page="OM07-3 | Page 3" />
         </div>
 
-        {/* Footer */}
-        <div style={{ marginTop: 8, display: 'flex', justifyContent: 'space-between', fontSize: 8, color: '#aaa' }}>
-          <span>Total Scope Inc. — Confidential</span>
-          <span>OM05-2F Rev. A</span>
-        </div>
       </div>
     </div>
   );

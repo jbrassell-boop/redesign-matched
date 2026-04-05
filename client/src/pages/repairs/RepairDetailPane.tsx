@@ -5,6 +5,7 @@ import type { RepairDetail, RepairFull, RepairLineItem } from './types';
 import { DiInspectionForm } from './forms/DiInspectionForm';
 import { DiFlexibleForm } from './forms/DiFlexibleForm';
 import { RequisitionForm } from './forms/RequisitionForm';
+import { FinalInspectionForm } from './forms/FinalInspectionForm';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import { CommandStrip } from './components/CommandStrip';
@@ -83,7 +84,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   // Forms dropdown + overlay state
   const [formsMenuOpen, setFormsMenuOpen] = useState(false);
   const formsMenuRef = useRef<HTMLDivElement>(null);
-  const [activeForm, setActiveForm] = useState<'di-inspection' | 'di-flexible' | 'requisition' | null>(null);
+  const [activeForm, setActiveForm] = useState<'di-inspection' | 'di-flexible' | 'requisition' | 'final-inspection' | null>(null);
 
   // Cockpit-specific state
   const [fullRepair, setFullRepair] = useState<RepairFull | null>(null);
@@ -350,9 +351,10 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                 minWidth: 210, zIndex: 100,
               }}>
                 {[
-                  { key: 'di-inspection' as const, label: 'D&I Inspection (OM05-2)' },
-                  { key: 'di-flexible'  as const, label: 'D&I Flexible (OM05-2F)' },
-                  { key: 'requisition'  as const, label: 'Requisition for Approval (OM07-2)' },
+                  { key: 'di-inspection'    as const, label: 'D&I Inspection (OM05-2)' },
+                  { key: 'di-flexible'      as const, label: 'D&I Flexible (OM07-3)' },
+                  { key: 'requisition'      as const, label: 'Requisition for Approval (OM07-2)' },
+                  { key: 'final-inspection' as const, label: 'Final Inspection — Flex (OM10-2)' },
                 ].map(item => (
                   <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} style={{
                     padding: '7px 12px', cursor: 'pointer', fontSize: 11,
@@ -372,9 +374,10 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         </div>
 
         {/* Form overlays — cockpit */}
-        {activeForm === 'di-inspection' && <DiInspectionForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
-        {activeForm === 'di-flexible'   && <DiFlexibleForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
-        {activeForm === 'requisition'   && <RequisitionForm repair={fullRepair} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'di-inspection'    && <DiInspectionForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'di-flexible'      && <DiFlexibleForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'requisition'      && <RequisitionForm repair={fullRepair} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'final-inspection' && <FinalInspectionForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
 
         {/* Tab bar */}
         <div style={{
@@ -571,9 +574,10 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
               minWidth: 230, zIndex: 100,
             }}>
               {[
-                { key: 'di-inspection' as const, label: 'D&I Inspection (OM05-2)' },
-                { key: 'di-flexible'  as const, label: 'D&I Flexible (OM05-2F)' },
-                { key: 'requisition'  as const, label: 'Requisition for Approval (OM07-2)' },
+                { key: 'di-inspection'    as const, label: 'D&I Inspection (OM05-2)' },
+                { key: 'di-flexible'      as const, label: 'D&I Flexible (OM07-3)' },
+                { key: 'requisition'      as const, label: 'Requisition for Approval (OM07-2)' },
+                { key: 'final-inspection' as const, label: 'Final Inspection — Flex (OM10-2)' },
               ].map(item => (
                 <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} style={{
                   padding: '7px 12px', cursor: 'pointer', fontSize: 12,
@@ -598,9 +602,10 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       {activeTab === 'comments'     && <NotesTab repairKey={detail.repairKey} />}
 
       {/* Form overlays — legacy pane. Cast detail to RepairFull shape (shared core fields). */}
-      {activeForm === 'di-inspection' && <DiInspectionForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
-      {activeForm === 'di-flexible'   && <DiFlexibleForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
-      {activeForm === 'requisition'   && <RequisitionForm repair={detail as unknown as RepairFull} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'di-inspection'    && <DiInspectionForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'di-flexible'      && <DiFlexibleForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'requisition'      && <RequisitionForm repair={detail as unknown as RepairFull} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'final-inspection' && <FinalInspectionForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
     </div>
   );
 };
