@@ -1185,6 +1185,40 @@ public class RepairsController(IConfiguration config) : ControllerBase
         return Ok(items);
     }
 
+    [HttpGet("update-slip-reasons")]
+    public async Task<IActionResult> GetUpdateSlipReasons()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand("SELECT lMainRepairUpdateSlipReasonKey AS [key], sMainRepairUpdateSlipReason AS name FROM tblMainRepairUpdateSlipReasons WHERE ISNULL(bActive,1) = 1 ORDER BY sMainRepairUpdateSlipReason", conn);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<object>();
+        while (await reader.ReadAsync())
+            items.Add(new { key = Convert.ToInt32(reader["key"]), name = reader["name"]?.ToString() ?? "" });
+        return Ok(items);
+    }
+
+    [HttpPost("{repairKey:int}/update-slips")]
+    public async Task<IActionResult> CreateUpdateSlip(int repairKey, [FromBody] CreateUpdateSlipRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            INSERT INTO tblRepairUpdateSlips (lRepairKey, dtUpdateRequestDate, lResponsibleTech, lResponsibleTech2, lMainRepairUpdateSlipReasonKey)
+            OUTPUT INSERTED.lRepairUpdateSlipKey
+            VALUES (@repairKey, GETDATE(), @techKey, @tech2Key, @reasonKey)
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        cmd.Parameters.AddWithValue("@techKey", body.TechKey.HasValue ? (object)body.TechKey.Value : DBNull.Value);
+        cmd.Parameters.AddWithValue("@tech2Key", body.Tech2Key.HasValue ? (object)body.Tech2Key.Value : DBNull.Value);
+        cmd.Parameters.AddWithValue("@reasonKey", body.ReasonKey.HasValue ? (object)body.ReasonKey.Value : DBNull.Value);
+        var newKey = await cmd.ExecuteScalarAsync();
+        return Ok(new { slipKey = Convert.ToInt32(newKey) });
+    }
+
     // ── Defect Tracking ──
     [HttpGet("{repairKey:int}/defect-tracking")]
     public async Task<IActionResult> GetDefectTracking(int repairKey)

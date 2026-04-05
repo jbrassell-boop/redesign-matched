@@ -241,6 +241,17 @@ export const createRepair = async (payload: CreateRepairPayload): Promise<{ repa
   return data;
 };
 
+// ── Update Slip Creation ──
+export const getUpdateSlipReasons = async () => {
+  const { data } = await apiClient.get('/repairs/update-slip-reasons');
+  return data as { key: number; name: string }[];
+};
+
+export const createUpdateSlip = async (repairKey: number, body: { techKey?: number | null; tech2Key?: number | null; reasonKey?: number | null }) => {
+  const { data } = await apiClient.post(`/repairs/${repairKey}/update-slips`, body);
+  return data as { slipKey: number };
+};
+
 // ── Technicians Lookup ──
 export interface TechnicianOption {
   techKey: number;

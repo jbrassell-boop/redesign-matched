@@ -234,6 +234,7 @@ public record TechnicianOption(
 
 public record AddNoteRequest(string? Note);
 public record BulkApproveRequest(string? Approved);
+public record CreateUpdateSlipRequest(int? TechKey, int? Tech2Key, int? ReasonKey);
 public record UpdateTechsRequest(int TechKey, int? Tech2Key);
 
 public record QuickEditRepairRequest(

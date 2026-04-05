@@ -383,6 +383,9 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
         onClose={() => setSlipsModalOpen(false)}
         repair={repair}
         slips={slipsData}
+        onSlipCreated={() => {
+          getUpdateSlips(repair.repairKey).then(setSlipsData).catch(() => {});
+        }}
       />
       <DefectTrackingModal
         open={defectsModalOpen}
