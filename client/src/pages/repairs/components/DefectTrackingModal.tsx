@@ -44,7 +44,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
 
         {/* Form header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--navy)' }}>Technical Services Inc.</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--navy)' }}>Total Scope Inc.</div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Defect Tracking</div>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Repair Quality Record</div>
@@ -135,7 +135,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
         {/* Form footer */}
         <div style={{ marginTop: 16, paddingTop: 8, borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', fontSize: 8, color: '#888' }}>
           <span>ISO 13485 Certified</span>
-          <span>Technical Services Inc. | 17 Creek Pkwy, Upper Chichester PA 19061 | (610) 485-3838</span>
+          <span>Total Scope Inc. | 17 Creek Pkwy, Upper Chichester PA 19061 | (610) 485-3838</span>
           <span>OM07-8</span>
         </div>
       </div>

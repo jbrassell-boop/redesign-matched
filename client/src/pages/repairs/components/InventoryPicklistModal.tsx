@@ -44,7 +44,7 @@ export const InventoryPicklistModal = ({ open, onClose, repair, items }: Invento
 
         {/* Form header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--navy)' }}>Technical Services Inc.</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--navy)' }}>Total Scope Inc.</div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Inventory Pick List</div>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Repair Parts & Inventory</div>
@@ -184,7 +184,7 @@ export const InventoryPicklistModal = ({ open, onClose, repair, items }: Invento
         {/* Form footer */}
         <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', fontSize: 8, color: '#888' }}>
           <span>ISO 13485 Certified</span>
-          <span>Technical Services Inc. | 17 Creek Pkwy, Upper Chichester PA 19061 | (610) 485-3838</span>
+          <span>Total Scope Inc. | 17 Creek Pkwy, Upper Chichester PA 19061 | (610) 485-3838</span>
           <span>OM07-6</span>
         </div>
       </div>

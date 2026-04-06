@@ -80,7 +80,7 @@ export const ReturnVerificationForm = ({ repair, onClose }: Props) => {
           <div style={{ marginTop: 10, padding: '10px 14px', background: '#FEF9E7', border: '1.5px solid #F59E0B', borderRadius: 4 }}>
             <div style={{ fontSize: '9.5px', fontWeight: 800, textTransform: 'uppercase', color: '#92400E', letterSpacing: '.06em', marginBottom: 4 }}>Disinfection Reminder</div>
             <div style={{ fontSize: '10.5px', color: '#78350F', lineHeight: 1.5 }}>
-              All equipment returned to Technical Services Inc. must be properly cleaned and high-level disinfected or sterilized prior to shipment. Equipment arriving without documentation of disinfection will be treated as contaminated. TSI reserves the right to charge a decontamination fee. Please include your facility's decontamination record with this shipment.
+              All equipment returned to Total Scope Inc. must be properly cleaned and high-level disinfected or sterilized prior to shipment. Equipment arriving without documentation of disinfection will be treated as contaminated. TSI reserves the right to charge a decontamination fee. Please include your facility's decontamination record with this shipment.
             </div>
           </div>
 
@@ -101,7 +101,7 @@ export const ReturnVerificationForm = ({ repair, onClose }: Props) => {
           {/* Footer */}
           <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: '#888' }}>
             <span>ISO 13485 Certified</span>
-            <span>Technical Services Inc. &nbsp;|&nbsp; 17 Creek Pkwy, Upper Chichester PA 19061 &nbsp;|&nbsp; (610) 485-3838</span>
+            <span>Total Scope Inc. &nbsp;|&nbsp; 17 Creek Pkwy, Upper Chichester PA 19061 &nbsp;|&nbsp; (610) 485-3838</span>
             <span>OM14-1</span>
           </div>
         </div>

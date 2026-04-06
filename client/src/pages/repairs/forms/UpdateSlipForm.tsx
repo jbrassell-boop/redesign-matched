@@ -67,7 +67,7 @@ export const UpdateSlipForm = ({ repair, onClose }: Props) => {
           {/* Footer */}
           <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: '#888' }}>
             <span>ISO 13485 Certified — Internal Document</span>
-            <span>Technical Services Inc. &nbsp;|&nbsp; 17 Creek Pkwy, Upper Chichester PA 19061 &nbsp;|&nbsp; (610) 485-3838</span>
+            <span>Total Scope Inc. &nbsp;|&nbsp; 17 Creek Pkwy, Upper Chichester PA 19061 &nbsp;|&nbsp; (610) 485-3838</span>
             <span>OM15-2</span>
           </div>
         </div>

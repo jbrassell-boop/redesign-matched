@@ -67,7 +67,7 @@ export const LoanerForm = ({ repair, onClose }: Props) => {
               Return deadline: 5 business days from delivery. Late fee: $200.00 per day after due date.
             </div>
             <div style={{ fontSize: '9.5px', color: '#333', lineHeight: 1.5, padding: '6px 10px', background: '#F9FAFB', border: '1px solid #eee', borderRadius: 3 }}>
-              Equipment is loaned on a temporary basis and must be returned to Technical Services Inc. (TSI) within <strong>five (5) business days</strong> of the agreed return date or such date as specified above. In the event that loaned equipment is not returned by the specified date, borrower agrees to pay a <strong>late fee of $200.00 per calendar day</strong> until the equipment is returned in full. This fee will be invoiced and is due upon receipt. TSI reserves the right to retrieve loaner equipment at borrower's expense if not returned within 10 business days of due date.
+              Equipment is loaned on a temporary basis and must be returned to Total Scope Inc. (TSI) within <strong>five (5) business days</strong> of the agreed return date or such date as specified above. In the event that loaned equipment is not returned by the specified date, borrower agrees to pay a <strong>late fee of $200.00 per calendar day</strong> until the equipment is returned in full. This fee will be invoiced and is due upon receipt. TSI reserves the right to retrieve loaner equipment at borrower's expense if not returned within 10 business days of due date.
             </div>
           </div>
 
@@ -80,7 +80,7 @@ export const LoanerForm = ({ repair, onClose }: Props) => {
           {/* Section 4: Indemnification */}
           <Bar style={{ marginTop: 6 }}>4. Indemnification &amp; Governing Law</Bar>
           <div style={{ fontSize: '9.5px', color: '#333', lineHeight: 1.5, padding: '6px 10px', background: '#F9FAFB', border: '1px solid #eee', borderRadius: 3 }}>
-            Borrower agrees to indemnify, defend, and hold harmless Technical Services Inc., its officers, employees, and agents from and against any and all claims, damages, losses, costs, and expenses (including reasonable attorneys' fees) arising out of or related to borrower's use, possession, or handling of the loaned equipment. This Agreement shall be governed by and construed in accordance with the laws of the <strong>Commonwealth of Pennsylvania</strong>, without regard to its conflict of laws principles. Any disputes arising under this Agreement shall be resolved in the courts of Delaware County, Pennsylvania.
+            Borrower agrees to indemnify, defend, and hold harmless Total Scope Inc., its officers, employees, and agents from and against any and all claims, damages, losses, costs, and expenses (including reasonable attorneys' fees) arising out of or related to borrower's use, possession, or handling of the loaned equipment. This Agreement shall be governed by and construed in accordance with the laws of the <strong>Commonwealth of Pennsylvania</strong>, without regard to its conflict of laws principles. Any disputes arising under this Agreement shall be resolved in the courts of Delaware County, Pennsylvania.
           </div>
 
           {/* Section 5: Borrower Information */}
@@ -118,7 +118,7 @@ export const LoanerForm = ({ repair, onClose }: Props) => {
           {/* Footer */}
           <div style={{ marginTop: 'auto', paddingTop: 6, borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: '#888' }}>
             <span>ISO 13485 Certified</span>
-            <span>Technical Services Inc. &nbsp;|&nbsp; 17 Creek Pkwy, Upper Chichester PA 19061 &nbsp;|&nbsp; (610) 485-3838</span>
+            <span>Total Scope Inc. &nbsp;|&nbsp; 17 Creek Pkwy, Upper Chichester PA 19061 &nbsp;|&nbsp; (610) 485-3838</span>
             <span>OM17-1</span>
           </div>
         </div>

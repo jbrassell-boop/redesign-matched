@@ -83,7 +83,7 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--navy)' }}>Technical Services Inc.</div>
+          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--navy)' }}>Total Scope Inc.</div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Update Slip</div>
             <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM15-2</div>

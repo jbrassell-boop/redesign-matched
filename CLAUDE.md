@@ -211,10 +211,13 @@ Remove all unused imports before committing.
 
 ## Known Gotchas
 
+- **Company name is "Total Scope Inc." (TSI)** — NEVER use "Technical Services Inc." anywhere in the codebase. All forms, headers, footers must say "Total Scope Inc."
 - `tblClient` has NO email or contact name columns — those fields return null
 - `tblDepartment` contact: `sContactFirst`, `sContactLast`, `sContactPhoneVoice`, `sContactEMail` (EMail not Email)
 - `staticwebapp.config.json` must have `navigationFallback` for SPA deep-link routing on Azure
 - Verify all SQL column names against `C:/Projects/tsi-redesign/tasks/db-schema-dump.json` before writing queries
+- `tblRepair` has triggers — use `DISABLE TRIGGER ALL ON tblRepair` before INSERT, re-enable after. Same for `tblScope`
+- `tblRepair.sRequisition` column does NOT exist — use `NULL AS sRequisition` placeholder
 
 ---
 

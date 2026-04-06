@@ -345,7 +345,7 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
           color: '#888',
         }}>
           <span>ISO 13485 Certified</span>
-          <span>Technical Services Inc.&nbsp;|&nbsp;17 Creek Pkwy, Upper Chichester PA 19061&nbsp;|&nbsp;(610) 485-3838</span>
+          <span>Total Scope Inc.&nbsp;|&nbsp;17 Creek Pkwy, Upper Chichester PA 19061&nbsp;|&nbsp;(610) 485-3838</span>
           <span>OM10-2</span>
         </div>
       </div>

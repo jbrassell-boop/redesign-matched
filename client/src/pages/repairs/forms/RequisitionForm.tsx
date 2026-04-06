@@ -263,7 +263,7 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           marginTop: 10, fontSize: 8.5, color: '#555', lineHeight: 1.4,
           padding: '6px 10px', background: '#F9FAFB', border: '1px solid #ddd', borderRadius: 3,
         }}>
-          By signing below, customer authorizes Technical Services Inc. (TSI) to proceed with the approved repair items listed above.
+          By signing below, customer authorizes Total Scope Inc. (TSI) to proceed with the approved repair items listed above.
           Items marked "N" will not be repaired and will be returned as-is. TSI's standard Terms &amp; Conditions apply.
           Payment is due net 30 days from invoice date. Unapproved items returned to customer at customer's expense.
           TSI is not responsible for damage to equipment during transit when customer-arranged shipping is used.
@@ -302,7 +302,7 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           color: '#888',
         }}>
           <span>ISO 13485 Certified</span>
-          <span>Technical Services Inc.&nbsp;|&nbsp;17 Creek Pkwy, Upper Chichester PA 19061&nbsp;|&nbsp;(610) 485-3838</span>
+          <span>Total Scope Inc.&nbsp;|&nbsp;17 Creek Pkwy, Upper Chichester PA 19061&nbsp;|&nbsp;(610) 485-3838</span>
           <span>OM07-2 (12/2020)</span>
         </div>
       </div>
