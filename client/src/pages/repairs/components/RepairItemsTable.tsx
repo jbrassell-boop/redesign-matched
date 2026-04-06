@@ -13,7 +13,7 @@ interface RepairItemsTableProps {
   hasAmendments: boolean;
 }
 
-type FixType = 'W' | 'NC' | 'C' | 'A' | '';
+type FixType = 'R' | 'W' | 'N' | 'C' | 'A' | '';
 type CauseType = 'UA' | 'NW' | '';
 
 interface AddState {
@@ -48,7 +48,8 @@ const causeBadge = (cause: string) => {
 const fixBadge = (fix: string) => {
   const styles: Record<string, { bg: string; color: string; border: string }> = {
     W:  { bg: '#F0FDF4', color: 'var(--success)', border: '#BBF7D0' },
-    NC: { bg: '#FEF2F2', color: 'var(--danger)',  border: '#FECACA' },
+    N:  { bg: '#FEF2F2', color: 'var(--danger)',  border: '#FECACA' },
+    R:  { bg: '#FFF7ED', color: '#C2410C',        border: '#FED7AA' },
     C:  { bg: '#EFF6FF', color: 'var(--primary)', border: '#BFDBFE' },
     A:  { bg: '#F5F3FF', color: '#7C3AED',        border: '#DDD6FE' },
   };
@@ -169,8 +170,9 @@ export const RepairItemsTable = ({
   const addTdStyle: React.CSSProperties = { ...tdStyle, background: '#eff6ff' };
 
   const fixTypeButtons: { label: string; value: FixType }[] = [
+    { label: 'R', value: 'R' },
     { label: 'W', value: 'W' },
-    { label: 'NC', value: 'NC' },
+    { label: 'N', value: 'N' },
     { label: 'C', value: 'C' },
     { label: 'A', value: 'A' },
   ];

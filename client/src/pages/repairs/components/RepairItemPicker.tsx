@@ -185,7 +185,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
                     display: 'flex', gap: 10, alignItems: 'center',
                   }}>
                     <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)' }}>Fix:</span>
-                    {['C', 'W', 'NC', 'A'].map(ft => (
+                    {['R', 'W', 'N', 'C', 'A'].map(ft => (
                       <button key={ft} onClick={() => updateFixType(item.itemKey, ft)} style={{
                         padding: '2px 8px', fontSize: 10, fontWeight: 700, borderRadius: 3, cursor: 'pointer',
                         border: entry.fixType === ft ? '1px solid var(--primary)' : '1px solid var(--border)',
