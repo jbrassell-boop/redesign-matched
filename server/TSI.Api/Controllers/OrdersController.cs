@@ -109,7 +109,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
 
         // Generate next work order number
         await using var woCmd = new SqlCommand(
-            "SELECT ISNULL(MAX(CAST(sWorkOrderNumber AS INT)), 0) + 1 FROM tblRepair WHERE ISNUMERIC(sWorkOrderNumber) = 1", conn);
+            "SELECT ISNULL(MAX(TRY_CAST(sWorkOrderNumber AS BIGINT)), 0) + 1 FROM tblRepair WHERE TRY_CAST(sWorkOrderNumber AS BIGINT) IS NOT NULL", conn);
         var nextWo = Convert.ToInt64(await woCmd.ExecuteScalarAsync());
         var woNumber = nextWo.ToString().PadLeft(7, '0');
 
