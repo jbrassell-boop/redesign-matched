@@ -9,6 +9,25 @@ interface InfoTabProps {
   onChange: (field: string, value: string | boolean | number | null) => void;
 }
 
+const lookupZip = async (
+  zip: string,
+  cityField: string,
+  stateField: string,
+  onChange: (field: string, value: string) => void,
+) => {
+  if (zip.length !== 5 || !/^\d{5}$/.test(zip)) return;
+  try {
+    const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+    if (!res.ok) return;
+    const data = await res.json();
+    const place = data.places?.[0];
+    if (place) {
+      onChange(cityField, place['place name']);
+      onChange(stateField, place['state abbreviation']);
+    }
+  } catch { /* silent */ }
+};
+
 const inputStyle: React.CSSProperties = {
   width: '100%',
   padding: '4px 8px',
@@ -121,7 +140,15 @@ export const InfoTab = ({ client, onChange }: InfoTabProps) => {
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8 }}>
           <EditField label="City" value={client.city} field="city" onChange={onChange} />
           <EditField label="State" value={client.state} field="state" onChange={onChange} />
-          <EditField label="Zip" value={client.zip} field="zip" onChange={onChange} />
+          <div style={fieldWrap}>
+            <div style={labelStyle}>Zip</div>
+            <input
+              style={inputStyle}
+              type="text"
+              value={client.zip ?? ''}
+              onChange={e => { onChange('zip', e.target.value); lookupZip(e.target.value, 'city', 'state', onChange as (f: string, v: string) => void); }}
+            />
+          </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           <EditField label="Phone" value={client.phone} field="phone" onChange={onChange} />

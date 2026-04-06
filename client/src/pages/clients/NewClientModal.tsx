@@ -64,6 +64,19 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
   const set = (k: keyof CreateClientPayload, v: unknown) =>
     setForm(prev => ({ ...prev, [k]: v === '' ? null : v }));
 
+  const lookupZip = async (zip: string, cityKey: keyof CreateClientPayload, stateKey: keyof CreateClientPayload) => {
+    if (zip.length !== 5 || !/^\d{5}$/.test(zip)) return;
+    try {
+      const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const place = data.places?.[0];
+      if (place) {
+        setForm(prev => ({ ...prev, [cityKey]: place['place name'], [stateKey]: place['state abbreviation'] }));
+      }
+    } catch { /* silent — don't block the user */ }
+  };
+
   useEffect(() => {
     if (!open) return;
     Promise.all([getSalesReps(), getPricingCategories(), getPaymentTerms()])
@@ -136,7 +149,7 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
           </select>
         </F>
         <F label="Zip">
-          <Inp value={form.zip ?? ''} onChange={v => set('zip', v)} />
+          <Inp value={form.zip ?? ''} onChange={v => { set('zip', v); lookupZip(v, 'city', 'state'); }} />
         </F>
       </div>
       <div style={{ ...g2, marginTop: 6 }}>
@@ -192,7 +205,7 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
           </select>
         </F>
         <F label="Zip">
-          <Inp value={form.billZip ?? ''} onChange={v => set('billZip', v)} />
+          <Inp value={form.billZip ?? ''} onChange={v => { set('billZip', v); lookupZip(v, 'billCity', 'billState'); }} />
         </F>
       </div>
 

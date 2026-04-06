@@ -56,6 +56,19 @@ export const NewDepartmentModal = ({ open, onClose, onCreated }: Props) => {
   const set = (k: keyof CreateDepartmentPayload, v: unknown) =>
     setForm(prev => ({ ...prev, [k]: v === '' ? null : v }));
 
+  const lookupZip = async (zip: string) => {
+    if (zip.length !== 5 || !/^\d{5}$/.test(zip)) return;
+    try {
+      const res = await fetch(`https://api.zippopotam.us/us/${zip}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const place = data.places?.[0];
+      if (place) {
+        setForm(prev => ({ ...prev, city: place['place name'], state: place['state abbreviation'] }));
+      }
+    } catch { /* silent */ }
+  };
+
   useEffect(() => {
     if (!open) return;
     Promise.all([getClientsSimple(), getCarriers()])
@@ -132,7 +145,7 @@ export const NewDepartmentModal = ({ open, onClose, onCreated }: Props) => {
           </select>
         </F>
         <F label="Zip">
-          <Inp value={form.zip ?? ''} onChange={v => set('zip', v)} />
+          <Inp value={form.zip ?? ''} onChange={v => { set('zip', v); lookupZip(v); }} />
         </F>
       </div>
 
