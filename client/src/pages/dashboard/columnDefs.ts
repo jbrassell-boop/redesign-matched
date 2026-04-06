@@ -37,17 +37,17 @@ const hotBadge = (text: string, record: { isUrgent?: boolean }) =>
 
 const repairsColumns = (onRowClick: (key: number) => void): ColumnsType<any> => [
   { title: 'DATE IN', dataIndex: 'dateIn', key: 'dateIn', width: 90 },
-  { title: 'CLIENT', dataIndex: 'client', key: 'client', render: hotBadge },
-  { title: 'DEPT', dataIndex: 'dept', key: 'dept' },
+  { title: 'CLIENT', dataIndex: 'client', key: 'client', width: 180, ellipsis: true, render: hotBadge },
+  { title: 'DEPT', dataIndex: 'dept', key: 'dept', width: 140, ellipsis: true },
   woLink(onRowClick),
-  { title: 'SCOPE TYPE', dataIndex: 'scopeType', key: 'scopeType' },
+  { title: 'SCOPE TYPE', dataIndex: 'scopeType', key: 'scopeType', width: 150, ellipsis: true },
   { title: 'SERIAL', dataIndex: 'serial', key: 'serial', width: 100 },
-  { title: 'TAT', dataIndex: 'daysIn', key: 'daysIn', width: 60, align: 'center', render: tatRender },
-  { title: 'STATUS', dataIndex: 'status', key: 'status', width: 130, render: statusRender },
-  { title: 'DATE APPR', dataIndex: 'dateApproved', key: 'dateApproved', width: 90, render: nullDash },
-  { title: 'EST DELIV', dataIndex: 'estDelivery', key: 'estDelivery', width: 90, render: nullDash },
-  { title: 'APPROVED $', dataIndex: 'amountApproved', key: 'amountApproved', width: 90, align: 'right', render: moneyRender },
-  { title: 'TECH', dataIndex: 'tech', key: 'tech', width: 90, render: nullDash },
+  { title: 'TAT', dataIndex: 'daysIn', key: 'daysIn', width: 55, align: 'center', render: tatRender },
+  { title: 'STATUS', dataIndex: 'status', key: 'status', width: 210, render: statusRender },
+  { title: 'DATE APPR', dataIndex: 'dateApproved', key: 'dateApproved', width: 95, render: nullDash },
+  { title: 'EST DELIV', dataIndex: 'estDelivery', key: 'estDelivery', width: 95, render: nullDash },
+  { title: 'APPROVED $', dataIndex: 'amountApproved', key: 'amountApproved', width: 100, align: 'right', render: moneyRender },
+  { title: 'TECH', dataIndex: 'tech', key: 'tech', width: 80, render: nullDash },
 ];
 
 // ── Shipping ──

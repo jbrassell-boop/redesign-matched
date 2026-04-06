@@ -28,8 +28,8 @@
 }
 
 .seg-group__btn {
-  padding: 4px 10px;
-  font-size: 10px;
+  padding: 5px 13px;
+  font-size: 12px;
   font-weight: 500;
   border: none;
   border-left: 1px solid var(--neutral-200);
@@ -57,10 +57,10 @@
 
 /* ── search input ── */
 .dash-toolbar__search {
-  width: 200px;
-  height: 28px;
+  width: 220px;
+  height: 30px;
   padding: 0 8px;
-  font-size: 12px;
+  font-size: 13px;
   border: 1px solid var(--neutral-200);
   border-radius: 4px;
   outline: none;
@@ -100,9 +100,9 @@
 
 /* ── group-by select ── */
 .dash-toolbar__select {
-  height: 28px;
-  padding: 0 6px;
-  font-size: 11px;
+  height: 30px;
+  padding: 0 8px;
+  font-size: 12px;
   border: 1px solid var(--neutral-200);
   border-radius: 4px;
   background: var(--card);

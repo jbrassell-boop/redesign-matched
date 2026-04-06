@@ -147,7 +147,7 @@ export const UnifiedTable = ({
         rowKey={rowKey}
         loading={loading}
         size="small"
-        scroll={{ x: 1000 }}
+        scroll={{ x: 1400 }}
         rowClassName={(row: any) => row.isUrgent ? 'urgent-row' : ''}
         rowSelection={{
           selectedRowKeys: selectedKeys,
