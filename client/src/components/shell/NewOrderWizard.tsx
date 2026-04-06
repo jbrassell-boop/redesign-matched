@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { message } from 'antd';
 import { getWizardClients, getWizardDepartments, createOrder } from '../../api/orders';
 import type { WizardClient, WizardDepartment } from '../../api/orders';
 
@@ -73,9 +74,10 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
         orderType,
       });
       onClose();
-      navigate(`/repairs?wo=${result.workOrderNumber}`);
-    } catch {
-      // stay on confirm step
+      navigate(`/repairs/${result.repairKey}`);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      message.error(msg ? `Failed to create order: ${msg}` : 'Failed to create order');
     } finally {
       setCreating(false);
     }
