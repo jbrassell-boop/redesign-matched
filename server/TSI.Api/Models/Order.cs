@@ -2,7 +2,17 @@ namespace TSI.Api.Models;
 
 public record CreateOrderRequest(
     int DepartmentKey,
-    string OrderType // "repair", "instrument", "product-sale", "endocart"
+    string OrderType,
+    int? ScopeKey,
+    string? SerialNumber,
+    int? ScopeTypeKey,
+    string? Complaint,
+    string? PurchaseOrder,
+    string? RackPosition,
+    int? PackageTypeKey,
+    string? IncludesCaseYN,
+    string? IncludesETOCapYN,
+    string? IncludesWaterProofCapYN
 );
 
 public record CreateOrderResponse(
@@ -23,4 +33,23 @@ public record WizardDepartment(
     int DepartmentKey,
     int ClientKey,
     string Name
+);
+
+public record WizardScope(
+    int ScopeKey,
+    string SerialNumber,
+    string Model,
+    string Manufacturer,
+    string Type
+);
+
+public record WizardInstrumentType(
+    string TypeCode,
+    string Label
+);
+
+public record WizardScopeType(
+    int ScopeTypeKey,
+    string Description,
+    string Manufacturer
 );
