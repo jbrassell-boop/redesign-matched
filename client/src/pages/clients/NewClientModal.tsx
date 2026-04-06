@@ -13,9 +13,6 @@ const fld: React.CSSProperties = {
   background: '#fff', padding: '0 7px', fontSize: 11, color: '#374151',
   width: '100%', fontFamily: 'inherit', outline: 'none',
 };
-const fldDisabled: React.CSSProperties = {
-  ...fld, background: '#f9fafb', color: '#9ca3af', cursor: 'not-allowed',
-};
 const secHead: React.CSSProperties = {
   background: 'var(--navy)', color: '#fff', padding: '4px 10px',
   fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',

@@ -113,6 +113,8 @@ export interface CreateDepartmentPayload {
   contactFirst?: string | null;
   contactLast?: string | null;
   contactEmail?: string | null;
+  salesRepKey?: number | null;
+  pricingCategoryKey?: number | null;
   carrierKey?: number | null;
   serviceLocationKey?: number | null;
   showConsumptionOnReq: boolean;
