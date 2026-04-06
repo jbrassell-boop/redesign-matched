@@ -262,7 +262,46 @@ public class OrdersController(IConfiguration config) : ControllerBase
                 scopeKey = Convert.ToInt32(await scopeCmd.ExecuteScalarAsync());
             }
 
-            // 3. Get "Received" status ID
+            // 3. Look up max charge: dept override → scope type default
+            decimal? maxCharge = null;
+            int scopeTypeKey = request.ScopeTypeKey ?? 0;
+            if (scopeKey > 0)
+            {
+                // Get scopeTypeKey from the scope if we don't already have it
+                if (scopeTypeKey == 0)
+                {
+                    await using var stCmd = new SqlCommand(
+                        "SELECT ISNULL(lScopeTypeKey, 0) FROM tblScope WHERE lScopeKey = @sk", conn);
+                    stCmd.Parameters.AddWithValue("@sk", scopeKey);
+                    var stObj = await stCmd.ExecuteScalarAsync();
+                    scopeTypeKey = stObj != null ? Convert.ToInt32(stObj) : 0;
+                }
+
+                if (scopeTypeKey > 0)
+                {
+                    // Try department-specific max charge first
+                    await using var mcCmd = new SqlCommand(
+                        "SELECT nMaxCharge FROM tblScopeTypeDepartmentMaxCharges WHERE lScopeTypeKey = @stk AND lDepartmentKey = @dk", conn);
+                    mcCmd.Parameters.AddWithValue("@stk", scopeTypeKey);
+                    mcCmd.Parameters.AddWithValue("@dk", request.DepartmentKey);
+                    var mcObj = await mcCmd.ExecuteScalarAsync();
+                    if (mcObj != null && mcObj != DBNull.Value)
+                        maxCharge = Convert.ToDecimal(mcObj);
+
+                    // Fall back to scope type default
+                    if (maxCharge == null)
+                    {
+                        await using var mcDef = new SqlCommand(
+                            "SELECT mMaxCharge FROM tblScopeType WHERE lScopeTypeKey = @stk", conn);
+                        mcDef.Parameters.AddWithValue("@stk", scopeTypeKey);
+                        var defObj = await mcDef.ExecuteScalarAsync();
+                        if (defObj != null && defObj != DBNull.Value)
+                            maxCharge = Convert.ToDecimal(defObj);
+                    }
+                }
+            }
+
+            // 4. Get "Received" status ID
             await using var statusCmd = new SqlCommand(
                 "SELECT TOP 1 lRepairStatusID FROM tblRepairStatuses WHERE sRepairStatus = 'Received' ORDER BY lRepairStatusSortOrder", conn);
             var statusObj = await statusCmd.ExecuteScalarAsync();
@@ -287,13 +326,15 @@ public class OrdersController(IConfiguration config) : ControllerBase
                     dtDateIn, lServiceLocationKey, sComplaintDesc, sPurchaseOrder,
                     sRackPosition, lPackageTypeKey,
                     sIncludesCaseYN, sIncludesETOCapYN, sIncludesWaterProofCapYN,
-                    lSalesRepKey, lPricingCategoryKey, lPaymentTermsKey
+                    lSalesRepKey, lPricingCategoryKey, lPaymentTermsKey,
+                    mMaxCharge
                 ) VALUES (
                     @deptKey, @scopeKey, @statusId, @woNumber,
                     GETDATE(), @svcKey, @complaint, @po,
                     @rack, @pkgTypeKey,
                     @inclCase, @inclETOCap, @inclWPCap,
-                    @salesRepKey, @pricingKey, @payTermsKey
+                    @salesRepKey, @pricingKey, @payTermsKey,
+                    @maxCharge
                 );
                 DECLARE @newKey INT = SCOPE_IDENTITY();
                 ENABLE TRIGGER ALL ON tblRepair;
@@ -316,6 +357,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
             insertCmd.Parameters.AddWithValue("@salesRepKey", salesRepKey > 0 ? salesRepKey : DBNull.Value);
             insertCmd.Parameters.AddWithValue("@pricingKey", pricingKey > 0 ? pricingKey : DBNull.Value);
             insertCmd.Parameters.AddWithValue("@payTermsKey", payTermsKey > 0 ? payTermsKey : DBNull.Value);
+            insertCmd.Parameters.AddWithValue("@maxCharge", maxCharge.HasValue ? maxCharge.Value : DBNull.Value);
 
             var newKey = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
 

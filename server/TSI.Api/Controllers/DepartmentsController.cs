@@ -964,4 +964,46 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         return Ok(new { deptKey = newKey });
     }
 
+    // ── Max Charges per scope type for this department ──
+    [HttpGet("{deptKey:int}/max-charges")]
+    public async Task<IActionResult> GetMaxCharges(int deptKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT mc.lScopeTypeKey,
+                   ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
+                   ISNULL(st.sRigidOrFlexible, '') AS sRigidOrFlexible,
+                   ISNULL(m.sManufacturer, '') AS sManufacturer,
+                   ISNULL(stc.sScopeTypeCategory, '') AS sScopeTypeCategory,
+                   mc.nMaxCharge
+            FROM tblScopeTypeDepartmentMaxCharges mc
+            INNER JOIN tblScopeType st ON st.lScopeTypeKey = mc.lScopeTypeKey
+            LEFT JOIN tblManufacturers m ON m.lManufacturerKey = st.lManufacturerKey
+            LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey
+            WHERE mc.lDepartmentKey = @deptKey
+            ORDER BY st.sScopeTypeDesc
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@deptKey", deptKey);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<object>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new
+            {
+                scopeTypeKey = Convert.ToInt32(reader["lScopeTypeKey"]),
+                model = reader["sScopeTypeDesc"]?.ToString() ?? "",
+                type = reader["sRigidOrFlexible"]?.ToString() ?? "",
+                manufacturer = reader["sManufacturer"]?.ToString() ?? "",
+                category = reader["sScopeTypeCategory"]?.ToString() ?? "",
+                maxCharge = reader["nMaxCharge"] == DBNull.Value ? 0m : Convert.ToDecimal(reader["nMaxCharge"]),
+            });
+        }
+        return Ok(items);
+    }
+
 }
