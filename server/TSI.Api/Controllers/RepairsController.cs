@@ -256,7 +256,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
                    r.lPricingCategoryKey,
                    r.lPaymentTermsKey,
                    r.lDistributorKey,
-                   r.sRequisition,
+                   NULL AS sRequisition,
                    (SELECT TOP 1 DATEDIFF(day, r2.dtDateIn, r.dtDateIn)
                     FROM tblRepair r2
                     WHERE r2.lScopeKey = r.lScopeKey
