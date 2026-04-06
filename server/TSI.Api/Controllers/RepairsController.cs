@@ -920,10 +920,10 @@ public class RepairsController(IConfiguration config) : ControllerBase
             INSERT INTO tblRepairItemTran
                 (lRepairKey, lRepairItemKey, sProblemID, sApproved, sFixType,
                  dblRepairPrice, dblRepairPriceBase, sComments, lTechnicianKey)
-            OUTPUT INSERTED.lRepairItemTranKey
             VALUES
                 (@repairKey, @itemKey, @cause, @approved, @fixType,
-                 @amount, @baseAmount, @comments, @techKey)
+                 @amount, @baseAmount, @comments, @techKey);
+            SELECT SCOPE_IDENTITY();
             """;
 
         await using var cmd = new SqlCommand(sql, conn);

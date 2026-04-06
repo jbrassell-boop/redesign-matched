@@ -86,10 +86,8 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
       message.success(`${selected.size} item${selected.size > 1 ? 's' : ''} added`);
       onItemsAdded();
       onClose();
-    } catch (err: unknown) {
-      const axiosErr = err as { response?: { status: number; data?: unknown } };
-      const detail = axiosErr?.response?.data ? JSON.stringify(axiosErr.response.data) : String(err);
-      message.error(`Failed to add items (${axiosErr?.response?.status ?? 'network'}): ${detail}`);
+    } catch {
+      message.error('Failed to add items');
     } finally {
       setAdding(false);
     }
