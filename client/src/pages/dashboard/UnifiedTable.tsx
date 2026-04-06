@@ -155,9 +155,14 @@ export const UnifiedTable = ({
           columnWidth: 36,
         }}
         onRow={(record) => ({
+          onClick: () => {
+            const key = record?.repairKey ?? record?.invoiceKey ?? record?.flagKey ?? record?.emailKey ?? record?.taskKey;
+            if (key) onRowClick(key);
+          },
           onContextMenu: (e) => {
             if (view === 'repairs') handleContextMenu(e, record);
           },
+          style: { cursor: 'pointer' },
         })}
         expandable={view === 'repairs' ? {
           expandedRowRender: (record: any) => (
