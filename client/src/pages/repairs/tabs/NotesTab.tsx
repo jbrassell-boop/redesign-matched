@@ -85,7 +85,7 @@ export const NotesTab = ({ repairKey }: Props) => {
               <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)' }}>{n.user || 'System'}</span>
               <span style={{ fontSize: 10, color: 'var(--muted)' }}>{n.date}</span>
             </div>
-            <div style={{ fontSize: 12, color: '#374151', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+            <div style={{ fontSize: 12, color: 'var(--danger)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
               {n.note}
             </div>
           </div>

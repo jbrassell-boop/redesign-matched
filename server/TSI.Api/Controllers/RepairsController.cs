@@ -1373,6 +1373,9 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         const string sql = """
+            IF NOT EXISTS (SELECT 1 FROM tblOwnerTypes WHERE sOwnerType = 'Repair')
+                INSERT INTO tblOwnerTypes (sOwnerType) VALUES ('Repair');
+
             SELECT n.lNoteKey, n.sNote, n.dtNoteDate,
                    ISNULL(u.sUserFullName, '') AS sUserFullName
             FROM tblNotes n
@@ -1405,6 +1408,9 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         const string sql = """
+            IF NOT EXISTS (SELECT 1 FROM tblOwnerTypes WHERE sOwnerType = 'Repair')
+                INSERT INTO tblOwnerTypes (sOwnerType) VALUES ('Repair');
+
             INSERT INTO tblNotes (lOwnerKey, lOwnerTypeKey, sNote, dtNoteDate, lUserKey)
             VALUES (@repairKey,
                     (SELECT TOP 1 lOwnerTypeKey FROM tblOwnerTypes WHERE sOwnerType = 'Repair'),
