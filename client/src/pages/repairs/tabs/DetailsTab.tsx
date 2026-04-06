@@ -19,17 +19,17 @@ interface DetailsTabProps {
 }
 
 const fieldStyle: React.CSSProperties = {
-  height: 26, border: '1px solid #d1d5db', borderRadius: 3,
+  height: 28, border: '1px solid #d1d5db', borderRadius: 3,
   background: '#fff', padding: '0 7px', fontSize: 11, color: '#374151',
   display: 'flex', alignItems: 'center',
 };
 const lblStyle: React.CSSProperties = {
   fontSize: 9, fontWeight: 700, color: 'var(--muted)',
-  textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 2,
+  textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 4,
 };
 const sectionHd: React.CSSProperties = {
   background: 'var(--neutral-50, #f9fafb)',
-  padding: '5px 10px', fontSize: 9.5, fontWeight: 700, color: 'var(--navy)',
+  padding: '7px 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--navy)',
   textTransform: 'uppercase', letterSpacing: '.05em',
   borderBottom: '1px solid var(--border)',
   borderTop: '1px solid var(--border)',
@@ -121,7 +121,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
   ];
 
   return (
-    <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10, overflow: 'auto' }}>
+    <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto' }}>
 
       {/* Action bar */}
       <div style={{
@@ -148,10 +148,10 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
       </div>
 
       {/* Main 2-col */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 280px) 1fr', gap: 12, alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 12, alignItems: 'start' }}>
 
         {/* LEFT sidebar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 
           {/* Complaint form — editable */}
           <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
@@ -159,8 +159,8 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
               <span>Customer Complaint</span>
               <AutosaveIndicator status={detailsStatus} />
             </div>
-            <div style={{ padding: 10 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px', marginBottom: 8 }}>
+            <div style={{ padding: '8px 12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px', marginBottom: 8 }}>
                 <div>
                   <div style={lblStyle}>Repair Reason</div>
                   <select
@@ -215,7 +215,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
                 ))}
               </div>
             </div>
-            <div style={{ padding: 10 }}>
+            <div style={{ padding: '8px 12px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5, marginBottom: 6 }}>
                 {(['UP', 'DOWN', 'RIGHT', 'LEFT', 'Epoxy', 'Size'] as const).map(lbl => (
                   <div key={lbl}>
@@ -236,8 +236,8 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
           {/* Outsource */}
           <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
             <div style={sectionHd}>Outsource</div>
-            <div style={{ padding: 10 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px' }}>
+            <div style={{ padding: '8px 12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px' }}>
                 {[
                   { label: 'Vendor', value: repair.outsourceVendor },
                   { label: 'Cost',   value: repair.outsourceCost != null ? `$${repair.outsourceCost}` : null },
@@ -258,7 +258,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
           {/* Comments */}
           <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
             <div style={sectionHd}>Comments</div>
-            <div style={{ padding: 10 }}>
+            <div style={{ padding: '8px 12px' }}>
               <div style={{
                 minHeight: 44, border: '1px solid #d1d5db', borderRadius: 3,
                 background: '#fff', padding: '6px 7px', fontSize: 10,

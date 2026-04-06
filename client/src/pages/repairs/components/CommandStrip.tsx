@@ -19,37 +19,39 @@ export const CommandStrip = ({ repair }: CommandStripProps) => {
 
   return (
     <div style={{
-      background: 'var(--navy)',
-      padding: '6px 14px',
+      background: '#fff',
+      borderBottom: '1px solid var(--border)',
+      padding: '8px 12px',
       display: 'flex',
       flexWrap: 'wrap',
-      gap: '10px 16px',
+      gap: '6px 12px',
       alignItems: 'center',
       flexShrink: 0,
     }}>
       {fields.map(({ label, value }, i) => (
-        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <div key={i} style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+        }}>
           <div style={{
-            fontSize: 8,
+            fontSize: 9,
             fontWeight: 700,
-            color: 'rgba(255,255,255,.5)',
+            color: 'var(--muted)',
             textTransform: 'uppercase',
             letterSpacing: '.05em',
           }}>
             {label}
           </div>
           <div style={{
-            height: 24,
-            background: 'rgba(255,255,255,.1)',
-            border: '1px solid rgba(255,255,255,.15)',
-            borderRadius: 3,
-            padding: '0 7px',
+            background: 'var(--neutral-50)',
+            border: '1px solid var(--border)',
+            borderRadius: 4,
+            padding: '4px 10px',
             fontSize: 11,
-            color: value ? '#fff' : 'rgba(255,255,255,.3)',
+            fontWeight: 600,
+            color: value ? 'var(--navy)' : 'var(--muted)',
             fontStyle: value ? 'normal' : 'italic',
-            display: 'flex',
-            alignItems: 'center',
-            minWidth: 70,
             whiteSpace: 'nowrap',
           }}>
             {value || '—'}

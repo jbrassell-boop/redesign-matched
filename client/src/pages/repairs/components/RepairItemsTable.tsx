@@ -159,15 +159,17 @@ export const RepairItemsTable = ({
   };
 
   const thStyle: React.CSSProperties = {
-    background: 'var(--navy)', color: '#fff',
-    padding: '6px 8px', textAlign: 'left',
-    fontSize: 10, fontWeight: 600, whiteSpace: 'nowrap',
+    background: 'var(--neutral-50)', color: 'var(--muted)',
+    padding: '6px 10px', textAlign: 'left',
+    fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap',
+    letterSpacing: '0.04em', textTransform: 'uppercase',
+    borderBottom: '1px solid var(--border)',
     position: 'sticky', top: 0,
   };
   const tdStyle: React.CSSProperties = {
-    padding: '5px 8px', borderBottom: '1px solid var(--border)', verticalAlign: 'middle', fontSize: 12,
+    padding: '5px 10px', borderBottom: '1px solid var(--border)', verticalAlign: 'middle', fontSize: 12,
   };
-  const addTdStyle: React.CSSProperties = { ...tdStyle, background: '#eff6ff' };
+  const addTdStyle: React.CSSProperties = { ...tdStyle, background: 'var(--neutral-50)' };
 
   const fixTypeButtons: { label: string; value: FixType }[] = [
     { label: 'R', value: 'R' },
@@ -178,26 +180,27 @@ export const RepairItemsTable = ({
   ];
 
   return (
-    <div style={{ border: '2px solid var(--primary)', borderRadius: 6, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-      {/* Header */}
+    <div style={{ border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      {/* Section head */}
       <div style={{
-        background: 'var(--primary)', color: '#fff',
-        padding: '8px 12px',
+        background: 'var(--neutral-50)',
+        borderBottom: '1px solid var(--border)',
+        padding: '7px 14px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 800 }}>Repair Items</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>Repair Items</span>
           <button onClick={() => setPickerOpen(true)} style={{
-            background: 'rgba(255,255,255,.2)', color: '#fff',
-            border: '1px solid rgba(255,255,255,.4)', borderRadius: 3,
-            padding: '2px 10px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+            background: 'var(--card)', color: 'var(--navy)',
+            border: '1px solid var(--border)', borderRadius: 3,
+            padding: '2px 10px', fontSize: 11, fontWeight: 500, cursor: 'pointer',
           }}>+ Add Items</button>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 11, opacity: .75 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 11, color: 'var(--muted)' }}>
             {items.length} item{items.length !== 1 ? 's' : ''} ·{' '}
-            <span style={{ color: '#4ade80' }}>{fmt(warrantyTotal)} warranty</span> ·{' '}
-            <span style={{ color: '#fbbf24' }}>{fmt(customerTotal)} customer</span>
+            <span style={{ color: 'var(--success)' }}>{fmt(warrantyTotal)} warranty</span> ·{' '}
+            <span style={{ color: 'var(--amber)' }}>{fmt(customerTotal)} customer</span>
           </span>
           {items.length > 0 && (
             <>
@@ -207,12 +210,12 @@ export const RepairItemsTable = ({
                   catch { message.error('Failed to approve'); }
                 }}
                 style={{
-                  background: 'rgba(255,255,255,.2)', color: '#fff',
-                  border: '1px solid rgba(255,255,255,.4)', borderRadius: 3,
-                  padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                  background: 'var(--card)', color: 'var(--navy)',
+                  border: '1px solid var(--border)', borderRadius: 3,
+                  padding: '2px 8px', fontSize: 11, fontWeight: 500, cursor: 'pointer',
                 }}
               >
-                ✓ Approve All
+                Approve All
               </button>
               <button
                 onClick={async () => {
@@ -220,9 +223,9 @@ export const RepairItemsTable = ({
                   catch { message.error('Failed to unapprove'); }
                 }}
                 style={{
-                  background: 'rgba(255,255,255,.1)', color: 'rgba(255,255,255,.8)',
-                  border: '1px solid rgba(255,255,255,.3)', borderRadius: 3,
-                  padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                  background: 'var(--card)', color: 'var(--navy)',
+                  border: '1px solid var(--border)', borderRadius: 3,
+                  padding: '2px 8px', fontSize: 11, fontWeight: 500, cursor: 'pointer',
                 }}
               >
                 Unapprove All
@@ -233,12 +236,12 @@ export const RepairItemsTable = ({
             <button
               onClick={() => onOpenAmendments()}
               style={{
-                background: 'rgba(255,255,255,.2)', color: '#fff',
-                border: '1px solid rgba(255,255,255,.4)', borderRadius: 3,
-                padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                background: 'var(--card)', color: 'var(--navy)',
+                border: '1px solid var(--border)', borderRadius: 3,
+                padding: '2px 8px', fontSize: 11, fontWeight: 500, cursor: 'pointer',
               }}
             >
-              A Amendments
+              Amendments
             </button>
           )}
         </div>
@@ -276,7 +279,7 @@ export const RepairItemsTable = ({
             ))}
 
             {/* Fast add row */}
-            <tr style={{ borderTop: '2px dashed #93c5fd' }}>
+            <tr style={{ borderTop: '2px dashed var(--border)' }}>
               {/* Approval dot — empty for new row */}
               <td style={addTdStyle}></td>
               {/* Autocomplete search spans Code + Description */}
@@ -328,7 +331,7 @@ export const RepairItemsTable = ({
                 <input
                   style={{
                     width: 72, height: 24, textAlign: 'right',
-                    border: '1px solid #93c5fd', borderRadius: 3,
+                    border: '1px solid var(--border)', borderRadius: 3,
                     fontSize: 11, padding: '0 4px', background: '#fff',
                     boxSizing: 'border-box' as const,
                   }}
@@ -346,7 +349,7 @@ export const RepairItemsTable = ({
                 <input
                   style={{
                     width: '100%', height: 24,
-                    border: '1px solid #93c5fd', borderRadius: 3,
+                    border: '1px solid var(--border)', borderRadius: 3,
                     fontSize: 11, padding: '0 4px', background: '#fff',
                     boxSizing: 'border-box' as const,
                   }}
@@ -376,17 +379,18 @@ export const RepairItemsTable = ({
 
       {/* Totals footer */}
       <div style={{
-        background: 'var(--navy)', color: '#fff',
-        padding: '8px 12px',
+        background: 'var(--neutral-50)',
+        borderTop: '1px solid var(--border)',
+        padding: '7px 14px',
         display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 24,
       }}>
-        <span style={{ fontSize: 11, opacity: .7 }}>
-          Warranty: <span style={{ color: '#4ade80', fontWeight: 700 }}>{fmt(warrantyTotal)}</span>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+          Warranty: <span style={{ color: 'var(--success)', fontWeight: 600 }}>{fmt(warrantyTotal)}</span>
         </span>
-        <span style={{ fontSize: 11, opacity: .7 }}>
-          Non-Warranty: <span style={{ color: '#fbbf24', fontWeight: 700 }}>{fmt(customerTotal)}</span>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+          Non-Warranty: <span style={{ color: 'var(--amber)', fontWeight: 600 }}>{fmt(customerTotal)}</span>
         </span>
-        <span style={{ fontSize: 14, fontWeight: 900 }}>Total: {fmt(grandTotal)}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>Total: {fmt(grandTotal)}</span>
       </div>
 
       <RepairItemPicker
