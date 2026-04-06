@@ -41,7 +41,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         var dataSql = $"""
             SELECT d.lDepartmentKey, d.sDepartmentName,
                    ISNULL(c.sClientName1, '') AS sClientName1,
-                   d.lClientKey,
+                   ISNULL(d.lClientKey, 0) AS lClientKey,
                    ISNULL(d.bActive, 0) AS bActive
             FROM tblDepartment d
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
@@ -84,7 +84,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         const string sql = """
-            SELECT d.lDepartmentKey, d.sDepartmentName, d.lClientKey,
+            SELECT d.lDepartmentKey, d.sDepartmentName, ISNULL(d.lClientKey, 0) AS lClientKey,
                    ISNULL(c.sClientName1, '') AS sClientName1,
                    ISNULL(d.bActive, 0) AS bActive,
                    d.sShipAddr1, d.sShipCity, d.sShipState, d.sShipZip,
@@ -133,7 +133,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         const string sql = """
-            SELECT d.lDepartmentKey, d.sDepartmentName, d.lClientKey,
+            SELECT d.lDepartmentKey, d.sDepartmentName, ISNULL(d.lClientKey, 0) AS lClientKey,
                    ISNULL(c.sClientName1, '') AS sClientName1,
                    ISNULL(d.bActive, 0) AS bActive,
                    d.sShipAddr1, d.sShipCity, d.sShipState, d.sShipZip,
