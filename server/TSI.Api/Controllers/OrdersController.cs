@@ -115,11 +115,16 @@ public class OrdersController(IConfiguration config) : ControllerBase
             var nextWo = Convert.ToInt64(await woCmd.ExecuteScalarAsync());
             var woNumber = nextWo.ToString().PadLeft(7, '0');
 
-            // Insert the repair record (SCOPE_IDENTITY because tblRepair has triggers)
+            // Insert the repair record
+            // Disable triggers during insert — legacy triggers reference stored procs
+            // that were not migrated to Azure SQL
             const string insertSql = """
+                DISABLE TRIGGER ALL ON tblRepair;
                 INSERT INTO tblRepair (lDepartmentKey, lRepairStatusID, sWorkOrderNumber, dtDateIn)
                 VALUES (@deptKey, @statusId, @woNumber, GETDATE());
-                SELECT CAST(SCOPE_IDENTITY() AS INT);
+                DECLARE @newKey INT = SCOPE_IDENTITY();
+                ENABLE TRIGGER ALL ON tblRepair;
+                SELECT @newKey;
                 """;
 
             await using var insertCmd = new SqlCommand(insertSql, conn);
