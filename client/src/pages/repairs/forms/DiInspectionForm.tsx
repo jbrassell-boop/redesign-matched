@@ -21,7 +21,7 @@ export const DiInspectionForm = ({ repair, onClose }: Props) => {
         <div style={{ padding: '0.5in', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-            <img src="/logo-color.jpg" alt="TSI Logo" style={{ height: 44 }} />
+            <img src="/logo-color.png" alt="TSI Logo" style={{ height: 44 }} />
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 15, fontWeight: 800, color: '#1B3A5C' }}>D&amp;I Inspection Report</div>
               <div style={{ fontSize: 11, fontWeight: 600, color: '#2E75B6', marginTop: 1 }}>Camera System</div>

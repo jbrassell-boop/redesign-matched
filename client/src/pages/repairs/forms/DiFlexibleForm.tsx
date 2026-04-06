@@ -251,9 +251,7 @@ const pfBtn = (type: 'p' | 'f' | 'na') => ({
 });
 
 const LogoBlock = () => (
-  <div style={{ fontWeight: 800, fontSize: 16, color: '#1B3A5C', letterSpacing: '-0.01em' }}>
-    <span style={{ color: '#2E75B6' }}>T</span>otal <span style={{ color: '#2E75B6' }}>S</span>cope <span style={{ color: '#2E75B6' }}>I</span>nc.
-  </div>
+  <img src="/logo-color.png" alt="Total Scope Inc." style={{ height: 44 }} />
 );
 
 const FormFooter = ({ page }: { page: string }) => (

@@ -28,7 +28,7 @@ export const ReturnVerificationForm = ({ repair, onClose }: Props) => {
         <div style={{ padding: '0.5in', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
-            <img src="/logo-color.jpg" alt="TSI Logo" style={{ height: 44 }} />
+            <img src="/logo-color.png" alt="TSI Logo" style={{ height: 44 }} />
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 15, fontWeight: 800, color: '#1B3A5C' }}>Scope Return Verification</div>
               <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM14-1</div>

@@ -27,7 +27,7 @@ export const UpdateSlipForm = ({ repair, onClose }: Props) => {
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-            <img src="/logo-color.jpg" alt="TSI Logo" style={{ height: 44 }} />
+            <img src="/logo-color.png" alt="TSI Logo" style={{ height: 44 }} />
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 15, fontWeight: 800, color: '#1B3A5C' }}>Update Slip</div>
               <div style={{ fontSize: 11, fontWeight: 600, color: '#2E75B6', marginTop: 1 }}>Technician Update Request</div>

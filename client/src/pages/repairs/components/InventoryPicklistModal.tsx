@@ -44,7 +44,7 @@ export const InventoryPicklistModal = ({ open, onClose, repair, items }: Invento
 
         {/* Form header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-          <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--navy)' }}>Total Scope Inc.</div>
+          <img src="/logo-color.png" alt="Total Scope Inc." style={{ height: 44 }} />
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Inventory Pick List</div>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Repair Parts & Inventory</div>
