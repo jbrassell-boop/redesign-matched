@@ -155,11 +155,18 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
     if (!form.dateIn)  { message.error('Date In is required'); return; }
     setSubmitting(true);
     try {
-      const { repairKey } = await createRepair(form as CreateRepairPayload);
+      const payload: CreateRepairPayload = {
+        ...form as CreateRepairPayload,
+        deptKey: Number(form.deptKey),
+        dateIn: form.dateIn,
+        serialNumber: scopeResult === 'not-found' ? snInput.trim() : (form.serialNumber ?? null),
+      };
+      const { repairKey } = await createRepair(payload);
       message.success(`Repair #${repairKey} created`);
       onCreated();
       handleClose();
-    } catch {
+    } catch (e) {
+      console.error('[NewRepair] create failed:', e);
       message.error('Failed to create repair');
     } finally {
       setSubmitting(false);
