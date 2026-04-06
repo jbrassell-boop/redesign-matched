@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal, message } from 'antd';
 import { createDepartment, type CreateDepartmentPayload } from '../../api/departments';
-import { getClientsSimple, getCarriers, type LookupOption } from '../../api/lookups';
+import { getClientsSimple, getCarriers, getScopeTypes, type LookupOption } from '../../api/lookups';
 
 const lbl: React.CSSProperties = {
   fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
@@ -11,6 +11,9 @@ const fld: React.CSSProperties = {
   height: 28, border: '1px solid #d1d5db', borderRadius: 3,
   background: '#fff', padding: '0 7px', fontSize: 11, color: '#374151',
   width: '100%', fontFamily: 'inherit', outline: 'none',
+};
+const fldDisabled: React.CSSProperties = {
+  ...fld, background: '#f9fafb', color: '#9ca3af', cursor: 'not-allowed',
 };
 const secHead: React.CSSProperties = {
   background: 'var(--navy)', color: '#fff', padding: '4px 10px',
@@ -24,8 +27,8 @@ const F = ({ label: l, children }: { label: string; children: React.ReactNode })
   <div><div style={lbl}>{l}</div>{children}</div>
 );
 
-const Inp = ({ value, onChange, placeholder }: { value: string | undefined; onChange: (v: string) => void; placeholder?: string }) => (
-  <input type="text" value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={fld} />
+const Inp = ({ value, onChange, placeholder, disabled }: { value: string | undefined; onChange: (v: string) => void; placeholder?: string; disabled?: boolean }) => (
+  <input type="text" value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={disabled ? fldDisabled : fld} disabled={disabled} />
 );
 
 const US_STATES = [
@@ -39,6 +42,8 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
+  clientKey?: number | null;   // pre-populate from context (e.g. client's dept tab)
+  clientName?: string;          // display name when pre-populated
 }
 
 const DEFAULTS: Partial<CreateDepartmentPayload> = {
@@ -47,10 +52,12 @@ const DEFAULTS: Partial<CreateDepartmentPayload> = {
   trackingRequired: false, taxExempt: false, paysByCreditCard: false, onsiteService: false,
 };
 
-export const NewDepartmentModal = ({ open, onClose, onCreated }: Props) => {
-  const [form, setForm]         = useState<Partial<CreateDepartmentPayload>>(DEFAULTS);
-  const [clients, setClients]   = useState<LookupOption[]>([]);
-  const [carriers, setCarriers] = useState<LookupOption[]>([]);
+export const NewDepartmentModal = ({ open, onClose, onCreated, clientKey: presetClientKey, clientName }: Props) => {
+  const [form, setForm]             = useState<Partial<CreateDepartmentPayload>>(DEFAULTS);
+  const [clients, setClients]       = useState<LookupOption[]>([]);
+  const [carriers, setCarriers]     = useState<LookupOption[]>([]);
+  const [scopeTypes, setScopeTypes] = useState<LookupOption[]>([]);
+  const [newScope, setNewScope]     = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const set = (k: keyof CreateDepartmentPayload, v: unknown) =>
@@ -71,17 +78,27 @@ export const NewDepartmentModal = ({ open, onClose, onCreated }: Props) => {
 
   useEffect(() => {
     if (!open) return;
-    Promise.all([getClientsSimple(), getCarriers()])
-      .then(([c, car]) => { setClients(c); setCarriers(car); })
+    setForm({ ...DEFAULTS, clientKey: presetClientKey ?? null });
+    setNewScope(false);
+    Promise.all([getClientsSimple(), getCarriers(), getScopeTypes()])
+      .then(([c, car, st]) => {
+        setClients(c);
+        setCarriers(car);
+        setScopeTypes(st);
+      })
       .catch(() => message.error('Failed to load form data'));
-  }, [open]);
+  }, [open, presetClientKey]);
 
   const handleSubmit = async () => {
-    if (!form.clientKey) { message.error('Client is required'); return; }
     if (!form.name?.trim()) { message.error('Department name is required'); return; }
     setSubmitting(true);
     try {
-      const { deptKey } = await createDepartment(form as CreateDepartmentPayload);
+      const payload: CreateDepartmentPayload = {
+        ...(form as CreateDepartmentPayload),
+        serialNumber: newScope ? (form.serialNumber ?? null) : null,
+        scopeTypeKey: newScope ? (form.scopeTypeKey ?? null) : null,
+      };
+      const { deptKey } = await createDepartment(payload);
       message.success(`Department #${deptKey} created`);
       onCreated();
       handleClose();
@@ -94,6 +111,7 @@ export const NewDepartmentModal = ({ open, onClose, onCreated }: Props) => {
 
   const handleClose = () => {
     setForm(DEFAULTS);
+    setNewScope(false);
     onClose();
   };
 
@@ -115,23 +133,63 @@ export const NewDepartmentModal = ({ open, onClose, onCreated }: Props) => {
     >
       {/* ── Department Info ── */}
       <div style={secHead}>Department Info</div>
+
+      {/* Client — read-only if pre-populated from context */}
+      {presetClientKey ? (
+        <div style={{ marginBottom: 6 }}>
+          <F label="Client">
+            <input value={clientName ?? `Client #${presetClientKey}`} disabled style={fldDisabled} />
+          </F>
+        </div>
+      ) : (
+        <div style={{ marginBottom: 6 }}>
+          <F label="Client">
+            <select value={form.clientKey ?? ''} onChange={e => set('clientKey', Number(e.target.value) || null)} style={fld}>
+              <option value="">— select client (optional) —</option>
+              {clients.map(c => <option key={c.key} value={c.key}>{c.name}</option>)}
+            </select>
+          </F>
+        </div>
+      )}
+
       <div style={{ ...g2, marginBottom: 6 }}>
-        <F label="Client *">
-          <select value={form.clientKey ?? ''} onChange={e => set('clientKey', Number(e.target.value) || null)} style={fld}>
-            <option value="">— select client —</option>
-            {clients.map(c => <option key={c.key} value={c.key}>{c.name}</option>)}
-          </select>
-        </F>
         <F label="Department Name *">
           <Inp value={form.name} onChange={v => set('name', v)} placeholder="Required" />
         </F>
-      </div>
-      <div style={g2}>
-        <F label="Address">
-          <Inp value={form.address1 ?? ''} onChange={v => set('address1', v)} />
-        </F>
         <F label="Phone">
           <Inp value={form.phone ?? ''} onChange={v => set('phone', v)} />
+        </F>
+      </div>
+
+      {/* Service Location */}
+      <div style={{ marginBottom: 6 }}>
+        <div style={lbl}>Service Location</div>
+        <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
+          {[{ key: 1, label: 'Upper Chichester' }, { key: 2, label: 'Nashville' }].map(loc => (
+            <label key={loc.key} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, cursor: 'pointer' }}>
+              <input
+                type="radio"
+                name="serviceLocation"
+                checked={form.serviceLocationKey === loc.key}
+                onChange={() => set('serviceLocationKey', loc.key)}
+              />
+              {loc.label}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Address ── */}
+      <div style={secHead}>Shipping Address</div>
+      <div style={g2}>
+        <F label="Address Line 1">
+          <Inp value={form.address1 ?? ''} onChange={v => set('address1', v)} />
+        </F>
+        <F label="Default Shipping Carrier">
+          <select value={form.carrierKey ?? ''} onChange={e => set('carrierKey', Number(e.target.value) || null)} style={fld}>
+            <option value="">— select —</option>
+            {carriers.map(c => <option key={c.key} value={c.key}>{c.name}</option>)}
+          </select>
         </F>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 60px 80px', gap: '6px 8px', marginTop: 6 }}>
@@ -163,16 +221,25 @@ export const NewDepartmentModal = ({ open, onClose, onCreated }: Props) => {
         </F>
       </div>
 
-      {/* ── Defaults ── */}
-      <div style={secHead}>Billing &amp; Defaults</div>
-      <div style={g2}>
-        <F label="Default Shipping Carrier">
-          <select value={form.carrierKey ?? ''} onChange={e => set('carrierKey', Number(e.target.value) || null)} style={fld}>
-            <option value="">— select —</option>
-            {carriers.map(c => <option key={c.key} value={c.key}>{c.name}</option>)}
-          </select>
-        </F>
-      </div>
+      {/* ── New Scope ── */}
+      <div style={secHead}>New Scope</div>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, cursor: 'pointer', marginBottom: 8 }}>
+        <input type="checkbox" checked={newScope} onChange={e => setNewScope(e.target.checked)} />
+        Add a scope for this department
+      </label>
+      {newScope && (
+        <div style={g2}>
+          <F label="Serial Number">
+            <Inp value={form.serialNumber ?? ''} onChange={v => set('serialNumber', v)} placeholder="Enter serial number" />
+          </F>
+          <F label="Scope Type">
+            <select value={form.scopeTypeKey ?? ''} onChange={e => set('scopeTypeKey', Number(e.target.value) || null)} style={fld}>
+              <option value="">— select scope type —</option>
+              {scopeTypes.map(s => <option key={s.key} value={s.key}>{s.name}</option>)}
+            </select>
+          </F>
+        </div>
+      )}
 
       {/* ── Options ── */}
       <div style={secHead}>Options</div>

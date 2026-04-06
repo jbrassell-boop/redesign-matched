@@ -103,7 +103,7 @@ export const getDeptContracts = async (deptKey: number): Promise<DeptContract[]>
 };
 
 export interface CreateDepartmentPayload {
-  clientKey: number;
+  clientKey?: number | null;
   name: string;
   address1?: string | null;
   city?: string | null;
@@ -114,6 +114,7 @@ export interface CreateDepartmentPayload {
   contactLast?: string | null;
   contactEmail?: string | null;
   carrierKey?: number | null;
+  serviceLocationKey?: number | null;
   showConsumptionOnReq: boolean;
   enforceScopeTypeFiltering: boolean;
   showProductId?: string | null;
@@ -124,6 +125,8 @@ export interface CreateDepartmentPayload {
   taxExempt: boolean;
   paysByCreditCard: boolean;
   onsiteService: boolean;
+  serialNumber?: string | null;
+  scopeTypeKey?: number | null;
 }
 
 export const createDepartment = async (payload: CreateDepartmentPayload): Promise<{ deptKey: number }> => {

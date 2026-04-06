@@ -121,7 +121,7 @@ public record DepartmentRepairItem(
 );
 
 public record CreateDepartmentRequest(
-    int ClientKey,
+    int? ClientKey,
     string Name,
     string? Address1,
     string? City,
@@ -132,6 +132,7 @@ public record CreateDepartmentRequest(
     string? ContactLast,
     string? ContactEmail,
     int? CarrierKey,
+    int? ServiceLocationKey,
     bool ShowConsumptionOnReq,
     bool EnforceScopeTypeFiltering,
     string? ShowProductId,
@@ -141,5 +142,8 @@ public record CreateDepartmentRequest(
     bool TrackingRequired,
     bool TaxExempt,
     bool PaysByCreditCard,
-    bool OnsiteService
+    bool OnsiteService,
+    // New Scope (optional — created after dept insert)
+    string? SerialNumber,
+    int? ScopeTypeKey
 );
