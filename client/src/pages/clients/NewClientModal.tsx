@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Modal, message } from 'antd';
 import { createNewClient, type CreateClientPayload } from '../../api/clients';
-import { getSalesReps, getPricingCategories, getPaymentTerms, type LookupOption } from '../../api/lookups';
+import { createDepartment } from '../../api/departments';
+import { getSalesReps, getPricingCategories, getPaymentTerms, getScopeTypes, getCarriers, type LookupOption } from '../../api/lookups';
 
 const lbl: React.CSSProperties = {
   fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
@@ -11,6 +12,9 @@ const fld: React.CSSProperties = {
   height: 28, border: '1px solid #d1d5db', borderRadius: 3,
   background: '#fff', padding: '0 7px', fontSize: 11, color: '#374151',
   width: '100%', fontFamily: 'inherit', outline: 'none',
+};
+const fldDisabled: React.CSSProperties = {
+  ...fld, background: '#f9fafb', color: '#9ca3af', cursor: 'not-allowed',
 };
 const secHead: React.CSSProperties = {
   background: 'var(--navy)', color: '#fff', padding: '4px 10px',
@@ -42,27 +46,50 @@ const US_STATES = [
   'VA','WA','WV','WI','WY','DC',
 ];
 
+interface DeptForm {
+  name: string;
+  salesRepKey: number | null;
+  pricingCategoryKey: number | null;
+  serviceLocationKey: number | null;
+  carrierKey: number | null;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
 }
 
-const DEFAULTS: Partial<CreateClientPayload> = {
+const CLIENT_DEFAULTS: Partial<CreateClientPayload> = {
   blindPS3: false, reqTotalsOnly: false, blindTotalsOnFinal: false,
   pORequired: false, neverHold: false, skipTracking: false,
   emailNewRepairs: false, nationalAccount: false,
 };
 
+const DEPT_DEFAULTS: DeptForm = {
+  name: '', salesRepKey: null, pricingCategoryKey: null,
+  serviceLocationKey: null, carrierKey: null,
+};
+
 export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
-  const [form, setForm] = useState<Partial<CreateClientPayload>>(DEFAULTS);
+  const [form, setForm]             = useState<Partial<CreateClientPayload>>(CLIENT_DEFAULTS);
+  const [dept, setDept]             = useState<DeptForm>(DEPT_DEFAULTS);
+  const [newScope, setNewScope]     = useState(false);
+  const [scopeSerial, setScopeSerial]   = useState('');
+  const [scopeTypeKey, setScopeTypeKey] = useState<number | null>(null);
+
   const [salesReps, setSalesReps]     = useState<LookupOption[]>([]);
   const [pricingCats, setPricingCats] = useState<LookupOption[]>([]);
   const [payTerms, setPayTerms]       = useState<LookupOption[]>([]);
+  const [scopeTypes, setScopeTypes]   = useState<LookupOption[]>([]);
+  const [carriers, setCarriers]       = useState<LookupOption[]>([]);
   const [submitting, setSubmitting]   = useState(false);
 
   const set = (k: keyof CreateClientPayload, v: unknown) =>
     setForm(prev => ({ ...prev, [k]: v === '' ? null : v }));
+
+  const setD = (k: keyof DeptForm, v: unknown) =>
+    setDept(prev => ({ ...prev, [k]: v === '' ? null : v }));
 
   const lookupZip = async (zip: string, cityKey: keyof CreateClientPayload, stateKey: keyof CreateClientPayload) => {
     if (zip.length !== 5 || !/^\d{5}$/.test(zip)) return;
@@ -74,13 +101,16 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
       if (place) {
         setForm(prev => ({ ...prev, [cityKey]: place['place name'], [stateKey]: place['state abbreviation'] }));
       }
-    } catch { /* silent — don't block the user */ }
+    } catch { /* silent */ }
   };
 
   useEffect(() => {
     if (!open) return;
-    Promise.all([getSalesReps(), getPricingCategories(), getPaymentTerms()])
-      .then(([sr, pc, pt]) => { setSalesReps(sr); setPricingCats(pc); setPayTerms(pt); })
+    Promise.all([getSalesReps(), getPricingCategories(), getPaymentTerms(), getScopeTypes(), getCarriers()])
+      .then(([sr, pc, pt, st, car]) => {
+        setSalesReps(sr); setPricingCats(pc); setPayTerms(pt);
+        setScopeTypes(st); setCarriers(car);
+      })
       .catch(() => message.error('Failed to load form data'));
   }, [open]);
 
@@ -89,6 +119,30 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
     setSubmitting(true);
     try {
       const { clientKey } = await createNewClient(form as CreateClientPayload);
+
+      // Create first department if name provided
+      if (dept.name.trim()) {
+        await createDepartment({
+          clientKey,
+          name: dept.name.trim(),
+          salesRepKey: dept.salesRepKey ?? null,
+          pricingCategoryKey: dept.pricingCategoryKey ?? null,
+          serviceLocationKey: dept.serviceLocationKey ?? null,
+          carrierKey: dept.carrierKey ?? null,
+          showConsumptionOnReq: false,
+          enforceScopeTypeFiltering: false,
+          showUAorNWT: false,
+          showItemizedDesc: false,
+          emailNewRepairs: false,
+          trackingRequired: false,
+          taxExempt: false,
+          paysByCreditCard: false,
+          onsiteService: false,
+          serialNumber: newScope && scopeSerial.trim() ? scopeSerial.trim() : null,
+          scopeTypeKey: newScope ? scopeTypeKey : null,
+        });
+      }
+
       message.success(`Client #${clientKey} created`);
       onCreated();
       handleClose();
@@ -100,7 +154,11 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
   };
 
   const handleClose = () => {
-    setForm(DEFAULTS);
+    setForm(CLIENT_DEFAULTS);
+    setDept(DEPT_DEFAULTS);
+    setNewScope(false);
+    setScopeSerial('');
+    setScopeTypeKey(null);
     onClose();
   };
 
@@ -116,7 +174,7 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
       open={open}
       onCancel={handleClose}
       title={<span style={{ color: 'var(--navy)', fontWeight: 700 }}>New Client</span>}
-      width={680}
+      width={700}
       footer={null}
       styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', padding: '12px 16px' } }}
     >
@@ -208,6 +266,59 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
           <Inp value={form.billZip ?? ''} onChange={v => { set('billZip', v); lookupZip(v, 'billCity', 'billState'); }} />
         </F>
       </div>
+
+      {/* ── First Department ── */}
+      <div style={secHead}>First Department</div>
+      <div style={g2}>
+        <F label="Department Name">
+          <Inp value={dept.name} onChange={v => setD('name', v)} placeholder="e.g. Endoscopy, Surgery…" />
+        </F>
+        <F label="Sales Rep">
+          <Sel value={dept.salesRepKey ?? undefined} onChange={v => setD('salesRepKey', Number(v) || null)} options={salesReps} />
+        </F>
+        <F label="Pricing Category">
+          <Sel value={dept.pricingCategoryKey ?? undefined} onChange={v => setD('pricingCategoryKey', Number(v) || null)} options={pricingCats} />
+        </F>
+        <F label="Default Shipping Carrier">
+          <Sel value={dept.carrierKey ?? undefined} onChange={v => setD('carrierKey', Number(v) || null)} options={carriers} />
+        </F>
+      </div>
+      <div style={{ marginTop: 6 }}>
+        <div style={lbl}>Service Location</div>
+        <div style={{ display: 'flex', gap: 16, marginTop: 4 }}>
+          {[{ key: 1, label: 'Upper Chichester' }, { key: 2, label: 'Nashville' }].map(loc => (
+            <label key={loc.key} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, cursor: 'pointer' }}>
+              <input
+                type="radio"
+                name="deptServiceLocation"
+                checked={dept.serviceLocationKey === loc.key}
+                onChange={() => setD('serviceLocationKey', loc.key)}
+              />
+              {loc.label}
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {/* ── New Scope ── */}
+      <div style={secHead}>New Scope</div>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, cursor: 'pointer', marginBottom: 8 }}>
+        <input type="checkbox" checked={newScope} onChange={e => setNewScope(e.target.checked)} />
+        Add a scope for this department
+      </label>
+      {newScope && (
+        <div style={g2}>
+          <F label="Serial Number">
+            <input type="text" value={scopeSerial} onChange={e => setScopeSerial(e.target.value)} placeholder="Enter serial number" style={fld} />
+          </F>
+          <F label="Scope Type">
+            <select value={scopeTypeKey ?? ''} onChange={e => setScopeTypeKey(Number(e.target.value) || null)} style={fld}>
+              <option value="">— select scope type —</option>
+              {scopeTypes.map(s => <option key={s.key} value={s.key}>{s.name}</option>)}
+            </select>
+          </F>
+        </div>
+      )}
 
       {/* ── Options ── */}
       <div style={secHead}>Options</div>
