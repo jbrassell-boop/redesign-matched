@@ -98,35 +98,42 @@ public class OrdersController(IConfiguration config) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
     {
-        await using var conn = CreateConnection();
-        await conn.OpenAsync();
+        try
+        {
+            await using var conn = CreateConnection();
+            await conn.OpenAsync();
 
-        // Get the "Received" status ID (initial status for new orders)
-        await using var statusCmd = new SqlCommand(
-            "SELECT TOP 1 lRepairStatusID FROM tblRepairStatuses WHERE sRepairStatus = 'Received' ORDER BY lRepairStatusSortOrder", conn);
-        var statusObj = await statusCmd.ExecuteScalarAsync();
-        var statusId = statusObj != null ? Convert.ToInt32(statusObj) : 1;
+            // Get the "Received" status ID (initial status for new orders)
+            await using var statusCmd = new SqlCommand(
+                "SELECT TOP 1 lRepairStatusID FROM tblRepairStatuses WHERE sRepairStatus = 'Received' ORDER BY lRepairStatusSortOrder", conn);
+            var statusObj = await statusCmd.ExecuteScalarAsync();
+            var statusId = statusObj != null ? Convert.ToInt32(statusObj) : 1;
 
-        // Generate next work order number
-        await using var woCmd = new SqlCommand(
-            "SELECT ISNULL(MAX(TRY_CAST(sWorkOrderNumber AS BIGINT)), 0) + 1 FROM tblRepair WHERE TRY_CAST(sWorkOrderNumber AS BIGINT) IS NOT NULL", conn);
-        var nextWo = Convert.ToInt64(await woCmd.ExecuteScalarAsync());
-        var woNumber = nextWo.ToString().PadLeft(7, '0');
+            // Generate next work order number (use TRY_CAST to skip non-numeric WOs like NR/SR prefixed)
+            await using var woCmd = new SqlCommand(
+                "SELECT ISNULL(MAX(TRY_CAST(sWorkOrderNumber AS BIGINT)), 0) + 1 FROM tblRepair WHERE TRY_CAST(sWorkOrderNumber AS BIGINT) IS NOT NULL", conn);
+            var nextWo = Convert.ToInt64(await woCmd.ExecuteScalarAsync());
+            var woNumber = nextWo.ToString().PadLeft(7, '0');
 
-        // Insert the repair record
-        var insertSql = """
-            INSERT INTO tblRepair (lDepartmentKey, lRepairStatusID, sWorkOrderNumber, dtDateIn)
-            VALUES (@deptKey, @statusId, @woNumber, GETDATE());
-            SELECT SCOPE_IDENTITY();
-            """;
+            // Insert the repair record
+            const string insertSql = """
+                INSERT INTO tblRepair (lDepartmentKey, lRepairStatusID, sWorkOrderNumber, dtDateIn)
+                OUTPUT INSERTED.lRepairKey
+                VALUES (@deptKey, @statusId, @woNumber, GETDATE())
+                """;
 
-        await using var insertCmd = new SqlCommand(insertSql, conn);
-        insertCmd.Parameters.AddWithValue("@deptKey", request.DepartmentKey);
-        insertCmd.Parameters.AddWithValue("@statusId", statusId);
-        insertCmd.Parameters.AddWithValue("@woNumber", woNumber);
+            await using var insertCmd = new SqlCommand(insertSql, conn);
+            insertCmd.Parameters.AddWithValue("@deptKey", request.DepartmentKey);
+            insertCmd.Parameters.AddWithValue("@statusId", statusId);
+            insertCmd.Parameters.AddWithValue("@woNumber", woNumber);
 
-        var newKey = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
+            var newKey = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
 
-        return Ok(new CreateOrderResponse(newKey, woNumber));
+            return Ok(new CreateOrderResponse(newKey, woNumber));
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { error = ex.Message, detail = ex.InnerException?.Message });
+        }
     }
 }
