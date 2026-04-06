@@ -787,6 +787,112 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         return Ok(list);
     }
 
+    [HttpGet("{deptKey:int}/available-sub-groups")]
+    public async Task<IActionResult> GetAvailableSubGroups(int deptKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT sg.llSubGroupKey, sg.sSubGroup
+            FROM tblSubGroups sg
+            WHERE sg.llSubGroupKey NOT IN (
+                SELECT lSubGroupKey FROM tblDepartmentSubGroups WHERE lDepartmentKey = @deptKey
+            )
+            ORDER BY sg.sSubGroup
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@deptKey", deptKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var subGroups = new List<DepartmentSubGroup>();
+        while (await reader.ReadAsync())
+        {
+            subGroups.Add(new DepartmentSubGroup(
+                SubGroupKey: Convert.ToInt32(reader["llSubGroupKey"]),
+                Name: reader["sSubGroup"]?.ToString() ?? ""
+            ));
+        }
+
+        return Ok(subGroups);
+    }
+
+    [HttpPost("{deptKey:int}/scopes")]
+    public async Task<IActionResult> AddScope(int deptKey, [FromBody] CreateScopeRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Get client key for this department
+        await using var deptCmd = new SqlCommand("SELECT lClientKey FROM tblDepartment WHERE lDepartmentKey = @deptKey", conn);
+        deptCmd.Parameters.AddWithValue("@deptKey", deptKey);
+        var clientKeyObj = await deptCmd.ExecuteScalarAsync();
+        if (clientKeyObj == null) return NotFound(new { message = "Department not found." });
+        var clientKey = clientKeyObj == DBNull.Value ? (int?)null : Convert.ToInt32(clientKeyObj);
+
+        const string sql = """
+            INSERT INTO tblScope (lDepartmentKey, lClientKey, lScopeTypeKey, sSerialNumber, dtCreateDate, bActive)
+            VALUES (@deptKey, @clientKey, @scopeTypeKey, @serialNumber, GETDATE(), 1);
+            SELECT SCOPE_IDENTITY();
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@deptKey", deptKey);
+        cmd.Parameters.AddWithValue("@clientKey", (object?)clientKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@scopeTypeKey", (object?)body.ScopeTypeKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@serialNumber", (object?)body.SerialNumber ?? DBNull.Value);
+
+        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return Ok(new { scopeKey = newKey });
+    }
+
+    [HttpGet("{deptKey:int}/gpos")]
+    public async Task<IActionResult> GetDeptGpos(int deptKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Get client key for this department
+        await using var deptCmd = new SqlCommand("SELECT lClientKey FROM tblDepartment WHERE lDepartmentKey = @deptKey", conn);
+        deptCmd.Parameters.AddWithValue("@deptKey", deptKey);
+        var clientKeyObj = await deptCmd.ExecuteScalarAsync();
+        if (clientKeyObj == null) return NotFound(new { message = "Department not found." });
+        var clientKey = Convert.ToInt32(clientKeyObj);
+
+        const string sql = """
+            SELECT sc.sItemText AS GpoName,
+                   crg.dtEffectiveDate, crg.dtEndDate,
+                   crg.GPOID, crg.GLN, crg.sGroup, crg.sCompany,
+                   crg.lSystemCodesKey
+            FROM tblClientReportingGroups crg
+                INNER JOIN tblSystemCodes sc ON sc.lSystemCodesKey = crg.lSystemCodesKey
+            WHERE crg.lClientKey = @clientKey
+            ORDER BY sc.sItemText
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.Parameters.AddWithValue("@clientKey", clientKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        var gpos = new List<DeptGpo>();
+        while (await reader.ReadAsync())
+        {
+            gpos.Add(new DeptGpo(
+                SystemCodesKey: Convert.ToInt32(reader["lSystemCodesKey"]),
+                GpoName: reader["GpoName"]?.ToString() ?? "",
+                EffectiveDate: reader["dtEffectiveDate"] as DateTime?,
+                EndDate: reader["dtEndDate"] as DateTime?,
+                GpoId: reader["GPOID"]?.ToString(),
+                Gln: reader["GLN"]?.ToString(),
+                Group: reader["sGroup"]?.ToString(),
+                Company: reader["sCompany"]?.ToString()
+            ));
+        }
+
+        return Ok(gpos);
+    }
+
     // ── Create Department ──
     [HttpPost]
     public async Task<IActionResult> CreateDepartment([FromBody] CreateDepartmentRequest body)

@@ -102,6 +102,32 @@ export const getDeptContracts = async (deptKey: number): Promise<DeptContract[]>
   return data;
 };
 
+export interface DeptGpo {
+  systemCodesKey: number;
+  gpoName: string;
+  effectiveDate: string | null;
+  endDate: string | null;
+  gpoId: string | null;
+  gln: string | null;
+  group: string | null;
+  company: string | null;
+}
+
+export const getDeptGpos = async (deptKey: number): Promise<DeptGpo[]> => {
+  const { data } = await apiClient.get<DeptGpo[]>(`/departments/${deptKey}/gpos`);
+  return data;
+};
+
+export const getAvailableSubGroups = async (deptKey: number): Promise<DepartmentSubGroup[]> => {
+  const { data } = await apiClient.get<DepartmentSubGroup[]>(`/departments/${deptKey}/available-sub-groups`);
+  return data;
+};
+
+export const addDeptScope = async (deptKey: number, payload: { serialNumber?: string | null; scopeTypeKey?: number | null }): Promise<{ scopeKey: number }> => {
+  const { data } = await apiClient.post(`/departments/${deptKey}/scopes`, payload);
+  return data;
+};
+
 export interface CreateDepartmentPayload {
   clientKey?: number | null;
   name: string;

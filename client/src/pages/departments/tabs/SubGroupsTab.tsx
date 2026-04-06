@@ -1,96 +1,157 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Spin } from 'antd';
-import { getDepartmentSubGroups, updateDepartmentSubGroups } from '../../../api/departments';
+import { Spin, message } from 'antd';
+import {
+  getDepartmentSubGroups, getAvailableSubGroups, updateDepartmentSubGroups,
+} from '../../../api/departments';
 import type { DepartmentSubGroup } from '../types';
 
 interface SubGroupsTabProps {
   deptKey: number;
 }
 
-export const SubGroupsTab = ({ deptKey }: SubGroupsTabProps) => {
-  const [subGroups, setSubGroups] = useState<DepartmentSubGroup[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+const panel: React.CSSProperties = {
+  flex: 1, border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden',
+  display: 'flex', flexDirection: 'column', minHeight: 0,
+};
+const panelHead: React.CSSProperties = {
+  padding: '8px 12px', background: 'var(--neutral-50)',
+  borderBottom: '1px solid var(--border)',
+  fontSize: 12, fontWeight: 700, color: 'var(--navy)',
+  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+};
+const panelBody: React.CSSProperties = {
+  flex: 1, overflowY: 'auto', minHeight: 120, maxHeight: 380,
+};
+const row: React.CSSProperties = {
+  padding: '7px 12px', fontSize: 12, color: 'var(--text)',
+  borderBottom: '1px solid var(--neutral-200)',
+  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+};
+const actionBtn = (variant: 'remove' | 'add'): React.CSSProperties => ({
+  fontSize: 11, fontWeight: 700, padding: '2px 8px',
+  border: 'none', borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit',
+  background: variant === 'remove' ? 'transparent' : 'var(--navy)',
+  color: variant === 'remove' ? 'var(--danger)' : '#fff',
+});
 
-  const reload = useCallback(() => {
+export const SubGroupsTab = ({ deptKey }: SubGroupsTabProps) => {
+  const [assigned, setAssigned]   = useState<DepartmentSubGroup[]>([]);
+  const [available, setAvailable] = useState<DepartmentSubGroup[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [saving, setSaving]       = useState(false);
+  const [search, setSearch]       = useState('');
+
+  const reload = useCallback(async () => {
     setLoading(true);
-    getDepartmentSubGroups(deptKey)
-      .then(setSubGroups)
-      .finally(() => setLoading(false));
+    try {
+      const [a, av] = await Promise.all([
+        getDepartmentSubGroups(deptKey),
+        getAvailableSubGroups(deptKey),
+      ]);
+      setAssigned(a);
+      setAvailable(av);
+    } catch {
+      message.error('Failed to load sub-groups');
+    } finally {
+      setLoading(false);
+    }
   }, [deptKey]);
 
   useEffect(() => { reload(); }, [reload]);
 
-  const handleRemove = async (sgKey: number) => {
-    const updated = subGroups.filter(sg => sg.subGroupKey !== sgKey);
+  const persist = async (next: DepartmentSubGroup[]) => {
     setSaving(true);
     try {
-      await updateDepartmentSubGroups(deptKey, updated.map(sg => sg.subGroupKey));
-      setSubGroups(updated);
+      await updateDepartmentSubGroups(deptKey, next.map(sg => sg.subGroupKey));
+      await reload();
+    } catch {
+      message.error('Failed to update sub-groups');
     } finally {
       setSaving(false);
     }
   };
 
+  const handleRemove = (sg: DepartmentSubGroup) => {
+    persist(assigned.filter(a => a.subGroupKey !== sg.subGroupKey));
+  };
+
+  const handleAdd = (sg: DepartmentSubGroup) => {
+    persist([...assigned, sg]);
+  };
+
+  const filteredAvailable = search.trim()
+    ? available.filter(sg => sg.name.toLowerCase().includes(search.toLowerCase()))
+    : available;
+
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
 
   return (
-    <div style={{ padding: 16 }}>
-      <div style={{
-        border: '1px solid var(--neutral-200)',
-        borderRadius: 6,
-        overflow: 'hidden',
-      }}>
-        <div style={{
-          padding: '8px 12px',
-          background: 'var(--neutral-50)',
-          borderBottom: '1px solid var(--neutral-200)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>Assigned Sub Groups</span>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-            ({subGroups.length})
-            {saving && <Spin size="small" style={{ marginLeft: 6 }} />}
+    <div style={{ padding: 16, display: 'flex', gap: 12 }}>
+      {/* Assigned panel */}
+      <div style={panel}>
+        <div style={panelHead}>
+          <span>Assigned Sub Groups</span>
+          <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 500 }}>
+            ({assigned.length}){saving && <Spin size="small" style={{ marginLeft: 6 }} />}
           </span>
         </div>
-        <div>
-          {subGroups.length === 0 ? (
-            <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
-              No sub-groups assigned to this department.
+        <div style={panelBody}>
+          {assigned.length === 0 ? (
+            <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>
+              No sub-groups assigned.
             </div>
           ) : (
-            subGroups.map((sg, i) => (
-              <div
-                key={sg.subGroupKey}
-                style={{
-                  padding: '8px 12px',
-                  fontSize: 13,
-                  color: 'var(--text)',
-                  borderBottom: i < subGroups.length - 1 ? '1px solid var(--neutral-200)' : undefined,
-                  background: i % 2 === 1 ? 'var(--neutral-50)' : undefined,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
+            assigned.map(sg => (
+              <div key={sg.subGroupKey} style={row}>
                 <span>{sg.name}</span>
                 <button
-                  onClick={() => handleRemove(sg.subGroupKey)}
+                  onClick={() => handleRemove(sg)}
                   disabled={saving}
-                  style={{
-                    padding: '2px 8px',
-                    fontSize: 11,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    border: 'none',
-                    borderRadius: 3,
-                    background: 'transparent',
-                    color: 'var(--danger)',
-                  }}
+                  style={actionBtn('remove')}
                 >
                   Remove
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Available panel */}
+      <div style={panel}>
+        <div style={panelHead}>
+          <span>Available Sub Groups</span>
+          <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 500 }}>
+            ({filteredAvailable.length})
+          </span>
+        </div>
+        <div style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>
+          <input
+            placeholder="Search sub groups..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            style={{
+              width: '100%', height: 28, padding: '0 8px', fontSize: 12,
+              border: '1px solid var(--border)', borderRadius: 4,
+              outline: 'none', fontFamily: 'inherit',
+            }}
+          />
+        </div>
+        <div style={panelBody}>
+          {filteredAvailable.length === 0 ? (
+            <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>
+              {available.length === 0 ? 'All sub-groups assigned.' : 'No matches.'}
+            </div>
+          ) : (
+            filteredAvailable.map(sg => (
+              <div key={sg.subGroupKey} style={row}>
+                <span>{sg.name}</span>
+                <button
+                  onClick={() => handleAdd(sg)}
+                  disabled={saving}
+                  style={actionBtn('add')}
+                >
+                  + Add
                 </button>
               </div>
             ))

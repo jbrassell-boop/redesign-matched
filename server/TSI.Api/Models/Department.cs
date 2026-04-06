@@ -120,6 +120,22 @@ public record DepartmentRepairItem(
     int Tat, decimal? Amount
 );
 
+public record DeptGpo(
+    int SystemCodesKey,
+    string GpoName,
+    DateTime? EffectiveDate,
+    DateTime? EndDate,
+    string? GpoId,
+    string? Gln,
+    string? Group,
+    string? Company
+);
+
+public record CreateScopeRequest(
+    string? SerialNumber,
+    int? ScopeTypeKey
+);
+
 public record CreateDepartmentRequest(
     int? ClientKey,
     string Name,
