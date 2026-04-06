@@ -5,6 +5,7 @@ import type { RepairDetail, RepairFull, RepairLineItem } from './types';
 import { DiInspectionForm } from './forms/DiInspectionForm';
 import { DiFlexibleForm } from './forms/DiFlexibleForm';
 import { DiRigidForm } from './forms/DiRigidForm';
+import { DiFlexibleDiagnosticForm } from './forms/DiFlexibleDiagnosticForm';
 import { RequisitionForm } from './forms/RequisitionForm';
 import { FinalInspectionForm } from './forms/FinalInspectionForm';
 import { ReturnVerificationForm } from './forms/ReturnVerificationForm';
@@ -91,7 +92,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   // Forms dropdown + overlay state
   const [formsMenuOpen, setFormsMenuOpen] = useState(false);
   const formsMenuRef = useRef<HTMLDivElement>(null);
-  const [activeForm, setActiveForm] = useState<'di-inspection' | 'di-flexible' | 'di-rigid' | 'requisition' | 'final-inspection' | 'return-verification' | 'amendment' | 'update-slip' | 'loaner' | null>(null);
+  const [activeForm, setActiveForm] = useState<'di-inspection' | 'di-flexible' | 'di-flex-diagnostic' | 'di-rigid' | 'requisition' | 'final-inspection' | 'return-verification' | 'amendment' | 'update-slip' | 'loaner' | null>(null);
 
   // Cockpit-specific state
   const [fullRepair, setFullRepair] = useState<RepairFull | null>(null);
@@ -362,8 +363,9 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                 <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' }}>Internal</div>
                 {[
                   { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)' },
-                  { key: 'di-flexible'    as const, label: 'D&I Flexible (OM07-3)' },
-                  { key: 'di-rigid'       as const, label: 'D&I Rigid (OM05-3)' },
+                  { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)' },
+                  { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)' },
+                  { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)' },
                   { key: 'amendment'      as const, label: 'Amendment (OM07-9)' },
                   { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)' },
                 ].map(item => (
@@ -402,6 +404,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         {/* Form overlays — cockpit */}
         {activeForm === 'di-inspection'      && <DiInspectionForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
         {activeForm === 'di-flexible'        && <DiFlexibleForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'di-flex-diagnostic' && <DiFlexibleDiagnosticForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
         {activeForm === 'di-rigid'           && <DiRigidForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
         {activeForm === 'requisition'        && <RequisitionForm repair={fullRepair} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
         {activeForm === 'final-inspection'   && <FinalInspectionForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
@@ -609,8 +612,9 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
               <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' }}>Internal</div>
               {[
                 { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)' },
-                { key: 'di-flexible'    as const, label: 'D&I Flexible (OM07-3)' },
-                { key: 'di-rigid'       as const, label: 'D&I Rigid (OM05-3)' },
+                { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)' },
+                { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)' },
+                { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)' },
                 { key: 'amendment'      as const, label: 'Amendment (OM07-9)' },
                 { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)' },
               ].map(item => (
@@ -656,6 +660,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       {/* Form overlays — legacy pane. Cast detail to RepairFull shape (shared core fields). */}
       {activeForm === 'di-inspection'      && <DiInspectionForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
       {activeForm === 'di-flexible'        && <DiFlexibleForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'di-flex-diagnostic' && <DiFlexibleDiagnosticForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
       {activeForm === 'di-rigid'           && <DiRigidForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
       {activeForm === 'requisition'        && <RequisitionForm repair={detail as unknown as RepairFull} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
       {activeForm === 'final-inspection'   && <FinalInspectionForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
