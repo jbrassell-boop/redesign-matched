@@ -91,6 +91,7 @@ export const InlineEditor = memo(({
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
           disabled={saving}
+          aria-label={placeholder}
           rows={3}
           style={{ ...sharedStyle, resize: 'vertical', minHeight: 60 }}
         />
@@ -106,6 +107,7 @@ export const InlineEditor = memo(({
         onBlur={handleSave}
         onKeyDown={handleKeyDown}
         disabled={saving}
+        aria-label={placeholder}
         style={{ ...sharedStyle, height: 28 }}
       />
     );

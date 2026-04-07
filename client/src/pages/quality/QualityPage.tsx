@@ -606,17 +606,9 @@ export const QualityPage = () => {
                 disabled={page >= totalPages}
                 onClick={() => setPage(p => p + 1)}
                 style={{
-                  height: 26,
-                  minWidth: 26,
-                  padding: '0 6px',
-                  border: '1px solid var(--border-dk)',
-                  borderRadius: 4,
-                  background: 'var(--card)',
-                  fontSize: 11,
-                  color: 'var(--label)',
+                  ...pageBtnBaseStyle,
                   cursor: page >= totalPages ? 'default' : 'pointer',
                   opacity: page >= totalPages ? 0.4 : 1,
-                  fontFamily: 'inherit',
                 }}
               >
                 ›
@@ -650,11 +642,7 @@ export const QualityPage = () => {
             <input type="text" value={ncrSearch} onChange={e => { setNcrSearch(e.target.value); setNcrPage(1); }}
               placeholder="Search NCR#, WO#, description..."
               aria-label="Search non-conformance reports"
-              style={{
-                marginLeft: 'auto', height: 30, width: 240, border: '1.5px solid var(--border-dk)', borderRadius: 6,
-                padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
-                background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
-              }}
+              style={ncrSearchInputStyle}
             />
           </div>
 

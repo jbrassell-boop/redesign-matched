@@ -180,7 +180,7 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
           style={{ height: 30, width: 260, fontSize: 12 }}
           allowClear
         />
-        <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>
+        <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }} aria-live="polite">
           <strong style={{ color: 'var(--text)' }}>{items.length}</strong> active loaners
         </div>
       </div>
@@ -829,7 +829,7 @@ export const LoanersPage = () => {
   /* ── Pagination Footer ───────────────────────────────────── */
   const footer = (
     <div style={loanerFooterStyle}>
-      <div style={{ fontSize: 11, color: 'var(--muted)' }}>
+      <div style={{ fontSize: 11, color: 'var(--muted)' }} aria-live="polite" aria-atomic="true">
         Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{totalCount}</strong>
       </div>
       {totalPages > 1 && (

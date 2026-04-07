@@ -6,6 +6,41 @@ import { getWizardClients, getWizardDepartments } from '../../api/orders';
 import type { WizardClient, WizardDepartment } from '../../api/orders';
 import type { PendingArrival } from './types';
 
+// ── Extracted static styles ──
+const loadingWrapStyle: React.CSSProperties = { padding: 60, textAlign: 'center' };
+const walkinWrapStyle: React.CSSProperties = { padding: 20 };
+const walkinHeaderStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 };
+const walkinTitleStyle: React.CSSProperties = { margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--navy)' };
+const cancelBtnStyle: React.CSSProperties = { height: 28, padding: '0 12px', border: '1px solid var(--neutral-200)', borderRadius: 5, background: 'var(--card)', color: 'var(--muted)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
+const clientPickerGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, maxHeight: 150, overflowY: 'auto', marginTop: 6 };
+const clientCardNameStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--navy)' };
+const clientCardCityStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
+const selectedClientWrapStyle: React.CSSProperties = { background: 'rgba(var(--success-rgb), 0.08)', border: '1px solid rgba(var(--success-rgb), 0.25)', borderRadius: 6, padding: '7px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 };
+const selectedClientLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase' };
+const selectedClientNameStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--navy)' };
+const selectedClientCityStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', marginLeft: 4 };
+const changeBtnStyle: React.CSSProperties = { background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' };
+const fieldGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 };
+const submitRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', marginTop: 16 };
+const submitBtnBaseStyle: React.CSSProperties = { height: 38, padding: '0 24px', border: 'none', borderRadius: 6, background: 'var(--success)', color: 'var(--card)', fontSize: 13, fontWeight: 700, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 };
+const svgIconStyle: React.CSSProperties = { width: 14, height: 14 };
+const emptyStateStyle: React.CSSProperties = { padding: 60, textAlign: 'center' };
+const emptyMsgStyle: React.CSSProperties = { fontSize: 14, color: 'var(--muted)', marginBottom: 16 };
+const emptyBtnStyle: React.CSSProperties = { height: 36, padding: '0 20px', border: '1.5px solid var(--navy)', borderRadius: 6, background: 'var(--card)', color: 'var(--navy)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'inline-flex', alignItems: 'center', gap: 6 };
+const svgSmallStyle: React.CSSProperties = { width: 12, height: 12 };
+const detailWrapStyle: React.CSSProperties = { padding: 20 };
+const detailHeaderStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid var(--neutral-200)', marginBottom: 16 };
+const woNumberStyle: React.CSSProperties = { fontSize: 16, fontWeight: 700, color: 'var(--navy)' };
+const woSubtitleStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)', marginTop: 2 };
+const detailGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 };
+const detailFieldLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.3 };
+const detailFieldValueBaseStyle: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--navy)', marginTop: 2 };
+const complaintBoxStyle: React.CSSProperties = { fontSize: 12, color: 'var(--danger)', fontStyle: 'italic', padding: '8px 12px', background: 'rgba(var(--danger-rgb), 0.04)', border: '1px solid rgba(var(--danger-rgb), 0.12)', borderRadius: 6, marginTop: 4 };
+const actionRowStyle: React.CSSProperties = { display: 'flex', gap: 8 };
+const openRepairsBtnStyle: React.CSSProperties = { height: 34, padding: '0 16px', border: 'none', borderRadius: 6, background: 'var(--primary)', color: 'var(--card)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
+const newWalkinBtnStyle: React.CSSProperties = { height: 34, padding: '0 16px', border: '1.5px solid var(--navy)', borderRadius: 6, background: 'var(--card)', color: 'var(--navy)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5 };
+const daysInBadgeBaseStyle: React.CSSProperties = { fontSize: 11, padding: '3px 10px', borderRadius: 4, fontWeight: 700 };
+
 interface Props {
   arrival: PendingArrival | null;
   loading: boolean;
@@ -74,7 +109,7 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
   }, [selectedDept, serial, complaint, poNumber, trackingIn, notes, onReceived, navigate]);
 
   if (loading) {
-    return <div style={{ padding: 60, textAlign: 'center' }}><Spin /></div>;
+    return <div style={loadingWrapStyle}><Spin /></div>;
   }
 
   // Walk-in intake mode
@@ -89,19 +124,12 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
       : clients;
 
     return (
-      <div style={{ padding: 20 }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: 16,
-        }}>
-          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--navy)' }}>Walk-in Intake</h3>
+      <div style={walkinWrapStyle}>
+        <div style={walkinHeaderStyle}>
+          <h3 style={walkinTitleStyle}>Walk-in Intake</h3>
           <button
             onClick={() => setMode('view')}
-            style={{
-              height: 28, padding: '0 12px', border: '1px solid var(--neutral-200)',
-              borderRadius: 5, background: 'var(--card)', color: 'var(--muted)',
-              fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-            }}
+            style={cancelBtnStyle}
           >Cancel</button>
         </div>
 
@@ -116,10 +144,7 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
               aria-label="Search customer"
               style={inputStyle}
             />
-            <div style={{
-              display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6,
-              maxHeight: 150, overflowY: 'auto', marginTop: 6,
-            }}>
+            <div style={clientPickerGridStyle}>
               {filteredClients.slice(0, 50).map(c => (
                 <div
                   key={c.clientKey}
@@ -128,29 +153,22 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--neutral-200)'; }}
                 >
-                  <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>{c.name}</div>
-                  <div style={{ fontSize: 10, color: 'var(--muted)' }}>{c.city}{c.state ? `, ${c.state}` : ''}</div>
+                  <div style={clientCardNameStyle}>{c.name}</div>
+                  <div style={clientCardCityStyle}>{c.city}{c.state ? `, ${c.state}` : ''}</div>
                 </div>
               ))}
             </div>
           </div>
         ) : (
-          <div style={{
-            background: 'rgba(var(--success-rgb), 0.08)', border: '1px solid rgba(var(--success-rgb), 0.25)',
-            borderRadius: 6, padding: '7px 12px', display: 'flex', alignItems: 'center',
-            justifyContent: 'space-between', marginBottom: 12,
-          }}>
+          <div style={selectedClientWrapStyle}>
             <div>
-              <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase' }}>Customer</span><br />
-              <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>{selectedClient.name}</span>
-              <span style={{ fontSize: 10, color: 'var(--muted)', marginLeft: 4 }}>
+              <span style={selectedClientLabelStyle}>Customer</span><br />
+              <span style={selectedClientNameStyle}>{selectedClient.name}</span>
+              <span style={selectedClientCityStyle}>
                 {selectedClient.city}{selectedClient.state ? `, ${selectedClient.state}` : ''}
               </span>
             </div>
-            <button onClick={() => { setSelectedClient(null); setSelectedDept(null); }} style={{
-              background: 'none', border: 'none', color: 'var(--primary)',
-              fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline',
-            }}>Change</button>
+            <button onClick={() => { setSelectedClient(null); setSelectedDept(null); }} style={changeBtnStyle}>Change</button>
           </div>
         )}
 
@@ -175,7 +193,7 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
         )}
 
         {/* Serial + Complaint */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+        <div style={fieldGridStyle}>
           <div>
             <label style={labelStyle}>Serial #</label>
             <input value={serial} onChange={e => setSerial(e.target.value)} placeholder="Serial number" style={inputStyle} />
@@ -191,7 +209,7 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
           <input value={complaint} onChange={e => setComplaint(e.target.value)} placeholder="Customer perceived problem..." style={inputStyle} />
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+        <div style={fieldGridStyle}>
           <div>
             <label style={labelStyle}>Tracking # In</label>
             <input value={trackingIn} onChange={e => setTrackingIn(e.target.value)} placeholder="Inbound tracking" style={inputStyle} />
@@ -202,19 +220,17 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
+        <div style={submitRowStyle}>
           <button
             onClick={handleSubmit}
             disabled={!selectedDept || !serial.trim() || submitting}
             style={{
-              height: 38, padding: '0 24px', border: 'none', borderRadius: 6,
-              background: 'var(--success)', color: 'var(--card)',
-              fontSize: 13, fontWeight: 700, cursor: submitting ? 'not-allowed' : 'pointer',
-              fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6,
+              ...submitBtnBaseStyle,
+              cursor: submitting ? 'not-allowed' : 'pointer',
               opacity: (!selectedDept || !serial.trim() || submitting) ? 0.5 : 1,
             }}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 14, height: 14 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={svgIconStyle}>
               <polyline points="20 6 9 17 4 12" />
             </svg>
             {submitting ? 'Creating...' : 'Create Work Order'}
@@ -227,20 +243,15 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
   // Normal view: show selected arrival details or empty state
   if (!arrival) {
     return (
-      <div style={{ padding: 60, textAlign: 'center' }}>
-        <div style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 16 }}>
+      <div style={emptyStateStyle}>
+        <div style={emptyMsgStyle}>
           Select a pending arrival from the list, or start a walk-in intake.
         </div>
         <button
           onClick={startWalkin}
-          style={{
-            height: 36, padding: '0 20px', border: '1.5px solid var(--navy)',
-            borderRadius: 6, background: 'var(--card)', color: 'var(--navy)',
-            fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-          }}
+          style={emptyBtnStyle}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 12, height: 12 }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={svgSmallStyle}>
             <path d="M12 5v14M5 12h14" />
           </svg>
           Walk-in / No Match
@@ -250,17 +261,14 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
   }
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={detailWrapStyle}>
       {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        paddingBottom: 12, borderBottom: '1px solid var(--neutral-200)', marginBottom: 16,
-      }}>
+      <div style={detailHeaderStyle}>
         <div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--navy)' }}>
+          <div style={woNumberStyle}>
             WO #{arrival.workOrderNumber}
           </div>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
+          <div style={woSubtitleStyle}>
             {arrival.clientName} &mdash; {arrival.departmentName}
           </div>
         </div>
@@ -268,10 +276,7 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
       </div>
 
       {/* Details grid */}
-      <div style={{
-        display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
-        marginBottom: 20,
-      }}>
+      <div style={detailGridStyle}>
         <DetailField label="Model" value={arrival.scopeTypeDesc} />
         <DetailField label="Serial #" value={arrival.serialNumber} mono />
         <DetailField label="Status" value={arrival.repairStatus} />
@@ -281,33 +286,20 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
       {arrival.complaintDesc && (
         <div style={{ marginBottom: 20 }}>
           <label style={labelStyle}>Complaint</label>
-          <div style={{
-            fontSize: 12, color: 'var(--danger)', fontStyle: 'italic',
-            padding: '8px 12px', background: 'rgba(var(--danger-rgb), 0.04)',
-            border: '1px solid rgba(var(--danger-rgb), 0.12)', borderRadius: 6, marginTop: 4,
-          }}>{arrival.complaintDesc}</div>
+          <div style={complaintBoxStyle}>{arrival.complaintDesc}</div>
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8 }}>
+      <div style={actionRowStyle}>
         <button
           onClick={() => navigate(`/repairs?wo=${arrival.workOrderNumber}`)}
-          style={{
-            height: 34, padding: '0 16px', border: 'none', borderRadius: 6,
-            background: 'var(--primary)', color: 'var(--card)',
-            fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-          }}
+          style={openRepairsBtnStyle}
         >Open in Repairs</button>
         <button
           onClick={startWalkin}
-          style={{
-            height: 34, padding: '0 16px', border: '1.5px solid var(--navy)',
-            borderRadius: 6, background: 'var(--card)', color: 'var(--navy)',
-            fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', gap: 5,
-          }}
+          style={newWalkinBtnStyle}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 12, height: 12 }}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={svgSmallStyle}>
             <path d="M12 5v14M5 12h14" />
           </svg>
           New Walk-in
@@ -335,8 +327,8 @@ const cardStyle: React.CSSProperties = {
 
 const DetailField = ({ label, value, mono }: { label: string; value: string; mono?: boolean }) => (
   <div>
-    <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.3 }}>{label}</div>
-    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)', marginTop: 2, fontFamily: mono ? 'monospace' : 'inherit' }}>
+    <div style={detailFieldLabelStyle}>{label}</div>
+    <div style={{ ...detailFieldValueBaseStyle, fontFamily: mono ? 'monospace' : 'inherit' }}>
       {value || 'N/A'}
     </div>
   </div>
@@ -348,7 +340,7 @@ const DaysInBadge = ({ days }: { days: number }) => {
   if (days >= 14) { bg = 'rgba(var(--danger-rgb), 0.08)'; color = 'var(--danger)'; }
   else if (days >= 7) { bg = 'rgba(var(--amber-rgb), 0.08)'; color = 'var(--warning)'; }
   return (
-    <span style={{ fontSize: 11, padding: '3px 10px', borderRadius: 4, background: bg, color, fontWeight: 700 }}>
+    <span style={{ ...daysInBadgeBaseStyle, background: bg, color }}>
       {days}d in
     </span>
   );
