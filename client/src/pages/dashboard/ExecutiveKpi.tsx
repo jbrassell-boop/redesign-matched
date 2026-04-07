@@ -79,7 +79,7 @@ export const ExecutiveKpi = () => {
   return (
     <div style={{
       padding: '12px 16px',
-      background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%)',
+      background: 'var(--navy)',
       borderBottom: '2px solid var(--primary)',
     }}>
       {/* Title row */}

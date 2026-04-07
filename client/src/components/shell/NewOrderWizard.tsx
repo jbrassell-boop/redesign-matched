@@ -33,7 +33,6 @@ const fld: React.CSSProperties = {
 const wizOverlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, background: 'rgba(0,0,37,0.35)',
   zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center',
-  backdropFilter: 'blur(2px)',
 };
 const wizDialogStyle: React.CSSProperties = {
   background: 'var(--card)', borderRadius: 10, width: 660, maxHeight: '85vh',
@@ -42,7 +41,7 @@ const wizDialogStyle: React.CSSProperties = {
 };
 const wizHeaderStyle: React.CSSProperties = {
   padding: '14px 20px',
-  background: 'linear-gradient(120deg, var(--navy) 0%, var(--steel) 100%)',
+  background: 'var(--navy)',
   color: 'var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   flexShrink: 0,
 };

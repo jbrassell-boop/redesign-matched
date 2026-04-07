@@ -79,7 +79,7 @@ const STAT_CHIPS: {
 const finPageContainerStyle: React.CSSProperties = { height: 'calc(100vh - 64px)', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--bg)' };
 const execBannerStyle: React.CSSProperties = {
   padding: '12px 20px',
-  background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%)',
+  background: 'var(--navy)',
   borderBottom: '2px solid var(--primary)',
 };
 const execCardStyle: React.CSSProperties = {

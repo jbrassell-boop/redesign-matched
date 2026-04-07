@@ -49,7 +49,7 @@ export const ScopeHistoryTab = ({ repairKey, currentRepairKey }: { repairKey: nu
       {totalRepairs > 0 && (
         <div style={{
           display: 'flex', gap: 16, marginBottom: 12, padding: '10px 14px',
-          background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%)',
+          background: 'var(--navy)',
           borderRadius: 8, color: 'var(--card)',
         }}>
           <div style={{ fontSize: 10, fontWeight: 700, opacity: .6, textTransform: 'uppercase', letterSpacing: '.06em', alignSelf: 'center', marginRight: 8 }}>

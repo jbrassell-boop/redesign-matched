@@ -711,7 +711,7 @@ const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactN
     disabled={disabled}
     onClick={onClick}
     style={{
-      height: 26, minWidth: 26, padding: '0 6px',
+      height: 36, minWidth: 36, padding: '0 6px',
       border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, fontFamily: 'inherit',
       cursor: disabled ? 'default' : 'pointer',
       background: active ? 'var(--navy)' : 'var(--card)',

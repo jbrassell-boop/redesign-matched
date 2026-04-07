@@ -39,13 +39,6 @@ export const LoginPage = () => {
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Subtle grid pattern overlay */}
-      <div style={{
-        position: 'absolute', inset: 0, opacity: 0.03,
-        backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-      }} />
-
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, position: 'relative', zIndex: 1 }}>
         {/* Company identity above card */}
         <div style={{ textAlign: 'center' }}>

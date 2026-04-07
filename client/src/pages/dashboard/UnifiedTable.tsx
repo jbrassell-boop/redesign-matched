@@ -221,6 +221,7 @@ export const UnifiedTable = ({
           <select
             style={{ width: '100%', height: 32, border: '1px solid var(--border)', borderRadius: 4, fontSize: 12, padding: '0 8px' }}
             value={selectedTech}
+            aria-label="Select technician"
             onChange={e => setSelectedTech(Number(e.target.value))}
           >
             <option value={0}>Select…</option>

@@ -100,7 +100,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
       style={{
         position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(2px)',
+        background: 'rgba(0,0,0,0.4)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 16,
       }}
