@@ -14,7 +14,7 @@ const fld: React.CSSProperties = {
   width: '100%', fontFamily: 'inherit', outline: 'none',
 };
 const secHead: React.CSSProperties = {
-  background: 'var(--navy)', color: '#fff', padding: '4px 10px',
+  background: 'var(--navy)', color: 'var(--card)', padding: '4px 10px',
   fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',
   borderRadius: 3, marginBottom: 6, marginTop: 12,
 };
@@ -22,7 +22,7 @@ const g2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr
 const g3: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 10px' };
 
 const F = ({ label: l, children }: { label: string; children: React.ReactNode }) => (
-  <div><div style={lbl}>{l}</div>{children}</div>
+  <label style={{ display: 'block' }}><span style={lbl}>{l}</span>{children}</label>
 );
 
 const Inp = ({ value, onChange, placeholder, type }: { value: string | undefined; onChange: (v: string) => void; placeholder?: string; type?: string }) => (
@@ -355,7 +355,7 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          style={{ height: 30, padding: '0 20px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ height: 30, padding: '0 20px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: 'var(--card)', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           {submitting ? 'Creating…' : 'Create Client'}
         </button>

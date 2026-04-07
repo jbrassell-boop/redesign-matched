@@ -10,9 +10,11 @@ export const OutstandingInvoices = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     getDashboardInvoices({ segment: 'summary', pageSize: 1 })
-      .then(r => setStats(r.stats))
-      .finally(() => setLoading(false));
+      .then(r => { if (!cancelled) setStats(r.stats); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) return <Skeleton active paragraph={{ rows: 3 }} />;

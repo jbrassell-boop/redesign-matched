@@ -12,6 +12,8 @@
   font-size: 16px;
   font-weight: 800;
   color: var(--primary-dark);
+  margin: 0;
+  line-height: inherit;
 }
 
 .detail-header__subtitle {

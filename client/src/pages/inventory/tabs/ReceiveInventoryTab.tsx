@@ -25,7 +25,11 @@ export const ReceiveInventoryTab = () => {
     }
   }, []);
 
-  useEffect(() => { loadItems(); }, [loadItems]);
+  useEffect(() => {
+    let cancelled = false;
+    loadItems().then(() => { if (cancelled) return; });
+    return () => { cancelled = true; };
+  }, [loadItems]);
 
   const handleSelect = (item: InventoryReceivingItem) => {
     setSelected(item);

@@ -68,7 +68,7 @@
   color: var(--text);
 }
 
-.dash-toolbar__search:focus {
+.dash-toolbar__search:focus-visible {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.13);
 }
@@ -111,6 +111,6 @@
   outline: none;
 }
 
-.dash-toolbar__select:focus {
+.dash-toolbar__select:focus-visible {
   border-color: var(--primary);
 }

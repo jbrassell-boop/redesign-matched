@@ -23,9 +23,11 @@ export const MyRepairQueue = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let cancelled = false;
     getDashboardRepairs({ search: '', page: 1, pageSize: 10, statusFilter: 'all' })
-      .then(r => setRepairs(r.repairs.slice(0, 10)))
-      .finally(() => setLoading(false));
+      .then(r => { if (!cancelled) setRepairs(r.repairs.slice(0, 10)); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) return <Skeleton active paragraph={{ rows: 4 }} />;

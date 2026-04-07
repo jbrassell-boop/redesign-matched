@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Spin } from 'antd';
+import { Spin, message } from 'antd';
 import { getInventorySuppliers } from '../../../api/inventory';
 import type { InventorySupplierItem } from '../types';
 
@@ -16,7 +16,7 @@ export const SuppliersTab = ({ inventoryKey }: Props) => {
     setLoading(true);
     getInventorySuppliers(inventoryKey)
       .then(data => { if (!cancelled) setItems(data); })
-      .catch(() => { if (!cancelled) setItems([]); })
+      .catch(() => { if (!cancelled) { message.error('Failed to load data'); setItems([]); } })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [inventoryKey]);

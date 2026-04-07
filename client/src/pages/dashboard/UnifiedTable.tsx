@@ -114,6 +114,7 @@ export const UnifiedTable = ({
             <textarea
               id="dashboard-note-input"
               placeholder="Enter note..."
+              aria-label="Repair note"
               rows={3}
               style={{ width: '100%', marginTop: 8, padding: '6px 8px', fontSize: 12, border: '1px solid var(--neutral-200)', borderRadius: 4, fontFamily: 'inherit', resize: 'vertical' }}
             />
@@ -220,6 +221,7 @@ export const UnifiedTable = ({
           <select
             style={{ width: '100%', height: 32, border: '1px solid var(--border)', borderRadius: 4, fontSize: 12, padding: '0 8px' }}
             value={selectedTech}
+            aria-label="Select technician"
             onChange={e => setSelectedTech(Number(e.target.value))}
           >
             <option value={0}>Select…</option>

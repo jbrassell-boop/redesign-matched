@@ -75,7 +75,7 @@ const RepairsListView = () => {
   useKeyboardNav(repairs, selectedIndex, handleSelect);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', background: 'var(--card)' }}>
+    <section aria-label="Repairs" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', background: 'var(--card)' }}>
       {/* Toolbar */}
       <div style={{
         padding: '10px 16px',
@@ -83,15 +83,15 @@ const RepairsListView = () => {
         display: 'flex', alignItems: 'center', gap: 12,
         flexShrink: 0,
       }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>Repairs</span>
-        <span style={{ fontSize: 11, color: 'var(--muted)' }}>{repairs.length} records</span>
+        <h1 style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)', margin: 0 }}>Repairs</h1>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }} aria-live="polite">{repairs.length} records</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
           <ExportButton data={repairs as unknown as Record<string, unknown>[]} columns={REPAIR_EXPORT_COLS} filename="repairs-export" sheetName="Repairs" />
           <button
             onClick={() => setNewModalOpen(true)}
             style={{
               height: 28, padding: '0 12px', fontSize: 11, fontWeight: 700,
-              background: 'var(--primary)', color: '#fff', border: 'none',
+              background: 'var(--primary)', color: 'var(--card)', border: 'none',
               borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit',
             }}
           >
@@ -117,6 +117,6 @@ const RepairsListView = () => {
           onDoubleClick={handleSelect}
         />
       </div>
-    </div>
+    </section>
   );
 };

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import './Field.css';
 
 interface FieldProps {
@@ -7,11 +8,13 @@ interface FieldProps {
   className?: string;
 }
 
-export const Field = ({ label, value, multiline, className }: FieldProps) => (
-  <div className={`field${className ? ` ${className}` : ''}`}>
-    <div className="field__label">{label}</div>
-    <div className={`field__value${value == null || value === '' ? ' field__value--empty' : ''}${multiline ? ' field__value--multiline' : ''}`}>
-      {value ?? '\u2014'}
+export const Field = memo(function Field({ label, value, multiline, className }: FieldProps) {
+  return (
+    <div className={`field${className ? ` ${className}` : ''}`}>
+      <div className="field__label">{label}</div>
+      <div className={`field__value${value == null || value === '' ? ' field__value--empty' : ''}${multiline ? ' field__value--multiline' : ''}`}>
+        {value ?? '\u2014'}
+      </div>
     </div>
-  </div>
-);
+  );
+});

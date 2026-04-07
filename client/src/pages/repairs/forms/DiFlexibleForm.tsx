@@ -18,7 +18,7 @@ const s = {
     gap: 8,
     fontFamily: "'Inter', Arial, sans-serif",
     fontSize: 11,
-    color: '#111',
+    color: 'var(--print-text)',
     boxSizing: 'border-box' as const,
   },
   formHeader: {
@@ -29,10 +29,10 @@ const s = {
   },
   formTitle: { fontSize: 15, fontWeight: 800, color: 'var(--navy)' },
   formSubtitle: { fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 },
-  formNumber: { fontSize: 10, color: '#666', marginTop: 2 },
+  formNumber: { fontSize: 10, color: 'var(--print-light)', marginTop: 2 },
   sectionBar: {
     background: 'var(--primary)',
-    color: '#fff',
+    color: 'var(--card)',
     fontSize: 9,
     fontWeight: 700 as const,
     textTransform: 'uppercase' as const,
@@ -43,11 +43,11 @@ const s = {
     fontSize: 8.5,
     fontWeight: 700 as const,
     textTransform: 'uppercase' as const,
-    color: '#555',
+    color: 'var(--print-muted)',
     letterSpacing: '0.04em',
   },
   fv: {
-    borderBottom: '1px solid #999',
+    borderBottom: '1px solid var(--print-check-border)',
     minHeight: 17,
     fontSize: 11,
     padding: '1px 2px',
@@ -55,28 +55,28 @@ const s = {
   cbBox: {
     width: 12,
     height: 12,
-    border: '1px solid #999',
+    border: '1px solid var(--print-check-border)',
     borderRadius: 2,
     display: 'inline-block' as const,
     flexShrink: 0,
     verticalAlign: 'middle' as const,
   },
   costField: {
-    borderBottom: '1px solid #aaa',
+    borderBottom: '1px solid var(--print-placeholder)',
     minWidth: 60,
     display: 'inline-block' as const,
     height: 14,
     verticalAlign: 'middle' as const,
   },
   sigMini: {
-    borderBottom: '1px solid #aaa',
+    borderBottom: '1px solid var(--print-placeholder)',
     minWidth: 100,
     display: 'inline-block' as const,
     height: 14,
     verticalAlign: 'middle' as const,
   },
   textField: {
-    border: '1px solid #ccc',
+    border: '1px solid var(--print-border)',
     borderRadius: 3,
     minHeight: 28,
     padding: '3px 6px',
@@ -87,12 +87,12 @@ const s = {
   formFooter: {
     marginTop: 'auto' as const,
     paddingTop: 8,
-    borderTop: '1px solid #ccc',
+    borderTop: '1px solid var(--print-border)',
     display: 'flex',
     justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
     fontSize: 8,
-    color: '#888',
+    color: 'var(--print-footer)',
   },
 };
 
@@ -198,7 +198,7 @@ const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2
 
 const repairTableTh: React.CSSProperties = {
   background: 'var(--primary)',
-  color: '#fff',
+  color: 'var(--card)',
   fontSize: 8,
   fontWeight: 700,
   textTransform: 'uppercase',
@@ -210,15 +210,15 @@ const repairTableTh: React.CSSProperties = {
 
 const repairTableTd: React.CSSProperties = {
   padding: '4px 8px',
-  borderBottom: '1px solid #e8e8e8',
+  borderBottom: '1px solid var(--print-border-md)',
   verticalAlign: 'middle',
-  borderRight: '1px solid #eee',
+  borderRight: '1px solid var(--print-border-xlt)',
   fontSize: 10,
 };
 
 const pfTableTh: React.CSSProperties = {
   background: 'var(--primary)',
-  color: '#fff',
+  color: 'var(--card)',
   fontSize: 8,
   fontWeight: 700,
   textTransform: 'uppercase',
@@ -230,9 +230,9 @@ const pfTableTh: React.CSSProperties = {
 
 const pfTableTd: React.CSSProperties = {
   padding: '3px 8px',
-  borderBottom: '1px solid #e8e8e8',
+  borderBottom: '1px solid var(--print-border-md)',
   verticalAlign: 'middle',
-  borderRight: '1px solid #eee',
+  borderRight: '1px solid var(--print-border-xlt)',
   fontSize: 10,
 };
 
@@ -240,18 +240,74 @@ const pfBtn = (type: 'p' | 'f' | 'na') => ({
   display: 'inline-block' as const,
   width: 24,
   height: 15,
-  border: type === 'p' ? '1px solid var(--success)' : type === 'f' ? '1px solid var(--danger)' : '1px solid #aaa',
+  border: type === 'p' ? '1px solid var(--success)' : type === 'f' ? '1px solid var(--danger)' : '1px solid var(--print-placeholder)',
   borderRadius: 2,
   textAlign: 'center' as const,
   lineHeight: '15px',
   fontSize: 8,
   fontWeight: 700 as const,
   margin: '0 1px',
-  color: type === 'p' ? 'var(--success)' : type === 'f' ? 'var(--danger)' : '#666',
+  color: type === 'p' ? 'var(--success)' : type === 'f' ? 'var(--danger)' : 'var(--print-light)',
 });
 
+// ── Extracted static styles ──
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed', inset: 0, zIndex: 1100,
+  background: 'rgba(0,0,0,0.5)',
+  display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+  padding: '24px 16px', overflowY: 'auto',
+};
+const actionBarStyle: React.CSSProperties = {
+  position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200,
+};
+const printBtnStyle: React.CSSProperties = {
+  height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
+  background: 'var(--primary)', color: 'var(--card)',
+  fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+};
+const closeBtnStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', border: '1px solid var(--print-border)', borderRadius: 5,
+  background: 'var(--card)', color: 'var(--print-muted)',
+  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+};
+const printFormStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 0 };
+const textAlignRightStyle: React.CSSProperties = { textAlign: 'right' };
+const scopeInfoGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px 12px', padding: '6px 0 2px' };
+const fieldColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1 };
+const fieldColSpan2Style: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1, gridColumn: 'span 2' };
+const repairTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 10 };
+const repairTableTdCenter: React.CSSProperties = { ...repairTableTd, textAlign: 'center' };
+const repairTableTdNoBorder: React.CSSProperties = { ...repairTableTd, textAlign: 'center', borderRight: 'none' };
+const subtotalRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', marginTop: 4, gap: 20 };
+const subtotalColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' };
+const subtotalLineStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-check-border)', minWidth: 100, height: 17 };
+const sigBlockStyle: React.CSSProperties = { display: 'flex', gap: 16, marginTop: 6 };
+const sigColStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', gap: 2 };
+const sigDateColStyle: React.CSSProperties = { flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 };
+const sigLineStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-check-border)', minHeight: 26 };
+const sigLabelStyle: React.CSSProperties = { fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 };
+const miniHeaderGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 12px', padding: '4px 0 6px' };
+const totalLineStyle: React.CSSProperties = { borderBottom: '2px solid var(--primary)', minWidth: 100, height: 17, fontWeight: 700 };
+const sigBlock2Style: React.CSSProperties = { display: 'flex', gap: 16, marginTop: 10 };
+const accessoriesGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px 12px', padding: '5px 0' };
+const accessoryItemStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 5, fontSize: 10 };
+const qcGridStyle: React.CSSProperties = {
+  display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px 10px',
+  padding: '8px 10px', border: '1px solid var(--print-border-lt)', borderRadius: 3,
+  background: 'var(--bg)', marginTop: 6,
+};
+const qcFieldColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 2 };
+const qcYnRowStyle: React.CSSProperties = { display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' };
+const qcYnItemStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 };
+const qcFieldLineStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-check-border)', minHeight: 18, marginTop: 2 };
+const qcFieldSpan2Style: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 2, gridColumn: 'span 2' };
+const pfCatRowStyle: React.CSSProperties = { fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.04em', padding: '3px 8px' };
+const pfTableTdCenter: React.CSSProperties = { ...pfTableTd, textAlign: 'center' };
+const pfTableTdNoBorder: React.CSSProperties = { ...pfTableTd, borderRight: 'none' };
+const logoStyle: React.CSSProperties = { height: 44 };
+
 const LogoBlock = () => (
-  <img src="/logo-color.png" alt="Total Scope Inc." style={{ height: 44 }} />
+  <img src="/logo-color.png" alt="Total Scope Inc." loading="lazy" style={logoStyle} />
 );
 
 const FormFooter = ({ page }: { page: string }) => (
@@ -272,36 +328,21 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
   return (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1100,
-        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)',
-        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-        padding: '24px 16px', overflowY: 'auto',
-      }}
+      style={overlayStyle}
     >
       {/* Action bar */}
-      <div className="no-print" style={{
-        position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200,
-      }}>
+      <div className="no-print" style={actionBarStyle}>
         <button
           onClick={() => window.print()}
-          style={{
-            height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
-            background: 'var(--primary)', color: '#fff',
-            fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-          }}
+          style={printBtnStyle}
         >Print</button>
         <button
           onClick={onClose}
-          style={{
-            height: 32, padding: '0 14px', border: '1px solid #ccc', borderRadius: 5,
-            background: 'var(--card)', color: '#555',
-            fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-          }}
+          style={closeBtnStyle}
         >Close</button>
       </div>
 
-      <div className="print-form flex-col" style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      <div className="print-form flex-col" style={printFormStyle}>
 
         {/* ══════════════════════════════════════════════════════
             PAGE 1 — Items Found / Approved + Comments
@@ -310,7 +351,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           {/* Header */}
           <div style={s.formHeader}>
             <LogoBlock />
-            <div style={{ textAlign: 'right' }}>
+            <div style={textAlignRightStyle}>
               <div style={s.formTitle}>Blank Inspection Report</div>
               <div style={s.formSubtitle}>Flexible Endoscope</div>
               <div style={s.formNumber}>OM07-3 &nbsp;|&nbsp; Page 1 of 3</div>
@@ -319,36 +360,36 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
 
           {/* Scope Information */}
           <div style={s.sectionBar}>Scope Information</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px 12px', padding: '6px 0 2px' }}>
-            <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div style={scopeInfoGridStyle}>
+            <div style={fieldColSpan2Style}>
               <span style={s.fl}>Client / Facility</span>
               <div style={s.fv}>{clientName}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Date</span>
               <div style={s.fv}>{today}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Work Order #</span>
               <div style={s.fv}>{woNum}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Serial #</span>
               <div style={s.fv}>{serialNum}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, gridColumn: 'span 2' }}>
+            <div style={fieldColSpan2Style}>
               <span style={s.fl}>Scope Model</span>
               <div style={s.fv}>{model}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Rack #</span>
               <div style={s.fv}></div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, gridColumn: 'span 2' }}>
+            <div style={fieldColSpan2Style}>
               <span style={s.fl}>Complaint</span>
               <div style={{ ...s.fv, minHeight: 24 }}>{complaint}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Cust. Expected Delivery</span>
               <div style={s.fv}></div>
             </div>
@@ -356,7 +397,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
 
           {/* Items Found to be in Need of Repair */}
           <div style={s.sectionBar}>Items Found to be in Need of Repair</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 10 }}>
+          <table style={repairTableStyle}>
             <thead>
               <tr>
                 <th style={{ ...repairTableTh, width: 22 }}></th>
@@ -368,20 +409,20 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
             <tbody>
               {REPAIR_ITEMS.map((item, i) => (
                 <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
-                  <td style={{ ...repairTableTd, borderRight: '1px solid #eee' }}><span style={s.cbBox}></span></td>
+                  <td style={{ ...repairTableTd, borderRight: '1px solid var(--print-border-xlt)' }}><span style={s.cbBox}></span></td>
                   <td style={repairTableTd}>{item}</td>
-                  <td style={{ ...repairTableTd, textAlign: 'center' }}><span style={s.costField}></span></td>
-                  <td style={{ ...repairTableTd, textAlign: 'center', borderRight: 'none' }}><span style={s.cbBox}></span></td>
+                  <td style={repairTableTdCenter}><span style={s.costField}></span></td>
+                  <td style={repairTableTdNoBorder}><span style={s.cbBox}></span></td>
                 </tr>
               ))}
             </tbody>
           </table>
 
           {/* Subtotal */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4, gap: 20 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
+          <div style={subtotalRowStyle}>
+            <div style={subtotalColStyle}>
               <span style={s.fl}>Subtotal Estimate</span>
-              <div style={{ borderBottom: '1px solid #999', minWidth: 100, height: 17 }}></div>
+              <div style={subtotalLineStyle}></div>
             </div>
           </div>
 
@@ -390,22 +431,22 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           <div style={{ ...s.textField, minHeight: 36 }}></div>
 
           {/* Signature block */}
-          <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Technician / Estimator</div>
+          <div style={sigBlockStyle}>
+            <div style={sigColStyle}>
+              <div style={sigLineStyle}></div>
+              <div style={sigLabelStyle}>Technician / Estimator</div>
             </div>
-            <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
+            <div style={sigDateColStyle}>
+              <div style={sigLineStyle}></div>
+              <div style={sigLabelStyle}>Date</div>
             </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Customer Authorization</div>
+            <div style={sigColStyle}>
+              <div style={sigLineStyle}></div>
+              <div style={sigLabelStyle}>Customer Authorization</div>
             </div>
-            <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
+            <div style={sigDateColStyle}>
+              <div style={sigLineStyle}></div>
+              <div style={sigLabelStyle}>Date</div>
             </div>
           </div>
 
@@ -419,7 +460,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           {/* Header */}
           <div style={s.formHeader}>
             <LogoBlock />
-            <div style={{ textAlign: 'right' }}>
+            <div style={textAlignRightStyle}>
               <div style={s.formTitle}>Blank Inspection Report</div>
               <div style={s.formSubtitle}>Flexible Endoscope — Items Approved &amp; Repaired</div>
               <div style={s.formNumber}>OM07-3 &nbsp;|&nbsp; Page 2 of 3</div>
@@ -427,16 +468,16 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           </div>
 
           {/* Mini header fields */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 12px', padding: '4px 0 6px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div style={miniHeaderGridStyle}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Work Order #</span>
               <div style={s.fv}>{woNum}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Serial #</span>
               <div style={s.fv}>{serialNum}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Date</span>
               <div style={s.fv}>{today}</div>
             </div>
@@ -444,7 +485,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
 
           {/* Items Approved and Repaired */}
           <div style={s.sectionBar}>Items Approved and Repaired</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 10 }}>
+          <table style={repairTableStyle}>
             <thead>
               <tr>
                 <th style={{ ...repairTableTh, width: 22 }}></th>
@@ -456,9 +497,9 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
             <tbody>
               {REPAIR_ITEMS.map((item, i) => (
                 <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
-                  <td style={{ ...repairTableTd, borderRight: '1px solid #eee' }}><span style={s.cbBox}></span></td>
+                  <td style={{ ...repairTableTd, borderRight: '1px solid var(--print-border-xlt)' }}><span style={s.cbBox}></span></td>
                   <td style={repairTableTd}>{item}</td>
-                  <td style={{ ...repairTableTd, textAlign: 'center' }}><span style={s.costField}></span></td>
+                  <td style={repairTableTdCenter}><span style={s.costField}></span></td>
                   <td style={{ ...repairTableTd, borderRight: 'none' }}><span style={s.sigMini}></span></td>
                 </tr>
               ))}
@@ -466,10 +507,10 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           </table>
 
           {/* Total */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4, gap: 20 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
+          <div style={subtotalRowStyle}>
+            <div style={subtotalColStyle}>
               <span style={s.fl}>Total Repair Cost</span>
-              <div style={{ borderBottom: '2px solid var(--primary)', minWidth: 100, height: 17, fontWeight: 700 }}></div>
+              <div style={totalLineStyle}></div>
             </div>
           </div>
 
@@ -478,14 +519,14 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           <div style={{ ...s.textField, minHeight: 48 }}></div>
 
           {/* Signature */}
-          <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Lead Technician / Signature</div>
+          <div style={sigBlock2Style}>
+            <div style={sigColStyle}>
+              <div style={sigLineStyle}></div>
+              <div style={sigLabelStyle}>Lead Technician / Signature</div>
             </div>
-            <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
+            <div style={sigDateColStyle}>
+              <div style={sigLineStyle}></div>
+              <div style={sigLabelStyle}>Date</div>
             </div>
           </div>
 
@@ -499,7 +540,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           {/* Header */}
           <div style={s.formHeader}>
             <LogoBlock />
-            <div style={{ textAlign: 'right' }}>
+            <div style={textAlignRightStyle}>
               <div style={s.formTitle}>Blank Inspection Report</div>
               <div style={s.formSubtitle}>Flexible Endoscope — Final Inspection</div>
               <div style={s.formNumber}>OM07-3 &nbsp;|&nbsp; Page 3 of 3</div>
@@ -507,16 +548,16 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           </div>
 
           {/* Mini header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 12px', padding: '4px 0 6px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div style={miniHeaderGridStyle}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Work Order #</span>
               <div style={s.fv}>{woNum}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Serial #</span>
               <div style={s.fv}>{serialNum}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Date</span>
               <div style={s.fv}>{today}</div>
             </div>
@@ -524,7 +565,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
 
           {/* 24-Point Checklist */}
           <div style={s.sectionBar}>Final Inspection Checklist — 24-Point</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 10 }}>
+          <table style={repairTableStyle}>
             <thead>
               <tr>
                 <th style={{ ...pfTableTh, width: '46%' }}>Item</th>
@@ -538,15 +579,15 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
               {PF_CATEGORIES.map(cat => (
                 <>
                   <tr key={`cat-${cat.cat}`} style={{ background: 'var(--primary-light)' }}>
-                    <td colSpan={5} style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.04em', padding: '3px 8px' }}>{cat.cat}</td>
+                    <td colSpan={5} style={pfCatRowStyle}>{cat.cat}</td>
                   </tr>
                   {cat.items.map((item, ii) => (
                     <tr key={`${cat.cat}-${ii}`} style={{ background: ii % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
                       <td style={pfTableTd}>{item}</td>
-                      <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfBtn('p')}>Y</span></td>
-                      <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfBtn('f')}>N</span></td>
-                      <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfBtn('na')}>N/A</span></td>
-                      <td style={{ ...pfTableTd, borderRight: 'none' }}></td>
+                      <td style={pfTableTdCenter}><span style={pfBtn('p')}>Y</span></td>
+                      <td style={pfTableTdCenter}><span style={pfBtn('f')}>N</span></td>
+                      <td style={pfTableTdCenter}><span style={pfBtn('na')}>N/A</span></td>
+                      <td style={pfTableTdNoBorder}></td>
                     </tr>
                   ))}
                 </>
@@ -556,9 +597,9 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
 
           {/* Scope Includes */}
           <div style={s.sectionBar}>Scope Includes</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px 12px', padding: '5px 0' }}>
+          <div style={accessoriesGridStyle}>
             {ACCESSORIES.map((acc, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10 }}>
+              <div key={i} style={accessoryItemStyle}>
                 <span style={s.cbBox}></span> {acc}
               </div>
             ))}
@@ -566,65 +607,61 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
 
           {/* QC Sign-Off */}
           <div style={s.sectionBar}>QC Sign-Off</div>
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px 10px',
-            padding: '8px 10px', border: '1px solid #ddd', borderRadius: 3,
-            background: 'var(--bg)', marginTop: 6,
-          }}>
+          <div style={qcGridStyle}>
             {/* Scope Usable */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>Scope Usable</span>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> Y</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> N</span>
+              <div style={qcYnRowStyle}>
+                <span style={qcYnItemStyle}><span style={s.cbBox}></span> Y</span>
+                <span style={qcYnItemStyle}><span style={s.cbBox}></span> N</span>
               </div>
             </div>
             {/* Rework Required */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>Rework Required</span>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> Y</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> N</span>
+              <div style={qcYnRowStyle}>
+                <span style={qcYnItemStyle}><span style={s.cbBox}></span> Y</span>
+                <span style={qcYnItemStyle}><span style={s.cbBox}></span> N</span>
               </div>
             </div>
             {/* Alcohol Wipe */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>Alcohol Wipe</span>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> Done</span>
+              <div style={qcYnRowStyle}>
+                <span style={qcYnItemStyle}><span style={s.cbBox}></span> Done</span>
               </div>
             </div>
             {/* Responsible Tech */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>Responsible Tech</span>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 18, marginTop: 2 }}></div>
+              <div style={qcFieldLineStyle}></div>
             </div>
             {/* QC Initials */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>QC Initials</span>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 18, marginTop: 2 }}></div>
+              <div style={qcFieldLineStyle}></div>
             </div>
             {/* Test Equipment — span 2 */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, gridColumn: 'span 2' }}>
+            <div style={qcFieldSpan2Style}>
               <span style={s.fl}>Test Equipment Used</span>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 18, marginTop: 2 }}></div>
+              <div style={qcFieldLineStyle}></div>
             </div>
             {/* Commercial QC */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>Commercial QC</span>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+              <div style={qcYnRowStyle}>
+                <span style={qcYnItemStyle}>
                   <span style={{ ...pfBtn('p'), width: 20, height: 13, lineHeight: '13px', fontSize: 8 }}>P</span>
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+                <span style={qcYnItemStyle}>
                   <span style={{ ...pfBtn('f'), width: 20, height: 13, lineHeight: '13px', fontSize: 8 }}>F</span>
                 </span>
               </div>
             </div>
             {/* Inspected By */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>Inspected By</span>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 18, marginTop: 2 }}></div>
+              <div style={qcFieldLineStyle}></div>
             </div>
           </div>
 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, memo } from 'react';
 import './PairedTable.css';
 
 /* ── Column definition ──────────────────────────────────────────────── */
@@ -33,7 +33,7 @@ type SortDir = 'asc' | 'desc' | null;
 
 /* ── Component ──────────────────────────────────────────────────────── */
 
-export function PairedTable<T extends Record<string, unknown>>({
+function PairedTableInner<T extends Record<string, unknown>>({
   columns,
   data,
   rowKey,
@@ -144,6 +144,8 @@ export function PairedTable<T extends Record<string, unknown>>({
     </div>
   );
 }
+
+export const PairedTable = memo(PairedTableInner) as typeof PairedTableInner;
 
 /* ── PairedRow sub-component ────────────────────────────────────────── */
 

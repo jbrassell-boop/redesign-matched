@@ -40,6 +40,10 @@ interface StatChipProps {
 const StatChip = ({ label, value, iconBg, iconColor, valueColor, active, onClick, icon }: StatChipProps) => (
   <div
     onClick={onClick}
+    role="button"
+    tabIndex={0}
+    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
+    aria-pressed={active}
     style={{
       flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
       borderRadius: 8, transition: 'background 0.12s, outline-color 0.12s',
@@ -47,12 +51,12 @@ const StatChip = ({ label, value, iconBg, iconColor, valueColor, active, onClick
       outline: active ? '2.5px solid var(--navy)' : '2.5px solid transparent', outlineOffset: -2,
     }}
   >
-    <span style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: iconBg, color: iconColor }}>
+    <span style={{ ...smStatChipIconStyle, background: iconBg, color: iconColor }}>
       {icon}
     </span>
-    <span style={{ display: 'flex', flexDirection: 'column' }}>
+    <span style={smStatChipTextStyle}>
       <span style={{ fontSize: 18, fontWeight: 800, color: valueColor, lineHeight: 1.2 }}>{value}</span>
-      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={smStatChipLabelStyle}>{label}</span>
     </span>
   </div>
 );
@@ -72,6 +76,55 @@ const DETAIL_TABS: TabDef[] = [
   { key: 'maxCharges',  label: 'Max Charges' },
   { key: 'inventory',   label: 'Inventory' },
   { key: 'flags',       label: 'Flags' },
+];
+
+// ── Extracted static styles (performance: avoid re-creating objects each render) ──
+const smPageContainerStyle: React.CSSProperties = { display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
+const smStatStripStyle: React.CSSProperties = { display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const smToolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap', flexShrink: 0 };
+const smSeparatorStyle: React.CSSProperties = { width: 1, height: 22, background: 'var(--border-dk)' };
+const smFilterLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
+const smThStyle: React.CSSProperties = {
+  background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px',
+  textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--border-light-rgb), 0.3)',
+  borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 10,
+};
+const smFooterStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' };
+const scopeInputStyle: React.CSSProperties = {
+  fontSize: 12, color: 'var(--text)', background: 'var(--card)',
+  border: '1px solid var(--neutral-200)', borderRadius: 4,
+  padding: '3px 6px', fontFamily: 'inherit', outline: 'none',
+  width: '100%', boxSizing: 'border-box',
+};
+const smModalFieldLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 };
+const smModalInputStyle: React.CSSProperties = { width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' };
+const smStatChipIconStyle: React.CSSProperties = { width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const smStatChipTextStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column' };
+const smStatChipLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' };
+const smCenterSpinStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: 40 };
+const smDetailFlexCol: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' };
+const smCloseRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const smCloseBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' };
+const smAngGridStyle: React.CSSProperties = { marginTop: 12, background: 'var(--neutral-50)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' };
+const smAngHeaderStyle: React.CSSProperties = { padding: '6px 12px', fontSize: 10, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' };
+const smAngGrid4Col: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 0 };
+const smAngCellStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 8px', borderRight: '1px solid var(--border)' };
+const smAngLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 800, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.04em' };
+const smNotesLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 };
+const smDetailPaneStyle: React.CSSProperties = { width: 560, minWidth: 560, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--card)' };
+const smPagBtnsStyle: React.CSSProperties = { display: 'flex', gap: 3, alignItems: 'center' };
+const smModalBodyStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8 };
+
+const SCOPE_MODEL_COLS = [
+  { key: 'description', label: 'Model Name', width: '20%' },
+  { key: 'type', label: 'Type', width: 78 },
+  { key: 'manufacturer', label: 'Manufacturer', width: 160 },
+  { key: 'category', label: 'Category', width: 150 },
+  { key: 'active', label: 'Status', width: 74 },
+  { key: 'insertTubeLength', label: 'Length', width: 70 },
+  { key: 'insertTubeDiameter', label: 'Diameter', width: 70 },
+  { key: 'fieldOfView', label: 'FOV', width: 60 },
+  { key: 'directionOfView', label: 'DOV', width: 60 },
 ];
 
 /* ═════════════════════════════════════════════════════════════ */
@@ -205,8 +258,10 @@ export const ScopeModelPage = () => {
   }, []);
 
   useEffect(() => {
-    getScopeModelStats().then(setStats).catch(() => { message.error('Failed to load scope model stats'); });
-    getManufacturers().then(setManufacturers).catch(() => { message.error('Failed to load manufacturers'); });
+    let cancelled = false;
+    getScopeModelStats().then(d => { if (!cancelled) setStats(d); }).catch(() => { if (!cancelled) message.error('Failed to load scope model stats'); });
+    getManufacturers().then(d => { if (!cancelled) setManufacturers(d); }).catch(() => { if (!cancelled) message.error('Failed to load manufacturers'); });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
@@ -259,7 +314,7 @@ export const ScopeModelPage = () => {
   const isActive = (tf: string, sf: string) => typeFilter === tf && statusFilter === sf;
 
   const statStrip = (
-    <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
+    <div style={smStatStripStyle}>
       <StatChip label="Total Models" value={stats?.total ?? 0} iconBg="rgba(var(--navy-rgb), 0.10)" iconColor="var(--navy)" valueColor="var(--navy)" active={isActive('', '')} onClick={() => chipFilter('', '')} icon={<IconTotal />} />
       <StatChip label="Active" value={stats?.activeCount ?? 0} iconBg="rgba(var(--success-rgb), 0.10)" iconColor="var(--success)" valueColor="var(--success)" active={isActive('', 'active')} onClick={() => chipFilter('', 'active')} icon={<IconActive />} />
       <StatChip label="Inactive" value={stats?.inactiveCount ?? 0} iconBg="rgba(var(--danger-rgb), 0.10)" iconColor="var(--danger)" valueColor="var(--danger)" active={isActive('', 'inactive')} onClick={() => chipFilter('', 'inactive')} icon={<IconInactive />} />
@@ -274,28 +329,28 @@ export const ScopeModelPage = () => {
     <button onClick={oc} style={{
       height: 28, padding: '0 10px', fontSize: 11, fontWeight: a ? 700 : 500, fontFamily: 'inherit',
       border: '1px solid var(--border-dk)', borderRight: 'none', cursor: 'pointer',
-      background: a ? 'var(--navy)' : 'var(--card)', color: a ? '#fff' : 'var(--muted)',
+      background: a ? 'var(--navy)' : 'var(--card)', color: a ? 'var(--card)' : 'var(--muted)',
     }}>{label}</button>
   );
 
   const toolbar = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap', flexShrink: 0 }}>
-      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Type</span>
+    <div style={smToolbarStyle}>
+      <span style={smFilterLabelStyle}>Type</span>
       <div style={{ display: 'flex' }}>
         {[{ l: 'All', v: '' }, { l: 'Flexible', v: 'F' }, { l: 'Rigid', v: 'R' }, { l: 'Camera', v: 'C' }].map(({ l, v }) => (
           <SegBtn key={v} label={l} active={typeFilter === v} onClick={() => { setTypeFilter(v); setPage(1); }} />
         ))}
         <div style={{ width: 0, borderRight: '1px solid var(--border-dk)' }} />
       </div>
-      <div style={{ width: 1, height: 22, background: 'var(--border-dk)' }} />
-      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
+      <div style={smSeparatorStyle} />
+      <span style={smFilterLabelStyle}>Status</span>
       <div style={{ display: 'flex' }}>
         {[{ l: 'All', v: '' }, { l: 'Active', v: 'active' }, { l: 'Inactive', v: 'inactive' }].map(({ l, v }) => (
           <SegBtn key={v} label={l} active={statusFilter === v} onClick={() => { setStatusFilter(v); setPage(1); }} />
         ))}
         <div style={{ width: 0, borderRight: '1px solid var(--border-dk)' }} />
       </div>
-      <div style={{ width: 1, height: 22, background: 'var(--border-dk)' }} />
+      <div style={smSeparatorStyle} />
       <Select
         placeholder="All Manufacturers"
         allowClear
@@ -319,7 +374,7 @@ export const ScopeModelPage = () => {
         onClick={() => { setNewModelName(''); setNewModelMfg(''); setNewModelType('F'); setNewModelOpen(true); }}
         style={{
           height: 30, padding: '0 12px', fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
-          background: 'var(--navy)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer',
+          background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
           display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0,
         }}
       >
@@ -329,26 +384,6 @@ export const ScopeModelPage = () => {
     </div>
   );
 
-  /* ── Table columns ───────────────────────────────────────── */
-  const columns = [
-    { key: 'description', label: 'Model Name', width: '20%' },
-    { key: 'type', label: 'Type', width: 78 },
-    { key: 'manufacturer', label: 'Manufacturer', width: 160 },
-    { key: 'category', label: 'Category', width: 150 },
-    { key: 'active', label: 'Status', width: 74 },
-    { key: 'insertTubeLength', label: 'Length', width: 70 },
-    { key: 'insertTubeDiameter', label: 'Diameter', width: 70 },
-    { key: 'fieldOfView', label: 'FOV', width: 60 },
-    { key: 'directionOfView', label: 'DOV', width: 60 },
-  ];
-
-  /* ── Inline edit input for scope specs ──────────────────── */
-  const scopeInputStyle: React.CSSProperties = {
-    fontSize: 12, color: 'var(--text)', background: 'var(--card)',
-    border: '1px solid var(--neutral-200)', borderRadius: 4,
-    padding: '3px 6px', fontFamily: 'inherit', outline: 'none',
-    width: '100%', boxSizing: 'border-box',
-  };
   const SEditField = ({ label, value, field }: { label: string; value: string | null | undefined; field: keyof PatchScopeModelPayload }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '2px 0' }}>
       <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em' }}>{label}</span>
@@ -381,17 +416,17 @@ export const ScopeModelPage = () => {
       </FormGrid>
 
       {/* Angulation Grid — editable */}
-      <div style={{ marginTop: 12, background: 'var(--neutral-50)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
-        <div style={{ padding: '6px 12px', fontSize: 10, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>Angulation</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 0 }}>
+      <div style={smAngGridStyle}>
+        <div style={smAngHeaderStyle}>Angulation</div>
+        <div style={smAngGrid4Col}>
           {([
             { dir: 'Up', val: localDetail.angUp, field: 'angUp' as keyof PatchScopeModelPayload },
             { dir: 'Down', val: localDetail.angDown, field: 'angDown' as keyof PatchScopeModelPayload },
             { dir: 'Left', val: localDetail.angLeft, field: 'angLeft' as keyof PatchScopeModelPayload },
             { dir: 'Right', val: localDetail.angRight, field: 'angRight' as keyof PatchScopeModelPayload },
           ]).map(a => (
-            <div key={a.dir} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 8px', borderRight: '1px solid var(--border)' }}>
-              <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.04em' }}>{a.dir}</span>
+            <div key={a.dir} style={smAngCellStyle}>
+              <span style={smAngLabelStyle}>{a.dir}</span>
               <input
                 value={a.val ?? ''}
                 onChange={e => handleSpecFieldChange(a.field, e.target.value)}
@@ -419,7 +454,7 @@ export const ScopeModelPage = () => {
       </div>
 
       <div style={{ marginTop: 8 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 }}>Notes</div>
+        <div style={smNotesLabelStyle}>Notes</div>
         <textarea
           value={localDetail.notes ?? ''}
           onChange={e => handleSpecFieldChange('notes', e.target.value)}
@@ -434,19 +469,20 @@ export const ScopeModelPage = () => {
 
   /* ── Detail pane body ────────────────────────────────────── */
   const detailPaneBody = detailLoading ? (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+    <div style={smCenterSpinStyle}><Spin /></div>
   ) : localDetail ? (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div style={smDetailFlexCol}>
       {/* Close row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
+      <div style={smCloseRowStyle}>
         <button
           onClick={() => { setSelectedKey(null); setDetail(null); setLocalDetail(null); }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' }}
+          style={smCloseBtnStyle}
         >
           &times;
         </button>
       </div>
       <DetailHeader
+        headingLevel="h2"
         title={localDetail.description}
         badges={
           <>
@@ -519,14 +555,15 @@ export const ScopeModelPage = () => {
   ) : null;
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div style={smPageContainerStyle}>
       {/* Left panel — stat strip + toolbar + table */}
-      <div style={{
+      <aside aria-label="Scope models list" style={{
         display: 'flex', flexDirection: 'column',
         width: selectedKey ? 'calc(100% - 560px)' : '100%',
         minWidth: 0,
         borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
         transition: 'width 0.2s ease',
+        willChange: 'width',
         overflow: 'hidden',
         background: 'var(--card)',
       }}>
@@ -538,13 +575,8 @@ export const ScopeModelPage = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: selectedKey ? 700 : 1040, tableLayout: 'fixed' }}>
             <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
               <tr>
-                {columns.map(col => (
-                  <th key={col.key} style={{
-                    background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px',
-                    textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(180,200,220,0.3)',
-                    borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase',
-                    fontSize: 10, width: col.width,
-                  }}>
+                {SCOPE_MODEL_COLS.map(col => (
+                  <th key={col.key} style={{ ...smThStyle, width: col.width }}>
                     {col.label}
                   </th>
                 ))}
@@ -552,9 +584,9 @@ export const ScopeModelPage = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={columns.length} style={{ textAlign: 'center', padding: 30 }}><Spin size="small" /></td></tr>
+                <tr><td colSpan={SCOPE_MODEL_COLS.length} style={{ textAlign: 'center', padding: 30 }}><Spin size="small" /></td></tr>
               ) : items.length === 0 ? (
-                <tr><td colSpan={columns.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No scope models match your filters</td></tr>
+                <tr><td colSpan={SCOPE_MODEL_COLS.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No scope models match your filters</td></tr>
               ) : items.map((item, idx) => {
                 const isSelected = item.scopeTypeKey === selectedKey;
                 return (
@@ -587,12 +619,12 @@ export const ScopeModelPage = () => {
         </div>
 
         {/* Pagination footer */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' }}>
-          <div>
+        <div style={smFooterStyle}>
+          <div aria-live="polite" aria-atomic="true">
             Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{totalCount}</strong> models
           </div>
           {totalPages > 1 && (
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+            <div style={smPagBtnsStyle}>
               <PgBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{'\u2039'}</PgBtn>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const start = Math.max(1, Math.min(page - 2, totalPages - 4));
@@ -603,20 +635,13 @@ export const ScopeModelPage = () => {
             </div>
           )}
         </div>
-      </div>
+      </aside>
 
       {/* Right panel — detail pane */}
       {selectedKey && (
-        <div style={{
-          width: 560,
-          minWidth: 560,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          background: 'var(--card)',
-        }}>
+        <section aria-label="Scope model details" style={smDetailPaneStyle}>
           {detailPaneBody}
-        </div>
+        </section>
       )}
 
       <ContextMenu
@@ -636,31 +661,34 @@ export const ScopeModelPage = () => {
           setNewModelOpen(false);
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8 }}>
+        <div style={smModalBodyStyle}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Model Name *</div>
+            <div style={smModalFieldLabelStyle}>Model Name *</div>
             <input
               value={newModelName}
               onChange={e => setNewModelName(e.target.value)}
               placeholder="e.g. GIF-H190"
-              style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+              aria-label="Model name"
+              style={smModalInputStyle}
             />
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Manufacturer</div>
+            <div style={smModalFieldLabelStyle}>Manufacturer</div>
             <input
               value={newModelMfg}
               onChange={e => setNewModelMfg(e.target.value)}
               placeholder="e.g. Olympus"
-              style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+              aria-label="Manufacturer"
+              style={smModalInputStyle}
             />
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Type</div>
+            <div style={smModalFieldLabelStyle}>Type</div>
             <select
               value={newModelType}
               onChange={e => setNewModelType(e.target.value)}
-              style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit' }}
+              aria-label="Scope type"
+              style={smModalInputStyle}
             >
               <option value="F">Flexible</option>
               <option value="R">Rigid</option>
@@ -684,11 +712,11 @@ const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactN
     disabled={disabled}
     onClick={onClick}
     style={{
-      height: 26, minWidth: 26, padding: '0 6px',
+      height: 36, minWidth: 36, padding: '0 6px',
       border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, fontFamily: 'inherit',
       cursor: disabled ? 'default' : 'pointer',
       background: active ? 'var(--navy)' : 'var(--card)',
-      color: active ? '#fff' : 'var(--muted)',
+      color: active ? 'var(--card)' : 'var(--muted)',
       fontWeight: active ? 600 : 400,
       opacity: disabled ? 0.4 : 1,
     }}

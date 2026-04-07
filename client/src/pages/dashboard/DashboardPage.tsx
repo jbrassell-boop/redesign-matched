@@ -41,67 +41,64 @@ export const DashboardPage = () => {
   const [quickEditOpen, setQuickEditOpen] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     getDashboardStats()
-      .then(setStats)
-      .finally(() => setStatsLoading(false));
+      .then(s => { if (!cancelled) setStats(s); })
+      .catch(() => { if (!cancelled) message.error('Failed to load dashboard stats'); })
+      .finally(() => { if (!cancelled) setStatsLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
-  const fetchData = useCallback(async (s: DashboardToolbarState) => {
+  const fetchData = useCallback(async (s: DashboardToolbarState, cancelled: () => boolean) => {
     setLoading(true);
     try {
       const params = { search: s.search, page: s.page, pageSize: s.pageSize };
       switch (s.view) {
         case 'repairs': {
           const r = await getDashboardRepairs(s);
-          setData(r.repairs);
-          setTotalCount(r.totalCount);
+          if (!cancelled()) { setData(r.repairs); setTotalCount(r.totalCount); }
           break;
         }
         case 'shipping': {
           const r = await getDashboardShipping(params);
-          setData(r.shipments);
-          setTotalCount(r.totalCount);
+          if (!cancelled()) { setData(r.shipments); setTotalCount(r.totalCount); }
           break;
         }
         case 'invoices': {
           const r = await getDashboardInvoices(params);
-          setData(r.invoices);
-          setTotalCount(r.totalCount);
+          if (!cancelled()) { setData(r.invoices); setTotalCount(r.totalCount); }
           break;
         }
         case 'flags': {
           const r = await getDashboardFlags(params);
-          setData(r.flags);
-          setTotalCount(r.totalCount);
+          if (!cancelled()) { setData(r.flags); setTotalCount(r.totalCount); }
           break;
         }
         case 'emails': {
           const r = await getDashboardEmails(params);
-          setData(r.emails);
-          setTotalCount(r.totalCount);
+          if (!cancelled()) { setData(r.emails); setTotalCount(r.totalCount); }
           break;
         }
         case 'tasks': {
           const r = await getDashboardTasks(params);
-          setData(r.tasks);
-          setTotalCount(r.totalCount);
+          if (!cancelled()) { setData(r.tasks); setTotalCount(r.totalCount); }
           break;
         }
         case 'techbench': {
           const r = await getDashboardTechBench(params);
-          setData(r.items);
-          setTotalCount(r.totalCount);
+          if (!cancelled()) { setData(r.items); setTotalCount(r.totalCount); }
           break;
         }
       }
     } finally {
-      setLoading(false);
+      if (!cancelled()) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => fetchData(toolbarState), toolbarState.search ? 300 : 0);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    const timer = setTimeout(() => fetchData(toolbarState, () => cancelled), toolbarState.search ? 300 : 0);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [toolbarState, fetchData]);
 
   const handleToolbarChange = (partial: Partial<DashboardToolbarState>) => {
@@ -216,7 +213,7 @@ export const DashboardPage = () => {
   ] : [];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+    <section aria-label="Dashboard" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
       <ExecutiveKpi />
       <StatStrip
         chips={chips}
@@ -255,6 +252,6 @@ export const DashboardPage = () => {
         onClose={() => { setQuickEditOpen(false); setQuickEditRecord(null); }}
         onSaved={handleQuickEditSaved}
       />
-    </div>
+    </section>
   );
 };

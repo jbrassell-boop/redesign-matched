@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Table } from 'antd';
 import type { TableProps } from 'antd';
 import './DataTable.css';
@@ -6,7 +7,7 @@ interface DataTableProps<T> extends TableProps<T> {
   className?: string;
 }
 
-export function DataTable<T extends object>(props: DataTableProps<T>) {
+function DataTableInner<T extends object>(props: DataTableProps<T>) {
   const { className, ...rest } = props;
   return (
     <div className={`data-table-wrap${className ? ` ${className}` : ''}`}>
@@ -14,3 +15,5 @@ export function DataTable<T extends object>(props: DataTableProps<T>) {
     </div>
   );
 }
+
+export const DataTable = memo(DataTableInner) as typeof DataTableInner;

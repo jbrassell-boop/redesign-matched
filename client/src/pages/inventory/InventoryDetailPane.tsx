@@ -246,6 +246,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg)' }}>
       <DetailHeader
+        headingLevel="h2"
         title={detail.description}
         subtitle={`#${detail.inventoryKey}`}
         badges={

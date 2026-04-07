@@ -172,12 +172,12 @@ const NavItemButton = ({ label, icon, isActive, collapsed, onClick }: NavItemBut
   let borderLeft = '3px solid transparent';
 
   if (isActive) {
-    bg = 'rgba(46,117,182,0.15)';
+    bg = 'rgba(var(--primary-rgb), 0.15)';
     color = 'var(--primary-light)';
     borderLeft = '3px solid var(--primary)';
   } else if (hovered) {
     bg = 'var(--sidebar-lt)';
-    color = '#fff';
+    color = 'var(--card)';
   }
 
   return (
@@ -185,6 +185,7 @@ const NavItemButton = ({ label, icon, isActive, collapsed, onClick }: NavItemBut
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      aria-current={isActive ? 'page' : undefined}
       title={collapsed ? label : undefined}
       style={{
         display: 'flex',
@@ -229,7 +230,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
   const location = useLocation();
 
   return (
-    <div style={{
+    <nav aria-label="Main navigation" style={{
       width: collapsed ? 56 : 240,
       minWidth: collapsed ? 56 : 240,
       background: 'var(--sidebar)',
@@ -243,6 +244,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
       overflow: 'hidden',
       zIndex: 200,
       transition: 'width 0.2s ease, min-width 0.2s ease',
+      willChange: 'width',
     }}>
       {/* Brand block */}
       <div style={{
@@ -267,7 +269,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
             justifyContent: 'center',
             flexShrink: 0,
           }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" width="18" height="18">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--card)" strokeWidth="2" width="18" height="18">
               <circle cx="12" cy="12" r="10"/>
               <path d="M12 6v6l4 2"/>
             </svg>
@@ -278,7 +280,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
         {!collapsed && (
           <div style={{ flex: 1, overflow: 'hidden' }}>
             <div style={{
-              color: '#fff',
+              color: 'var(--card)',
               fontWeight: 700,
               fontSize: 13,
               lineHeight: 1.2,
@@ -381,6 +383,6 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
           © 2026 Total Scope, Inc.
         </div>
       )}
-    </div>
+    </nav>
   );
 };

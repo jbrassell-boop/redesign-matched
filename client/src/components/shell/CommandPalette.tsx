@@ -242,6 +242,8 @@ export const CommandPalette = () => {
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search repairs, clients, or type a command..."
+            aria-label="Search repairs, clients, or type a command"
+            aria-controls="cmd-palette-results"
             autoComplete="off"
             style={{
               flex: 1, border: 'none', outline: 'none',
@@ -261,7 +263,7 @@ export const CommandPalette = () => {
         </div>
 
         {/* Results */}
-        <div ref={resultsRef} role="listbox" style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
+        <div ref={resultsRef} id="cmd-palette-results" role="listbox" aria-label="Search results" style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
           {flat.length === 0 && query.length >= 2 && (
             <div style={{
               padding: '24px 16px', textAlign: 'center',
@@ -346,6 +348,10 @@ export const CommandPalette = () => {
               </div>
             );
           })}
+        </div>
+
+        <div aria-live="polite" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap' }}>
+          {query.length >= 2 ? `${flat.length} result${flat.length !== 1 ? 's' : ''} found` : ''}
         </div>
 
         {/* Footer */}

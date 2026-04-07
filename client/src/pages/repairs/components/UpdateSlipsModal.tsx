@@ -13,16 +13,16 @@ interface UpdateSlipsModalProps {
 }
 
 const sBar: React.CSSProperties = {
-  background: 'var(--primary)', color: '#fff',
+  background: 'var(--primary)', color: 'var(--card)',
   fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
   letterSpacing: '.06em', padding: '4px 10px', margin: '8px 0 0',
 };
 const fl: React.CSSProperties = {
   fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase',
-  color: '#555', letterSpacing: '.04em',
+  color: 'var(--print-muted)', letterSpacing: '.04em',
 };
 const fv: React.CSSProperties = {
-  borderBottom: '1px solid #999', minHeight: 18, fontSize: 11, padding: '1px 2px',
+  borderBottom: '1px solid var(--print-check-border)', minHeight: 18, fontSize: 11, padding: '1px 2px',
 };
 
 export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }: UpdateSlipsModalProps) => {
@@ -69,11 +69,11 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
 
   return (
     <Modal open={open} onCancel={onClose} footer={null} width={760} destroyOnClose>
-      <div style={{ background: 'var(--card)', fontFamily: 'Inter, Arial, sans-serif', fontSize: 11, color: '#111' }}>
+      <div style={{ background: 'var(--card)', fontFamily: 'Inter, Arial, sans-serif', fontSize: 11, color: 'var(--print-text)' }}>
 
         {/* Internal Use Only Banner */}
         <div style={{
-          background: '#FEF2F2', border: '2px solid #FECACA',
+          background: 'var(--danger-light)', border: '2px solid var(--badge-red-border)',
           borderRadius: 4, padding: '8px 16px', textAlign: 'center', marginBottom: 10,
         }}>
           <div style={{ fontSize: 13, fontWeight: 800, color: 'var(--danger)', textTransform: 'uppercase', letterSpacing: '.12em' }}>
@@ -83,10 +83,10 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-          <img src="/logo-color.png" alt="Total Scope Inc." style={{ height: 44 }} />
+          <img src="/logo-color.png" alt="Total Scope Inc." loading="lazy" style={{ height: 44 }} />
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Update Slip</div>
-            <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM15-2</div>
+            <div style={{ fontSize: 10, color: 'var(--print-light)', marginTop: 2 }}>OM15-2</div>
           </div>
         </div>
 
@@ -108,17 +108,17 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
             <thead>
               <tr>
                 {['Date', 'Reason', 'Primary Tech', 'Secondary Tech'].map(h => (
-                  <th key={h} style={{ background: 'var(--primary)', color: '#fff', fontSize: 8, fontWeight: 700, textTransform: 'uppercase', padding: '4px 8px', textAlign: 'left', letterSpacing: '.03em', borderRight: '1px solid rgba(255,255,255,.2)' }}>{h}</th>
+                  <th key={h} style={{ background: 'var(--primary)', color: 'var(--card)', fontSize: 8, fontWeight: 700, textTransform: 'uppercase', padding: '4px 8px', textAlign: 'left', letterSpacing: '.03em', borderRight: '1px solid rgba(255,255,255,.2)' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {slips.map((s, i) => (
                 <tr key={s.slipKey} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
-                  <td style={{ padding: '4px 8px', borderBottom: '1px solid #e8e8e8' }}>{s.date}</td>
-                  <td style={{ padding: '4px 8px', borderBottom: '1px solid #e8e8e8' }}>{s.reason || '—'}</td>
-                  <td style={{ padding: '4px 8px', borderBottom: '1px solid #e8e8e8' }}>{s.primaryTech || '—'}</td>
-                  <td style={{ padding: '4px 8px', borderBottom: '1px solid #e8e8e8' }}>{s.secondaryTech || '—'}</td>
+                  <td style={{ padding: '4px 8px', borderBottom: '1px solid var(--print-border-md)' }}>{s.date}</td>
+                  <td style={{ padding: '4px 8px', borderBottom: '1px solid var(--print-border-md)' }}>{s.reason || '—'}</td>
+                  <td style={{ padding: '4px 8px', borderBottom: '1px solid var(--print-border-md)' }}>{s.primaryTech || '—'}</td>
+                  <td style={{ padding: '4px 8px', borderBottom: '1px solid var(--print-border-md)' }}>{s.secondaryTech || '—'}</td>
                 </tr>
               ))}
             </tbody>
@@ -129,7 +129,7 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
         <div style={{ marginTop: 12 }}>
           {!showNewForm ? (
             <button onClick={() => setShowNewForm(true)} style={{
-              height: 30, padding: '0 14px', background: 'var(--navy)', color: '#fff',
+              height: 30, padding: '0 14px', background: 'var(--navy)', color: 'var(--card)',
               border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', gap: 4,
             }}>
@@ -163,7 +163,7 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
               </div>
               <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
                 <button onClick={handleCreate} disabled={saving} style={{
-                  padding: '5px 14px', background: 'var(--navy)', color: '#fff', border: 'none',
+                  padding: '5px 14px', background: 'var(--navy)', color: 'var(--card)', border: 'none',
                   borderRadius: 4, fontSize: 11, fontWeight: 700, cursor: 'pointer',
                 }}>{saving ? 'Creating...' : 'Create'}</button>
                 <button onClick={() => setShowNewForm(false)} style={{
@@ -178,7 +178,7 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
         {/* Print button */}
         <div className="no-print" style={{ textAlign: 'center', marginTop: 16 }}>
           <button onClick={() => window.print()} style={{
-            padding: '7px 20px', background: 'var(--primary)', color: '#fff',
+            padding: '7px 20px', background: 'var(--primary)', color: 'var(--card)',
             border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer',
           }}>Print / Save PDF</button>
         </div>

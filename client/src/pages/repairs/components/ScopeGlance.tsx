@@ -12,7 +12,7 @@ export const ScopeGlance = ({ repair, flags }: ScopeGlanceProps) => {
 
   return (
     <div style={{
-      background: '#f0f6ff',
+      background: 'var(--primary-hover-bg)',
       borderBottom: '2px solid var(--border)',
       padding: '5px 14px',
       display: 'flex',
@@ -25,10 +25,10 @@ export const ScopeGlance = ({ repair, flags }: ScopeGlanceProps) => {
         { label: 'Manufacturer', value: repair.manufacturer },
         { label: 'Category',     value: repair.scopeType },
         { label: 'Model',        value: repair.scopeModel },
-        { label: 'SN#',          value: repair.serial },
-        { label: 'Cap / FFS',    value: repair.capFfs },
-      ].map(({ label, value }) => (
-        <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        { label: 'SN#',          value: repair.serial, title: 'Serial Number' },
+        { label: 'Cap / FFS',    value: repair.capFfs, title: 'Capital / Fee For Service pricing model' },
+      ].map(({ label, value, title }) => (
+        <div key={label} title={title} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <div style={{ fontSize: 8, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>
             {label}
           </div>
@@ -46,7 +46,7 @@ export const ScopeGlance = ({ repair, flags }: ScopeGlanceProps) => {
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }} title="Scope returned for repair within 40 days of last repair">
           <div style={{ fontSize: 8, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>Within 40 Day</div>
           <div style={{
             fontSize: 11, fontWeight: 700,
@@ -58,14 +58,14 @@ export const ScopeGlance = ({ repair, flags }: ScopeGlanceProps) => {
 
         {repair.isUrgent && (
           <span style={{
-            background: 'var(--danger)', color: '#fff',
+            background: 'var(--danger)', color: 'var(--card)',
             padding: '2px 9px', borderRadius: 10,
             fontSize: 10, fontWeight: 700,
           }}>⚑ Rush</span>
         )}
         {flags.map((f) => (
           <span key={f.flagKey} style={{
-            background: 'var(--amber-light)', color: '#92400E',
+            background: 'var(--amber-light)', color: 'var(--badge-amber-text)',
             border: '1px solid var(--amber-border)',
             padding: '2px 9px', borderRadius: 10,
             fontSize: 10, fontWeight: 700,

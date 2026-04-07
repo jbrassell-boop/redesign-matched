@@ -32,6 +32,10 @@ interface StatChipProps {
 const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon, active, onClick, clickable = true }: StatChipProps) => (
   <div
     onClick={clickable ? onClick : undefined}
+    role={clickable ? 'button' : undefined}
+    tabIndex={clickable ? 0 : undefined}
+    onKeyDown={clickable && onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
+    aria-pressed={clickable ? active : undefined}
     style={{
       flex: 1,
       display: 'flex',
@@ -119,8 +123,10 @@ export const OnsiteServicesPage = () => {
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     setStatsLoading(true);
-    getOnsiteServiceStats().then(setStats).finally(() => setStatsLoading(false));
+    getOnsiteServiceStats().then(d => { if (!cancelled) setStats(d); }).finally(() => { if (!cancelled) setStatsLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   const loadData = useCallback(async (filters: OnsiteServiceFilters) => {
@@ -287,6 +293,7 @@ export const OnsiteServicesPage = () => {
           value={dateFrom}
           onChange={e => { setDateFrom(e.target.value); setPage(1); }}
           title="From date"
+          aria-label="Filter from date"
           style={{
             height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px',
             fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)',
@@ -299,6 +306,7 @@ export const OnsiteServicesPage = () => {
           value={dateTo}
           onChange={e => { setDateTo(e.target.value); setPage(1); }}
           title="To date"
+          aria-label="Filter to date"
           style={{
             height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px',
             fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)',
@@ -311,6 +319,7 @@ export const OnsiteServicesPage = () => {
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search invoice, client, dept..."
+          aria-label="Search onsite services"
           style={{
             marginLeft: 'auto', height: 30, width: 220,
             border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px',
@@ -328,13 +337,14 @@ export const OnsiteServicesPage = () => {
       {/* Split pane */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
         {/* Left panel — list */}
-        <div style={{
+        <aside aria-label="Onsite services list" style={{
           width: selectedKey ? 340 : '100%',
           minWidth: selectedKey ? 340 : undefined,
           borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
           display: 'flex', flexDirection: 'column',
           background: 'var(--card)',
           transition: 'width 0.2s ease',
+          willChange: 'width',
           overflow: 'hidden',
         }}>
           {/* List rows */}
@@ -393,7 +403,7 @@ export const OnsiteServicesPage = () => {
                 disabled={page <= 1}
                 onClick={() => setPage(p => p - 1)}
                 style={{
-                  height: 26, minWidth: 26, padding: '0 6px',
+                  height: 36, minWidth: 36, padding: '0 6px',
                   border: '1px solid var(--border-dk)', borderRadius: 4,
                   background: 'var(--card)', fontSize: 11, color: 'var(--label)',
                   cursor: page <= 1 ? 'default' : 'pointer',
@@ -409,7 +419,7 @@ export const OnsiteServicesPage = () => {
                     key={pg}
                     onClick={() => setPage(pg)}
                     style={{
-                      height: 26, minWidth: 26, padding: '0 6px',
+                      height: 36, minWidth: 36, padding: '0 6px',
                       border: '1px solid var(--border-dk)', borderRadius: 4,
                       background: page === pg ? 'var(--navy)' : 'var(--card)',
                       color: page === pg ? 'var(--card)' : 'var(--label)',
@@ -425,7 +435,7 @@ export const OnsiteServicesPage = () => {
                 disabled={page >= totalPages}
                 onClick={() => setPage(p => p + 1)}
                 style={{
-                  height: 26, minWidth: 26, padding: '0 6px',
+                  height: 36, minWidth: 36, padding: '0 6px',
                   border: '1px solid var(--border-dk)', borderRadius: 4,
                   background: 'var(--card)', fontSize: 11, color: 'var(--label)',
                   cursor: page >= totalPages ? 'default' : 'pointer',
@@ -436,18 +446,18 @@ export const OnsiteServicesPage = () => {
               </button>
             </div>
           </div>
-        </div>
+        </aside>
 
         {/* Right panel — detail */}
         {selectedKey && (
-          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+          <section aria-label="Service details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
             <OnsiteServiceDetailDrawer
               open={true}
               serviceKey={selectedKey}
               onClose={() => setSelectedKey(null)}
               onUpdated={() => { reload(); }}
             />
-          </div>
+          </section>
         )}
       </div>
 

@@ -15,7 +15,9 @@ export const MorningBriefing = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getDashboardStats().then(setStats).finally(() => setLoading(false));
+    let cancelled = false;
+    getDashboardStats().then(d => { if (!cancelled) setStats(d); }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) return <Skeleton active paragraph={{ rows: 2 }} />;

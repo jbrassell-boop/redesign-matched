@@ -17,7 +17,7 @@ const lblStyle: React.CSSProperties = {
   textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 2,
 };
 const inputStyle: React.CSSProperties = {
-  height: 26, border: '1px solid var(--neutral-200)', borderRadius: 3,
+  height: 36, border: '1px solid var(--neutral-200)', borderRadius: 3,
   background: 'var(--card)', padding: '0 7px', fontSize: 11, color: 'var(--label)',
   width: '100%', boxSizing: 'border-box', fontFamily: 'inherit',
 };

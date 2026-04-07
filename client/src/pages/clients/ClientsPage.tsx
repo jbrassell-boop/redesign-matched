@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Input, Button } from 'antd';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { FixedSizeList } from 'react-window';
+import { Input, Button, message } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { getClients } from '../../api/clients';
 import { ClientDetailPane } from './ClientDetailPane';
@@ -22,25 +23,40 @@ export const ClientsPage = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
   const [newModalOpen, setNewModalOpen] = useState(false);
+  const clientListRef = useRef<HTMLDivElement>(null);
+  const [listHeight, setListHeight] = useState(0);
 
-  const loadClients = useCallback(async (s: string, sf: string) => {
+  useEffect(() => {
+    const el = clientListRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) setListHeight(entry.contentRect.height);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const loadClients = useCallback(async (s: string, sf: string, cancelled: () => boolean) => {
     setLoading(true);
     try {
       const result = await getClients({ search: s, pageSize: 500, statusFilter: sf === 'all' ? undefined : sf });
-      setClients(result.clients);
+      if (!cancelled()) setClients(result.clients);
+    } catch {
+      if (!cancelled()) message.error('Failed to load clients');
     } finally {
-      setLoading(false);
+      if (!cancelled()) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => loadClients(search, statusFilter), search ? 300 : 0);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    const timer = setTimeout(() => loadClients(search, statusFilter, () => cancelled), search ? 300 : 0);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [search, statusFilter, loadClients]);
 
   const handleClientDeleted = useCallback(() => {
     setSelectedKey(null);
-    loadClients(search, statusFilter);
+    loadClients(search, statusFilter, () => false);
   }, [search, statusFilter, loadClients]);
 
   const filtered = clients.filter(c => {
@@ -55,13 +71,14 @@ export const ClientsPage = () => {
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
       {/* Left Panel — Client List */}
-      <div style={{
+      <aside aria-label="Client list" style={{
         width: selectedKey ? 320 : '100%',
         minWidth: selectedKey ? 320 : undefined,
         borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
         display: 'flex', flexDirection: 'column',
         background: 'var(--card)',
         transition: 'width 0.2s ease',
+        willChange: 'width',
       }}>
         {/* Header */}
         <div style={{
@@ -71,8 +88,8 @@ export const ClientsPage = () => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Clients</span>
-              <span style={{
+              <h1 style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', margin: 0 }}>Clients</h1>
+              <span aria-live="polite" style={{
                 fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
                 background: 'var(--primary-light)', color: 'var(--primary)',
               }}>
@@ -115,7 +132,7 @@ export const ClientsPage = () => {
                   padding: '3px 10px', borderRadius: 9999, fontSize: 10, fontWeight: 700,
                   cursor: 'pointer', border: 'none', display: 'flex', gap: 4, alignItems: 'center',
                   background: statusFilter === s.key ? 'var(--navy)' : 'var(--neutral-100)',
-                  color: statusFilter === s.key ? '#fff' : 'var(--muted)',
+                  color: statusFilter === s.key ? 'var(--card)' : 'var(--muted)',
                 }}
               >
                 {s.label}
@@ -132,54 +149,69 @@ export const ClientsPage = () => {
         </div>
 
         {/* Client rows */}
-        <div style={{ flex: 1, overflow: 'auto' }}>
+        <div ref={clientListRef} style={{ flex: 1, overflow: 'hidden' }}>
           {loading && (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>
           )}
           {!loading && filtered.length === 0 && (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No clients found</div>
           )}
-          {filtered.map(c => (
-            <div
-              key={c.clientKey}
-              onClick={() => setSelectedKey(c.clientKey)}
-              style={{
-                padding: '10px 14px',
-                borderBottom: '1px solid var(--neutral-100)',
-                cursor: 'pointer',
-                background: c.clientKey === selectedKey ? 'var(--primary-light)' : 'var(--card)',
-                borderLeft: c.clientKey === selectedKey ? '3px solid var(--primary)' : '3px solid transparent',
-                transition: 'background 0.1s',
-              }}
-              onMouseEnter={e => { if (c.clientKey !== selectedKey) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-              onMouseLeave={e => { if (c.clientKey !== selectedKey) e.currentTarget.style.background = 'var(--card)'; }}
+          {!loading && filtered.length > 0 && listHeight > 0 && (
+            <FixedSizeList
+              height={listHeight}
+              itemCount={filtered.length}
+              itemSize={54}
+              width="100%"
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2 }}>{c.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
-                    {[c.city, c.state].filter(Boolean).join(', ') || '—'}
-                    {(c as any).zip ? ` ${(c as any).zip}` : ''}
+              {({ index, style }) => {
+                const c = filtered[index];
+                return (
+                  <div style={style} key={c.clientKey}>
+                    <div
+                      onClick={() => setSelectedKey(c.clientKey)}
+                      style={{
+                        padding: '10px 14px',
+                        borderBottom: '1px solid var(--neutral-100)',
+                        cursor: 'pointer',
+                        background: c.clientKey === selectedKey ? 'var(--primary-light)' : 'var(--card)',
+                        borderLeft: c.clientKey === selectedKey ? '3px solid var(--primary)' : '3px solid transparent',
+                        transition: 'background 0.1s',
+                        height: '100%',
+                        boxSizing: 'border-box',
+                      }}
+                      onMouseEnter={e => { if (c.clientKey !== selectedKey) e.currentTarget.style.background = 'var(--neutral-50)'; }}
+                      onMouseLeave={e => { if (c.clientKey !== selectedKey) e.currentTarget.style.background = 'var(--card)'; }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2 }}>{c.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+                            {[c.city, c.state].filter(Boolean).join(', ') || '—'}
+                            {(c as any).zip ? ` ${(c as any).zip}` : ''}
+                          </div>
+                        </div>
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
+                          background: c.isActive ? 'rgba(var(--success-rgb), 0.1)' : 'var(--neutral-100)',
+                          color: c.isActive ? 'var(--success)' : 'var(--muted)',
+                        }}>
+                          {c.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <span style={{
-                  fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
-                  background: c.isActive ? 'rgba(var(--success-rgb), 0.1)' : 'var(--neutral-100)',
-                  color: c.isActive ? 'var(--success)' : 'var(--muted)',
-                }}>
-                  {c.isActive ? 'Active' : 'Inactive'}
-                </span>
-              </div>
-            </div>
-          ))}
+                );
+              }}
+            </FixedSizeList>
+          )}
         </div>
-      </div>
+      </aside>
 
       {/* Right Panel — Detail */}
       {selectedKey && (
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <section aria-label="Client details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <ClientDetailPane clientKey={selectedKey} onClientDeleted={handleClientDeleted} />
-        </div>
+        </section>
       )}
 
       {/* Empty state when nothing selected */}
@@ -192,7 +224,7 @@ export const ClientsPage = () => {
       <NewClientModal
         open={newModalOpen}
         onClose={() => setNewModalOpen(false)}
-        onCreated={() => loadClients(search, statusFilter)}
+        onCreated={() => loadClients(search, statusFilter, () => false)}
       />
     </div>
   );

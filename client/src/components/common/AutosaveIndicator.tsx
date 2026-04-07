@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { AutosaveStatus } from '../../hooks/useAutosave';
 
 interface AutosaveIndicatorProps {
@@ -9,7 +10,7 @@ interface AutosaveIndicatorProps {
  * Shows nothing when idle, "Saving..." with spinner while saving,
  * "Saved" in green that fades after 2 seconds, "Save failed" in red that persists.
  */
-export const AutosaveIndicator = ({ status }: AutosaveIndicatorProps) => {
+export const AutosaveIndicator = memo(({ status }: AutosaveIndicatorProps) => {
   if (status === 'idle') return null;
 
   const styles: Record<AutosaveStatus, React.CSSProperties> = {
@@ -21,6 +22,7 @@ export const AutosaveIndicator = ({ status }: AutosaveIndicatorProps) => {
 
   return (
     <span
+      aria-live="polite"
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -53,4 +55,4 @@ export const AutosaveIndicator = ({ status }: AutosaveIndicatorProps) => {
       `}</style>
     </span>
   );
-};
+});

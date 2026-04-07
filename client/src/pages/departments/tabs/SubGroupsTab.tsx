@@ -31,7 +31,7 @@ const actionBtn = (variant: 'remove' | 'add'): React.CSSProperties => ({
   fontSize: 11, fontWeight: 700, padding: '2px 8px',
   border: 'none', borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit',
   background: variant === 'remove' ? 'transparent' : 'var(--navy)',
-  color: variant === 'remove' ? 'var(--danger)' : '#fff',
+  color: variant === 'remove' ? 'var(--danger)' : 'var(--card)',
 });
 
 export const SubGroupsTab = ({ deptKey }: SubGroupsTabProps) => {
@@ -57,7 +57,11 @@ export const SubGroupsTab = ({ deptKey }: SubGroupsTabProps) => {
     }
   }, [deptKey]);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    let cancelled = false;
+    reload().then(() => { if (cancelled) return; });
+    return () => { cancelled = true; };
+  }, [reload]);
 
   const persist = async (next: DepartmentSubGroup[]) => {
     setSaving(true);
@@ -128,6 +132,7 @@ export const SubGroupsTab = ({ deptKey }: SubGroupsTabProps) => {
         <div style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>
           <input
             placeholder="Search sub groups..."
+            aria-label="Search available sub groups"
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{

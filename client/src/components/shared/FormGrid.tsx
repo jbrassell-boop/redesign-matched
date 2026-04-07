@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import './FormGrid.css';
 
 interface FormGridProps {
@@ -6,8 +7,10 @@ interface FormGridProps {
   className?: string;
 }
 
-export const FormGrid = ({ cols = 2, children, className }: FormGridProps) => (
-  <div className={`form-grid form-grid--${cols}${className ? ` ${className}` : ''}`}>
-    {children}
-  </div>
-);
+export const FormGrid = memo(function FormGrid({ cols = 2, children, className }: FormGridProps) {
+  return (
+    <div className={`form-grid form-grid--${cols}${className ? ` ${className}` : ''}`}>
+      {children}
+    </div>
+  );
+});

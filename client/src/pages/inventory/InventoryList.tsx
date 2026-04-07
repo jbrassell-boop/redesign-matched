@@ -73,7 +73,7 @@ export const InventoryList = ({
         aria-label="Search inventory"
         value={search}
         onChange={e => onSearchChange(e.target.value)}
-        style={{ height: 26, fontSize: 11 }}
+        style={{ height: 36, fontSize: 11 }}
         allowClear
       />
     </div>

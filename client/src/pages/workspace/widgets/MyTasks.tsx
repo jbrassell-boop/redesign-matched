@@ -15,9 +15,11 @@ export const MyTasks = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     getDashboardTasks({ pageSize: 8 })
-      .then(r => setTasks(r.tasks.slice(0, 8)))
-      .finally(() => setLoading(false));
+      .then(r => { if (!cancelled) setTasks(r.tasks.slice(0, 8)); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) return <Skeleton active paragraph={{ rows: 4 }} />;

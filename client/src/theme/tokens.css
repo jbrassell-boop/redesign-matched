@@ -8,6 +8,9 @@
   --navy-rgb: 27, 58, 92;
   --success-rgb: 22, 163, 74;
   --muted-rgb: 107, 114, 128;
+  --navy-dark-rgb: 15, 23, 42;
+  --border-light-rgb: 180, 200, 220;
+  --red-500-rgb: 239, 68, 68;
   /* selection / status light backgrounds */
   --amber-light: #FEF3C7;
   --amber-border: #FDE68A;
@@ -18,6 +21,32 @@
   --purple: #7C3AED;
   --purple-light: #F5F3FF;
   --purple-rgb: 124, 58, 237;
+
+  /* status badge palette */
+  --badge-blue-border: #BFDBFE;
+  --badge-green-text: #166534;
+  --badge-amber-text: #92400E;
+  --badge-red-bg: #FEE2E2;
+  --badge-red-text: #991B1B;
+  --badge-red-border: #FECACA;
+  --badge-purple-bg: #EDE9FE;
+  --badge-purple-border: #C4B5FD;
+  --badge-cyan-bg: #E0F2FE;
+  --badge-cyan-text: #0369A1;
+  --badge-cyan-border: #7DD3FC;
+  --badge-teal-bg: #ECFDF5;
+  --badge-teal-text: #065F46;
+  --badge-teal-border: #A7F3D0;
+  --badge-orange-bg: #FFF3E0;
+  --badge-orange-text: #E65100;
+  --badge-orange-border: #FFCC80;
+
+  /* stat-strip tinted backgrounds */
+  --stat-warn-bg: #FFFDF7;
+  --stat-alert-bg: #FEF9F9;
+  --stat-blue-bg: #EFF6FF;
+  --danger-light: #FEF2F2;
+
   --danger: #B71234;
   --red: #B71234;
   --success: #16A34A;
@@ -76,6 +105,53 @@
   --radius-lg: 8px;
   --radius-xl: 12px;
   --radius-pill: 9999px;
+
+  /* print-form palette (used in repair print forms) */
+  --print-text: #111;
+  --print-muted: #555;
+  --print-light: #666;
+  --print-footer: #888;
+  --print-border: #ccc;
+  --print-border-lt: #ddd;
+  --print-border-xlt: #eee;
+  --print-input-bg: #eee;
+  --print-placeholder: #aaa;
+  --print-body: #333;
+  --print-subtle: #444;
+  --print-subtext: #777;
+  --print-warn-bg: #FEF9E7;
+  --print-warn-text: #78350F;
+  --print-error-text: #7F1D1D;
+
+  /* additional badge / status colours */
+  --badge-orange-text-dk: #C2410C;
+  --badge-orange-border-lt: #FED7AA;
+  --badge-orange-bg-lt: #FFF7ED;
+  --badge-purple-border-lt: #DDD6FE;
+
+  /* bright accent colours for dark backgrounds */
+  --stat-green: #4ade80;
+  --stat-red: #f87171;
+  --stat-amber-lt: #fbbf24;
+  --danger-text-lt: #fca5a5;
+
+  /* login / gradient */
+  --login-gradient-dark: #0f172a;
+
+  /* misc UI */
+  --text-near-black: #1a1a1a;
+  --print-border-md: #e8e8e8;
+  --print-cell-border: #e0e0e0;
+  --print-row-divider: #f0f0f0;
+  --print-check-border: #999;
+  --primary-hover-bg: #f0f6ff;
+  --info-bg: #EFF6FF;
+  --info-section-bg: #f8faff;
+  --info-section-border: #dce8f8;
+  --navy-dark: #1a365d;
+  --gradient-blue-start: #e8f0f8;
+  --gradient-blue-end: #d4e4f0;
+  --input-focus-border: #93c5fd;
 }
 
 * { box-sizing: border-box; }
@@ -91,6 +167,51 @@ body {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--neutral-200); border-radius: 3px; }
+
+/* ── FOCUS-VISIBLE — shell buttons ── */
+/* Sidebar nav buttons */
+nav[aria-label="Main navigation"] button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+/* Topbar buttons (Work Orders, density toggle, sign out) */
+header button:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: -2px;
+}
+
+/* Topbar dropdown menu items */
+div[role="menuitem"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  background: var(--neutral-50);
+}
+
+/* ── Global focus-visible styles ── */
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+select:focus-visible,
+[role="tab"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+.ant-input:focus-visible,
+.ant-select-selector:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 0;
+}
+
+/* Ensure table rows with click handlers show focus */
+tr[tabindex]:focus-visible,
+[role="row"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
 
 /* ── DENSITY TOGGLE — compact mode ── */
 [data-density="compact"] .tab-bar__item { padding: 6px 14px; font-size: var(--text-xs); }

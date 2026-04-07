@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import { memo, type JSX } from 'react';
 import type { Alert, AlertType } from '../../hooks/useAlerts';
 
 interface AlertBannerProps {
@@ -36,7 +36,7 @@ const ICONS: Record<AlertType, () => JSX.Element> = {
   opportunity: OpportunityIcon,
 };
 
-export const AlertBanner = ({ alerts, onDismiss }: AlertBannerProps) => {
+export const AlertBanner = memo(function AlertBanner({ alerts, onDismiss }: AlertBannerProps) {
   if (!alerts.length) return null;
 
   return (
@@ -78,4 +78,4 @@ export const AlertBanner = ({ alerts, onDismiss }: AlertBannerProps) => {
       })}
     </div>
   );
-};
+});

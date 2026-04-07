@@ -5,15 +5,15 @@ interface CommandStripProps {
 }
 
 export const CommandStrip = ({ repair }: CommandStripProps) => {
-  const fields: { label: string; value: string | null | undefined }[] = [
+  const fields: { label: string; value: string | null | undefined; title?: string }[] = [
     { label: 'Client',         value: repair.client },
     { label: 'Department',     value: repair.dept },
-    { label: 'Work Order',     value: repair.wo },
-    { label: 'Purchase Order', value: repair.purchaseOrder },
+    { label: 'WO#',            value: repair.wo, title: 'Work Order Number' },
+    { label: 'PO#',            value: repair.purchaseOrder, title: 'Purchase Order Number' },
     { label: 'Rack',           value: repair.rackLocation },
     { label: 'Repair Level',   value: repair.repairLevel },
     { label: 'Lead Time',      value: repair.leadTime },
-    { label: 'Turn Around',    value: repair.turnAroundTime },
+    { label: 'TAT',            value: repair.turnAroundTime, title: 'Turn Around Time (days in repair)' },
     { label: 'Date In',        value: repair.dateIn },
   ];
 
@@ -28,8 +28,8 @@ export const CommandStrip = ({ repair }: CommandStripProps) => {
       alignItems: 'center',
       flexShrink: 0,
     }}>
-      {fields.map(({ label, value }, i) => (
-        <div key={i} style={{
+      {fields.map(({ label, value, title }, i) => (
+        <div key={i} title={title} style={{
           display: 'flex',
           flexDirection: 'column',
           gap: 2,

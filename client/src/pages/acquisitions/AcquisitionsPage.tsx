@@ -14,6 +14,10 @@ interface StatChipProps {
 const StatChip = ({ label, value, iconBg, iconColor, valueColor, active, onClick, icon }: StatChipProps) => (
   <div
     onClick={onClick}
+    role="button"
+    tabIndex={0}
+    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
+    aria-pressed={active}
     style={{
       flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
       borderRadius: 8, transition: 'background 0.12s, outline-color 0.12s',
@@ -21,12 +25,12 @@ const StatChip = ({ label, value, iconBg, iconColor, valueColor, active, onClick
       outline: active ? '2.5px solid var(--navy)' : '2.5px solid transparent', outlineOffset: -2,
     }}
   >
-    <span style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: iconBg, color: iconColor }}>
+    <span style={{ ...statChipIconStyle, background: iconBg, color: iconColor }}>
       {icon}
     </span>
-    <span style={{ display: 'flex', flexDirection: 'column' }}>
+    <span style={statChipTextColStyle}>
       <span style={{ fontSize: 18, fontWeight: 800, color: valueColor, lineHeight: 1.2 }}>{value}</span>
-      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={statChipLabelStyle}>{label}</span>
     </span>
   </div>
 );
@@ -39,6 +43,47 @@ const IconDollar = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentCol
 
 const fmtCurrency = (n: number) => n > 0 ? `$${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : '$0';
 
+// ── Extracted static styles ──
+const statChipIconStyle: React.CSSProperties = { width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const statChipTextColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column' };
+const statChipLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' };
+const acqStatStripStyle: React.CSSProperties = { display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const acqDetailContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
+const acqDetailHeaderStyle: React.CSSProperties = {
+  background: 'var(--navy)', padding: '12px 16px',
+  display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+};
+const acqDetailHeaderLeftStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10 };
+const acqDetailTitleStyle: React.CSSProperties = { fontWeight: 700, color: 'var(--card)', fontSize: 14, margin: 0 };
+const acqDetailCloseBtnStyle: React.CSSProperties = { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: '2px 6px' };
+const acqDetailBodyStyle: React.CSSProperties = { flex: 1, overflow: 'auto', padding: '16px 20px' };
+const acqCenterSpinStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: 40 };
+const acqNoDetailStyle: React.CSSProperties = { padding: 40, textAlign: 'center', color: 'var(--muted)' };
+const acqCostBannerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: '12px 0 16px', borderBottom: '1px solid var(--border)', marginBottom: 16 };
+const acqCostValueStyle: React.CSSProperties = { fontSize: 22, fontWeight: 800, color: 'var(--navy)' };
+const acqCostLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
+const acqCommentsLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 };
+const acqCommentBoxStyle: React.CSSProperties = { fontSize: 12, color: 'var(--text)', background: 'var(--neutral-50)', borderRadius: 6, padding: '10px 12px', border: '1px solid var(--border)' };
+const acqPageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
+const acqSplitPaneStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex' };
+const acqDetailPaneStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' };
+const acqListContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
+const acqListHeaderStyle: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 };
+const acqListTitleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
+const acqListTitleLeftStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
+const acqListTitleTextStyle: React.CSSProperties = { fontSize: 13, fontWeight: 800, color: 'var(--navy)' };
+const acqListCountBadgeStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' };
+const acqSearchIconStyle: React.CSSProperties = { color: 'var(--muted)', fontSize: 12 };
+const acqSearchInputStyle: React.CSSProperties = { height: 28, fontSize: 11 };
+const acqListBodyStyle: React.CSSProperties = { flex: 1, overflow: 'auto' };
+const acqLoadingStyle: React.CSSProperties = { padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 };
+const acqRowSerialStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2 };
+const acqRowModelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginTop: 1 };
+const acqRowBottomStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' };
+const acqPaginationStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 };
+const acqPagCountStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
+const acqPagBtnsStyle: React.CSSProperties = { display: 'flex', gap: 3 };
+
 const TABS: TabDef[] = [
   { key: 'inhouse', label: 'In-House' },
   { key: 'consigned', label: 'Consigned' },
@@ -49,39 +94,33 @@ const TABS: TabDef[] = [
 const AcquisitionDetailPanel = ({ detail, loading, onClose }: { detail: AcquisitionDetail | null; loading: boolean; onClose: () => void }) => {
   const fmt$ = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2 });
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={acqDetailContainerStyle}>
       {/* Header */}
-      <div style={{
-        background: 'var(--navy)', padding: '12px 16px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>
+      <div style={acqDetailHeaderStyle}>
+        <div style={acqDetailHeaderLeftStyle}>
+          <h2 style={acqDetailTitleStyle}>
             {detail?.serial || 'Acquisition Detail'}
-          </span>
+          </h2>
           {detail && <StatusBadge status={detail.isSold ? 'Sold' : 'In-House'} />}
         </div>
-        <button
-          onClick={onClose}
-          style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: '2px 6px' }}
-        >
+        <button onClick={onClose} style={acqDetailCloseBtnStyle}>
           &times;
         </button>
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px' }}>
+      <div style={acqDetailBodyStyle}>
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+          <div style={acqCenterSpinStyle}><Spin /></div>
         ) : !detail ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)' }}>No detail available</div>
+          <div style={acqNoDetailStyle}>No detail available</div>
         ) : (
           <>
             {/* Cost banner */}
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 16px', borderBottom: '1px solid var(--border)', marginBottom: 16 }}>
+            <div style={acqCostBannerStyle}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--navy)' }}>{fmt$(detail.cost)}</div>
-                <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Acquisition Cost</div>
+                <div style={acqCostValueStyle}>{fmt$(detail.cost)}</div>
+                <div style={acqCostLabelStyle}>Acquisition Cost</div>
               </div>
             </div>
             <FormGrid cols={2}>
@@ -98,8 +137,8 @@ const AcquisitionDetailPanel = ({ detail, loading, onClose }: { detail: Acquisit
             </FormGrid>
             {detail.comment && (
               <div style={{ marginTop: 16 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Comments</div>
-                <div style={{ fontSize: 12, color: 'var(--text)', background: 'var(--neutral-50)', borderRadius: 6, padding: '10px 12px', border: '1px solid var(--border)' }}>
+                <div style={acqCommentsLabelStyle}>Comments</div>
+                <div style={acqCommentBoxStyle}>
                   {detail.comment}
                 </div>
               </div>
@@ -165,7 +204,7 @@ export const AcquisitionsPage = () => {
     setDetail(null);
   };
 
-  useEffect(() => { getAcquisitionStats().then(setStats).catch(() => { message.error('Failed to load acquisition stats'); }); }, []);
+  useEffect(() => { let cancelled = false; getAcquisitionStats().then(d => { if (!cancelled) setStats(d); }).catch(() => { if (!cancelled) message.error('Failed to load acquisition stats'); }); return () => { cancelled = true; }; }, []);
 
   const loadInHouse = useCallback(async (s: string, p: number) => {
     setInHouseLoading(true);
@@ -197,7 +236,7 @@ export const AcquisitionsPage = () => {
 
   /* ── Stat Strip ──────────────────────────────────────────── */
   const statStrip = (
-    <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
+    <div style={acqStatStripStyle}>
       <StatChip label="In-House" value={stats?.inHouse ?? 0} iconBg="rgba(var(--primary-rgb), 0.10)" iconColor="var(--primary)" valueColor="var(--navy)" active={activeTab === 'inhouse'} onClick={() => setActiveTab('inhouse')} icon={<IconInHouse />} />
       <StatChip label="Consigned" value={stats?.consigned ?? 0} iconBg="rgba(var(--amber-rgb), 0.10)" iconColor="var(--amber)" valueColor="var(--amber)" active={activeTab === 'consigned'} onClick={() => setActiveTab('consigned')} icon={<IconConsigned />} />
       <StatChip label="Sold" value={stats?.sold ?? 0} iconBg="rgba(var(--success-rgb), 0.10)" iconColor="var(--success)" valueColor="var(--success)" active={activeTab === 'sold'} onClick={() => setActiveTab('sold')} icon={<IconSold />} />
@@ -219,30 +258,30 @@ export const AcquisitionsPage = () => {
   ) => {
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={acqListContainerStyle}>
         {/* List header */}
-        <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--navy)' }}>{tabLabel} Acquisitions</span>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' }}>{total}</span>
+        <div style={acqListHeaderStyle}>
+          <div style={acqListTitleRowStyle}>
+            <div style={acqListTitleLeftStyle}>
+              <span style={acqListTitleTextStyle}>{tabLabel} Acquisitions</span>
+              <span style={acqListCountBadgeStyle}>{total}</span>
             </div>
           </div>
           <Input
-            prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+            prefix={<SearchOutlined style={acqSearchIconStyle} />}
             placeholder="Search serial, model, client..."
             aria-label="Search acquisitions"
             value={searchVal}
             onChange={e => { onSearch(e.target.value); onPage(1); }}
             allowClear
-            style={{ height: 28, fontSize: 11 }}
+            style={acqSearchInputStyle}
           />
         </div>
 
         {/* List rows */}
-        <div style={{ flex: 1, overflow: 'auto' }}>
-          {loading && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>}
-          {!loading && items.length === 0 && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No records found</div>}
+        <div style={acqListBodyStyle}>
+          {loading && <div style={acqLoadingStyle}>Loading...</div>}
+          {!loading && items.length === 0 && <div style={acqLoadingStyle}>No records found</div>}
           {items.map(item => (
             <div
               key={item.scopeKey}
@@ -258,9 +297,9 @@ export const AcquisitionsPage = () => {
               onMouseEnter={e => { if (item.scopeKey !== selectedKey) e.currentTarget.style.background = 'var(--neutral-50)'; }}
               onMouseLeave={e => { if (item.scopeKey !== selectedKey) e.currentTarget.style.background = 'var(--card)'; }}
             >
-              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2 }}>{item.serial || '\u2014'}</div>
-              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{item.scopeType || '\u2014'}</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+              <div style={acqRowSerialStyle}>{item.serial || '\u2014'}</div>
+              <div style={acqRowModelStyle}>{item.scopeType || '\u2014'}</div>
+              <div style={acqRowBottomStyle}>
                 <span>{item.client || '\u2014'}</span>
                 <span>{item.dateAcquired || '\u2014'}</span>
               </div>
@@ -269,10 +308,10 @@ export const AcquisitionsPage = () => {
         </div>
 
         {/* Pagination */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
-          <span style={{ fontSize: 10, color: 'var(--muted)' }}>{items.length} of {total}</span>
+        <div style={acqPaginationStyle}>
+          <span style={acqPagCountStyle}>{items.length} of {total}</span>
           {totalPages > 1 && (
-            <div style={{ display: 'flex', gap: 3 }}>
+            <div style={acqPagBtnsStyle}>
               <PgBtn disabled={currentPage <= 1} onClick={() => onPage(currentPage - 1)}>{'\u2039'}</PgBtn>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const start = Math.max(1, Math.min(currentPage - 2, totalPages - 4));
@@ -290,25 +329,25 @@ export const AcquisitionsPage = () => {
   /* ── Sold List ───────────────────────────────────────────── */
   const soldTotalPages = Math.max(1, Math.ceil(soldTotal / pageSize));
   const renderSoldList = () => (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--navy)' }}>Sold Acquisitions</span>
-          <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' }}>{soldTotal}</span>
+    <div style={acqListContainerStyle}>
+      <div style={acqListHeaderStyle}>
+        <div style={acqListTitleLeftStyle}>
+          <span style={acqListTitleTextStyle}>Sold Acquisitions</span>
+          <span style={acqListCountBadgeStyle}>{soldTotal}</span>
         </div>
         <Input
-          prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+          prefix={<SearchOutlined style={acqSearchIconStyle} />}
           placeholder="Search serial, model, buyer..."
           aria-label="Search sold acquisitions"
           value={soldSearch}
           onChange={e => { setSoldSearch(e.target.value); setSoldPage(1); }}
           allowClear
-          style={{ height: 28, fontSize: 11 }}
+          style={acqSearchInputStyle}
         />
       </div>
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        {soldLoading && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>}
-        {!soldLoading && soldItems.length === 0 && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No records found</div>}
+      <div style={acqListBodyStyle}>
+        {soldLoading && <div style={acqLoadingStyle}>Loading...</div>}
+        {!soldLoading && soldItems.length === 0 && <div style={acqLoadingStyle}>No records found</div>}
         {soldItems.map(item => (
           <div
             key={item.scopeKey}
@@ -324,19 +363,19 @@ export const AcquisitionsPage = () => {
             onMouseEnter={e => { if (item.scopeKey !== selectedKey) e.currentTarget.style.background = 'var(--neutral-50)'; }}
             onMouseLeave={e => { if (item.scopeKey !== selectedKey) e.currentTarget.style.background = 'var(--card)'; }}
           >
-            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2 }}>{item.serial || '\u2014'}</div>
-            <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{item.scopeType || '\u2014'}</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+            <div style={acqRowSerialStyle}>{item.serial || '\u2014'}</div>
+            <div style={acqRowModelStyle}>{item.scopeType || '\u2014'}</div>
+            <div style={acqRowBottomStyle}>
               <span>{item.client || '\u2014'}</span>
               <span>{item.saleDate || '\u2014'}</span>
             </div>
           </div>
         ))}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
-        <span style={{ fontSize: 10, color: 'var(--muted)' }}>{soldItems.length} of {soldTotal}</span>
+      <div style={acqPaginationStyle}>
+        <span style={acqPagCountStyle}>{soldItems.length} of {soldTotal}</span>
         {soldTotalPages > 1 && (
-          <div style={{ display: 'flex', gap: 3 }}>
+          <div style={acqPagBtnsStyle}>
             <PgBtn disabled={soldPage <= 1} onClick={() => setSoldPage(p => p - 1)}>{'\u2039'}</PgBtn>
             {Array.from({ length: Math.min(5, soldTotalPages) }, (_, i) => {
               const start = Math.max(1, Math.min(soldPage - 2, soldTotalPages - 4));
@@ -358,34 +397,35 @@ export const AcquisitionsPage = () => {
     : renderSoldList();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div style={acqPageContainerStyle}>
       {statStrip}
       <TabBar tabs={TABS} activeKey={activeTab} onChange={tab => { setActiveTab(tab); handleCloseDetail(); }} />
 
       {/* Split pane */}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+      <div style={acqSplitPaneStyle}>
         {/* Left panel — list */}
-        <div style={{
+        <aside aria-label="Acquisition list" style={{
           width: selectedKey ? 340 : '100%',
           minWidth: selectedKey ? 340 : undefined,
           borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
           display: 'flex', flexDirection: 'column',
           background: 'var(--card)',
           transition: 'width 0.2s ease',
+          willChange: 'width',
           overflow: 'hidden',
         }}>
           {listContent}
-        </div>
+        </aside>
 
         {/* Right panel — detail */}
         {selectedKey && (
-          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+          <section aria-label="Acquisition details" style={acqDetailPaneStyle}>
             <AcquisitionDetailPanel
               detail={detail}
               loading={detailLoading}
               onClose={handleCloseDetail}
             />
-          </div>
+          </section>
         )}
       </div>
     </div>
@@ -395,7 +435,7 @@ export const AcquisitionsPage = () => {
 /* ── Shared ───────────────────────────────────────────────── */
 const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (
   <button disabled={disabled} onClick={onClick} style={{
-    height: 22, minWidth: 22, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 10, fontFamily: 'inherit',
+    height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 10, fontFamily: 'inherit',
     cursor: disabled ? 'default' : 'pointer', fontWeight: active ? 600 : 400,
     background: active ? 'var(--navy)' : 'var(--card)', color: active ? 'var(--card)' : 'var(--muted)', opacity: disabled ? 0.4 : 1,
   }}>{children}</button>

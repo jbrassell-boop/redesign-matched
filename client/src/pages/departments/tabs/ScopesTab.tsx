@@ -27,7 +27,11 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { reload(); }, [deptKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    let cancelled = false;
+    reload();
+    return () => { cancelled = true; };
+  }, [deptKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openAdd = () => {
     setSerial('');
@@ -76,6 +80,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <input
           placeholder="Search model, serial..."
+          aria-label="Search scopes by model or serial number"
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{
@@ -92,7 +97,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
           onClick={openAdd}
           style={{
             height: 28, padding: '0 12px', fontSize: 11, fontWeight: 700,
-            background: 'var(--navy)', color: '#fff', border: 'none',
+            background: 'var(--navy)', color: 'var(--card)', border: 'none',
             borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', gap: 4,
           }}
@@ -178,6 +183,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
               value={serial}
               onChange={e => setSerial(e.target.value)}
               placeholder="Enter serial number"
+              aria-label="Scope serial number"
               style={{ width: '100%', height: 30, border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '0 8px', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
             />
           </div>
@@ -198,7 +204,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
             <button onClick={() => setAddOpen(false)} style={{ height: 30, padding: '0 14px', fontSize: 12, fontWeight: 600, background: 'var(--neutral-100)', color: 'var(--navy)', border: '1px solid var(--border)', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>
               Cancel
             </button>
-            <button onClick={handleAdd} disabled={saving} style={{ height: 30, padding: '0 18px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={handleAdd} disabled={saving} style={{ height: 30, padding: '0 18px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: 'var(--card)', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>
               {saving ? 'Adding…' : 'Add Scope'}
             </button>
           </div>

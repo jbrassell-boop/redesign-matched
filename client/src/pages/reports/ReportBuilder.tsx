@@ -43,37 +43,37 @@ const RISK_SUMMARY_BY = ['Department', 'Client', 'Sales Rep'];
 const DateRangeRow = () => (
   <div style={rowStyle}>
     <span style={labelStyle}>Date Range</span>
-    <input type="date" style={{ ...inputStyle, width: 130 }} />
+    <input type="date" aria-label="Report start date" style={{ ...inputStyle, width: 130 }} />
     <span style={{ fontSize: 10, color: 'var(--muted)' }}>to</span>
-    <input type="date" style={{ ...inputStyle, width: 130 }} />
+    <input type="date" aria-label="Report end date" style={{ ...inputStyle, width: 130 }} />
   </div>
 );
 
 const ClientRow = () => (
   <div style={rowStyle}>
     <span style={labelStyle}>Client</span>
-    <select style={selectStyle}><option>All Clients</option></select>
+    <select style={selectStyle} aria-label="Client filter"><option>All Clients</option></select>
   </div>
 );
 
 const DeptRow = () => (
   <div style={rowStyle}>
     <span style={labelStyle}>Department</span>
-    <select style={selectStyle}><option>All Departments</option></select>
+    <select style={selectStyle} aria-label="Department filter"><option>All Departments</option></select>
   </div>
 );
 
 const SalesRepRow = () => (
   <div style={rowStyle}>
     <span style={labelStyle}>Sales Rep</span>
-    <select style={selectStyle}>{SALES_REPS.map(r => <option key={r}>{r}</option>)}</select>
+    <select style={selectStyle} aria-label="Sales rep filter">{SALES_REPS.map(r => <option key={r}>{r}</option>)}</select>
   </div>
 );
 
 const InstTypeRow = () => (
   <div style={rowStyle}>
     <span style={labelStyle}>Inst. Type</span>
-    <select style={selectStyle}>{INST_TYPES.map(t => <option key={t}>{t}</option>)}</select>
+    <select style={selectStyle} aria-label="Instrument type filter">{INST_TYPES.map(t => <option key={t}>{t}</option>)}</select>
   </div>
 );
 
@@ -112,11 +112,11 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <DateRangeRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Status</span>
-              <select style={selectStyle}>{REPAIR_STATUSES.map(s => <option key={s}>{s}</option>)}</select>
+              <select style={selectStyle} aria-label="Status filter">{REPAIR_STATUSES.map(s => <option key={s}>{s}</option>)}</select>
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Sort By</span>
-              <select style={selectStyle}>
+              <select style={selectStyle} aria-label="Sort by">
                 <option>Date</option><option>Client</option><option>Status</option><option>Technician</option>
               </select>
             </div>
@@ -170,7 +170,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <ClientRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Report Type</span>
-              <select style={selectStyle}><option>Summary</option><option>By Scope Type</option></select>
+              <select style={selectStyle} aria-label="Report type"><option>Summary</option><option>By Scope Type</option></select>
             </div>
           </>
         );
@@ -182,7 +182,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <ClientRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Vendor</span>
-              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter vendor name..." />
+              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter vendor name..." aria-label="Vendor name filter" />
             </div>
           </>
         );
@@ -201,7 +201,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <DateRangeRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Lot Number</span>
-              <input type="text" style={{ ...inputStyle, width: 160 }} placeholder="Enter lot number..." />
+              <input type="text" style={{ ...inputStyle, width: 160 }} placeholder="Enter lot number..." aria-label="Lot number filter" />
             </div>
           </>
         );
@@ -212,11 +212,11 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <DateRangeRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Date Field</span>
-              <select style={selectStyle}>{DATE_RANGE_FIELDS.map(f => <option key={f}>{f}</option>)}</select>
+              <select style={selectStyle} aria-label="Date field">{DATE_RANGE_FIELDS.map(f => <option key={f}>{f}</option>)}</select>
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Repair Items</span>
-              <input type="text" style={{ ...inputStyle, width: 160 }} defaultValue="*" title="Wildcard * for all items" />
+              <input type="text" style={{ ...inputStyle, width: 160 }} defaultValue="*" title="Wildcard * for all items" aria-label="Repair items filter" />
             </div>
           </>
         );
@@ -228,12 +228,12 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <DeptRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Contract</span>
-              <select style={selectStyle}><option>All Contracts</option></select>
+              <select style={selectStyle} aria-label="Contract filter"><option>All Contracts</option></select>
             </div>
             <DateRangeRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Report Type</span>
-              <select style={selectStyle}>{REPORT_CARD_TYPES.map(t => <option key={t}>{t}</option>)}</select>
+              <select style={selectStyle} aria-label="Report type">{REPORT_CARD_TYPES.map(t => <option key={t}>{t}</option>)}</select>
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Options</span>
@@ -259,12 +259,12 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Min Invoices</span>
-              <input type="number" style={{ ...inputStyle, width: 80 }} defaultValue={1} min={1} />
+              <input type="number" style={{ ...inputStyle, width: 80 }} defaultValue={1} min={1} aria-label="Minimum invoices" />
               <span style={{ fontSize: 10, color: 'var(--muted)' }}>in past year</span>
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Summary By</span>
-              <select style={selectStyle}>{RISK_SUMMARY_BY.map(r => <option key={r}>{r}</option>)}</select>
+              <select style={selectStyle} aria-label="Summary by">{RISK_SUMMARY_BY.map(r => <option key={r}>{r}</option>)}</select>
             </div>
           </>
         );
@@ -275,15 +275,15 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <DateRangeRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Repair Detail</span>
-              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Filter by repair detail..." />
+              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Filter by repair detail..." aria-label="Filter by repair detail" />
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Client</span>
-              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter client name..." />
+              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter client name..." aria-label="Client name filter" />
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Department</span>
-              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter department..." />
+              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter department..." aria-label="Department filter" />
             </div>
           </>
         );
@@ -293,11 +293,11 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
           <>
             <div style={rowStyle}>
               <span style={labelStyle}>Month</span>
-              <input type="month" style={{ ...inputStyle, width: 160 }} />
+              <input type="month" aria-label="Leaderboard month" style={{ ...inputStyle, width: 160 }} />
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Report Type</span>
-              <select style={selectStyle}>{LEADERBOARD_TYPES.map(t => <option key={t}>{t}</option>)}</select>
+              <select style={selectStyle} aria-label="Report type">{LEADERBOARD_TYPES.map(t => <option key={t}>{t}</option>)}</select>
             </div>
           </>
         );
@@ -307,7 +307,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
           <>
             <div style={rowStyle}>
               <span style={labelStyle}>Month</span>
-              <input type="month" style={{ ...inputStyle, width: 160 }} />
+              <input type="month" aria-label="Sales rep report month" style={{ ...inputStyle, width: 160 }} />
             </div>
             <SalesRepRow />
           </>
@@ -328,7 +328,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <SalesRepRow />
             <div style={rowStyle}>
               <span style={labelStyle}>View</span>
-              <select style={selectStyle}><option>Summary</option><option>Detail</option></select>
+              <select style={selectStyle} aria-label="View"><option>Summary</option><option>Detail</option></select>
             </div>
           </>
         );
@@ -340,7 +340,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <SalesRepRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Sort By</span>
-              <select style={selectStyle}><option>Invoice Date</option><option>Client</option><option>Amount</option></select>
+              <select style={selectStyle} aria-label="Sort by"><option>Invoice Date</option><option>Client</option><option>Amount</option></select>
             </div>
           </>
         );

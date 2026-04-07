@@ -136,7 +136,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
               <button
                 onClick={() => { setShowForm(true); setSelected(null); }}
                 style={{
-                  background: 'var(--primary)', color: '#fff', border: 'none',
+                  background: 'var(--primary)', color: 'var(--card)', border: 'none',
                   borderRadius: 3, padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
                 }}>
                 + New
@@ -218,7 +218,8 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
                 <div>
                   <div style={labelStyle}>Type *</div>
                   <select style={inputStyle} value={typeKey}
-                    onChange={e => setTypeKey(e.target.value ? Number(e.target.value) : '')}>
+                    onChange={e => setTypeKey(e.target.value ? Number(e.target.value) : '')}
+                    aria-label="Amendment type">
                     <option value="">Select type…</option>
                     {amendTypes.map(t => (
                       <option key={t.typeKey} value={t.typeKey}>{t.typeName}</option>
@@ -229,7 +230,8 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
                   <div style={labelStyle}>Reason *</div>
                   <select style={inputStyle} value={reasonKey}
                     onChange={e => setReasonKey(e.target.value ? Number(e.target.value) : '')}
-                    disabled={!typeKey}>
+                    disabled={!typeKey}
+                    aria-label="Amendment reason">
                     <option value="">Select reason…</option>
                     {amendReasons.map(r => (
                       <option key={r.reasonKey} value={r.reasonKey}>{r.reasonName}</option>
@@ -240,7 +242,8 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
                   <div>
                     <div style={labelStyle}>New Fix Type (optional)</div>
                     <select style={inputStyle} value={newFixType}
-                      onChange={e => setNewFixType(e.target.value)}>
+                      onChange={e => setNewFixType(e.target.value)}
+                      aria-label="New fix type">
                       <option value="">No change</option>
                       <option value="W">W — Warranty</option>
                       <option value="NC">NC — Non-Covered</option>
@@ -252,6 +255,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
                     <div style={labelStyle}>New Amount (optional)</div>
                     <input style={inputStyle} type="number" min="0" step="0.01"
                       placeholder="No change"
+                      aria-label="New amendment amount"
                       value={newAmount}
                       onChange={e => setNewAmount(e.target.value)} />
                   </div>
@@ -259,6 +263,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
                 <div>
                   <div style={labelStyle}>Comment</div>
                   <input style={inputStyle} maxLength={80} placeholder="Optional…"
+                    aria-label="Amendment comment"
                     value={comment}
                     onChange={e => setComment(e.target.value)} />
                 </div>
@@ -268,7 +273,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
                     Cancel
                   </button>
                   <button onClick={handleSave} disabled={saving}
-                    style={{ padding: '5px 14px', borderRadius: 3, border: 'none', background: 'var(--primary)', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                    style={{ padding: '5px 14px', borderRadius: 3, border: 'none', background: 'var(--primary)', color: 'var(--card)', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
                     {saving ? 'Saving…' : 'Save Amendment'}
                   </button>
                 </div>

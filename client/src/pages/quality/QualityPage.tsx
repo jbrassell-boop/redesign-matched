@@ -32,6 +32,10 @@ interface StatChipProps {
 const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon, active, onClick, clickable = true }: StatChipProps) => (
   <div
     onClick={clickable ? onClick : undefined}
+    role={clickable ? 'button' : undefined}
+    tabIndex={clickable ? 0 : undefined}
+    onKeyDown={clickable && onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
+    aria-pressed={clickable ? active : undefined}
     style={{
       flex: 1,
       display: 'flex',
@@ -48,22 +52,12 @@ const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon, active, o
     onMouseEnter={e => { if (clickable && !active) (e.currentTarget as HTMLDivElement).style.background = 'var(--bg)'; }}
     onMouseLeave={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = ''; }}
   >
-    <div style={{
-      width: 32,
-      height: 32,
-      borderRadius: 6,
-      background: iconBg,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-      color: iconColor,
-    }}>
+    <div style={{ ...iconBgBaseStyle, background: iconBg, color: iconColor }}>
       {icon}
     </div>
     <div>
-      <div style={{ fontSize: 16, fontWeight: 800, color: valueColor, lineHeight: 1.2 }}>{value}</div>
-      <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</div>
+      <div style={{ ...statValueStyle, color: valueColor }}>{value}</div>
+      <div style={statLabelStyle}>{label}</div>
     </div>
   </div>
 );
@@ -118,6 +112,86 @@ const TABS: TabDef[] = [
   { key: 'Reports', label: 'Reports' },
 ];
 
+// ── Extracted static styles (performance: avoid re-creating objects each render) ──
+const pageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
+const statStripStyle: React.CSSProperties = { display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const tabFlexColumnStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 };
+const toolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' };
+const filterLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' };
+const segmentedWrapStyle: React.CSSProperties = { display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' };
+const separatorStyle: React.CSSProperties = { width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 };
+const dateInputStyle: React.CSSProperties = { height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', width: 120 };
+const dateToLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
+const searchInputStyle: React.CSSProperties = { marginLeft: 'auto', height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center` };
+const ncrSearchInputStyle: React.CSSProperties = { ...searchInputStyle, width: 240 };
+const capaSearchInputStyle: React.CSSProperties = { ...searchInputStyle, width: 260 };
+const tableCardBgStyle: React.CSSProperties = { flex: 1, overflow: 'auto', background: 'var(--card)' };
+const tableFixedStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' };
+const thCellStyle: React.CSSProperties = { background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', userSelect: 'none' };
+const tdCellStyle: React.CSSProperties = { padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const tdCellMutedStyle: React.CSSProperties = { ...tdCellStyle, color: 'var(--muted)' };
+const tdCellNoBorderStyle: React.CSSProperties = { padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)' };
+const tdCellDateMutedStyle: React.CSSProperties = { padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' };
+const emptyRowStyle: React.CSSProperties = { textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 };
+const footerBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' };
+const paginationWrapStyle: React.CSSProperties = { display: 'flex', gap: 3, alignItems: 'center' };
+const navyBoldStyle: React.CSSProperties = { fontWeight: 700, color: 'var(--navy)' };
+const newBtnStyle: React.CSSProperties = { height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 };
+const woLinkStyle: React.CSSProperties = { fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' };
+const fontWeight500Style: React.CSSProperties = { fontWeight: 500 };
+const pageBtnBaseStyle: React.CSSProperties = { height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', fontFamily: 'inherit' };
+const reportCardBaseStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--neutral-200)', borderRadius: 'var(--radius-lg)', padding: 18, cursor: 'pointer', transition: 'box-shadow 0.15s' };
+const reportIconWrapStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 };
+const reportIconBoxStyle: React.CSSProperties = { width: 32, height: 32, borderRadius: 6, background: 'rgba(var(--navy-rgb), 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--navy)' };
+const reportTitleStyle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: 'var(--text)' };
+const reportDescStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 };
+const reportGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 };
+const reportsTabContentStyle: React.CSSProperties = { flex: 1, overflow: 'auto', padding: 16 };
+const iconBgBaseStyle: React.CSSProperties = { width: 32, height: 32, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 };
+const statValueStyle: React.CSSProperties = { fontSize: 16, fontWeight: 800, lineHeight: 1.2 };
+const statLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
+
+const QC_COLS = [
+  { label: 'WO#', width: 90 },
+  { label: 'Type', width: 120 },
+  { label: 'Client', width: 200 },
+  { label: 'Scope S/N', width: 130 },
+  { label: 'Tech Key', width: 100 },
+  { label: 'Date', width: 100 },
+  { label: 'Result', width: 110 },
+];
+
+const NCR_COLS = [
+  { label: 'NCR#', width: 90 },
+  { label: 'WO#', width: 90 },
+  { label: 'Description', width: 220 },
+  { label: 'Category', width: 100 },
+  { label: 'Severity', width: 90 },
+  { label: 'Status', width: 110 },
+  { label: 'Date Filed', width: 100 },
+];
+
+const CAPA_COLS = [
+  { label: 'CAPA#', width: 90 },
+  { label: 'NCR Ref', width: 90 },
+  { label: 'Type', width: 100 },
+  { label: 'Description', width: 220 },
+  { label: 'Owner', width: 120 },
+  { label: 'Due Date', width: 100 },
+  { label: 'Status', width: 100 },
+];
+
+const REWORK_COLS = [
+  { label: 'RW#', width: 80 },
+  { label: 'WO#', width: 90 },
+  { label: 'Serial#', width: 120 },
+  { label: 'Reason', width: 210 },
+  { label: 'Tech', width: 120 },
+  { label: 'Original Complete', width: 110 },
+  { label: 'Rework Due', width: 100 },
+  { label: 'Status', width: 100 },
+];
+
 export const QualityPage = () => {
   const [activeTab, setActiveTab] = useState('QC Inspections');
   const [stats, setStats] = useState<QualityStats | null>(null);
@@ -162,34 +236,42 @@ export const QualityPage = () => {
 
   // Load stats once
   useEffect(() => {
+    let cancelled = false;
     setStatsLoading(true);
     getQualityStats()
-      .then(setStats)
-      .finally(() => setStatsLoading(false));
+      .then(s => { if (!cancelled) setStats(s); })
+      .catch(() => { if (!cancelled) message.error('Failed to load quality stats'); })
+      .finally(() => { if (!cancelled) setStatsLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
-  const loadInspections = useCallback(async (filters: QualityFilters) => {
+  const loadInspections = useCallback(async (filters: QualityFilters, cancelled: () => boolean) => {
     setLoading(true);
     try {
       const result = await getQualityInspections(filters);
-      setInspections(result.inspections);
-      setTotalCount(result.totalCount);
+      if (!cancelled()) {
+        setInspections(result.inspections);
+        setTotalCount(result.totalCount);
+      }
+    } catch {
+      if (!cancelled()) message.error('Failed to load inspections');
     } finally {
-      setLoading(false);
+      if (!cancelled()) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
     const delay = search ? 300 : 0;
     searchTimeout.current = setTimeout(() => {
-      loadInspections({ search, dateFrom, dateTo, resultFilter, page, pageSize: PAGE_SIZE });
+      loadInspections({ search, dateFrom, dateTo, resultFilter, page, pageSize: PAGE_SIZE }, () => cancelled);
     }, delay);
-    return () => { if (searchTimeout.current) clearTimeout(searchTimeout.current); };
+    return () => { cancelled = true; if (searchTimeout.current) clearTimeout(searchTimeout.current); };
   }, [search, dateFrom, dateTo, resultFilter, page, loadInspections]);
 
   // NCR data loading
-  const loadNcr = useCallback(async () => {
+  const loadNcr = useCallback(async (cancelled: () => boolean) => {
     setNcrLoading(true);
     try {
       const result = await getQualityNcr({
@@ -198,19 +280,26 @@ export const QualityPage = () => {
         page: ncrPage,
         pageSize: PAGE_SIZE,
       });
-      setNcrItems(result.items);
-      setNcrTotal(result.totalCount);
+      if (!cancelled()) {
+        setNcrItems(result.items);
+        setNcrTotal(result.totalCount);
+      }
+    } catch {
+      if (!cancelled()) message.error('Failed to load non-conformances');
     } finally {
-      setNcrLoading(false);
+      if (!cancelled()) setNcrLoading(false);
     }
   }, [ncrSearch, ncrStatusFilter, ncrPage]);
 
   useEffect(() => {
-    if (activeTab === 'Non-Conformances') loadNcr();
+    if (activeTab !== 'Non-Conformances') return;
+    let cancelled = false;
+    loadNcr(() => cancelled);
+    return () => { cancelled = true; };
   }, [activeTab, loadNcr]);
 
   // Rework data loading
-  const loadRework = useCallback(async () => {
+  const loadRework = useCallback(async (cancelled: () => boolean) => {
     setReworkLoading(true);
     try {
       const result = await getQualityRework({
@@ -219,15 +308,22 @@ export const QualityPage = () => {
         page: reworkPage,
         pageSize: PAGE_SIZE,
       });
-      setReworkItems(result.items);
-      setReworkTotal(result.totalCount);
+      if (!cancelled()) {
+        setReworkItems(result.items);
+        setReworkTotal(result.totalCount);
+      }
+    } catch {
+      if (!cancelled()) message.error('Failed to load rework items');
     } finally {
-      setReworkLoading(false);
+      if (!cancelled()) setReworkLoading(false);
     }
   }, [reworkSearch, reworkStatusFilter, reworkPage]);
 
   useEffect(() => {
-    if (activeTab === 'Rework Tracking') loadRework();
+    if (activeTab !== 'Rework Tracking') return;
+    let cancelled = false;
+    loadRework(() => cancelled);
+    return () => { cancelled = true; };
   }, [activeTab, loadRework]);
 
   const ncrTotalPages = Math.max(1, Math.ceil(ncrTotal / PAGE_SIZE));
@@ -261,15 +357,10 @@ export const QualityPage = () => {
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <section aria-label="Quality" style={pageContainerStyle}>
 
       {/* ── Stat Strip ── */}
-      <div style={{
-        display: 'flex',
-        background: 'var(--card)',
-        borderBottom: '1px solid var(--neutral-200)',
-        flexShrink: 0,
-      }}>
+      <div style={statStripStyle}>
         <StatChip
           label="Total Inspections"
           value={statsLoading ? '—' : (stats?.totalInspections ?? 0)}
@@ -342,29 +433,15 @@ export const QualityPage = () => {
       {/* ── Tab Content ── */}
 
       {activeTab === 'QC Inspections' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div style={tabFlexColumnStyle}>
 
           {/* Toolbar */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '10px 16px',
-            background: 'var(--card)',
-            borderBottom: '1px solid var(--neutral-200)',
-            flexShrink: 0,
-            flexWrap: 'wrap',
-          }}>
+          <div style={toolbarStyle}>
             {/* Result segmented control */}
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
+            <span style={filterLabelStyle}>
               Result
             </span>
-            <div style={{
-              display: 'inline-flex',
-              border: '1px solid var(--border-dk)',
-              borderRadius: 'var(--radius-md)',
-              overflow: 'hidden',
-            }}>
+            <div style={segmentedWrapStyle}>
               {(['all', 'Pass', 'Conditional', 'Fail'] as const).map((v, i) => (
                 <button
                   key={v}
@@ -380,7 +457,7 @@ export const QualityPage = () => {
             </div>
 
             {/* Separator */}
-            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
+            <div style={separatorStyle} />
 
             {/* Date range */}
             <input
@@ -388,39 +465,17 @@ export const QualityPage = () => {
               value={dateFrom}
               onChange={e => { setDateFrom(e.target.value); setPage(1); }}
               title="From date"
-              style={{
-                height: 30,
-                border: '1.5px solid var(--border-dk)',
-                borderRadius: 6,
-                padding: '0 8px',
-                fontSize: 11,
-                fontFamily: 'inherit',
-                color: 'var(--text)',
-                background: 'var(--card)',
-                outline: 'none',
-                cursor: 'pointer',
-                width: 120,
-              }}
+              aria-label="Filter from date"
+              style={dateInputStyle}
             />
-            <span style={{ fontSize: 10, color: 'var(--muted)' }}>to</span>
+            <span style={dateToLabelStyle}>to</span>
             <input
               type="date"
               value={dateTo}
               onChange={e => { setDateTo(e.target.value); setPage(1); }}
               title="To date"
-              style={{
-                height: 30,
-                border: '1.5px solid var(--border-dk)',
-                borderRadius: 6,
-                padding: '0 8px',
-                fontSize: 11,
-                fontFamily: 'inherit',
-                color: 'var(--text)',
-                background: 'var(--card)',
-                outline: 'none',
-                cursor: 'pointer',
-                width: 120,
-              }}
+              aria-label="Filter to date"
+              style={dateInputStyle}
             />
 
             {/* Search — right aligned */}
@@ -429,18 +484,8 @@ export const QualityPage = () => {
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search WO#, Serial#, Client..."
-              style={{
-                marginLeft: 'auto',
-                height: 30,
-                width: 220,
-                border: '1.5px solid var(--border-dk)',
-                borderRadius: 6,
-                padding: '0 10px 0 30px',
-                fontSize: 11,
-                fontFamily: 'inherit',
-                outline: 'none',
-                background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
-              }}
+              aria-label="Search QC inspections"
+              style={searchInputStyle}
             />
 
             {/* Export */}
@@ -452,39 +497,14 @@ export const QualityPage = () => {
           </div>
 
           {/* Table */}
-          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <div style={tableCardBgStyle}>
+            <table style={tableFixedStyle}>
               <thead>
                 <tr>
-                  {[
-                    { label: 'WO#', width: 90 },
-                    { label: 'Type', width: 120 },
-                    { label: 'Client', width: 200 },
-                    { label: 'Scope S/N', width: 130 },
-                    { label: 'Tech Key', width: 100 },
-                    { label: 'Date', width: 100 },
-                    { label: 'Result', width: 110 },
-                  ].map(col => (
+                  {QC_COLS.map(col => (
                     <th
                       key={col.label}
-                      style={{
-                        width: col.width,
-                        background: 'var(--neutral-50)',
-                        color: 'var(--neutral-500)',
-                        fontWeight: 700,
-                        padding: '8px 10px',
-                        textAlign: 'left',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.04em',
-                        fontSize: 11,
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 2,
-                        whiteSpace: 'nowrap',
-                        borderRight: '1px solid rgba(var(--primary-rgb), 0.15)',
-                        borderBottom: '1px solid var(--neutral-200)',
-                        userSelect: 'none',
-                      }}
+                      style={{ ...thCellStyle, width: col.width }}
                     >
                       {col.label}
                     </th>
@@ -494,13 +514,13 @@ export const QualityPage = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>
+                    <td colSpan={7} style={emptyRowStyle}>
                       Loading...
                     </td>
                   </tr>
                 ) : inspections.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>
+                    <td colSpan={7} style={emptyRowStyle}>
                       No inspections found.
                     </td>
                   </tr>
@@ -515,30 +535,30 @@ export const QualityPage = () => {
                       onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
                     >
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        <span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>
+                      <td style={tdCellStyle}>
+                        <span style={woLinkStyle}>
                           {item.workOrderNumber}
                         </span>
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={tdCellStyle}>
                         <StatusBadge
                           status={item.inspectionType}
                           variant={item.inspectionType === 'D&I Intake' ? 'blue' : 'purple'}
                         />
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={tdCellStyle}>
                         {item.clientName}
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--muted)' }}>
+                      <td style={tdCellMutedStyle}>
                         {item.scopeSN ?? '—'}
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--muted)' }}>
+                      <td style={tdCellMutedStyle}>
                         {item.technicianKey ?? '—'}
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--muted)' }}>
+                      <td style={tdCellMutedStyle}>
                         {item.inspectionDate}
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={tdCellStyle}>
                         <StatusBadge
                           status={item.result}
                           variant={item.result === 'Pass' ? 'green' : item.result === 'Fail' ? 'red' : 'amber'}
@@ -552,34 +572,16 @@ export const QualityPage = () => {
           </div>
 
           {/* Table Footer */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '8px 16px',
-            background: 'var(--neutral-50)',
-            borderTop: '1.5px solid var(--border-dk)',
-            flexShrink: 0,
-            fontSize: 11,
-            color: 'var(--muted)',
-          }}>
-            <span style={{ fontWeight: 500 }}>{totalCount.toLocaleString()} records</span>
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+          <div style={footerBarStyle}>
+            <span style={fontWeight500Style}>{totalCount.toLocaleString()} records</span>
+            <div style={paginationWrapStyle}>
               <button
                 disabled={page <= 1}
                 onClick={() => setPage(p => p - 1)}
                 style={{
-                  height: 26,
-                  minWidth: 26,
-                  padding: '0 6px',
-                  border: '1px solid var(--border-dk)',
-                  borderRadius: 4,
-                  background: 'var(--card)',
-                  fontSize: 11,
-                  color: 'var(--label)',
+                  ...pageBtnBaseStyle,
                   cursor: page <= 1 ? 'default' : 'pointer',
                   opacity: page <= 1 ? 0.4 : 1,
-                  fontFamily: 'inherit',
                 }}
               >
                 ‹
@@ -591,17 +593,11 @@ export const QualityPage = () => {
                     key={pg}
                     onClick={() => setPage(pg)}
                     style={{
-                      height: 26,
-                      minWidth: 26,
-                      padding: '0 6px',
-                      border: '1px solid var(--border-dk)',
-                      borderRadius: 4,
+                      ...pageBtnBaseStyle,
                       background: page === pg ? 'var(--navy)' : 'var(--card)',
                       color: page === pg ? 'var(--card)' : 'var(--label)',
-                      fontSize: 11,
                       fontWeight: page === pg ? 600 : 400,
                       cursor: 'pointer',
-                      fontFamily: 'inherit',
                     }}
                   >
                     {pg}
@@ -612,17 +608,9 @@ export const QualityPage = () => {
                 disabled={page >= totalPages}
                 onClick={() => setPage(p => p + 1)}
                 style={{
-                  height: 26,
-                  minWidth: 26,
-                  padding: '0 6px',
-                  border: '1px solid var(--border-dk)',
-                  borderRadius: 4,
-                  background: 'var(--card)',
-                  fontSize: 11,
-                  color: 'var(--label)',
+                  ...pageBtnBaseStyle,
                   cursor: page >= totalPages ? 'default' : 'pointer',
                   opacity: page >= totalPages ? 0.4 : 1,
-                  fontFamily: 'inherit',
                 }}
               >
                 ›
@@ -633,26 +621,19 @@ export const QualityPage = () => {
       )}
 
       {activeTab === 'Non-Conformances' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div style={tabFlexColumnStyle}>
           {/* Toolbar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-            background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
-          }}>
+          <div style={toolbarStyle}>
             <button
               onClick={() => setNcrModalOpen(true)}
-              style={{
-                height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
-                background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 5,
-              }}
+              style={newBtnStyle}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={12} height={12}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New NCR
             </button>
-            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
-            <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+            <div style={separatorStyle} />
+            <span style={filterLabelStyle}>Status</span>
+            <div style={segmentedWrapStyle}>
               {(['', 'Open', 'Under Review', 'Closed'] as const).map((v, i) => (
                 <button key={v} onClick={() => { setNcrStatusFilter(v); setNcrPage(1); }}
                   style={{ ...segBtnStyle(ncrStatusFilter === v), borderRight: i < 3 ? '1px solid var(--border-dk)' : 'none' }}>
@@ -662,67 +643,51 @@ export const QualityPage = () => {
             </div>
             <input type="text" value={ncrSearch} onChange={e => { setNcrSearch(e.target.value); setNcrPage(1); }}
               placeholder="Search NCR#, WO#, description..."
-              style={{
-                marginLeft: 'auto', height: 30, width: 240, border: '1.5px solid var(--border-dk)', borderRadius: 6,
-                padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
-                background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
-              }}
+              aria-label="Search non-conformance reports"
+              style={ncrSearchInputStyle}
             />
           </div>
 
           {/* Table */}
-          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <div style={tableCardBgStyle}>
+            <table style={tableFixedStyle}>
               <thead>
                 <tr>
-                  {[
-                    { label: 'NCR#', width: 90 },
-                    { label: 'WO#', width: 90 },
-                    { label: 'Description', width: 220 },
-                    { label: 'Category', width: 100 },
-                    { label: 'Severity', width: 90 },
-                    { label: 'Status', width: 110 },
-                    { label: 'Date Filed', width: 100 },
-                  ].map(col => (
-                    <th key={col.label} style={{
-                      width: col.width, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700,
-                      padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
-                      position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap',
-                      borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', userSelect: 'none',
-                    }}>{col.label}</th>
+                  {NCR_COLS.map(col => (
+                    <th key={col.label} style={{ ...thCellStyle, width: col.width }}>{col.label}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {ncrLoading ? (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>Loading...</td></tr>
+                  <tr><td colSpan={7} style={emptyRowStyle}>Loading...</td></tr>
                 ) : ncrItems.length === 0 ? (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No non-conformances match current filters</td></tr>
+                  <tr><td colSpan={7} style={emptyRowStyle}>No non-conformances match current filters</td></tr>
                 ) : ncrItems.map((item, idx) => (
                   <tr key={item.isoComplaintKey}
                     style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
                   >
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.ncrNumber}</span>
+                    <td style={tdCellStyle}>
+                      <span style={navyBoldStyle}>{item.ncrNumber}</span>
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.workOrderNumber}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.description}>{item.description}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.category}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)' }}>
+                    <td style={tdCellStyle}>{item.workOrderNumber}</td>
+                    <td style={tdCellStyle} title={item.description}>{item.description}</td>
+                    <td style={tdCellStyle}>{item.category}</td>
+                    <td style={tdCellNoBorderStyle}>
                       <StatusBadge
                         status={item.severity}
                         variant={item.severity === 'Critical' ? 'red' : item.severity === 'Major' ? 'amber' : 'blue'}
                       />
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)' }}>
+                    <td style={tdCellNoBorderStyle}>
                       <StatusBadge
                         status={item.status}
                         variant={item.status === 'Open' ? 'red' : item.status === 'Under Review' ? 'amber' : 'gray'}
                       />
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.dateFiled}</td>
+                    <td style={tdCellDateMutedStyle}>{item.dateFiled}</td>
                   </tr>
                 ))}
               </tbody>
@@ -730,27 +695,24 @@ export const QualityPage = () => {
           </div>
 
           {/* Footer */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px',
-            background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)',
-          }}>
-            <span style={{ fontWeight: 500 }}>{ncrTotal.toLocaleString()} records</span>
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+          <div style={footerBarStyle}>
+            <span style={fontWeight500Style}>{ncrTotal.toLocaleString()} records</span>
+            <div style={paginationWrapStyle}>
               <button disabled={ncrPage <= 1} onClick={() => setNcrPage(p => p - 1)}
-                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: ncrPage <= 1 ? 'default' : 'pointer', opacity: ncrPage <= 1 ? 0.4 : 1, fontFamily: 'inherit' }}>
+                style={{ ...pageBtnBaseStyle, cursor: ncrPage <= 1 ? 'default' : 'pointer', opacity: ncrPage <= 1 ? 0.4 : 1 }}>
                 &#8249;
               </button>
               {Array.from({ length: Math.min(ncrTotalPages, 7) }, (_, i) => {
                 const pg = i + 1;
                 return (
                   <button key={pg} onClick={() => setNcrPage(pg)}
-                    style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: ncrPage === pg ? 'var(--navy)' : 'var(--card)', color: ncrPage === pg ? 'var(--card)' : 'var(--label)', fontSize: 11, fontWeight: ncrPage === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ ...pageBtnBaseStyle, background: ncrPage === pg ? 'var(--navy)' : 'var(--card)', color: ncrPage === pg ? 'var(--card)' : 'var(--label)', fontWeight: ncrPage === pg ? 600 : 400, cursor: 'pointer' }}>
                     {pg}
                   </button>
                 );
               })}
               <button disabled={ncrPage >= ncrTotalPages} onClick={() => setNcrPage(p => p + 1)}
-                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: ncrPage >= ncrTotalPages ? 'default' : 'pointer', opacity: ncrPage >= ncrTotalPages ? 0.4 : 1, fontFamily: 'inherit' }}>
+                style={{ ...pageBtnBaseStyle, cursor: ncrPage >= ncrTotalPages ? 'default' : 'pointer', opacity: ncrPage >= ncrTotalPages ? 0.4 : 1 }}>
                 &#8250;
               </button>
             </div>
@@ -759,94 +721,64 @@ export const QualityPage = () => {
       )}
 
       {activeTab === 'CAPA Log' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div style={tabFlexColumnStyle}>
           {/* Toolbar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-            background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
-          }}>
+          <div style={toolbarStyle}>
             <button
               onClick={() => setCapaModalOpen(true)}
-              style={{
-                height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
-                background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 5,
-              }}
+              style={newBtnStyle}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={12} height={12}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New CAPA
             </button>
-            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Type</span>
-            <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+            <div style={separatorStyle} />
+            <span style={filterLabelStyle}>Type</span>
+            <div style={segmentedWrapStyle}>
               {['All', 'Corrective', 'Preventive'].map((v, i) => (
                 <button key={v} style={{ ...segBtnStyle(i === 0), borderRight: i < 2 ? '1px solid var(--border-dk)' : 'none' }}>{v}</button>
               ))}
             </div>
-            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
-            <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+            <div style={separatorStyle} />
+            <span style={filterLabelStyle}>Status</span>
+            <div style={segmentedWrapStyle}>
               {['All', 'Open', 'In Progress', 'Completed', 'Overdue'].map((v, i) => (
                 <button key={v} style={{ ...segBtnStyle(i === 0), borderRight: i < 4 ? '1px solid var(--border-dk)' : 'none' }}>{v}</button>
               ))}
             </div>
-            <input type="text" placeholder="Search CAPA#, NCR ref, description..." readOnly
-              style={{
-                marginLeft: 'auto', height: 30, width: 260, border: '1.5px solid var(--border-dk)', borderRadius: 6,
-                padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
-                background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
-              }}
+            <input type="text" placeholder="Search CAPA#, NCR ref, description..." aria-label="Search CAPA records" readOnly
+              style={capaSearchInputStyle}
             />
           </div>
 
           {/* Table */}
-          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <div style={tableCardBgStyle}>
+            <table style={tableFixedStyle}>
               <thead>
                 <tr>
-                  {[
-                    { label: 'CAPA#', width: 90 },
-                    { label: 'NCR Ref', width: 90 },
-                    { label: 'Type', width: 100 },
-                    { label: 'Description', width: 220 },
-                    { label: 'Owner', width: 120 },
-                    { label: 'Due Date', width: 100 },
-                    { label: 'Status', width: 100 },
-                  ].map(col => (
-                    <th key={col.label} style={{
-                      width: col.width, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700,
-                      padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
-                      position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap',
-                      borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', userSelect: 'none',
-                    }}>{col.label}</th>
+                  {CAPA_COLS.map(col => (
+                    <th key={col.label} style={{ ...thCellStyle, width: col.width }}>{col.label}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No CAPA records found. CAPA tracking will be available when linked to NCR records.</td></tr>
+                <tr><td colSpan={7} style={emptyRowStyle}>No CAPA records found. CAPA tracking will be available when linked to NCR records.</td></tr>
               </tbody>
             </table>
           </div>
 
           {/* Footer */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px',
-            background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)',
-          }}>
-            <span style={{ fontWeight: 500 }}>0 records</span>
+          <div style={footerBarStyle}>
+            <span style={fontWeight500Style}>0 records</span>
           </div>
         </div>
       )}
 
       {activeTab === 'Rework Tracking' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div style={tabFlexColumnStyle}>
           {/* Toolbar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-            background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
-          }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
-            <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+          <div style={toolbarStyle}>
+            <span style={filterLabelStyle}>Status</span>
+            <div style={segmentedWrapStyle}>
               {(['', 'In Progress', 'Complete'] as const).map((v, i) => (
                 <button key={v || 'all'} onClick={() => { setReworkStatusFilter(v); setReworkPage(1); }}
                   style={{ ...segBtnStyle(reworkStatusFilter === v), borderRight: i < 2 ? '1px solid var(--border-dk)' : 'none' }}>
@@ -856,59 +788,42 @@ export const QualityPage = () => {
             </div>
             <input type="text" value={reworkSearch} onChange={e => { setReworkSearch(e.target.value); setReworkPage(1); }}
               placeholder="Search RW#, WO#, Serial#..."
-              style={{
-                marginLeft: 'auto', height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6,
-                padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
-                background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
-              }}
+              aria-label="Search rework records"
+              style={searchInputStyle}
             />
           </div>
 
           {/* Table */}
-          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <div style={tableCardBgStyle}>
+            <table style={tableFixedStyle}>
               <thead>
                 <tr>
-                  {[
-                    { label: 'RW#', width: 80 },
-                    { label: 'WO#', width: 90 },
-                    { label: 'Serial#', width: 120 },
-                    { label: 'Reason', width: 210 },
-                    { label: 'Tech', width: 120 },
-                    { label: 'Original Complete', width: 110 },
-                    { label: 'Rework Due', width: 100 },
-                    { label: 'Status', width: 100 },
-                  ].map(col => (
-                    <th key={col.label} style={{
-                      width: col.width, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700,
-                      padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
-                      position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap',
-                      borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', userSelect: 'none',
-                    }}>{col.label}</th>
+                  {REWORK_COLS.map(col => (
+                    <th key={col.label} style={{ ...thCellStyle, width: col.width }}>{col.label}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {reworkLoading ? (
-                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>Loading...</td></tr>
+                  <tr><td colSpan={8} style={emptyRowStyle}>Loading...</td></tr>
                 ) : reworkItems.length === 0 ? (
-                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No rework records match current filters</td></tr>
+                  <tr><td colSpan={8} style={emptyRowStyle}>No rework records match current filters</td></tr>
                 ) : reworkItems.map((item, idx) => (
                   <tr key={item.repairKey}
                     style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
                   >
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.reworkNumber}</span>
+                    <td style={tdCellStyle}>
+                      <span style={navyBoldStyle}>{item.reworkNumber}</span>
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.workOrderNumber}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.serialNumber}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.reason}>{item.reason}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.techName || '—'}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.originalComplete || '—'}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.reworkDue || '—'}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)' }}>
+                    <td style={tdCellStyle}>{item.workOrderNumber}</td>
+                    <td style={tdCellStyle}>{item.serialNumber}</td>
+                    <td style={tdCellStyle} title={item.reason}>{item.reason}</td>
+                    <td style={tdCellStyle}>{item.techName || '—'}</td>
+                    <td style={tdCellDateMutedStyle}>{item.originalComplete || '—'}</td>
+                    <td style={tdCellDateMutedStyle}>{item.reworkDue || '—'}</td>
+                    <td style={tdCellNoBorderStyle}>
                       <StatusBadge
                         status={item.status}
                         variant={item.status === 'Complete' ? 'green' : item.status === 'In Progress' ? 'blue' : 'amber'}
@@ -921,27 +836,24 @@ export const QualityPage = () => {
           </div>
 
           {/* Footer */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px',
-            background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)',
-          }}>
-            <span style={{ fontWeight: 500 }}>{reworkTotal.toLocaleString()} records</span>
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+          <div style={footerBarStyle}>
+            <span style={fontWeight500Style}>{reworkTotal.toLocaleString()} records</span>
+            <div style={paginationWrapStyle}>
               <button disabled={reworkPage <= 1} onClick={() => setReworkPage(p => p - 1)}
-                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: reworkPage <= 1 ? 'default' : 'pointer', opacity: reworkPage <= 1 ? 0.4 : 1, fontFamily: 'inherit' }}>
+                style={{ ...pageBtnBaseStyle, cursor: reworkPage <= 1 ? 'default' : 'pointer', opacity: reworkPage <= 1 ? 0.4 : 1 }}>
                 &#8249;
               </button>
               {Array.from({ length: Math.min(reworkTotalPages, 7) }, (_, i) => {
                 const pg = i + 1;
                 return (
                   <button key={pg} onClick={() => setReworkPage(pg)}
-                    style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: reworkPage === pg ? 'var(--navy)' : 'var(--card)', color: reworkPage === pg ? 'var(--card)' : 'var(--label)', fontSize: 11, fontWeight: reworkPage === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ ...pageBtnBaseStyle, background: reworkPage === pg ? 'var(--navy)' : 'var(--card)', color: reworkPage === pg ? 'var(--card)' : 'var(--label)', fontWeight: reworkPage === pg ? 600 : 400, cursor: 'pointer' }}>
                     {pg}
                   </button>
                 );
               })}
               <button disabled={reworkPage >= reworkTotalPages} onClick={() => setReworkPage(p => p + 1)}
-                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: reworkPage >= reworkTotalPages ? 'default' : 'pointer', opacity: reworkPage >= reworkTotalPages ? 0.4 : 1, fontFamily: 'inherit' }}>
+                style={{ ...pageBtnBaseStyle, cursor: reworkPage >= reworkTotalPages ? 'default' : 'pointer', opacity: reworkPage >= reworkTotalPages ? 0.4 : 1 }}>
                 &#8250;
               </button>
             </div>
@@ -1034,9 +946,9 @@ export const QualityPage = () => {
       </Modal>
 
       {activeTab === 'Reports' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+        <div style={tabFlexColumnStyle}>
+          <div style={reportsTabContentStyle}>
+            <div style={reportGridStyle}>
               {[
                 { title: 'Inspection Summary', desc: 'Pass/Fail/Conditional breakdown by period', icon: <IconShield /> },
                 { title: 'First-Pass Yield Trend', desc: 'FPY percentage over last 12 months', icon: <IconCheckDouble /> },
@@ -1045,20 +957,17 @@ export const QualityPage = () => {
                 { title: 'Rework Rate by Technician', desc: 'Rework frequency per tech over time', icon: <IconX /> },
                 { title: 'Cost of Poor Quality', desc: 'COPQ trends including rework and scrap costs', icon: <IconDollar /> },
               ].map(report => (
-                <div key={report.title} style={{
-                  background: 'var(--card)', border: '1px solid var(--neutral-200)', borderRadius: 'var(--radius-lg)',
-                  padding: 18, cursor: 'pointer', transition: 'box-shadow 0.15s',
-                }}
+                <div key={report.title} style={reportCardBaseStyle}
                   onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(var(--navy-rgb), 0.1)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = ''; }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(var(--navy-rgb), 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--navy)' }}>
+                  <div style={reportIconWrapStyle}>
+                    <div style={reportIconBoxStyle}>
                       {report.icon}
                     </div>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{report.title}</span>
+                    <span style={reportTitleStyle}>{report.title}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>{report.desc}</div>
+                  <div style={reportDescStyle}>{report.desc}</div>
                 </div>
               ))}
             </div>
@@ -1066,6 +975,6 @@ export const QualityPage = () => {
         </div>
       )}
 
-    </div>
+    </section>
   );
 };

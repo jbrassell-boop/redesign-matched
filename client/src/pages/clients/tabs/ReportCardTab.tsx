@@ -52,8 +52,8 @@ export const ReportCardTab = ({ clientKey }: Props) => {
     <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, var(--navy) 0%, #1a365d 100%)',
-        borderRadius: 8, padding: '16px 20px', color: '#fff',
+        background: 'var(--navy)',
+        borderRadius: 8, padding: '16px 20px', color: 'var(--card)',
       }}>
         <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', opacity: .6, marginBottom: 4 }}>
           Client Performance Report Card — {year} YTD

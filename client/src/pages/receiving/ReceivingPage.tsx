@@ -73,7 +73,7 @@ export const ReceivingPage = () => {
       {/* Split layout */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Left panel */}
-        <div style={{
+        <aside aria-label="Pending arrivals list" style={{
           width: 320, flexShrink: 0,
           borderRight: '1px solid var(--neutral-200)',
           background: 'var(--card)',
@@ -84,7 +84,7 @@ export const ReceivingPage = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary-dark)' }}>Pending Arrivals</span>
-            <span style={{ fontSize: 11, color: 'var(--muted)' }}>{arrivals.length} records</span>
+            <span style={{ fontSize: 11, color: 'var(--muted)' }} aria-live="polite">{arrivals.length} records</span>
           </div>
           <ReceivingList
             arrivals={arrivals}
@@ -94,16 +94,16 @@ export const ReceivingPage = () => {
             onSearchChange={setSearch}
             onSelect={handleSelect}
           />
-        </div>
+        </aside>
 
         {/* Right panel */}
-        <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
+        <section aria-label="Arrival details" style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
           <ReceivingDetailPane
             arrival={selectedArrival}
             loading={false}
             onReceived={handleReceived}
           />
-        </div>
+        </section>
       </div>
     </div>
   );

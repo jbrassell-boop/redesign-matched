@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Spin } from 'antd';
 import { getDepartmentContacts } from '../../../api/departments';
 import type { DeptContact } from '../types';
@@ -11,14 +11,14 @@ export const ContactsTab = ({ deptKey }: ContactsTabProps) => {
   const [contacts, setContacts] = useState<DeptContact[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const reload = useCallback(() => {
+  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     getDepartmentContacts(deptKey)
-      .then(setContacts)
-      .finally(() => setLoading(false));
+      .then(d => { if (!cancelled) setContacts(d); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [deptKey]);
-
-  useEffect(() => { reload(); }, [reload]);
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
 

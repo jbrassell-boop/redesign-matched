@@ -86,13 +86,13 @@ export const ContactsTab = ({ clientKey }: ContactsTabProps) => {
               <tr style={{ borderBottom: '1px solid var(--neutral-200)', background: 'rgba(var(--primary-rgb), 0.04)' }}>
                 <td style={tdStyle}>
                   <div style={{ display: 'flex', gap: 4 }}>
-                    <input style={inlineInput} placeholder="First" value={editRow.firstName ?? ''} onChange={e => setEditRow({ ...editRow, firstName: e.target.value })} />
-                    <input style={inlineInput} placeholder="Last" value={editRow.lastName ?? ''} onChange={e => setEditRow({ ...editRow, lastName: e.target.value })} />
+                    <input style={inlineInput} placeholder="First" aria-label="Contact first name" value={editRow.firstName ?? ''} onChange={e => setEditRow({ ...editRow, firstName: e.target.value })} />
+                    <input style={inlineInput} placeholder="Last" aria-label="Contact last name" value={editRow.lastName ?? ''} onChange={e => setEditRow({ ...editRow, lastName: e.target.value })} />
                   </div>
                 </td>
-                <td style={tdStyle}><input style={inlineInput} value={editRow.phone ?? ''} onChange={e => setEditRow({ ...editRow, phone: e.target.value })} /></td>
-                <td style={tdStyle}><input style={inlineInput} value={editRow.fax ?? ''} onChange={e => setEditRow({ ...editRow, fax: e.target.value })} /></td>
-                <td style={tdStyle}><input style={inlineInput} value={editRow.email ?? ''} onChange={e => setEditRow({ ...editRow, email: e.target.value })} /></td>
+                <td style={tdStyle}><input style={inlineInput} aria-label="Contact phone" value={editRow.phone ?? ''} onChange={e => setEditRow({ ...editRow, phone: e.target.value })} /></td>
+                <td style={tdStyle}><input style={inlineInput} aria-label="Contact fax" value={editRow.fax ?? ''} onChange={e => setEditRow({ ...editRow, fax: e.target.value })} /></td>
+                <td style={tdStyle}><input style={inlineInput} aria-label="Contact email" value={editRow.email ?? ''} onChange={e => setEditRow({ ...editRow, email: e.target.value })} /></td>
                 <td style={tdStyle} />
                 <td style={tdStyle} />
                 <td style={tdStyle}>

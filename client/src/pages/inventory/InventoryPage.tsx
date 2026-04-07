@@ -47,7 +47,11 @@ export const InventoryPage = () => {
   }, [search, loadItems]);
 
   useEffect(() => {
-    getInventoryStats().then(setStats).catch(() => { message.error('Failed to load inventory stats'); });
+    let cancelled = false;
+    getInventoryStats()
+      .then(data => { if (!cancelled) setStats(data); })
+      .catch(() => { if (!cancelled) message.error('Failed to load inventory stats'); });
+    return () => { cancelled = true; };
   }, []);
 
   const handleSelect = useCallback(async (item: InventoryListItem) => {
@@ -159,7 +163,7 @@ export const InventoryPage = () => {
       {/* Split layout */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Left panel — 260px */}
-        <div style={{
+        <aside aria-label="Inventory list" style={{
           width: 260,
           flexShrink: 0,
           borderRight: '1px solid var(--border)',
@@ -171,13 +175,13 @@ export const InventoryPage = () => {
           <div style={{ padding: '6px 10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--navy)' }}>Inventory</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 10, color: 'var(--muted)' }}>{totalCount} items</span>
+              <span style={{ fontSize: 10, color: 'var(--muted)' }} aria-live="polite">{totalCount} items</span>
               <ExportButton data={items as unknown as Record<string, unknown>[]} columns={INVENTORY_EXPORT_COLS} filename="inventory-export" sheetName="Inventory" />
               <button
                 onClick={() => { setPoSupplier(''); setPoNotes(''); setDraftPOOpen(true); }}
                 style={{
-                  height: 24, padding: '0 8px', fontSize: 10, fontWeight: 700, fontFamily: 'inherit',
-                  background: 'var(--navy)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer',
+                  height: 36, minWidth: 36, padding: '0 8px', fontSize: 10, fontWeight: 700, fontFamily: 'inherit',
+                  background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 4, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 3,
                 }}
               >
@@ -195,12 +199,12 @@ export const InventoryPage = () => {
             onSelect={handleSelect}
             totalCount={totalCount}
           />
-        </div>
+        </aside>
 
         {/* Right panel — flex 1 */}
-        <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
+        <section aria-label="Inventory details" style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
           <InventoryDetailPane detail={detail} loading={detailLoading} />
-        </div>
+        </section>
       </div>
 
       <Modal
@@ -221,6 +225,7 @@ export const InventoryPage = () => {
               value={poSupplier}
               onChange={e => setPoSupplier(e.target.value)}
               placeholder="Supplier name"
+              aria-label="Supplier name"
               style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
           </div>
@@ -230,6 +235,7 @@ export const InventoryPage = () => {
               value={poNotes}
               onChange={e => setPoNotes(e.target.value)}
               placeholder="Optional notes for this purchase order..."
+              aria-label="Purchase order notes"
               rows={4}
               style={{ width: '100%', border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '6px 8px', fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
             />

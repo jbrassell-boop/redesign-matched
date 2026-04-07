@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Input, Button } from 'antd';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { FixedSizeList } from 'react-window';
+import { Input, Button, message } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { getDepartments } from '../../api/departments';
 import { DepartmentDetailPane } from './DepartmentDetailPane';
@@ -20,20 +21,35 @@ export const DepartmentsPage = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
   const [newModalOpen, setNewModalOpen] = useState(false);
+  const deptListRef = useRef<HTMLDivElement>(null);
+  const [listHeight, setListHeight] = useState(0);
 
-  const loadDepartments = useCallback(async (s: string) => {
+  useEffect(() => {
+    const el = deptListRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) setListHeight(entry.contentRect.height);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const loadDepartments = useCallback(async (s: string, cancelled: () => boolean) => {
     setLoading(true);
     try {
       const result = await getDepartments({ search: s, pageSize: 500 });
-      setDepartments(result.departments);
+      if (!cancelled()) setDepartments(result.departments);
+    } catch {
+      if (!cancelled()) message.error('Failed to load departments');
     } finally {
-      setLoading(false);
+      if (!cancelled()) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => loadDepartments(search), search ? 300 : 0);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    const timer = setTimeout(() => loadDepartments(search, () => cancelled), search ? 300 : 0);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [search, loadDepartments]);
 
   const filtered = departments.filter(d => {
@@ -48,13 +64,14 @@ export const DepartmentsPage = () => {
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
       {/* Left Panel — Department List */}
-      <div style={{
+      <aside aria-label="Department list" style={{
         width: selectedKey ? 340 : '100%',
         minWidth: selectedKey ? 340 : undefined,
         borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
         display: 'flex', flexDirection: 'column',
         background: 'var(--card)',
         transition: 'width 0.2s ease',
+        willChange: 'width',
       }}>
         {/* Header */}
         <div style={{
@@ -64,8 +81,8 @@ export const DepartmentsPage = () => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Departments</span>
-              <span style={{
+              <h1 style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', margin: 0 }}>Departments</h1>
+              <span aria-live="polite" style={{
                 fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
                 background: 'var(--primary-light)', color: 'var(--primary)',
               }}>
@@ -107,7 +124,7 @@ export const DepartmentsPage = () => {
                   padding: '3px 10px', borderRadius: 9999, fontSize: 10, fontWeight: 700,
                   cursor: 'pointer', border: 'none', display: 'flex', gap: 4, alignItems: 'center',
                   background: statusFilter === s.key ? 'var(--navy)' : 'var(--neutral-100)',
-                  color: statusFilter === s.key ? '#fff' : 'var(--muted)',
+                  color: statusFilter === s.key ? 'var(--card)' : 'var(--muted)',
                 }}
               >
                 {s.label}
@@ -124,57 +141,72 @@ export const DepartmentsPage = () => {
         </div>
 
         {/* Department rows */}
-        <div style={{ flex: 1, overflow: 'auto' }}>
+        <div ref={deptListRef} style={{ flex: 1, overflow: 'hidden' }}>
           {loading && (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>
           )}
           {!loading && filtered.length === 0 && (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No departments found</div>
           )}
-          {filtered.map(d => (
-            <div
-              key={d.deptKey}
-              onClick={() => setSelectedKey(d.deptKey)}
-              style={{
-                padding: '10px 14px',
-                borderBottom: '1px solid var(--neutral-100)',
-                cursor: 'pointer',
-                background: d.deptKey === selectedKey ? 'var(--primary-light)' : 'var(--card)',
-                borderLeft: d.deptKey === selectedKey ? '3px solid var(--primary)' : '3px solid transparent',
-                transition: 'background 0.1s',
-              }}
-              onMouseEnter={e => { if (d.deptKey !== selectedKey) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-              onMouseLeave={e => { if (d.deptKey !== selectedKey) e.currentTarget.style.background = 'var(--card)'; }}
+          {!loading && filtered.length > 0 && listHeight > 0 && (
+            <FixedSizeList
+              height={listHeight}
+              itemCount={filtered.length}
+              itemSize={54}
+              width="100%"
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2 }}>{d.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{d.clientName}</div>
-                </div>
-                <span style={{
-                  fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
-                  background: d.isActive ? 'rgba(var(--success-rgb), 0.1)' : 'var(--neutral-100)',
-                  color: d.isActive ? 'var(--success)' : 'var(--muted)',
-                }}>
-                  {d.isActive ? 'Active' : 'Inactive'}
-                </span>
-              </div>
-            </div>
-          ))}
+              {({ index, style }) => {
+                const d = filtered[index];
+                return (
+                  <div style={style} key={d.deptKey}>
+                    <div
+                      onClick={() => setSelectedKey(d.deptKey)}
+                      style={{
+                        padding: '10px 14px',
+                        borderBottom: '1px solid var(--neutral-100)',
+                        cursor: 'pointer',
+                        background: d.deptKey === selectedKey ? 'var(--primary-light)' : 'var(--card)',
+                        borderLeft: d.deptKey === selectedKey ? '3px solid var(--primary)' : '3px solid transparent',
+                        transition: 'background 0.1s',
+                        height: '100%',
+                        boxSizing: 'border-box',
+                      }}
+                      onMouseEnter={e => { if (d.deptKey !== selectedKey) e.currentTarget.style.background = 'var(--neutral-50)'; }}
+                      onMouseLeave={e => { if (d.deptKey !== selectedKey) e.currentTarget.style.background = 'var(--card)'; }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2 }}>{d.name}</div>
+                          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{d.clientName}</div>
+                        </div>
+                        <span style={{
+                          fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
+                          background: d.isActive ? 'rgba(var(--success-rgb), 0.1)' : 'var(--neutral-100)',
+                          color: d.isActive ? 'var(--success)' : 'var(--muted)',
+                        }}>
+                          {d.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              }}
+            </FixedSizeList>
+          )}
         </div>
-      </div>
+      </aside>
 
       {/* Right Panel — Detail */}
       {selectedKey && (
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <section aria-label="Department details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <DepartmentDetailPane deptKey={selectedKey} />
-        </div>
+        </section>
       )}
 
       <NewDepartmentModal
         open={newModalOpen}
         onClose={() => setNewModalOpen(false)}
-        onCreated={() => loadDepartments(search)}
+        onCreated={() => loadDepartments(search, () => false)}
       />
     </div>
   );

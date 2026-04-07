@@ -37,7 +37,8 @@
   gap: 6px;
 }
 .cockpit-header__btn {
-  height: 26px;
+  height: 36px;
+  min-width: 36px;
   padding: 0 10px;
   border: 1px solid var(--neutral-200);
   border-radius: 5px;

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 
 interface InlineEditorProps {
   value: string;
@@ -8,7 +8,7 @@ interface InlineEditorProps {
   maxLength?: number;
 }
 
-export const InlineEditor = ({
+export const InlineEditor = memo(({
   value,
   onSave,
   placeholder = 'Click to add note...',
@@ -91,6 +91,7 @@ export const InlineEditor = ({
           onBlur={handleSave}
           onKeyDown={handleKeyDown}
           disabled={saving}
+          aria-label={placeholder}
           rows={3}
           style={{ ...sharedStyle, resize: 'vertical', minHeight: 60 }}
         />
@@ -106,6 +107,7 @@ export const InlineEditor = ({
         onBlur={handleSave}
         onKeyDown={handleKeyDown}
         disabled={saving}
+        aria-label={placeholder}
         style={{ ...sharedStyle, height: 28 }}
       />
     );
@@ -115,7 +117,10 @@ export const InlineEditor = ({
 
   return (
     <span
+      role="button"
+      tabIndex={0}
       onClick={() => setEditing(true)}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditing(true); } }}
       title={hasValue ? value : placeholder}
       style={{
         display: 'inline-block',
@@ -137,4 +142,4 @@ export const InlineEditor = ({
       {hasValue ? value : placeholder}
     </span>
   );
-};
+});

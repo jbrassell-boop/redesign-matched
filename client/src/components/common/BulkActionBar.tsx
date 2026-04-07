@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { ReactNode } from 'react';
 
 interface BulkActionBarAction {
@@ -20,7 +21,7 @@ const VARIANT_STYLES: Record<string, { bg: string; border: string; color: string
   danger:  { bg: 'rgba(var(--danger-rgb), 0.1)', border: 'rgba(var(--danger-rgb), 0.4)', color: 'var(--danger)' },
 };
 
-export const BulkActionBar = ({ count, onClear, actions, children }: BulkActionBarProps) => {
+export const BulkActionBar = memo(({ count, onClear, actions, children }: BulkActionBarProps) => {
   if (count === 0) return null;
 
   return (
@@ -96,4 +97,4 @@ export const BulkActionBar = ({ count, onClear, actions, children }: BulkActionB
       </button>
     </div>
   );
-};
+});

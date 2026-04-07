@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Spin } from 'antd';
+import { Spin, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { getScopeDetail, getDepartmentRepairs } from '../../api/departments';
 import type { ScopeDetail, DepartmentRepairItem } from './types';
@@ -20,21 +20,26 @@ export const ScopeDrawer = ({ scopeKey, deptKey, open, onClose }: ScopeDrawerPro
 
   useEffect(() => {
     if (!scopeKey || !open) return;
+    let cancelled = false;
     setLoading(true);
     getScopeDetail(deptKey, scopeKey)
-      .then(setScope)
-      .catch(() => setScope(null))
-      .finally(() => setLoading(false));
+      .then(d => { if (!cancelled) setScope(d); })
+      .catch(() => { if (!cancelled) { message.error('Failed to load scope detail'); setScope(null); } })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [scopeKey, deptKey, open]);
 
   useEffect(() => {
     if (!scopeKey || !open) return;
+    let cancelled = false;
     getDepartmentRepairs(deptKey, { pageSize: 20 })
       .then(res => {
+        if (cancelled) return;
         const filtered = res.items.filter(r => r.serialNumber === scope?.serialNumber);
         setRepairs(filtered.length > 0 ? filtered : res.items.slice(0, 10));
       })
-      .catch(() => setRepairs([]));
+      .catch(() => { if (!cancelled) { message.error('Failed to load repair history'); setRepairs([]); } });
+    return () => { cancelled = true; };
   }, [scopeKey, deptKey, open, scope?.serialNumber]);
 
   const typeBadgeClass = scope?.type?.toLowerCase() === 'flexible'

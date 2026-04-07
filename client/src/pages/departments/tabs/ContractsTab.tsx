@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Spin } from 'antd';
 import { getDeptContracts } from '../../../api/departments';
 
@@ -21,14 +21,14 @@ export const ContractsTab = ({ deptKey }: ContractsTabProps) => {
   const [contracts, setContracts] = useState<DeptContract[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const load = useCallback(() => {
+  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     getDeptContracts(deptKey)
-      .then(data => setContracts(data))
-      .finally(() => setLoading(false));
+      .then(data => { if (!cancelled) setContracts(data); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [deptKey]);
-
-  useEffect(() => { load(); }, [load]);
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
 

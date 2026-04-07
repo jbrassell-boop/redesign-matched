@@ -32,24 +32,17 @@ export const LoginPage = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)',
+      background: 'linear-gradient(135deg, var(--login-gradient-dark) 0%, var(--navy) 50%, var(--login-gradient-dark) 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       position: 'relative',
       overflow: 'hidden',
     }}>
-      {/* Subtle grid pattern overlay */}
-      <div style={{
-        position: 'absolute', inset: 0, opacity: 0.03,
-        backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-      }} />
-
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, position: 'relative', zIndex: 1 }}>
         {/* Company identity above card */}
         <div style={{ textAlign: 'center' }}>
-          <img src="/logo-white.png" alt="Total Scope, Inc." style={{ height: 64, marginBottom: 12, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} />
+          <img src="/logo-white.png" alt="Total Scope, Inc." loading="lazy" style={{ height: 64, marginBottom: 12, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} />
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 600 }}>
             Medical Device Repair Management
           </p>
@@ -57,7 +50,8 @@ export const LoginPage = () => {
 
         {/* Login card */}
         <div style={{
-          width: 380,
+          maxWidth: 380,
+          width: '100%',
           background: 'var(--card)',
           borderRadius: 12,
           boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
@@ -65,17 +59,17 @@ export const LoginPage = () => {
         }}>
           {/* Card body */}
           <div style={{ padding: '32px 32px 24px' }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', marginBottom: 4 }}>
+            <h1 style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', marginBottom: 4, margin: 0 }}>
               Sign In
-            </div>
+            </h1>
             <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 24 }}>
               WinScope Operations Portal
             </div>
 
             {error && (
-              <div style={{
-                background: '#FEF2F2',
-                border: '1px solid #FECACA',
+              <div role="alert" style={{
+                background: 'var(--danger-light)',
+                border: '1px solid var(--badge-red-border)',
                 borderRadius: 6,
                 padding: '10px 14px',
                 fontSize: 12,
@@ -88,11 +82,12 @@ export const LoginPage = () => {
 
             <form onSubmit={onSubmit} autoComplete="off">
               <div style={{ marginBottom: 16 }}>
-                <label style={{
+                <label htmlFor="login-username" style={{
                   display: 'block', fontSize: 11, fontWeight: 700,
                   color: 'var(--navy)', marginBottom: 6,
                 }}>Username</label>
                 <input
+                  id="login-username"
                   type="text"
                   value={form.username}
                   onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
@@ -104,17 +99,18 @@ export const LoginPage = () => {
                     fontFamily: 'inherit', color: 'var(--text)', outline: 'none',
                     boxSizing: 'border-box', transition: 'border-color .15s, box-shadow .15s',
                   }}
-                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(46,117,182,0.1)'; }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(var(--primary-rgb), 0.1)'; }}
                   onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-dk)'; e.currentTarget.style.boxShadow = 'none'; }}
                 />
               </div>
 
               <div style={{ marginBottom: 24 }}>
-                <label style={{
+                <label htmlFor="login-password" style={{
                   display: 'block', fontSize: 11, fontWeight: 700,
                   color: 'var(--navy)', marginBottom: 6,
                 }}>Password</label>
                 <input
+                  id="login-password"
                   type="password"
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
@@ -126,7 +122,7 @@ export const LoginPage = () => {
                     fontFamily: 'inherit', color: 'var(--text)', outline: 'none',
                     boxSizing: 'border-box', transition: 'border-color .15s, box-shadow .15s',
                   }}
-                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(46,117,182,0.1)'; }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(var(--primary-rgb), 0.1)'; }}
                   onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-dk)'; e.currentTarget.style.boxShadow = 'none'; }}
                 />
               </div>
@@ -136,8 +132,8 @@ export const LoginPage = () => {
                 disabled={loading}
                 style={{
                   width: '100%', height: 44,
-                  background: loading ? 'rgba(15,23,42,0.6)' : 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
-                  color: '#fff', border: 'none',
+                  background: loading ? 'rgba(var(--navy-dark-rgb), 0.6)' : 'linear-gradient(135deg, var(--login-gradient-dark) 0%, var(--navy) 100%)',
+                  color: 'var(--card)', border: 'none',
                   borderRadius: 6,
                   fontSize: 13, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
                   fontFamily: 'inherit', letterSpacing: '0.04em',
@@ -160,7 +156,7 @@ export const LoginPage = () => {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               padding: '3px 10px', borderRadius: 4,
-              background: '#EFF6FF', border: '1px solid #BFDBFE',
+              background: 'var(--info-bg)', border: '1px solid var(--badge-blue-border)',
             }}>
               <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth={2.5}>
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />

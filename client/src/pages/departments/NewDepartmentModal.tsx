@@ -16,7 +16,7 @@ const fldDisabled: React.CSSProperties = {
   ...fld, background: 'var(--bg)', color: 'var(--muted)', cursor: 'not-allowed',
 };
 const secHead: React.CSSProperties = {
-  background: 'var(--navy)', color: '#fff', padding: '4px 10px',
+  background: 'var(--navy)', color: 'var(--card)', padding: '4px 10px',
   fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',
   borderRadius: 3, marginBottom: 6, marginTop: 12,
 };
@@ -24,7 +24,7 @@ const g2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr
 const g3: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 10px' };
 
 const F = ({ label: l, children }: { label: string; children: React.ReactNode }) => (
-  <div><div style={lbl}>{l}</div>{children}</div>
+  <label style={{ display: 'block' }}><span style={lbl}>{l}</span>{children}</label>
 );
 
 const Inp = ({ value, onChange, placeholder, disabled }: { value: string | undefined; onChange: (v: string) => void; placeholder?: string; disabled?: boolean }) => (
@@ -78,15 +78,18 @@ export const NewDepartmentModal = ({ open, onClose, onCreated, clientKey: preset
 
   useEffect(() => {
     if (!open) return;
+    let cancelled = false;
     setForm({ ...DEFAULTS, clientKey: presetClientKey ?? null });
     setNewScope(false);
     Promise.all([getClientsSimple(), getCarriers(), getScopeTypes()])
       .then(([c, car, st]) => {
+        if (cancelled) return;
         setClients(c);
         setCarriers(car);
         setScopeTypes(st);
       })
-      .catch(() => message.error('Failed to load form data'));
+      .catch(() => { if (!cancelled) message.error('Failed to load form data'); });
+    return () => { cancelled = true; };
   }, [open, presetClientKey]);
 
   const handleSubmit = async () => {
@@ -263,7 +266,7 @@ export const NewDepartmentModal = ({ open, onClose, onCreated, clientKey: preset
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          style={{ height: 30, padding: '0 20px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ height: 30, padding: '0 20px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: 'var(--card)', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           {submitting ? 'Creating…' : 'Create Department'}
         </button>

@@ -41,6 +41,6 @@
   width: 100px;
   outline: none;
 }
-.reference-strip__po-input:focus {
+.reference-strip__po-input:focus-visible {
   border-color: var(--primary);
 }

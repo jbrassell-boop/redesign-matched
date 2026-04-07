@@ -99,8 +99,10 @@ export const OutsourceValidationPage = () => {
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     setStatsLoading(true);
-    getOutsourceStats().then(setStats).finally(() => setStatsLoading(false));
+    getOutsourceStats().then(d => { if (!cancelled) setStats(d); }).finally(() => { if (!cancelled) setStatsLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   const loadData = useCallback(async (filters: OutsourceFilters) => {
@@ -172,7 +174,7 @@ export const OutsourceValidationPage = () => {
     top: 0,
     zIndex: 2,
     whiteSpace: 'nowrap',
-    borderRight: '1px solid rgba(180,200,220,0.3)',
+    borderRight: '1px solid rgba(var(--border-light-rgb), 0.3)',
     borderBottom: '1px solid var(--neutral-200)',
     userSelect: 'none',
   };
@@ -225,13 +227,16 @@ export const OutsourceValidationPage = () => {
 
         <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>From</span>
         <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1); }}
+          aria-label="Filter from date"
           style={{ height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 120 }} />
         <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>To</span>
         <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1); }}
+          aria-label="Filter to date"
           style={{ height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 120 }} />
 
         <input type="text" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search WO#, serial, client, vendor..."
+          aria-label="Search outsource validations"
           style={{
             marginLeft: 'auto', height: 30, width: 220, border: '1.5px solid var(--border-dk)',
             borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
@@ -311,20 +316,20 @@ export const OutsourceValidationPage = () => {
         <span style={{ fontWeight: 500 }}>{totalCount.toLocaleString()} records</span>
         <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
           <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
-            style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: page <= 1 ? 'default' : 'pointer', opacity: page <= 1 ? 0.4 : 1, fontFamily: 'inherit' }}>
+            style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: page <= 1 ? 'default' : 'pointer', opacity: page <= 1 ? 0.4 : 1, fontFamily: 'inherit' }}>
             {'\u2039'}
           </button>
           {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
             const pg = i + 1;
             return (
               <button key={pg} onClick={() => setPage(pg)}
-                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: page === pg ? 'var(--navy)' : 'var(--card)', color: page === pg ? 'var(--card)' : 'var(--label)', fontSize: 11, fontWeight: page === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: page === pg ? 'var(--navy)' : 'var(--card)', color: page === pg ? 'var(--card)' : 'var(--label)', fontSize: 11, fontWeight: page === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {pg}
               </button>
             );
           })}
           <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}
-            style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: page >= totalPages ? 'default' : 'pointer', opacity: page >= totalPages ? 0.4 : 1, fontFamily: 'inherit' }}>
+            style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: page >= totalPages ? 'default' : 'pointer', opacity: page >= totalPages ? 0.4 : 1, fontFamily: 'inherit' }}>
             {'\u203A'}
           </button>
         </div>

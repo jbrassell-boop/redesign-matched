@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Spin, message } from 'antd';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import { Spin, message, Popconfirm } from 'antd';
 import { useParams } from 'react-router-dom';
 import type { RepairDetail, RepairFull, RepairLineItem } from './types';
 import { DiInspectionForm } from './forms/DiInspectionForm';
@@ -27,8 +27,6 @@ import { FinancialsTab } from './tabs/FinancialsTab';
 import { ScopeHistoryTab } from './tabs/ScopeHistoryTab';
 import { StatusHistoryTab } from './tabs/StatusHistoryTab';
 import { NotesTab } from './tabs/NotesTab';
-import { ImagesTab } from './tabs/ImagesTab';
-import { DocumentsTab } from './tabs/DocumentsTab';
 import { InlineEditor } from '../../components/common/InlineEditor';
 import {
   updateRepairNotes, getRepairStatuses, updateRepairStatus,
@@ -78,12 +76,75 @@ const BASE_TABS: TabDef[] = [
   { key: 'statuslog',    label: 'Status Log' },
 ];
 
+// ── Extracted static styles (performance: avoid re-creating objects each render) ──
+const repairCockpitContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' };
+const repairQuickActionBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 20px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const repairLegacyQuickActionBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderBottom: '1px solid var(--neutral-200)', background: 'var(--neutral-50)' };
+const repairDropdownMenuStyle: React.CSSProperties = {
+  position: 'absolute', top: '100%', left: 0, marginTop: 4,
+  background: 'var(--card)', border: '1px solid var(--neutral-200)',
+  borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+  minWidth: 220, maxHeight: 300, overflowY: 'auto', zIndex: 100,
+};
+const repairFormsDropdownStyle: React.CSSProperties = {
+  position: 'absolute', top: '100%', left: 0, marginTop: 4,
+  background: 'var(--card)', border: '1px solid var(--neutral-200)',
+  borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+  minWidth: 240, zIndex: 100,
+};
+const repairFormsSectionHeaderStyle: React.CSSProperties = { padding: '6px 14px 4px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' };
+const repairFormsSectionHeaderBorderTopStyle: React.CSSProperties = { ...repairFormsSectionHeaderStyle, borderTop: '1px solid var(--neutral-200)' };
+const repairMenuItemStyle: React.CSSProperties = { padding: '9px 14px', cursor: 'pointer', fontSize: 12, color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)' };
+const repairMenuItemStyle12: React.CSSProperties = { ...repairMenuItemStyle, fontSize: 12 };
+const repairDropdownBtnStyle: React.CSSProperties = {
+  height: 30, padding: '0 14px', border: '1px solid var(--neutral-200)',
+  borderRadius: 5, background: 'var(--card)', color: 'var(--muted)',
+  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+  display: 'flex', alignItems: 'center', gap: 5,
+};
+const repairLegacyDropdownBtnStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', border: '1px solid var(--neutral-200)',
+  borderRadius: 5, background: 'var(--card)', color: 'var(--muted)',
+  fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+  display: 'flex', alignItems: 'center', gap: 5,
+};
+const repairFieldLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 };
+const repairCockpitTabBarStyle: React.CSSProperties = { background: 'var(--card)', borderBottom: '2px solid var(--border)', display: 'flex', padding: '0 16px', flexShrink: 0, overflowX: 'auto', gap: 2 };
+
+const COCKPIT_TABS = [
+  { key: 'scope-in', label: 'Scope In', group: 'intake' },
+  { key: 'details',  label: 'Details',  group: 'intake' },
+  { key: 'outgoing', label: 'Outgoing', group: 'process' },
+  { key: 'expense',  label: 'Expense',  group: 'process' },
+  { key: 'inspections', label: 'Inspections', group: 'process' },
+  { key: 'financials', label: 'Financials', group: 'review' },
+  { key: 'scopehistory', label: 'History', group: 'review' },
+  { key: 'statuslog', label: 'Status Log', group: 'review' },
+  { key: 'comments',  label: 'Notes',      group: 'review' },
+] as const;
+
+const INTERNAL_FORMS = [
+  { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)', title: 'Camera endoscope disassembly & inspection form' },
+  { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)', title: 'Flexible endoscope disassembly & inspection form' },
+  { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)', title: 'Flexible endoscope diagnostic disassembly & inspection form' },
+  { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)', title: 'Rigid endoscope disassembly & inspection form' },
+  { key: 'amendment'      as const, label: 'Amendment (OM07-9)', title: 'Repair order amendment form' },
+  { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)', title: 'Customer update communication slip' },
+];
+
+const CUSTOMER_FORMS = [
+  { key: 'requisition'          as const, label: 'Requisition (OM07-2)', title: 'Customer repair requisition form' },
+  { key: 'final-inspection'     as const, label: 'Final Inspection (OM10-2)', title: 'Final quality inspection report' },
+  { key: 'return-verification'  as const, label: 'Return Verification (OM14-1)', title: 'Return shipment verification form' },
+  { key: 'loaner'               as const, label: 'Loaner (OM17-1)', title: 'Loaner scope request and tracking form' },
+];
+
 export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged, cockpitMode, repairKey: repairKeyProp }: RepairDetailPaneProps) => {
   const params = useParams<{ repairKey: string }>();
   const isCockpit = cockpitMode || !!params.repairKey;
   const resolvedKey = repairKeyProp ?? (params.repairKey ? parseInt(params.repairKey, 10) : null);
 
-  const [activeTab, setActiveTab] = useState<'scope-in' | 'details' | 'outgoing' | 'expense' | 'workflow' | 'inspections' | 'financials' | 'scopehistory' | 'statuslog' | 'comments' | 'images' | 'documents'>('details');
+  const [activeTab, setActiveTab] = useState<'scope-in' | 'details' | 'outgoing' | 'expense' | 'workflow' | 'inspections' | 'financials' | 'scopehistory' | 'statuslog' | 'comments'>('details');
   const [lineItems, setLineItems] = useState<RepairLineItem[]>([]);
   const [statuses, setStatuses] = useState<RepairStatusOption[]>([]);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
@@ -95,6 +156,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   const [activeForm, setActiveForm] = useState<'di-inspection' | 'di-flexible' | 'di-flex-diagnostic' | 'di-rigid' | 'requisition' | 'final-inspection' | 'return-verification' | 'amendment' | 'update-slip' | 'loaner' | null>(null);
 
   // Cockpit-specific state
+  const [headerExpanded, setHeaderExpanded] = useState(false);
   const [fullRepair, setFullRepair] = useState<RepairFull | null>(null);
   const [flags, setFlags] = useState<ClientFlag[]>([]);
   const [cockpitLoading, setCockpitLoading] = useState(false);
@@ -102,25 +164,28 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   // Load cockpit data
   useEffect(() => {
     if (!isCockpit || !resolvedKey) return;
+    let cancelled = false;
     setCockpitLoading(true);
     Promise.all([
       getRepairFull(resolvedKey),
       getRepairStatuses(),
     ]).then(([repair, sts]) => {
+      if (cancelled) return;
       setFullRepair(repair);
       setStatuses(sts);
       // Load secondary data
       const promises: Promise<void>[] = [];
       if (repair.clientKey) {
         promises.push(
-          getClientFlags(repair.clientKey).then(setFlags).catch(() => { message.error('Failed to load client flags'); }),
+          getClientFlags(repair.clientKey).then(f => { if (!cancelled) setFlags(f); }).catch(() => { if (!cancelled) message.error('Failed to load client flags'); }),
         );
       }
       promises.push(
-        getRepairLineItems(resolvedKey).then(setLineItems).catch(() => { message.error('Failed to load repair line items'); }),
+        getRepairLineItems(resolvedKey).then(li => { if (!cancelled) setLineItems(li); }).catch(() => { if (!cancelled) message.error('Failed to load repair line items'); }),
       );
       return Promise.all(promises);
-    }).catch(() => { message.error('Failed to load repair data'); }).finally(() => setCockpitLoading(false));
+    }).catch(() => { if (!cancelled) message.error('Failed to load repair data'); }).finally(() => { if (!cancelled) setCockpitLoading(false); });
+    return () => { cancelled = true; };
   }, [isCockpit, resolvedKey]);
 
   const rk = isCockpit ? (fullRepair?.repairKey ?? 0) : (detail?.repairKey ?? 0);
@@ -153,7 +218,9 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   // Load statuses once (non-cockpit mode)
   useEffect(() => {
     if (!isCockpit) {
-      getRepairStatuses().then(setStatuses).catch(() => { message.error('Failed to load repair statuses'); });
+      let cancelled = false;
+      getRepairStatuses().then(s => { if (!cancelled) setStatuses(s); }).catch(() => { if (!cancelled) message.error('Failed to load repair statuses'); });
+      return () => { cancelled = true; };
     }
   }, [isCockpit]);
 
@@ -243,6 +310,13 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
     }
   }, [rk, statuses, onStatusChanged, isCockpit, resolvedKey]);
 
+  const confirmAndSetStatus = useCallback((statusId: number) => {
+    const name = statuses.find(s => s.statusId === statusId)?.statusName ?? '';
+    if (window.confirm(`Change status to "${name}"?`)) {
+      handleSetStatus(statusId);
+    }
+  }, [statuses, handleSetStatus]);
+
   const handleNoteSave = useCallback(async (notes: string) => {
     try {
       await updateRepairNotes(rk, notes);
@@ -268,66 +342,81 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Repair not found</div>;
     }
 
-    const cockpitTabs = [
-      { key: 'scope-in', label: 'Scope In', num: '1' },
-      { key: 'details',  label: 'Details',  num: '2' },
-      { key: 'outgoing', label: 'Outgoing', num: '3' },
-      { key: 'expense',  label: 'Expense',  num: '4' },
-      { key: 'inspections', label: 'Inspections', num: '5' },
-      { key: 'financials', label: 'Financials', num: '6' },
-      { key: 'scopehistory', label: 'History', num: '7' },
-      { key: 'statuslog', label: 'Status Log', num: '8' },
-      { key: 'comments',  label: 'Notes',      num: '9' },
-      { key: 'images',    label: 'Images',     num: '10' },
-      { key: 'documents', label: 'Documents',  num: '11' },
-    ] as const;
-
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
-        <CommandStrip repair={fullRepair} />
+      <div style={repairCockpitContainerStyle}>
         <WorkflowPipeline currentStatus={fullRepair.status} />
-        <ScopeGlance repair={fullRepair} flags={flags} />
+
+        {/* Condensed header: summary line + collapsible details */}
+        <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--border)', padding: '5px 14px', flexShrink: 0 }}>
+          <h1 style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
+            Repair {fullRepair.wo}
+          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--navy)', fontWeight: 600 }}>
+            <span>{fullRepair.client}</span>
+            <span style={{ color: 'var(--muted)' }}>&mdash;</span>
+            <span>{fullRepair.dept}</span>
+            <span style={{ color: 'var(--neutral-200)' }}>&middot;</span>
+            <span>WO# {fullRepair.wo}</span>
+            <span style={{ color: 'var(--neutral-200)' }}>&middot;</span>
+            <span style={{ fontWeight: 400 }}>{fullRepair.scopeType}</span>
+            <span style={{ color: 'var(--neutral-200)' }}>&middot;</span>
+            <span style={{ fontWeight: 400 }}>{fullRepair.serial || '\u2014'}</span>
+            <span style={{ color: 'var(--neutral-200)' }}>&middot;</span>
+            <span>TAT: <span style={{ fontWeight: 700, color: fullRepair.daysIn > 14 ? 'var(--danger)' : fullRepair.daysIn > 7 ? 'var(--amber)' : 'var(--muted)' }}>{fullRepair.daysIn}d</span></span>
+            <button
+              onClick={() => setHeaderExpanded(!headerExpanded)}
+              style={{
+                marginLeft: 'auto', border: 'none', background: 'none', cursor: 'pointer',
+                fontSize: 10, fontWeight: 600, color: 'var(--primary)', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 3, padding: '2px 6px',
+              }}
+            >
+              {headerExpanded ? '\u25B4 Less' : '\u25BE More'}
+            </button>
+          </div>
+          {headerExpanded && (
+            <div style={{ marginTop: 6 }}>
+              <CommandStrip repair={fullRepair} />
+              <ScopeGlance repair={fullRepair} flags={flags} />
+            </div>
+          )}
+        </div>
 
         {/* Quick action bar */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px',
-          background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0,
-        }}>
+        <div style={repairQuickActionBarStyle}>
           {hasNext && (
-            <button onClick={handleAdvance} style={{
-              height: 26, padding: '0 12px', border: 'none', borderRadius: 4,
-              background: 'var(--primary)', color: '#fff',
-              fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 11, height: 11 }}>
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-              {nextStatusName ?? 'Next Stage'}
-            </button>
+            <Popconfirm
+              title="Advance workflow?"
+              description={`Move this repair to "${nextStatusName}"?`}
+              onConfirm={handleAdvance}
+              okText="Advance"
+              cancelText="Cancel"
+            >
+              <button style={{
+                height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
+                background: 'var(--primary)', color: 'var(--card)',
+                fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 5,
+              }}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 11, height: 11 }}>
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+                {nextStatusName ?? 'Next Stage'}
+              </button>
+            </Popconfirm>
           )}
           <div ref={statusMenuRef} style={{ position: 'relative' }}>
-            <button onClick={() => setStatusMenuOpen(!statusMenuOpen)} style={{
-              height: 26, padding: '0 10px', border: '1px solid var(--neutral-200)',
-              borderRadius: 4, background: 'var(--card)', color: 'var(--muted)',
-              fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 3,
-            }}>
+            <button onClick={() => setStatusMenuOpen(!statusMenuOpen)} style={repairDropdownBtnStyle}>
               Change Status
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
             {statusMenuOpen && (
-              <div role="listbox" style={{
-                position: 'absolute', top: '100%', left: 0, marginTop: 4,
-                background: 'var(--card)', border: '1px solid var(--neutral-200)',
-                borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                minWidth: 220, maxHeight: 300, overflowY: 'auto', zIndex: 100,
-              }}>
+              <div role="listbox" style={repairDropdownMenuStyle}>
                 {statuses.map(s => (
-                  <div key={s.statusId} onClick={() => handleSetStatus(s.statusId)} role="option" aria-selected={s.statusId === currentStatusId} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSetStatus(s.statusId); } }} style={{
-                    padding: '6px 12px', cursor: 'pointer', fontSize: 11,
+                  <div key={s.statusId} onClick={() => confirmAndSetStatus(s.statusId)} role="option" aria-selected={s.statusId === currentStatusId} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); confirmAndSetStatus(s.statusId); } }} style={{
+                    padding: '8px 14px', cursor: 'pointer', fontSize: 12,
                     color: s.statusId === currentStatusId ? 'var(--primary)' : 'var(--text)',
                     fontWeight: s.statusId === currentStatusId ? 700 : 400,
                     background: s.statusId === currentStatusId ? 'var(--primary-light)' : undefined,
@@ -342,52 +431,24 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           </div>
           {/* Forms dropdown — cockpit */}
           <div ref={formsMenuRef} style={{ position: 'relative' }}>
-            <button onClick={() => setFormsMenuOpen(!formsMenuOpen)} style={{
-              height: 26, padding: '0 10px', border: '1px solid var(--neutral-200)',
-              borderRadius: 4, background: 'var(--card)', color: 'var(--muted)',
-              fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 3,
-            }}>
+            <button onClick={() => setFormsMenuOpen(!formsMenuOpen)} style={repairDropdownBtnStyle}>
               Forms
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
             {formsMenuOpen && (
-              <div role="menu" style={{
-                position: 'absolute', top: '100%', left: 0, marginTop: 4,
-                background: 'var(--card)', border: '1px solid var(--neutral-200)',
-                borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                minWidth: 240, zIndex: 100,
-              }}>
-                <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' }}>Internal</div>
-                {[
-                  { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)' },
-                  { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)' },
-                  { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)' },
-                  { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)' },
-                  { key: 'amendment'      as const, label: 'Amendment (OM07-9)' },
-                  { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)' },
-                ].map(item => (
-                  <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={{
-                    padding: '7px 12px', cursor: 'pointer', fontSize: 11,
-                    color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
-                  }}
+              <div role="menu" style={repairFormsDropdownStyle}>
+                <div style={repairFormsSectionHeaderStyle}>Internal</div>
+                {INTERNAL_FORMS.map(item => (
+                  <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle}
                   onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = ''; }}
                   >{item.label}</div>
                 ))}
-                <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', borderTop: '1px solid var(--neutral-200)' }}>Customer-Facing</div>
-                {[
-                  { key: 'requisition'          as const, label: 'Requisition (OM07-2)' },
-                  { key: 'final-inspection'     as const, label: 'Final Inspection (OM10-2)' },
-                  { key: 'return-verification'  as const, label: 'Return Verification (OM14-1)' },
-                  { key: 'loaner'               as const, label: 'Loaner (OM17-1)' },
-                ].map(item => (
-                  <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={{
-                    padding: '7px 12px', cursor: 'pointer', fontSize: 11,
-                    color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
-                  }}
+                <div style={repairFormsSectionHeaderBorderTopStyle}>Customer-Facing</div>
+                {CUSTOMER_FORMS.map(item => (
+                  <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle}
                   onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = ''; }}
                   >{item.label}</div>
@@ -395,10 +456,6 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
               </div>
             )}
           </div>
-          <div style={{ flex: 1 }} />
-          <span style={{ fontSize: 10, color: 'var(--muted)' }}>
-            {fullRepair.status} · TAT: <span style={{ fontWeight: 700, color: fullRepair.daysIn > 14 ? 'var(--danger)' : fullRepair.daysIn > 7 ? 'var(--amber)' : 'var(--muted)' }}>{fullRepair.daysIn}d</span>
-          </span>
         </div>
 
         {/* Form overlays — cockpit */}
@@ -414,33 +471,31 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         {activeForm === 'loaner'             && <LoanerForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
 
         {/* Tab bar */}
-        <div style={{
-          background: 'var(--card)', borderBottom: '2px solid var(--border)',
-          display: 'flex', padding: '0 8px', flexShrink: 0, overflowX: 'auto',
-        }}>
-          {cockpitTabs.map(t => (
-            <div
-              key={t.key}
-              onClick={() => setActiveTab(t.key)}
-              style={{
-                padding: '7px 12px',
-                fontSize: 11, fontWeight: 600,
-                color: activeTab === t.key ? 'var(--primary)' : 'var(--muted)',
-                borderBottom: activeTab === t.key ? '2px solid var(--primary)' : '2px solid transparent',
-                marginBottom: -2,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                display: 'flex', alignItems: 'center', gap: 4,
-              }}
-            >
-              <span style={{
-                fontSize: 9, fontWeight: 700, width: 16, height: 16, borderRadius: '50%',
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                background: activeTab === t.key ? 'var(--primary)' : 'var(--neutral-200)',
-                color: activeTab === t.key ? '#fff' : 'var(--muted)',
-              }}>{t.num}</span>
-              {t.label}
-            </div>
+        <div style={repairCockpitTabBarStyle}>
+          {COCKPIT_TABS.map((t, i) => (
+            <React.Fragment key={t.key}>
+              {i > 0 && COCKPIT_TABS[i - 1].group !== t.group && (
+                <div style={{ width: 1, height: 20, background: 'var(--neutral-200)', margin: '0 8px', alignSelf: 'center' }} />
+              )}
+              <div
+                role="tab"
+                tabIndex={0}
+                aria-selected={activeTab === t.key}
+                onClick={() => setActiveTab(t.key)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab(t.key); } }}
+                style={{
+                  padding: '10px 16px',
+                  fontSize: 13, fontWeight: 600,
+                  color: activeTab === t.key ? 'var(--primary)' : 'var(--muted)',
+                  borderBottom: activeTab === t.key ? '2px solid var(--primary)' : '2px solid transparent',
+                  marginBottom: -2,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {t.label}
+              </div>
+            </React.Fragment>
           ))}
         </div>
 
@@ -455,8 +510,6 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           {activeTab === 'scopehistory' && <ScopeHistoryTab repairKey={fullRepair.repairKey} currentRepairKey={fullRepair.repairKey} />}
           {activeTab === 'statuslog'   && <StatusHistoryTab repairKey={fullRepair.repairKey} />}
           {activeTab === 'comments'    && <NotesTab repairKey={fullRepair.repairKey} />}
-          {activeTab === 'images'      && <ImagesTab repairKey={fullRepair.repairKey} />}
-          {activeTab === 'documents'   && <DocumentsTab repairKey={fullRepair.repairKey} />}
         </div>
       </div>
     );
@@ -487,13 +540,13 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
 
       {detail.complaint && (
         <div style={{ marginTop: 4 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 }}>Complaint / Description</div>
+          <div style={repairFieldLabelStyle}>Complaint / Description</div>
           <div style={{ fontSize: 13, color: 'var(--text)', padding: '8px 10px', background: 'var(--neutral-50)', border: '1px solid var(--neutral-200)', borderRadius: 4, whiteSpace: 'pre-wrap' }}>{detail.complaint}</div>
         </div>
       )}
 
       <div style={{ marginTop: 8 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 }}>Notes</div>
+        <div style={repairFieldLabelStyle}>Notes</div>
         <InlineEditor
           value={detail.notes ?? ''}
           onSave={handleNoteSave}
@@ -507,6 +560,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <DetailHeader
+        headingLevel="h2"
         title={detail.wo}
         badges={
           <>
@@ -521,37 +575,36 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       <AlertBanner alerts={alerts} onDismiss={dismissAlert} />
 
       {/* Quick Actions Bar */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
-        borderBottom: '1px solid var(--neutral-200)', background: 'var(--neutral-50)',
-      }}>
+      <div style={repairLegacyQuickActionBarStyle}>
         {hasNext && (
-          <button
-            onClick={handleAdvance}
-            style={{
-              height: 28, padding: '0 12px', border: 'none', borderRadius: 5,
-              background: 'var(--primary)', color: 'var(--card)',
-              fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}
+          <Popconfirm
+            title="Advance workflow?"
+            description={`Move this repair to "${nextStatusName}"?`}
+            onConfirm={handleAdvance}
+            okText="Advance"
+            cancelText="Cancel"
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}>
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-            {nextStatusName ?? 'Next Stage'}
-          </button>
+            <button
+              style={{
+                height: 28, padding: '0 12px', border: 'none', borderRadius: 5,
+                background: 'var(--primary)', color: 'var(--card)',
+                fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+                display: 'flex', alignItems: 'center', gap: 4,
+              }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}>
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+              {nextStatusName ?? 'Next Stage'}
+            </button>
+          </Popconfirm>
         )}
 
         {/* Status dropdown */}
         <div ref={statusMenuRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setStatusMenuOpen(!statusMenuOpen)}
-            style={{
-              height: 28, padding: '0 10px', border: '1px solid var(--neutral-200)',
-              borderRadius: 5, background: 'var(--card)', color: 'var(--muted)',
-              fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}
+            style={repairLegacyDropdownBtnStyle}
           >
             Change Status
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -559,16 +612,11 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             </svg>
           </button>
           {statusMenuOpen && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, marginTop: 4,
-              background: 'var(--card)', border: '1px solid var(--neutral-200)',
-              borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-              minWidth: 200, maxHeight: 300, overflowY: 'auto', zIndex: 100,
-            }}>
+            <div style={{ ...repairDropdownMenuStyle, minWidth: 200 }}>
               {statuses.map(s => (
                 <div
                   key={s.statusId}
-                  onClick={() => handleSetStatus(s.statusId)}
+                  onClick={() => confirmAndSetStatus(s.statusId)}
                   style={{
                     padding: '6px 12px', cursor: 'pointer', fontSize: 12,
                     color: s.statusId === detail.statusId ? 'var(--primary)' : 'var(--text)',
@@ -590,12 +638,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         <div ref={formsMenuRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setFormsMenuOpen(!formsMenuOpen)}
-            style={{
-              height: 28, padding: '0 10px', border: '1px solid var(--neutral-200)',
-              borderRadius: 5, background: 'var(--card)', color: 'var(--muted)',
-              fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}
+            style={repairLegacyDropdownBtnStyle}
           >
             Forms
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -603,40 +646,17 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             </svg>
           </button>
           {formsMenuOpen && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, marginTop: 4,
-              background: 'var(--card)', border: '1px solid var(--neutral-200)',
-              borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-              minWidth: 240, zIndex: 100,
-            }}>
-              <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' }}>Internal</div>
-              {[
-                { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)' },
-                { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)' },
-                { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)' },
-                { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)' },
-                { key: 'amendment'      as const, label: 'Amendment (OM07-9)' },
-                { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)' },
-              ].map(item => (
-                <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={{
-                  padding: '7px 12px', cursor: 'pointer', fontSize: 12,
-                  color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
-                }}
+            <div style={repairFormsDropdownStyle}>
+              <div style={repairFormsSectionHeaderStyle}>Internal</div>
+              {INTERNAL_FORMS.map(item => (
+                <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle12}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = ''; }}
                 >{item.label}</div>
               ))}
-              <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', borderTop: '1px solid var(--neutral-200)' }}>Customer-Facing</div>
-              {[
-                { key: 'requisition'          as const, label: 'Requisition (OM07-2)' },
-                { key: 'final-inspection'     as const, label: 'Final Inspection (OM10-2)' },
-                { key: 'return-verification'  as const, label: 'Return Verification (OM14-1)' },
-                { key: 'loaner'               as const, label: 'Loaner (OM17-1)' },
-              ].map(item => (
-                <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={{
-                  padding: '7px 12px', cursor: 'pointer', fontSize: 12,
-                  color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
-                }}
+              <div style={repairFormsSectionHeaderBorderTopStyle}>Customer-Facing</div>
+              {CUSTOMER_FORMS.map(item => (
+                <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle12}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = ''; }}
                 >{item.label}</div>
@@ -646,7 +666,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         </div>
       </div>
 
-      <TabBar tabs={[...tabs, { key: 'comments', label: 'Comments' }, { key: 'images', label: 'Images' }, { key: 'documents', label: 'Documents' }]} activeKey={activeTab} onChange={k => setActiveTab(k as Parameters<typeof setActiveTab>[0])} />
+      <TabBar tabs={[...tabs, { key: 'comments', label: 'Comments' }]} activeKey={activeTab} onChange={k => setActiveTab(k as Parameters<typeof setActiveTab>[0])} />
       {activeTab === 'details'      && detailsContent}
       {activeTab === 'workflow'     && <WorkflowTab repairKey={detail.repairKey} />}
       {activeTab === 'inspections'  && <InspectionsTab repairKey={detail.repairKey} />}
@@ -654,8 +674,6 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       {activeTab === 'scopehistory' && <ScopeHistoryTab repairKey={detail.repairKey} currentRepairKey={detail.repairKey} />}
       {activeTab === 'statuslog'    && <StatusHistoryTab repairKey={detail.repairKey} />}
       {activeTab === 'comments'     && <NotesTab repairKey={detail.repairKey} />}
-      {activeTab === 'images'       && <ImagesTab repairKey={detail.repairKey} />}
-      {activeTab === 'documents'    && <DocumentsTab repairKey={detail.repairKey} />}
 
       {/* Form overlays — legacy pane. Cast detail to RepairFull shape (shared core fields). */}
       {activeForm === 'di-inspection'      && <DiInspectionForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}

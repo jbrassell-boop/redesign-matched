@@ -15,7 +15,7 @@ export const DeptToolbar = ({ dept, autosaveStatus, onToggleActive }: DeptToolba
 
   return (
     <div className="dept-toolbar">
-      <span className="dept-toolbar__name">{dept.name}</span>
+      <h2 className="dept-toolbar__name">{dept.name}</h2>
       <span
         className="dept-toolbar__client"
         onClick={() => navigate(`/clients?id=${dept.clientKey}`)}

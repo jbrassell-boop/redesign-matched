@@ -1,9 +1,55 @@
-import { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { message } from 'antd';
 import type { RepairLineItem, RepairCatalogItem } from '../types';
 import { addRepairLineItem, deleteRepairLineItem, patchLineItemCauseComments, bulkApproveLineItems } from '../../../api/repairs';
 import { RepairItemAutoComplete } from './RepairItemAutoComplete';
 import { RepairItemPicker } from './RepairItemPicker';
+
+// ── Extracted static styles ──
+const ritContainerStyle: React.CSSProperties = { border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', display: 'flex', flexDirection: 'column' };
+const ritSectionHeadStyle: React.CSSProperties = {
+  background: 'var(--neutral-50)',
+  borderBottom: '1px solid var(--border)',
+  padding: '7px 14px',
+  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+};
+const ritTitleStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--navy)' };
+const ritAddBtnStyle: React.CSSProperties = {
+  background: 'var(--card)', color: 'var(--navy)',
+  border: '1px solid var(--border)', borderRadius: 3,
+  padding: '2px 10px', fontSize: 11, fontWeight: 500, cursor: 'pointer',
+};
+const ritToolBtnStyle: React.CSSProperties = {
+  background: 'var(--card)', color: 'var(--navy)',
+  border: '1px solid var(--border)', borderRadius: 3,
+  padding: '2px 8px', fontSize: 11, fontWeight: 500, cursor: 'pointer',
+};
+const ritTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 12 };
+const ritCauseRowStyle: React.CSSProperties = { display: 'flex', gap: 3, justifyContent: 'center' };
+const ritFixRowStyle: React.CSSProperties = { display: 'flex', gap: 2, justifyContent: 'center' };
+const ritAmountInputStyle: React.CSSProperties = {
+  width: 72, height: 36, textAlign: 'right',
+  border: '1px solid var(--border)', borderRadius: 3,
+  fontSize: 11, padding: '0 4px', background: 'var(--card)',
+  boxSizing: 'border-box' as const,
+};
+const ritCommentInputStyle: React.CSSProperties = {
+  width: '100%', height: 36,
+  border: '1px solid var(--border)', borderRadius: 3,
+  fontSize: 11, padding: '0 4px', background: 'var(--card)',
+  boxSizing: 'border-box' as const,
+};
+const ritFooterStyle: React.CSSProperties = {
+  background: 'var(--neutral-50)',
+  borderTop: '1px solid var(--border)',
+  padding: '7px 14px',
+  display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 24,
+};
+const ritDeleteBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 14, padding: 0 };
+const ritApprovedStyle: React.CSSProperties = { color: 'var(--success)', fontWeight: 700, fontSize: 11 };
+const ritPendingStyle: React.CSSProperties = { color: 'var(--amber)', fontSize: 11 };
+const ritWarrantyListStyle: React.CSSProperties = { fontSize: 9, color: 'var(--muted)', fontWeight: 400 };
+const ritOverflowStyle: React.CSSProperties = { overflowX: 'auto', flex: 1 };
 
 interface RepairItemsTableProps {
   repairKey: number;
@@ -28,14 +74,19 @@ const EMPTY_ADD: AddState = {
   selectedItem: null, fixType: 'C', cause: '', amount: 0, comment: '',
 };
 
+const CAUSE_TITLES: Record<string, string> = {
+  UA: 'User Abuse',
+  NW: 'Normal Wear',
+};
+
 const causeBadge = (cause: string) => {
   const styles: Record<string, { bg: string; color: string; border: string }> = {
-    UA: { bg: '#FEF2F2', color: 'var(--danger)', border: '#FECACA' },
-    NW: { bg: '#FFF7ED', color: '#C2410C', border: '#FED7AA' },
+    UA: { bg: 'var(--danger-light)', color: 'var(--danger)', border: 'var(--badge-red-border)' },
+    NW: { bg: 'var(--badge-orange-bg-lt)', color: 'var(--badge-orange-text-dk)', border: 'var(--badge-orange-border-lt)' },
   };
   const s = styles[cause?.toUpperCase()] ?? { bg: 'var(--neutral-50)', color: 'var(--muted)', border: 'var(--border)' };
   return (
-    <span style={{
+    <span title={CAUSE_TITLES[cause?.toUpperCase()] ?? undefined} style={{
       display: 'inline-block', padding: '1px 6px', borderRadius: 10,
       fontSize: 10, fontWeight: 700,
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
@@ -45,17 +96,25 @@ const causeBadge = (cause: string) => {
   );
 };
 
+const FIX_TITLES: Record<string, string> = {
+  R: 'Repair',
+  W: 'Warranty',
+  N: 'New',
+  C: 'Consumable',
+  A: 'Accessory',
+};
+
 const fixBadge = (fix: string) => {
   const styles: Record<string, { bg: string; color: string; border: string }> = {
     W:  { bg: 'var(--success-light)', color: 'var(--success)', border: 'var(--success-border)' },
-    N:  { bg: '#FEF2F2', color: 'var(--danger)',  border: '#FECACA' },
-    R:  { bg: '#FFF7ED', color: '#C2410C',        border: '#FED7AA' },
-    C:  { bg: '#EFF6FF', color: 'var(--primary)', border: '#BFDBFE' },
-    A:  { bg: 'var(--purple-light)', color: 'var(--purple)',        border: '#DDD6FE' },
+    N:  { bg: 'var(--danger-light)', color: 'var(--danger)',  border: 'var(--badge-red-border)' },
+    R:  { bg: 'var(--badge-orange-bg-lt)', color: 'var(--badge-orange-text-dk)',        border: 'var(--badge-orange-border-lt)' },
+    C:  { bg: 'var(--info-bg)', color: 'var(--primary)', border: 'var(--badge-blue-border)' },
+    A:  { bg: 'var(--purple-light)', color: 'var(--purple)',        border: 'var(--badge-purple-border-lt)' },
   };
   const s = styles[fix?.toUpperCase()] ?? { bg: 'var(--neutral-50)', color: 'var(--muted)', border: 'var(--border)' };
   return (
-    <span style={{
+    <span title={FIX_TITLES[fix?.toUpperCase()] ?? undefined} style={{
       display: 'inline-block', padding: '1px 6px', borderRadius: 10,
       fontSize: 10, fontWeight: 700,
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
@@ -78,10 +137,25 @@ export const RepairItemsTable = ({
   const [pickerOpen, setPickerOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const warrantyTotal = items
+  // Undo-delete state: track items pending deletion
+  const [pendingDeleteKeys, setPendingDeleteKeys] = useState<Set<number>>(new Set());
+  const pendingDeletes = useRef<Map<number, { timeout: ReturnType<typeof setTimeout>; item: RepairLineItem }>>(new Map());
+
+  // Clean up pending timeouts on unmount
+  useEffect(() => {
+    const pending = pendingDeletes.current;
+    return () => {
+      pending.forEach(({ timeout }) => clearTimeout(timeout));
+    };
+  }, []);
+
+  // Filter out items that are pending deletion
+  const visibleItems = items.filter(i => !pendingDeleteKeys.has(i.tranKey));
+
+  const warrantyTotal = visibleItems
     .filter(i => i.fixType?.toUpperCase() === 'W')
     .reduce((sum, i) => sum + (i.baseAmount ?? i.amount ?? 0), 0);
-  const customerTotal = items
+  const customerTotal = visibleItems
     .filter(i => i.fixType?.toUpperCase() !== 'W')
     .reduce((sum, i) => sum + (i.amount ?? 0), 0);
   const grandTotal = warrantyTotal + customerTotal;
@@ -129,14 +203,57 @@ export const RepairItemsTable = ({
     }
   }, [addRow, repairKey, onItemsChanged]);
 
-  const handleDelete = async (tranKey: number) => {
-    try {
-      await deleteRepairLineItem(repairKey, tranKey);
-      onItemsChanged();
-    } catch {
-      message.error('Failed to remove item');
+  const undoDelete = useCallback((tranKey: number) => {
+    const pending = pendingDeletes.current.get(tranKey);
+    if (pending) {
+      clearTimeout(pending.timeout);
+      pendingDeletes.current.delete(tranKey);
     }
-  };
+    setPendingDeleteKeys(prev => {
+      const next = new Set(prev);
+      next.delete(tranKey);
+      return next;
+    });
+    message.destroy(`delete-${tranKey}`);
+    message.info('Item restored');
+  }, []);
+
+  const handleDelete = useCallback((item: RepairLineItem) => {
+    // Optimistically hide the item
+    setPendingDeleteKeys(prev => new Set(prev).add(item.tranKey));
+
+    // Set a 5-second timeout to actually call the delete API
+    const timeout = setTimeout(async () => {
+      pendingDeletes.current.delete(item.tranKey);
+      try {
+        await deleteRepairLineItem(repairKey, item.tranKey);
+        onItemsChanged();
+      } catch {
+        // Restore on failure
+        setPendingDeleteKeys(prev => {
+          const next = new Set(prev);
+          next.delete(item.tranKey);
+          return next;
+        });
+        message.error('Failed to delete item');
+      }
+    }, 5000);
+
+    pendingDeletes.current.set(item.tranKey, { timeout, item });
+
+    const tranKey = item.tranKey;
+    message.success({
+      content: React.createElement('span', null,
+        'Item removed. ',
+        React.createElement('a', {
+          onClick: () => undoDelete(tranKey),
+          style: { fontWeight: 600 },
+        }, 'Undo'),
+      ),
+      duration: 5,
+      key: `delete-${tranKey}`,
+    });
+  }, [repairKey, onItemsChanged, undoDelete]);
 
   const handlePatchCause = async (tranKey: number, cause: string) => {
     try {
@@ -171,49 +288,36 @@ export const RepairItemsTable = ({
   };
   const addTdStyle: React.CSSProperties = { ...tdStyle, background: 'var(--neutral-50)' };
 
-  const fixTypeButtons: { label: string; value: FixType }[] = [
-    { label: 'R', value: 'R' },
-    { label: 'W', value: 'W' },
-    { label: 'N', value: 'N' },
-    { label: 'C', value: 'C' },
-    { label: 'A', value: 'A' },
+  const fixTypeButtons: { label: string; value: FixType; title: string }[] = [
+    { label: 'R', value: 'R', title: 'Repair' },
+    { label: 'W', value: 'W', title: 'Warranty' },
+    { label: 'N', value: 'N', title: 'New' },
+    { label: 'C', value: 'C', title: 'Consumable' },
+    { label: 'A', value: 'A', title: 'Accessory' },
   ];
 
   return (
-    <div style={{ border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+    <div style={ritContainerStyle}>
       {/* Section head */}
-      <div style={{
-        background: 'var(--neutral-50)',
-        borderBottom: '1px solid var(--border)',
-        padding: '7px 14px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
+      <div style={ritSectionHeadStyle}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>Repair Items</span>
-          <button onClick={() => setPickerOpen(true)} style={{
-            background: 'var(--card)', color: 'var(--navy)',
-            border: '1px solid var(--border)', borderRadius: 3,
-            padding: '2px 10px', fontSize: 11, fontWeight: 500, cursor: 'pointer',
-          }}>+ Add Items</button>
+          <span style={ritTitleStyle}>Repair Items</span>
+          <button onClick={() => setPickerOpen(true)} style={ritAddBtnStyle}>+ Add Items</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-            {items.length} item{items.length !== 1 ? 's' : ''} ·{' '}
+            {visibleItems.length} item{visibleItems.length !== 1 ? 's' : ''} ·{' '}
             <span style={{ color: 'var(--success)' }}>{fmt(warrantyTotal)} warranty</span> ·{' '}
             <span style={{ color: 'var(--amber)' }}>{fmt(customerTotal)} customer</span>
           </span>
-          {items.length > 0 && (
+          {visibleItems.length > 0 && (
             <>
               <button
                 onClick={async () => {
                   try { await bulkApproveLineItems(repairKey, 'Y'); onItemsChanged(); }
                   catch { message.error('Failed to approve'); }
                 }}
-                style={{
-                  background: 'var(--card)', color: 'var(--navy)',
-                  border: '1px solid var(--border)', borderRadius: 3,
-                  padding: '2px 8px', fontSize: 11, fontWeight: 500, cursor: 'pointer',
-                }}
+                style={ritToolBtnStyle}
               >
                 Approve All
               </button>
@@ -222,25 +326,14 @@ export const RepairItemsTable = ({
                   try { await bulkApproveLineItems(repairKey, ''); onItemsChanged(); }
                   catch { message.error('Failed to unapprove'); }
                 }}
-                style={{
-                  background: 'var(--card)', color: 'var(--navy)',
-                  border: '1px solid var(--border)', borderRadius: 3,
-                  padding: '2px 8px', fontSize: 11, fontWeight: 500, cursor: 'pointer',
-                }}
+                style={ritToolBtnStyle}
               >
                 Unapprove All
               </button>
             </>
           )}
           {hasAmendments && (
-            <button
-              onClick={() => onOpenAmendments()}
-              style={{
-                background: 'var(--card)', color: 'var(--navy)',
-                border: '1px solid var(--border)', borderRadius: 3,
-                padding: '2px 8px', fontSize: 11, fontWeight: 500, cursor: 'pointer',
-              }}
-            >
+            <button onClick={() => onOpenAmendments()} style={ritToolBtnStyle}>
               Amendments
             </button>
           )}
@@ -248,8 +341,8 @@ export const RepairItemsTable = ({
       </div>
 
       {/* Table */}
-      <div style={{ overflowX: 'auto', flex: 1 }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+      <div style={ritOverflowStyle}>
+        <table style={ritTableStyle}>
           <thead>
             <tr>
               <th style={{ ...thStyle, width: 28, textAlign: 'center' }}></th>
@@ -257,7 +350,7 @@ export const RepairItemsTable = ({
               <th style={{ ...thStyle, minWidth: 200 }}>Repair Item</th>
               <th style={{ ...thStyle, minWidth: 70, textAlign: 'center' }}>Cause</th>
               <th style={{ ...thStyle, minWidth: 70, textAlign: 'center' }}>Fix Type</th>
-              <th style={{ ...thStyle, minWidth: 80, textAlign: 'center' }}>Approval</th>
+              <th style={{ ...thStyle, minWidth: 80, textAlign: 'center' }} title="Approval Status (Y=Yes, N=No, P=Pending)">Approval</th>
               <th style={{ ...thStyle, minWidth: 80, textAlign: 'right' }}>Amount</th>
               <th style={{ ...thStyle, minWidth: 54 }}>Tech</th>
               <th style={{ ...thStyle, minWidth: 160 }}>Comments</th>
@@ -265,13 +358,13 @@ export const RepairItemsTable = ({
             </tr>
           </thead>
           <tbody>
-            {items.map(item => (
+            {visibleItems.map(item => (
               <RepairItemRow
                 key={item.tranKey}
                 item={item}
                 fmt={fmt}
                 tdStyle={tdStyle}
-                onDelete={() => handleDelete(item.tranKey)}
+                onDelete={() => handleDelete(item)}
                 onOpenAmendments={() => onOpenAmendments(item.tranKey)}
                 onPatchCause={(cause) => handlePatchCause(item.tranKey, cause)}
                 onPatchComment={(comment) => handlePatchComment(item.tranKey, comment)}
@@ -292,14 +385,14 @@ export const RepairItemsTable = ({
               </td>
               {/* Cause toggles */}
               <td style={{ ...addTdStyle, textAlign: 'center' }}>
-                <div style={{ display: 'flex', gap: 3, justifyContent: 'center' }}>
+                <div style={ritCauseRowStyle}>
                   {(['UA', 'NW'] as CauseType[]).map(c => (
-                    <button key={c} onClick={() => setAddRow(r => ({ ...r, cause: r.cause === c ? '' : c }))}
+                    <button key={c} title={c === 'UA' ? 'User Abuse' : 'Normal Wear'} onClick={() => setAddRow(r => ({ ...r, cause: r.cause === c ? '' : c }))}
                       style={{
                         padding: '1px 5px', fontSize: 10, fontWeight: 700,
                         borderRadius: 3, cursor: 'pointer',
                         background: addRow.cause === c ? 'var(--danger)' : 'var(--neutral-50)',
-                        color: addRow.cause === c ? '#fff' : 'var(--muted)',
+                        color: addRow.cause === c ? 'var(--card)' : 'var(--muted)',
                         border: `1px solid ${addRow.cause === c ? 'var(--danger)' : 'var(--border)'}`,
                       }}>
                       {c}
@@ -309,14 +402,14 @@ export const RepairItemsTable = ({
               </td>
               {/* Fix Type button group */}
               <td style={{ ...addTdStyle, textAlign: 'center' }}>
-                <div style={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                  {fixTypeButtons.map(({ label, value }) => (
-                    <button key={value} onClick={() => handleFixType(value)}
+                <div style={ritFixRowStyle}>
+                  {fixTypeButtons.map(({ label, value, title }) => (
+                    <button key={value} title={title} onClick={() => handleFixType(value)}
                       style={{
                         padding: '1px 5px', fontSize: 10, fontWeight: 700,
                         borderRadius: 3, cursor: 'pointer',
                         background: addRow.fixType === value ? 'var(--primary)' : 'var(--neutral-50)',
-                        color: addRow.fixType === value ? '#fff' : 'var(--muted)',
+                        color: addRow.fixType === value ? 'var(--card)' : 'var(--muted)',
                         border: `1px solid ${addRow.fixType === value ? 'var(--primary)' : 'var(--border)'}`,
                       }}>
                       {label}
@@ -329,12 +422,7 @@ export const RepairItemsTable = ({
               {/* Amount */}
               <td style={{ ...addTdStyle, textAlign: 'right' }}>
                 <input
-                  style={{
-                    width: 72, height: 24, textAlign: 'right',
-                    border: '1px solid var(--border)', borderRadius: 3,
-                    fontSize: 11, padding: '0 4px', background: 'var(--card)',
-                    boxSizing: 'border-box' as const,
-                  }}
+                  style={ritAmountInputStyle}
                   type="number" min="0" step="0.01"
                   value={addRow.fixType === 'W' ? 0 : (addRow.amount || '')}
                   disabled={addRow.fixType === 'W'}
@@ -347,13 +435,9 @@ export const RepairItemsTable = ({
               {/* Comment */}
               <td style={addTdStyle}>
                 <input
-                  style={{
-                    width: '100%', height: 24,
-                    border: '1px solid var(--border)', borderRadius: 3,
-                    fontSize: 11, padding: '0 4px', background: 'var(--card)',
-                    boxSizing: 'border-box' as const,
-                  }}
+                  style={ritCommentInputStyle}
                   placeholder="Comment…"
+                  aria-label="Repair item comment"
                   maxLength={80}
                   value={addRow.comment}
                   onChange={e => setAddRow(r => ({ ...r, comment: e.target.value }))}
@@ -365,7 +449,7 @@ export const RepairItemsTable = ({
                 <button onClick={handleAdd} disabled={saving || !addRow.selectedItem}
                   style={{
                     background: addRow.selectedItem ? 'var(--primary)' : 'var(--neutral-200)',
-                    color: addRow.selectedItem ? '#fff' : 'var(--muted)',
+                    color: addRow.selectedItem ? 'var(--card)' : 'var(--muted)',
                     border: 'none', borderRadius: 3,
                     padding: '3px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
                   }}>
@@ -378,12 +462,7 @@ export const RepairItemsTable = ({
       </div>
 
       {/* Totals footer */}
-      <div style={{
-        background: 'var(--neutral-50)',
-        borderTop: '1px solid var(--border)',
-        padding: '7px 14px',
-        display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 24,
-      }}>
+      <div style={ritFooterStyle}>
         <span style={{ fontSize: 11, color: 'var(--muted)' }}>
           Warranty: <span style={{ color: 'var(--success)', fontWeight: 600 }}>{fmt(warrantyTotal)}</span>
         </span>
@@ -420,7 +499,7 @@ const RepairItemRow = ({ item, fmt, tdStyle, onDelete, onOpenAmendments, onPatch
 
   return (
     <tr style={{ cursor: 'default' }}
-      onMouseEnter={e => (e.currentTarget.style.background = '#f0f6ff')}
+      onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-hover-bg)')}
       onMouseLeave={e => (e.currentTarget.style.background = '')}>
       <td style={{ ...tdStyle, textAlign: 'center' }}>
         {approvalDot(item.approved)}
@@ -443,15 +522,15 @@ const RepairItemRow = ({ item, fmt, tdStyle, onDelete, onOpenAmendments, onPatch
       </td>
       <td style={{ ...tdStyle, textAlign: 'center' }}>
         {item.approved === 'Y'
-          ? <span style={{ color: 'var(--success)', fontWeight: 700, fontSize: 11 }}>✓ Approved</span>
-          : <span style={{ color: 'var(--amber)', fontSize: 11 }}>Pending</span>}
+          ? <span style={ritApprovedStyle}>✓ Approved</span>
+          : <span style={ritPendingStyle}>Pending</span>}
       </td>
       {/* Amount — click to amend */}
       <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
         onClick={onOpenAmendments} title="Click to amend">
         {fmt(item.amount ?? 0)}
         {item.fixType?.toUpperCase() === 'W' && item.baseAmount > 0 && (
-          <div style={{ fontSize: 9, color: 'var(--muted)', fontWeight: 400 }}>
+          <div style={ritWarrantyListStyle}>
             (list: {fmt(item.baseAmount)})
           </div>
         )}
@@ -478,7 +557,7 @@ const RepairItemRow = ({ item, fmt, tdStyle, onDelete, onOpenAmendments, onPatch
       </td>
       <td style={{ ...tdStyle, textAlign: 'center' }}>
         <button onClick={onDelete}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 14, padding: 0 }}
+          style={ritDeleteBtnStyle}
           title="Remove item">×</button>
       </td>
     </tr>

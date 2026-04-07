@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Skeleton } from 'antd';
 import './StatStrip.css';
 
@@ -20,7 +21,9 @@ interface StatStripProps {
   onChipClick?: (id: string) => void;
 }
 
-export const StatStrip = ({ chips, loading, activeChip, onChipClick }: StatStripProps) => (
+const skeletonStyle = { width: 40, height: 16 } as const;
+
+export const StatStrip = memo(({ chips, loading, activeChip, onChipClick }: StatStripProps) => (
   <div className="stat-strip">
     {chips.map(chip => {
       const isActive = chip.id === activeChip;
@@ -37,14 +40,18 @@ export const StatStrip = ({ chips, loading, activeChip, onChipClick }: StatStrip
           key={chip.id}
           className={cls}
           title={chip.tooltip}
+          role={onChipClick ? 'button' : undefined}
+          tabIndex={onChipClick ? 0 : undefined}
           onClick={() => onChipClick?.(isActive ? 'all' : chip.id)}
+          onKeyDown={onChipClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onChipClick(isActive ? 'all' : chip.id); } } : undefined}
+          aria-pressed={onChipClick ? isActive : undefined}
         >
           <div className={`stat-chip__icon stat-chip__icon--${chip.color}`}>
             <div className={`stat-chip__icon-dot stat-chip__dot--${chip.color}`} />
           </div>
           <div>
             {loading ? (
-              <Skeleton.Input size="small" active style={{ width: 40, height: 16 }} />
+              <Skeleton.Input size="small" active style={skeletonStyle} />
             ) : (
               <div className={`stat-chip__value stat-chip__val--${chip.color}`}>
                 {chip.value != null ? chip.value.toLocaleString() : '\u2014'}
@@ -56,4 +63,4 @@ export const StatStrip = ({ chips, loading, activeChip, onChipClick }: StatStrip
       );
     })}
   </div>
-);
+));

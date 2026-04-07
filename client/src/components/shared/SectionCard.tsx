@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import './SectionCard.css';
 
 interface SectionCardProps {
@@ -7,7 +8,7 @@ interface SectionCardProps {
   className?: string;
 }
 
-export const SectionCard = ({ title, actions, children, className }: SectionCardProps) => (
+export const SectionCard = memo(({ title, actions, children, className }: SectionCardProps) => (
   <div className={`section-card${className ? ` ${className}` : ''}`}>
     <div className="section-card__head">
       <span>{title}</span>
@@ -15,4 +16,4 @@ export const SectionCard = ({ title, actions, children, className }: SectionCard
     </div>
     <div className="section-card__body">{children}</div>
   </div>
-);
+));

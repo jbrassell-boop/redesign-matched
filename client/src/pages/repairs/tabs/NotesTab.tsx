@@ -50,6 +50,7 @@ export const NotesTab = ({ repairKey }: Props) => {
             padding: '6px 8px', fontSize: 12, resize: 'vertical', fontFamily: 'inherit',
           }}
           placeholder="Add a note…"
+          aria-label="Add a repair note"
           value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAdd(); } }}
@@ -60,7 +61,7 @@ export const NotesTab = ({ repairKey }: Props) => {
           style={{
             height: 32, padding: '0 16px', borderRadius: 4, border: 'none',
             background: text.trim() ? 'var(--primary)' : 'var(--neutral-200)',
-            color: text.trim() ? '#fff' : 'var(--muted)',
+            color: text.trim() ? 'var(--card)' : 'var(--muted)',
             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
