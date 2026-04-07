@@ -429,16 +429,7 @@ export const QualityPage = () => {
         <div style={tabFlexColumnStyle}>
 
           {/* Toolbar */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '10px 16px',
-            background: 'var(--card)',
-            borderBottom: '1px solid var(--neutral-200)',
-            flexShrink: 0,
-            flexWrap: 'wrap',
-          }}>
+          <div style={toolbarStyle}>
             {/* Result segmented control */}
             <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
               Result
@@ -464,7 +455,7 @@ export const QualityPage = () => {
             </div>
 
             {/* Separator */}
-            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
+            <div style={separatorStyle} />
 
             {/* Date range */}
             <input
@@ -543,24 +534,7 @@ export const QualityPage = () => {
                   {QC_COLS.map(col => (
                     <th
                       key={col.label}
-                      style={{
-                        width: col.width,
-                        background: 'var(--neutral-50)',
-                        color: 'var(--neutral-500)',
-                        fontWeight: 700,
-                        padding: '8px 10px',
-                        textAlign: 'left',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.04em',
-                        fontSize: 11,
-                        position: 'sticky',
-                        top: 0,
-                        zIndex: 2,
-                        whiteSpace: 'nowrap',
-                        borderRight: '1px solid rgba(var(--primary-rgb), 0.15)',
-                        borderBottom: '1px solid var(--neutral-200)',
-                        userSelect: 'none',
-                      }}
+                      style={{ ...thCellStyle, width: col.width }}
                     >
                       {col.label}
                     </th>
@@ -628,17 +602,7 @@ export const QualityPage = () => {
           </div>
 
           {/* Table Footer */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '8px 16px',
-            background: 'var(--neutral-50)',
-            borderTop: '1.5px solid var(--border-dk)',
-            flexShrink: 0,
-            fontSize: 11,
-            color: 'var(--muted)',
-          }}>
+          <div style={footerBarStyle}>
             <span style={{ fontWeight: 500 }}>{totalCount.toLocaleString()} records</span>
             <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
               <button
@@ -711,24 +675,17 @@ export const QualityPage = () => {
       {activeTab === 'Non-Conformances' && (
         <div style={tabFlexColumnStyle}>
           {/* Toolbar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-            background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
-          }}>
+          <div style={toolbarStyle}>
             <button
               onClick={() => setNcrModalOpen(true)}
-              style={{
-                height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
-                background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 5,
-              }}
+              style={newBtnStyle}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={12} height={12}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New NCR
             </button>
-            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
-            <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+            <div style={separatorStyle} />
+            <span style={filterLabelStyle}>Status</span>
+            <div style={segmentedWrapStyle}>
               {(['', 'Open', 'Under Review', 'Closed'] as const).map((v, i) => (
                 <button key={v} onClick={() => { setNcrStatusFilter(v); setNcrPage(1); }}
                   style={{ ...segBtnStyle(ncrStatusFilter === v), borderRight: i < 3 ? '1px solid var(--border-dk)' : 'none' }}>
@@ -752,12 +709,7 @@ export const QualityPage = () => {
               <thead>
                 <tr>
                   {NCR_COLS.map(col => (
-                    <th key={col.label} style={{
-                      width: col.width, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700,
-                      padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
-                      position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap',
-                      borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', userSelect: 'none',
-                    }}>{col.label}</th>
+                    <th key={col.label} style={{ ...thCellStyle, width: col.width }}>{col.label}</th>
                   ))}
                 </tr>
               </thead>
@@ -773,7 +725,7 @@ export const QualityPage = () => {
                     onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
                   >
                     <td style={tdCellStyle}>
-                      <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.ncrNumber}</span>
+                      <span style={navyBoldStyle}>{item.ncrNumber}</span>
                     </td>
                     <td style={tdCellStyle}>{item.workOrderNumber}</td>
                     <td style={tdCellStyle} title={item.description}>{item.description}</td>
@@ -798,10 +750,7 @@ export const QualityPage = () => {
           </div>
 
           {/* Footer */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px',
-            background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)',
-          }}>
+          <div style={footerBarStyle}>
             <span style={{ fontWeight: 500 }}>{ncrTotal.toLocaleString()} records</span>
             <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
               <button disabled={ncrPage <= 1} onClick={() => setNcrPage(p => p - 1)}
@@ -829,31 +778,24 @@ export const QualityPage = () => {
       {activeTab === 'CAPA Log' && (
         <div style={tabFlexColumnStyle}>
           {/* Toolbar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-            background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
-          }}>
+          <div style={toolbarStyle}>
             <button
               onClick={() => setCapaModalOpen(true)}
-              style={{
-                height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
-                background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', gap: 5,
-              }}
+              style={newBtnStyle}
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={12} height={12}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New CAPA
             </button>
-            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Type</span>
-            <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+            <div style={separatorStyle} />
+            <span style={filterLabelStyle}>Type</span>
+            <div style={segmentedWrapStyle}>
               {['All', 'Corrective', 'Preventive'].map((v, i) => (
                 <button key={v} style={{ ...segBtnStyle(i === 0), borderRight: i < 2 ? '1px solid var(--border-dk)' : 'none' }}>{v}</button>
               ))}
             </div>
-            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
-            <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+            <div style={separatorStyle} />
+            <span style={filterLabelStyle}>Status</span>
+            <div style={segmentedWrapStyle}>
               {['All', 'Open', 'In Progress', 'Completed', 'Overdue'].map((v, i) => (
                 <button key={v} style={{ ...segBtnStyle(i === 0), borderRight: i < 4 ? '1px solid var(--border-dk)' : 'none' }}>{v}</button>
               ))}
@@ -873,12 +815,7 @@ export const QualityPage = () => {
               <thead>
                 <tr>
                   {CAPA_COLS.map(col => (
-                    <th key={col.label} style={{
-                      width: col.width, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700,
-                      padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
-                      position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap',
-                      borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', userSelect: 'none',
-                    }}>{col.label}</th>
+                    <th key={col.label} style={{ ...thCellStyle, width: col.width }}>{col.label}</th>
                   ))}
                 </tr>
               </thead>
@@ -889,10 +826,7 @@ export const QualityPage = () => {
           </div>
 
           {/* Footer */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px',
-            background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)',
-          }}>
+          <div style={footerBarStyle}>
             <span style={{ fontWeight: 500 }}>0 records</span>
           </div>
         </div>
@@ -901,12 +835,9 @@ export const QualityPage = () => {
       {activeTab === 'Rework Tracking' && (
         <div style={tabFlexColumnStyle}>
           {/* Toolbar */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-            background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap',
-          }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
-            <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+          <div style={toolbarStyle}>
+            <span style={filterLabelStyle}>Status</span>
+            <div style={segmentedWrapStyle}>
               {(['', 'In Progress', 'Complete'] as const).map((v, i) => (
                 <button key={v || 'all'} onClick={() => { setReworkStatusFilter(v); setReworkPage(1); }}
                   style={{ ...segBtnStyle(reworkStatusFilter === v), borderRight: i < 2 ? '1px solid var(--border-dk)' : 'none' }}>
@@ -929,22 +860,8 @@ export const QualityPage = () => {
             <table style={tableFixedStyle}>
               <thead>
                 <tr>
-                  {[
-                    { label: 'RW#', width: 80 },
-                    { label: 'WO#', width: 90 },
-                    { label: 'Serial#', width: 120 },
-                    { label: 'Reason', width: 210 },
-                    { label: 'Tech', width: 120 },
-                    { label: 'Original Complete', width: 110 },
-                    { label: 'Rework Due', width: 100 },
-                    { label: 'Status', width: 100 },
-                  ].map(col => (
-                    <th key={col.label} style={{
-                      width: col.width, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700,
-                      padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
-                      position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap',
-                      borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', userSelect: 'none',
-                    }}>{col.label}</th>
+                  {REWORK_COLS.map(col => (
+                    <th key={col.label} style={{ ...thCellStyle, width: col.width }}>{col.label}</th>
                   ))}
                 </tr>
               </thead>
@@ -960,7 +877,7 @@ export const QualityPage = () => {
                     onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
                   >
                     <td style={tdCellStyle}>
-                      <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.reworkNumber}</span>
+                      <span style={navyBoldStyle}>{item.reworkNumber}</span>
                     </td>
                     <td style={tdCellStyle}>{item.workOrderNumber}</td>
                     <td style={tdCellStyle}>{item.serialNumber}</td>
@@ -981,10 +898,7 @@ export const QualityPage = () => {
           </div>
 
           {/* Footer */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px',
-            background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)',
-          }}>
+          <div style={footerBarStyle}>
             <span style={{ fontWeight: 500 }}>{reworkTotal.toLocaleString()} records</span>
             <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
               <button disabled={reworkPage <= 1} onClick={() => setReworkPage(p => p - 1)}
