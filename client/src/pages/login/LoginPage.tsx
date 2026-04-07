@@ -50,7 +50,8 @@ export const LoginPage = () => {
 
         {/* Login card */}
         <div style={{
-          width: 380,
+          maxWidth: 380,
+          width: '100%',
           background: 'var(--card)',
           borderRadius: 12,
           boxShadow: '0 20px 60px rgba(0,0,0,0.3)',

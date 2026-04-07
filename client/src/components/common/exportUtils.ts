@@ -1,5 +1,3 @@
-import * as XLSX from 'xlsx';
-
 interface ExportColumn {
   key: string;
   label: string;
@@ -28,12 +26,13 @@ export function exportCsv<T extends Record<string, unknown>>(
 /**
  * Export data as XLSX (Excel) and trigger browser download.
  */
-export function exportExcel<T extends Record<string, unknown>>(
+export async function exportExcel<T extends Record<string, unknown>>(
   data: T[],
   columns: ExportColumn[],
   filename: string,
   sheetName = 'Sheet1',
-): void {
+): Promise<void> {
+  const XLSX = await import('xlsx');
   const headers = columns.map(c => c.label);
   const rows = data.map(row => columns.map(c => row[c.key] ?? ''));
   const wsData = [headers, ...rows];

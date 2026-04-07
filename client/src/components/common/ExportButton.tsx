@@ -32,7 +32,7 @@ function ExportButtonInner<T extends Record<string, unknown>>({
     {
       key: 'xlsx',
       label: 'Export as Excel',
-      onClick: () => { exportExcel(data, columns, filename, sheetName); setOpen(false); },
+      onClick: () => { exportExcel(data, columns, filename, sheetName).then(() => setOpen(false)); },
     },
   ];
 
