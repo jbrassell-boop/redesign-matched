@@ -21,12 +21,12 @@ const StatChip = ({ label, value, iconBg, iconColor, valueColor, active, onClick
       outline: active ? '2.5px solid var(--navy)' : '2.5px solid transparent', outlineOffset: -2,
     }}
   >
-    <span style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: iconBg, color: iconColor }}>
+    <span style={{ ...statChipIconStyle, background: iconBg, color: iconColor }}>
       {icon}
     </span>
-    <span style={{ display: 'flex', flexDirection: 'column' }}>
+    <span style={statChipTextColStyle}>
       <span style={{ fontSize: 18, fontWeight: 800, color: valueColor, lineHeight: 1.2 }}>{value}</span>
-      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={statChipLabelStyle}>{label}</span>
     </span>
   </div>
 );
@@ -38,6 +38,47 @@ const IconSold = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor
 const IconDollar = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><line x1="8" y1="1.5" x2="8" y2="14.5" /><path d="M11 4.5H6.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H5" /></svg>;
 
 const fmtCurrency = (n: number) => n > 0 ? `$${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}` : '$0';
+
+// ── Extracted static styles ──
+const statChipIconStyle: React.CSSProperties = { width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const statChipTextColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column' };
+const statChipLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' };
+const acqStatStripStyle: React.CSSProperties = { display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const acqDetailContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
+const acqDetailHeaderStyle: React.CSSProperties = {
+  background: 'var(--navy)', padding: '12px 16px',
+  display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
+};
+const acqDetailHeaderLeftStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10 };
+const acqDetailTitleStyle: React.CSSProperties = { fontWeight: 700, color: 'var(--card)', fontSize: 14 };
+const acqDetailCloseBtnStyle: React.CSSProperties = { background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: '2px 6px' };
+const acqDetailBodyStyle: React.CSSProperties = { flex: 1, overflow: 'auto', padding: '16px 20px' };
+const acqCenterSpinStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: 40 };
+const acqNoDetailStyle: React.CSSProperties = { padding: 40, textAlign: 'center', color: 'var(--muted)' };
+const acqCostBannerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: '12px 0 16px', borderBottom: '1px solid var(--border)', marginBottom: 16 };
+const acqCostValueStyle: React.CSSProperties = { fontSize: 22, fontWeight: 800, color: 'var(--navy)' };
+const acqCostLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
+const acqCommentsLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 };
+const acqCommentBoxStyle: React.CSSProperties = { fontSize: 12, color: 'var(--text)', background: 'var(--neutral-50)', borderRadius: 6, padding: '10px 12px', border: '1px solid var(--border)' };
+const acqPageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
+const acqSplitPaneStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex' };
+const acqDetailPaneStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' };
+const acqListContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
+const acqListHeaderStyle: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 };
+const acqListTitleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
+const acqListTitleLeftStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
+const acqListTitleTextStyle: React.CSSProperties = { fontSize: 13, fontWeight: 800, color: 'var(--navy)' };
+const acqListCountBadgeStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' };
+const acqSearchIconStyle: React.CSSProperties = { color: 'var(--muted)', fontSize: 12 };
+const acqSearchInputStyle: React.CSSProperties = { height: 28, fontSize: 11 };
+const acqListBodyStyle: React.CSSProperties = { flex: 1, overflow: 'auto' };
+const acqLoadingStyle: React.CSSProperties = { padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 };
+const acqRowSerialStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2 };
+const acqRowModelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginTop: 1 };
+const acqRowBottomStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' };
+const acqPaginationStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 };
+const acqPagCountStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
+const acqPagBtnsStyle: React.CSSProperties = { display: 'flex', gap: 3 };
 
 const TABS: TabDef[] = [
   { key: 'inhouse', label: 'In-House' },

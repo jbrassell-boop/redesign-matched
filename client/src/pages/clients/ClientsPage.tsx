@@ -71,7 +71,7 @@ export const ClientsPage = () => {
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
       {/* Left Panel — Client List */}
-      <div style={{
+      <aside aria-label="Client list" style={{
         width: selectedKey ? 320 : '100%',
         minWidth: selectedKey ? 320 : undefined,
         borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,

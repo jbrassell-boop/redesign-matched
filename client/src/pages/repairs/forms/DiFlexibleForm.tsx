@@ -460,7 +460,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           {/* Header */}
           <div style={s.formHeader}>
             <LogoBlock />
-            <div style={{ textAlign: 'right' }}>
+            <div style={textAlignRightStyle}>
               <div style={s.formTitle}>Blank Inspection Report</div>
               <div style={s.formSubtitle}>Flexible Endoscope — Items Approved &amp; Repaired</div>
               <div style={s.formNumber}>OM07-3 &nbsp;|&nbsp; Page 2 of 3</div>
@@ -468,16 +468,16 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           </div>
 
           {/* Mini header fields */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 12px', padding: '4px 0 6px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div style={miniHeaderGridStyle}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Work Order #</span>
               <div style={s.fv}>{woNum}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Serial #</span>
               <div style={s.fv}>{serialNum}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Date</span>
               <div style={s.fv}>{today}</div>
             </div>
@@ -485,7 +485,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
 
           {/* Items Approved and Repaired */}
           <div style={s.sectionBar}>Items Approved and Repaired</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 10 }}>
+          <table style={repairTableStyle}>
             <thead>
               <tr>
                 <th style={{ ...repairTableTh, width: 22 }}></th>
@@ -499,7 +499,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
                 <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
                   <td style={{ ...repairTableTd, borderRight: '1px solid var(--print-border-xlt)' }}><span style={s.cbBox}></span></td>
                   <td style={repairTableTd}>{item}</td>
-                  <td style={{ ...repairTableTd, textAlign: 'center' }}><span style={s.costField}></span></td>
+                  <td style={repairTableTdCenter}><span style={s.costField}></span></td>
                   <td style={{ ...repairTableTd, borderRight: 'none' }}><span style={s.sigMini}></span></td>
                 </tr>
               ))}
@@ -507,10 +507,10 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           </table>
 
           {/* Total */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4, gap: 20 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
+          <div style={subtotalRowStyle}>
+            <div style={subtotalColStyle}>
               <span style={s.fl}>Total Repair Cost</span>
-              <div style={{ borderBottom: '2px solid var(--primary)', minWidth: 100, height: 17, fontWeight: 700 }}></div>
+              <div style={totalLineStyle}></div>
             </div>
           </div>
 
@@ -519,14 +519,14 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           <div style={{ ...s.textField, minHeight: 48 }}></div>
 
           {/* Signature */}
-          <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Lead Technician / Signature</div>
+          <div style={sigBlock2Style}>
+            <div style={sigColStyle}>
+              <div style={sigLineStyle}></div>
+              <div style={sigLabelStyle}>Lead Technician / Signature</div>
             </div>
-            <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Date</div>
+            <div style={sigDateColStyle}>
+              <div style={sigLineStyle}></div>
+              <div style={sigLabelStyle}>Date</div>
             </div>
           </div>
 

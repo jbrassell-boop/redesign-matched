@@ -75,7 +75,7 @@ const RepairsListView = () => {
   useKeyboardNav(repairs, selectedIndex, handleSelect);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', background: 'var(--card)' }}>
+    <section aria-label="Repairs" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', background: 'var(--card)' }}>
       {/* Toolbar */}
       <div style={{
         padding: '10px 16px',
@@ -84,7 +84,7 @@ const RepairsListView = () => {
         flexShrink: 0,
       }}>
         <h1 style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)', margin: 0 }}>Repairs</h1>
-        <span style={{ fontSize: 11, color: 'var(--muted)' }}>{repairs.length} records</span>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }} aria-live="polite">{repairs.length} records</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
           <ExportButton data={repairs as unknown as Record<string, unknown>[]} columns={REPAIR_EXPORT_COLS} filename="repairs-export" sheetName="Repairs" />
           <button
@@ -117,6 +117,6 @@ const RepairsListView = () => {
           onDoubleClick={handleSelect}
         />
       </div>
-    </div>
+    </section>
   );
 };

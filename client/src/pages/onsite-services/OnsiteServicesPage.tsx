@@ -32,6 +32,10 @@ interface StatChipProps {
 const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon, active, onClick, clickable = true }: StatChipProps) => (
   <div
     onClick={clickable ? onClick : undefined}
+    role={clickable ? 'button' : undefined}
+    tabIndex={clickable ? 0 : undefined}
+    onKeyDown={clickable && onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
+    aria-pressed={clickable ? active : undefined}
     style={{
       flex: 1,
       display: 'flex',
