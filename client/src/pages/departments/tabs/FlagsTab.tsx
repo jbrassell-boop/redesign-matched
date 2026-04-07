@@ -34,7 +34,14 @@ export const FlagsTab = ({ deptKey }: FlagsTabProps) => {
       .finally(() => setLoading(false));
   }, [deptKey]);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getDeptFlags(deptKey)
+      .then(data => { if (!cancelled) { setFlags(data); setEditingKey(null); setEditRow(null); } })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [deptKey]);
 
   const handleAdd = () => {
     setEditRow(emptyFlag());
