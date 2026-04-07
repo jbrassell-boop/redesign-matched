@@ -12,13 +12,14 @@ export const SplitLayout = memo(({ left, right, leftWidth = 280 }: SplitLayoutPr
 
   return (
     <div className="split-layout">
-      <div
+      <aside
         className={`split-layout__left${collapsed ? ' split-layout__left--collapsed' : ''}`}
         style={!collapsed ? { width: leftWidth } : undefined}
+        aria-label="List panel"
       >
         {left}
-      </div>
-      <div className="split-layout__right">
+      </aside>
+      <section className="split-layout__right" aria-label="Detail panel">
         {collapsed && (
           <button
             className="split-layout__collapse-btn"
@@ -29,7 +30,7 @@ export const SplitLayout = memo(({ left, right, leftWidth = 280 }: SplitLayoutPr
           </button>
         )}
         {right}
-      </div>
+      </section>
     </div>
   );
 });

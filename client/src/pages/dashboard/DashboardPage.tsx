@@ -213,7 +213,7 @@ export const DashboardPage = () => {
   ] : [];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+    <section aria-label="Dashboard" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
       <ExecutiveKpi />
       <StatStrip
         chips={chips}
@@ -252,6 +252,6 @@ export const DashboardPage = () => {
         onClose={() => { setQuickEditOpen(false); setQuickEditRecord(null); }}
         onSaved={handleQuickEditSaved}
       />
-    </div>
+    </section>
   );
 };

@@ -397,7 +397,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
 
           {/* Items Found to be in Need of Repair */}
           <div style={s.sectionBar}>Items Found to be in Need of Repair</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 10 }}>
+          <table style={repairTableStyle}>
             <thead>
               <tr>
                 <th style={{ ...repairTableTh, width: 22 }}></th>
@@ -411,18 +411,18 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
                 <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
                   <td style={{ ...repairTableTd, borderRight: '1px solid var(--print-border-xlt)' }}><span style={s.cbBox}></span></td>
                   <td style={repairTableTd}>{item}</td>
-                  <td style={{ ...repairTableTd, textAlign: 'center' }}><span style={s.costField}></span></td>
-                  <td style={{ ...repairTableTd, textAlign: 'center', borderRight: 'none' }}><span style={s.cbBox}></span></td>
+                  <td style={repairTableTdCenter}><span style={s.costField}></span></td>
+                  <td style={repairTableTdNoBorder}><span style={s.cbBox}></span></td>
                 </tr>
               ))}
             </tbody>
           </table>
 
           {/* Subtotal */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4, gap: 20 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
+          <div style={subtotalRowStyle}>
+            <div style={subtotalColStyle}>
               <span style={s.fl}>Subtotal Estimate</span>
-              <div style={{ borderBottom: '1px solid var(--print-check-border)', minWidth: 100, height: 17 }}></div>
+              <div style={subtotalLineStyle}></div>
             </div>
           </div>
 
@@ -431,22 +431,22 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           <div style={{ ...s.textField, minHeight: 36 }}></div>
 
           {/* Signature block */}
-          <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Technician / Estimator</div>
+          <div style={sigBlockStyle}>
+            <div style={sigColStyle}>
+              <div style={sigLineStyle}></div>
+              <div style={sigLabelStyle}>Technician / Estimator</div>
             </div>
-            <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Date</div>
+            <div style={sigDateColStyle}>
+              <div style={sigLineStyle}></div>
+              <div style={sigLabelStyle}>Date</div>
             </div>
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Customer Authorization</div>
+            <div style={sigColStyle}>
+              <div style={sigLineStyle}></div>
+              <div style={sigLabelStyle}>Customer Authorization</div>
             </div>
-            <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Date</div>
+            <div style={sigDateColStyle}>
+              <div style={sigLineStyle}></div>
+              <div style={sigLabelStyle}>Date</div>
             </div>
           </div>
 
