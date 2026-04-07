@@ -425,8 +425,8 @@ export const ScopeModelPage = () => {
             { dir: 'Left', val: localDetail.angLeft, field: 'angLeft' as keyof PatchScopeModelPayload },
             { dir: 'Right', val: localDetail.angRight, field: 'angRight' as keyof PatchScopeModelPayload },
           ]).map(a => (
-            <div key={a.dir} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 8px', borderRight: '1px solid var(--border)' }}>
-              <span style={{ fontSize: 9, fontWeight: 800, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.04em' }}>{a.dir}</span>
+            <div key={a.dir} style={smAngCellStyle}>
+              <span style={smAngLabelStyle}>{a.dir}</span>
               <input
                 value={a.val ?? ''}
                 onChange={e => handleSpecFieldChange(a.field, e.target.value)}
@@ -454,7 +454,7 @@ export const ScopeModelPage = () => {
       </div>
 
       <div style={{ marginTop: 8 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 }}>Notes</div>
+        <div style={smNotesLabelStyle}>Notes</div>
         <textarea
           value={localDetail.notes ?? ''}
           onChange={e => handleSpecFieldChange('notes', e.target.value)}
@@ -469,14 +469,14 @@ export const ScopeModelPage = () => {
 
   /* ── Detail pane body ────────────────────────────────────── */
   const detailPaneBody = detailLoading ? (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+    <div style={smCenterSpinStyle}><Spin /></div>
   ) : localDetail ? (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div style={smDetailFlexCol}>
       {/* Close row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
+      <div style={smCloseRowStyle}>
         <button
           onClick={() => { setSelectedKey(null); setDetail(null); setLocalDetail(null); }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' }}
+          style={smCloseBtnStyle}
         >
           &times;
         </button>
