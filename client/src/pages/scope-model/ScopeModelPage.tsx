@@ -74,6 +74,39 @@ const DETAIL_TABS: TabDef[] = [
   { key: 'flags',       label: 'Flags' },
 ];
 
+// ── Extracted static styles (performance: avoid re-creating objects each render) ──
+const smPageContainerStyle: React.CSSProperties = { display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
+const smStatStripStyle: React.CSSProperties = { display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const smToolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap', flexShrink: 0 };
+const smSeparatorStyle: React.CSSProperties = { width: 1, height: 22, background: 'var(--border-dk)' };
+const smFilterLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
+const smThStyle: React.CSSProperties = {
+  background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px',
+  textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(180,200,220,0.3)',
+  borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 10,
+};
+const smFooterStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' };
+const scopeInputStyle: React.CSSProperties = {
+  fontSize: 12, color: 'var(--text)', background: 'var(--card)',
+  border: '1px solid var(--neutral-200)', borderRadius: 4,
+  padding: '3px 6px', fontFamily: 'inherit', outline: 'none',
+  width: '100%', boxSizing: 'border-box',
+};
+const smModalFieldLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 };
+const smModalInputStyle: React.CSSProperties = { width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' };
+
+const SCOPE_MODEL_COLS = [
+  { key: 'description', label: 'Model Name', width: '20%' },
+  { key: 'type', label: 'Type', width: 78 },
+  { key: 'manufacturer', label: 'Manufacturer', width: 160 },
+  { key: 'category', label: 'Category', width: 150 },
+  { key: 'active', label: 'Status', width: 74 },
+  { key: 'insertTubeLength', label: 'Length', width: 70 },
+  { key: 'insertTubeDiameter', label: 'Diameter', width: 70 },
+  { key: 'fieldOfView', label: 'FOV', width: 60 },
+  { key: 'directionOfView', label: 'DOV', width: 60 },
+];
+
 /* ═════════════════════════════════════════════════════════════ */
 /*  SCOPE MODEL PAGE                                            */
 /* ═════════════════════════════════════════════════════════════ */
@@ -331,26 +364,6 @@ export const ScopeModelPage = () => {
     </div>
   );
 
-  /* ── Table columns ───────────────────────────────────────── */
-  const columns = [
-    { key: 'description', label: 'Model Name', width: '20%' },
-    { key: 'type', label: 'Type', width: 78 },
-    { key: 'manufacturer', label: 'Manufacturer', width: 160 },
-    { key: 'category', label: 'Category', width: 150 },
-    { key: 'active', label: 'Status', width: 74 },
-    { key: 'insertTubeLength', label: 'Length', width: 70 },
-    { key: 'insertTubeDiameter', label: 'Diameter', width: 70 },
-    { key: 'fieldOfView', label: 'FOV', width: 60 },
-    { key: 'directionOfView', label: 'DOV', width: 60 },
-  ];
-
-  /* ── Inline edit input for scope specs ──────────────────── */
-  const scopeInputStyle: React.CSSProperties = {
-    fontSize: 12, color: 'var(--text)', background: 'var(--card)',
-    border: '1px solid var(--neutral-200)', borderRadius: 4,
-    padding: '3px 6px', fontFamily: 'inherit', outline: 'none',
-    width: '100%', boxSizing: 'border-box',
-  };
   const SEditField = ({ label, value, field }: { label: string; value: string | null | undefined; field: keyof PatchScopeModelPayload }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '2px 0' }}>
       <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em' }}>{label}</span>
