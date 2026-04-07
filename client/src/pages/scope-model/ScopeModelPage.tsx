@@ -603,7 +603,7 @@ export const ScopeModelPage = () => {
 
         {/* Pagination footer */}
         <div style={smFooterStyle}>
-          <div>
+          <div aria-live="polite" aria-atomic="true">
             Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{totalCount}</strong> models
           </div>
           {totalPages > 1 && (

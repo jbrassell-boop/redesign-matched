@@ -404,7 +404,7 @@ export const AcquisitionsPage = () => {
       {/* Split pane */}
       <div style={acqSplitPaneStyle}>
         {/* Left panel — list */}
-        <div style={{
+        <aside aria-label="Acquisition list" style={{
           width: selectedKey ? 340 : '100%',
           minWidth: selectedKey ? 340 : undefined,
           borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
@@ -414,17 +414,17 @@ export const AcquisitionsPage = () => {
           overflow: 'hidden',
         }}>
           {listContent}
-        </div>
+        </aside>
 
         {/* Right panel — detail */}
         {selectedKey && (
-          <div style={acqDetailPaneStyle}>
+          <section aria-label="Acquisition details" style={acqDetailPaneStyle}>
             <AcquisitionDetailPanel
               detail={detail}
               loading={detailLoading}
               onClose={handleCloseDetail}
             />
-          </div>
+          </section>
         )}
       </div>
     </div>

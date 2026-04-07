@@ -287,47 +287,47 @@ export const FinancialPage = () => {
   // ─── Executive summary banner ───────────────────────────────────────────────
   const ExecBanner = () => (
     <div style={execBannerStyle}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
+      <div style={execBannerHeaderStyle}>
+        <span style={execBannerTitleStyle}>
           Financial Overview
         </span>
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>
+        <span style={execBannerDateStyle}>
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
         </span>
       </div>
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+      <div style={execCardsRowStyle}>
         {/* Outstanding A/R */}
         <div style={execCardStyle}>
           <div style={execCardLabelStyle}>Outstanding A/R</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--navy)', lineHeight: 1.1 }}>
+          <div style={execValueLargeNavyStyle}>
             {stats ? fmt$(stats.outstandingAR) : '\u2014'}
           </div>
         </div>
         {/* Revenue MTD */}
         <div style={execCardStyle}>
           <div style={execCardLabelStyle}>Revenue MTD</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--success)', lineHeight: 1.1 }}>
+          <div style={execValueLargeSuccessStyle}>
             {stats ? fmt$(stats.revenueMTD) : '\u2014'}
           </div>
         </div>
         {/* DSO */}
         <div style={execCardStyle}>
           <div style={execCardLabelStyle}>Days Sales Outstanding</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--primary)', lineHeight: 1.1 }}>
+          <div style={execValueLargePrimaryStyle}>
             {stats ? stats.dso + 'd' : '\u2014'}
           </div>
-          {stats && <div style={{ fontSize: 10, color: 'var(--muted)' }}>Avg {stats.avgDaysToPay}d to pay</div>}
+          {stats && <div style={execSubtextMutedStyle}>Avg {stats.avgDaysToPay}d to pay</div>}
         </div>
         {/* Overdue */}
         <div style={{ ...execCardStyle, cursor: 'pointer' }}
           onClick={() => handleTabChange('outstanding')}
         >
           <div style={execCardLabelStyle}>Overdue Invoices</div>
-          <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--danger)', lineHeight: 1.1 }}>
+          <div style={execValueLargeDangerStyle}>
             {stats ? stats.overdueCount : '\u2014'}
           </div>
           {stats && stats.overdueCount > 0 && (
-            <div style={{ fontSize: 10, color: 'var(--danger)', fontWeight: 600 }}>Requires attention</div>
+            <div style={execSubtextDangerStyle}>Requires attention</div>
           )}
         </div>
       </div>
@@ -336,14 +336,7 @@ export const FinancialPage = () => {
 
   // ─── Stat strip (colored dot squares) ───────────────────────────────────────
   const StatStrip = () => (
-    <div style={{
-      display: 'flex',
-      marginBottom: 16,
-      borderRadius: 10,
-      border: '1px solid var(--border)',
-      overflow: 'hidden',
-      background: 'var(--card)',
-    }}>
+    <div style={statStripWrapStyle}>
       {STAT_CHIPS.map((chip, i) => (
         <div
           key={chip.key}
@@ -363,18 +356,12 @@ export const FinancialPage = () => {
           }}
         >
           {/* Colored dot square replacing emoji icon */}
-          <div style={{
-            width: 10,
-            height: 10,
-            borderRadius: 3,
-            background: chip.dotColor,
-            flexShrink: 0,
-          }} />
+          <div style={{ ...statDotBaseStyle, background: chip.dotColor }} />
           <div>
             <div style={{ fontSize: 14, fontWeight: 800, color: chip.valueColor, lineHeight: 1.2 }}>
               {getStatValue(chip.key)}
             </div>
-            <div style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{chip.label}</div>
+            <div style={statLabelMutedStyle}>{chip.label}</div>
           </div>
         </div>
       ))}
@@ -470,7 +457,7 @@ export const FinancialPage = () => {
 
           {/* Right: inline detail pane */}
           {detailOpen && (
-            <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+            <div style={invoiceDetailPaneStyle}>
               <FinancialDetailPane
                 detail={selectedInvoice}
                 loading={detailLoading}
@@ -482,7 +469,7 @@ export const FinancialPage = () => {
         </div>
       ) : (
         /* Non-split tabs: scrollable full-width */
-        <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px' }}>
+        <div style={fullWidthScrollPadStyle}>
           {/* Stat strip for non-list tabs */}
           <StatStrip />
 
@@ -503,10 +490,10 @@ export const FinancialPage = () => {
 
           {/* At Risk Tab */}
           {activeTab === 'atrisk' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={flexColGap12Style}>
               {/* Filter bar */}
               <div style={finFilterBarStyle}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={filterGap8Style}>
                   <span style={finFilterLabelStyle}>From</span>
                   <DatePicker
                     value={dayjs(atRiskDateFrom)}
@@ -515,7 +502,7 @@ export const FinancialPage = () => {
                     aria-label="At-risk from month"
                   />
                 </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={filterGap8Style}>
                   <span style={finFilterLabelStyle}>To</span>
                   <DatePicker
                     value={dayjs(atRiskDateTo)}
@@ -524,7 +511,7 @@ export const FinancialPage = () => {
                     aria-label="At-risk to month"
                   />
                 </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={filterGap8Style}>
                   <span style={finFilterLabelStyle}>Min Repairs</span>
                   <Select
                     value={atRiskMinInvoices}
@@ -535,7 +522,7 @@ export const FinancialPage = () => {
                     aria-label="Minimum repairs"
                   />
                 </div>
-                <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={switchRowStyle}>
                   {[
                     { key: 'includeLabor' as const, label: 'Labor' },
                     { key: 'includeMaterial' as const, label: 'Material' },
@@ -543,21 +530,21 @@ export const FinancialPage = () => {
                     { key: 'includeShipping' as const, label: 'Shipping' },
                     { key: 'includeCommissions' as const, label: 'Commissions' },
                   ].map(f => (
-                    <div key={f.key} style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+                    <div key={f.key} style={switchItemStyle}>
                       <Switch
                         size="small"
                         aria-label={`Include ${f.label}`}
                         checked={atRiskFilters[f.key]}
                         onChange={(v) => setAtRiskFilters(prev => ({ ...prev, [f.key]: v }))}
                       />
-                      <span style={{ fontSize: 11, color: 'var(--text)' }}>{f.label}</span>
+                      <span style={switchLabelStyle}>{f.label}</span>
                     </div>
                   ))}
                 </div>
               </div>
               {/* Summary stats */}
               {atRiskItems.length > 0 && (
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={summaryStatFlexStyle}>
                   {[
                     { label: 'Departments', value: atRiskItems.length, color: 'var(--navy)' },
                     { label: 'Total Revenue', value: '$' + atRiskItems.reduce((s, r) => s + r.revenue, 0).toLocaleString('en-US', { maximumFractionDigits: 0 }), color: 'var(--success)' },
@@ -565,7 +552,7 @@ export const FinancialPage = () => {
                     { label: 'At Risk (< 40%)', value: atRiskItems.filter(r => r.marginPct < 40).length, color: 'var(--danger)' },
                   ].map(s => (
                     <div key={s.label} style={summaryStatCardStyle}>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</div>
+                      <div style={{ ...summaryStatValueStyle, color: s.color }}>{s.value}</div>
                       <div style={summaryStatLabelStyle}>{s.label}</div>
                     </div>
                   ))}
@@ -601,10 +588,10 @@ export const FinancialPage = () => {
 
           {/* Trending Tab */}
           {activeTab === 'trending' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={flexColGap12Style}>
               {/* Filter bar */}
               <div style={finFilterBarStyle}>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={filterGap8Style}>
                   <span style={finFilterLabelStyle}>From</span>
                   <DatePicker
                     value={dayjs(trendDateFrom)}
@@ -613,7 +600,7 @@ export const FinancialPage = () => {
                     aria-label="Trending from month"
                   />
                 </div>
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={filterGap8Style}>
                   <span style={finFilterLabelStyle}>To</span>
                   <DatePicker
                     value={dayjs(trendDateTo)}
@@ -625,7 +612,7 @@ export const FinancialPage = () => {
               </div>
               {/* Summary stats */}
               {trendingItems.length > 0 && (
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={summaryStatFlexStyle}>
                   {[
                     { label: 'Months', value: trendingItems.length, color: 'var(--navy)' },
                     { label: 'Total Revenue', value: '$' + trendingItems.reduce((s, t) => s + Number(t.revenue), 0).toLocaleString('en-US', { maximumFractionDigits: 0 }), color: 'var(--success)' },
@@ -633,7 +620,7 @@ export const FinancialPage = () => {
                     { label: 'Avg Margin %', value: trendingItems.length > 0 ? Math.round(trendingItems.reduce((s, t) => s + Number(t.marginPct), 0) / trendingItems.length) + '%' : '\u2014', color: 'var(--warning)' },
                   ].map(s => (
                     <div key={s.label} style={summaryStatCardStyle}>
-                      <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</div>
+                      <div style={{ ...summaryStatValueStyle, color: s.color }}>{s.value}</div>
                       <div style={summaryStatLabelStyle}>{s.label}</div>
                     </div>
                   ))}
@@ -803,7 +790,7 @@ function renderHoldRows(holds: ClientOnHold[], loading: boolean) {
             ...finPaymentRowStyle,
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+          <div style={holdRowFlexStyle}>
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{h.clientName}</div>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{h.departmentName}</div>
@@ -812,8 +799,8 @@ function renderHoldRows(holds: ClientOnHold[], loading: boolean) {
               )}
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--danger)', textTransform: 'uppercase' }}>On Hold</div>
-              <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>Since {fmtDate(h.onHoldDate)}</div>
+              <div style={holdOnHoldStyle}>On Hold</div>
+              <div style={holdSinceStyle}>Since {fmtDate(h.onHoldDate)}</div>
             </div>
           </div>
         </div>

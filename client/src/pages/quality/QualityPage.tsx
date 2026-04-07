@@ -465,6 +465,7 @@ export const QualityPage = () => {
               value={dateFrom}
               onChange={e => { setDateFrom(e.target.value); setPage(1); }}
               title="From date"
+              aria-label="Filter from date"
               style={dateInputStyle}
             />
             <span style={dateToLabelStyle}>to</span>
@@ -473,6 +474,7 @@ export const QualityPage = () => {
               value={dateTo}
               onChange={e => { setDateTo(e.target.value); setPage(1); }}
               title="To date"
+              aria-label="Filter to date"
               style={dateInputStyle}
             />
 
@@ -694,23 +696,23 @@ export const QualityPage = () => {
 
           {/* Footer */}
           <div style={footerBarStyle}>
-            <span style={{ fontWeight: 500 }}>{ncrTotal.toLocaleString()} records</span>
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+            <span style={fontWeight500Style}>{ncrTotal.toLocaleString()} records</span>
+            <div style={paginationWrapStyle}>
               <button disabled={ncrPage <= 1} onClick={() => setNcrPage(p => p - 1)}
-                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: ncrPage <= 1 ? 'default' : 'pointer', opacity: ncrPage <= 1 ? 0.4 : 1, fontFamily: 'inherit' }}>
+                style={{ ...pageBtnBaseStyle, cursor: ncrPage <= 1 ? 'default' : 'pointer', opacity: ncrPage <= 1 ? 0.4 : 1 }}>
                 &#8249;
               </button>
               {Array.from({ length: Math.min(ncrTotalPages, 7) }, (_, i) => {
                 const pg = i + 1;
                 return (
                   <button key={pg} onClick={() => setNcrPage(pg)}
-                    style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: ncrPage === pg ? 'var(--navy)' : 'var(--card)', color: ncrPage === pg ? 'var(--card)' : 'var(--label)', fontSize: 11, fontWeight: ncrPage === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ ...pageBtnBaseStyle, background: ncrPage === pg ? 'var(--navy)' : 'var(--card)', color: ncrPage === pg ? 'var(--card)' : 'var(--label)', fontWeight: ncrPage === pg ? 600 : 400, cursor: 'pointer' }}>
                     {pg}
                   </button>
                 );
               })}
               <button disabled={ncrPage >= ncrTotalPages} onClick={() => setNcrPage(p => p + 1)}
-                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: ncrPage >= ncrTotalPages ? 'default' : 'pointer', opacity: ncrPage >= ncrTotalPages ? 0.4 : 1, fontFamily: 'inherit' }}>
+                style={{ ...pageBtnBaseStyle, cursor: ncrPage >= ncrTotalPages ? 'default' : 'pointer', opacity: ncrPage >= ncrTotalPages ? 0.4 : 1 }}>
                 &#8250;
               </button>
             </div>
@@ -744,11 +746,7 @@ export const QualityPage = () => {
               ))}
             </div>
             <input type="text" placeholder="Search CAPA#, NCR ref, description..." aria-label="Search CAPA records" readOnly
-              style={{
-                marginLeft: 'auto', height: 30, width: 260, border: '1.5px solid var(--border-dk)', borderRadius: 6,
-                padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
-                background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
-              }}
+              style={capaSearchInputStyle}
             />
           </div>
 
@@ -770,7 +768,7 @@ export const QualityPage = () => {
 
           {/* Footer */}
           <div style={footerBarStyle}>
-            <span style={{ fontWeight: 500 }}>0 records</span>
+            <span style={fontWeight500Style}>0 records</span>
           </div>
         </div>
       )}
@@ -791,11 +789,7 @@ export const QualityPage = () => {
             <input type="text" value={reworkSearch} onChange={e => { setReworkSearch(e.target.value); setReworkPage(1); }}
               placeholder="Search RW#, WO#, Serial#..."
               aria-label="Search rework records"
-              style={{
-                marginLeft: 'auto', height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6,
-                padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
-                background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
-              }}
+              style={searchInputStyle}
             />
           </div>
 
@@ -843,23 +837,23 @@ export const QualityPage = () => {
 
           {/* Footer */}
           <div style={footerBarStyle}>
-            <span style={{ fontWeight: 500 }}>{reworkTotal.toLocaleString()} records</span>
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+            <span style={fontWeight500Style}>{reworkTotal.toLocaleString()} records</span>
+            <div style={paginationWrapStyle}>
               <button disabled={reworkPage <= 1} onClick={() => setReworkPage(p => p - 1)}
-                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: reworkPage <= 1 ? 'default' : 'pointer', opacity: reworkPage <= 1 ? 0.4 : 1, fontFamily: 'inherit' }}>
+                style={{ ...pageBtnBaseStyle, cursor: reworkPage <= 1 ? 'default' : 'pointer', opacity: reworkPage <= 1 ? 0.4 : 1 }}>
                 &#8249;
               </button>
               {Array.from({ length: Math.min(reworkTotalPages, 7) }, (_, i) => {
                 const pg = i + 1;
                 return (
                   <button key={pg} onClick={() => setReworkPage(pg)}
-                    style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: reworkPage === pg ? 'var(--navy)' : 'var(--card)', color: reworkPage === pg ? 'var(--card)' : 'var(--label)', fontSize: 11, fontWeight: reworkPage === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    style={{ ...pageBtnBaseStyle, background: reworkPage === pg ? 'var(--navy)' : 'var(--card)', color: reworkPage === pg ? 'var(--card)' : 'var(--label)', fontWeight: reworkPage === pg ? 600 : 400, cursor: 'pointer' }}>
                     {pg}
                   </button>
                 );
               })}
               <button disabled={reworkPage >= reworkTotalPages} onClick={() => setReworkPage(p => p + 1)}
-                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: reworkPage >= reworkTotalPages ? 'default' : 'pointer', opacity: reworkPage >= reworkTotalPages ? 0.4 : 1, fontFamily: 'inherit' }}>
+                style={{ ...pageBtnBaseStyle, cursor: reworkPage >= reworkTotalPages ? 'default' : 'pointer', opacity: reworkPage >= reworkTotalPages ? 0.4 : 1 }}>
                 &#8250;
               </button>
             </div>
@@ -953,8 +947,8 @@ export const QualityPage = () => {
 
       {activeTab === 'Reports' && (
         <div style={tabFlexColumnStyle}>
-          <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
+          <div style={reportsTabContentStyle}>
+            <div style={reportGridStyle}>
               {[
                 { title: 'Inspection Summary', desc: 'Pass/Fail/Conditional breakdown by period', icon: <IconShield /> },
                 { title: 'First-Pass Yield Trend', desc: 'FPY percentage over last 12 months', icon: <IconCheckDouble /> },
@@ -963,20 +957,17 @@ export const QualityPage = () => {
                 { title: 'Rework Rate by Technician', desc: 'Rework frequency per tech over time', icon: <IconX /> },
                 { title: 'Cost of Poor Quality', desc: 'COPQ trends including rework and scrap costs', icon: <IconDollar /> },
               ].map(report => (
-                <div key={report.title} style={{
-                  background: 'var(--card)', border: '1px solid var(--neutral-200)', borderRadius: 'var(--radius-lg)',
-                  padding: 18, cursor: 'pointer', transition: 'box-shadow 0.15s',
-                }}
+                <div key={report.title} style={reportCardBaseStyle}
                   onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(var(--navy-rgb), 0.1)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = ''; }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: 6, background: 'rgba(var(--navy-rgb), 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--navy)' }}>
+                  <div style={reportIconWrapStyle}>
+                    <div style={reportIconBoxStyle}>
                       {report.icon}
                     </div>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{report.title}</span>
+                    <span style={reportTitleStyle}>{report.title}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>{report.desc}</div>
+                  <div style={reportDescStyle}>{report.desc}</div>
                 </div>
               ))}
             </div>

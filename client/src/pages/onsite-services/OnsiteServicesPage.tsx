@@ -337,7 +337,7 @@ export const OnsiteServicesPage = () => {
       {/* Split pane */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
         {/* Left panel — list */}
-        <div style={{
+        <aside aria-label="Onsite services list" style={{
           width: selectedKey ? 340 : '100%',
           minWidth: selectedKey ? 340 : undefined,
           borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
@@ -445,18 +445,18 @@ export const OnsiteServicesPage = () => {
               </button>
             </div>
           </div>
-        </div>
+        </aside>
 
         {/* Right panel — detail */}
         {selectedKey && (
-          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+          <section aria-label="Service details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
             <OnsiteServiceDetailDrawer
               open={true}
               serviceKey={selectedKey}
               onClose={() => setSelectedKey(null)}
               onUpdated={() => { reload(); }}
             />
-          </div>
+          </section>
         )}
       </div>
 

@@ -15,6 +15,33 @@ const fmtDate = (d: string | null) => {
   return isNaN(dt.getTime()) ? '\u2014' : dt.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 };
 
+// ── Extracted static styles ──
+const pageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
+const statStripStyle: React.CSSProperties = { display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--border)', flexShrink: 0, overflowX: 'auto' };
+const statIconStyle: React.CSSProperties = { width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 };
+const statLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' };
+const splitPaneStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex' };
+const listToolbarStyle: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 };
+const listToolbarTopStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
+const listToolbarTitleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6 };
+const listTitleStyle: React.CSSProperties = { fontSize: 13, fontWeight: 800, color: 'var(--navy)' };
+const listCountBadgeStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' };
+const listScrollStyle: React.CSSProperties = { flex: 1, overflow: 'auto' };
+const loadingTextStyle: React.CSSProperties = { padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 };
+const listItemInvoiceStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' };
+const listItemNameStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--navy)' };
+const listItemClientStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginTop: 2 };
+const listItemBottomStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' };
+const listItemTotalStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--navy)' };
+const paginationBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 };
+const paginationCountStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
+const paginationBtnsStyle: React.CSSProperties = { display: 'flex', gap: 3 };
+const rightPanelStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' };
+const modalFooterStyle: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', gap: 8 };
+const modalBodyStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' };
+const modalLabelStyle: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 };
+const modalHintStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', margin: 0 };
+
 const STAT_CHIPS: {
   key: string;
   label: string;
@@ -148,15 +175,9 @@ export const ProductSalePage = () => {
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div style={pageContainerStyle}>
       {/* Stat strip */}
-      <div style={{
-        display: 'flex',
-        background: 'var(--card)',
-        borderBottom: '1px solid var(--border)',
-        flexShrink: 0,
-        overflowX: 'auto',
-      }}>
+      <div style={statStripStyle}>
         {STAT_CHIPS.map((chip, i) => (
           <div
             key={chip.key}
@@ -177,21 +198,21 @@ export const ProductSalePage = () => {
             }}
           >
             <div style={{
-              width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: chip.iconBg, color: chip.iconColor, fontSize: 13, fontWeight: 700, flexShrink: 0,
+              ...statIconStyle,
+              background: chip.iconBg, color: chip.iconColor,
             }}>
               {chip.icon}
             </div>
             <div>
               <div style={{ fontSize: 14, fontWeight: 800, color: chip.valueColor, lineHeight: 1.2 }}>{getStatValue(chip.key)}</div>
-              <div style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{chip.label}</div>
+              <div style={statLabelStyle}>{chip.label}</div>
             </div>
           </div>
         ))}
       </div>
 
       {/* Split pane */}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+      <div style={splitPaneStyle}>
         {/* Left panel — list */}
         <div style={{
           width: selectedKey ? 340 : '100%',
@@ -203,11 +224,11 @@ export const ProductSalePage = () => {
           overflow: 'hidden',
         }}>
           {/* List toolbar */}
-          <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--navy)' }}>Product Sales</span>
-                <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' }}>{totalCount.toLocaleString()}</span>
+          <div style={listToolbarStyle}>
+            <div style={listToolbarTopStyle}>
+              <div style={listToolbarTitleRowStyle}>
+                <span style={listTitleStyle}>Product Sales</span>
+                <span style={listCountBadgeStyle}>{totalCount.toLocaleString()}</span>
               </div>
               <Button
                 icon={<PlusOutlined />}
@@ -248,9 +269,9 @@ export const ProductSalePage = () => {
           </div>
 
           {/* List rows */}
-          <div style={{ flex: 1, overflow: 'auto' }}>
-            {loading && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>}
-            {!loading && sales.length === 0 && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No records found</div>}
+          <div style={listScrollStyle}>
+            {loading && <div style={loadingTextStyle}>Loading...</div>}
+            {!loading && sales.length === 0 && <div style={loadingTextStyle}>No records found</div>}
             {sales.map(item => {
               const isSelected = item.productSaleKey === selectedKey;
               return (
@@ -271,14 +292,14 @@ export const ProductSalePage = () => {
                   onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
                   onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
                 >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>{item.invoiceNumber || '\u2014'}</div>
+                  <div style={listItemInvoiceStyle}>
+                    <div style={listItemNameStyle}>{item.invoiceNumber || '\u2014'}</div>
                     <StatusBadge status={item.status} />
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{item.clientName}</div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+                  <div style={listItemClientStyle}>{item.clientName}</div>
+                  <div style={listItemBottomStyle}>
                     <span>{fmtDate(item.orderDate)}</span>
-                    <span style={{ fontWeight: 600, color: 'var(--navy)' }}>{fmt$(item.total)}</span>
+                    <span style={listItemTotalStyle}>{fmt$(item.total)}</span>
                   </div>
                 </div>
               );
@@ -286,10 +307,10 @@ export const ProductSalePage = () => {
           </div>
 
           {/* Pagination */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
-            <span style={{ fontSize: 10, color: 'var(--muted)' }}>{sales.length} of {totalCount}</span>
+          <div style={paginationBarStyle}>
+            <span style={paginationCountStyle}>{sales.length} of {totalCount}</span>
             {totalPages > 1 && (
-              <div style={{ display: 'flex', gap: 3 }}>
+              <div style={paginationBtnsStyle}>
                 <PgBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{'\u2039'}</PgBtn>
                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                   const start = Math.max(1, Math.min(page - 2, totalPages - 4));
@@ -304,7 +325,7 @@ export const ProductSalePage = () => {
 
         {/* Right panel — detail */}
         {selectedKey && (
-          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+          <div style={rightPanelStyle}>
             <ProductSaleDetailPane
               detail={detail}
               loading={detailLoading}
@@ -321,7 +342,7 @@ export const ProductSalePage = () => {
         open={createModalOpen}
         onCancel={() => setCreateModalOpen(false)}
         footer={
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <div style={modalFooterStyle}>
             <Button onClick={() => setCreateModalOpen(false)}>Cancel</Button>
             <Button
               type="primary"
@@ -335,9 +356,9 @@ export const ProductSalePage = () => {
         }
         width={440}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' }}>
+        <div style={modalBodyStyle}>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Purchase Order #</label>
+            <label style={modalLabelStyle}>Purchase Order #</label>
             <Input
               aria-label="Purchase Order #"
               value={createPO}
@@ -347,7 +368,7 @@ export const ProductSalePage = () => {
             />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Notes</label>
+            <label style={modalLabelStyle}>Notes</label>
             <Input.TextArea
               aria-label="Notes"
               rows={3}
@@ -357,7 +378,7 @@ export const ProductSalePage = () => {
               style={{ fontSize: 12 }}
             />
           </div>
-          <p style={{ fontSize: 11, color: 'var(--muted)', margin: 0 }}>
+          <p style={modalHintStyle}>
             Client, department, and line items can be added after creation in the detail view.
           </p>
         </div>

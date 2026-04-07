@@ -105,6 +105,7 @@ export const DevelopmentListPage = () => {
         <select
           value={filterStatus ?? ''}
           onChange={e => { setFilterStatus(e.target.value ? Number(e.target.value) : undefined); setPage(1); }}
+          aria-label="Filter by status"
           style={{
             height: 28, border: '1.5px solid var(--border-dk)', borderRadius: 4,
             padding: '0 6px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)',

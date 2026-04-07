@@ -101,7 +101,7 @@ export const SuppliersPage = () => {
       {/* Split layout */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Left panel */}
-        <div style={{
+        <aside aria-label="Supplier list" style={{
           width: 280,
           flexShrink: 0,
           borderRight: '1px solid var(--neutral-200)',
@@ -113,7 +113,7 @@ export const SuppliersPage = () => {
           <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary-dark)' }}>Suppliers</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 11, color: 'var(--muted)' }}>{suppliers.length} records</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)' }} aria-live="polite">{suppliers.length} records</span>
               <ExportButton
                 data={suppliers as unknown as Record<string, unknown>[]}
                 columns={EXPORT_COLS}
@@ -140,12 +140,12 @@ export const SuppliersPage = () => {
             onSearchChange={setSearch}
             onSelect={handleSelect}
           />
-        </div>
+        </aside>
 
         {/* Right panel */}
-        <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
+        <section aria-label="Supplier details" style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
           <SupplierDetailPane detail={detail} loading={detailLoading} />
-        </div>
+        </section>
       </div>
 
       <Modal

@@ -29,6 +29,86 @@ const fld: React.CSSProperties = {
   color: 'var(--label)', background: 'var(--card)',
 };
 
+// ── Extracted static styles ──
+const wizOverlayStyle: React.CSSProperties = {
+  position: 'fixed', inset: 0, background: 'rgba(0,0,37,0.35)',
+  zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center',
+  backdropFilter: 'blur(2px)',
+};
+const wizDialogStyle: React.CSSProperties = {
+  background: 'var(--card)', borderRadius: 10, width: 660, maxHeight: '85vh',
+  overflow: 'hidden', boxShadow: '0 24px 72px rgba(0,0,37,0.28)',
+  display: 'flex', flexDirection: 'column',
+};
+const wizHeaderStyle: React.CSSProperties = {
+  padding: '14px 20px',
+  background: 'linear-gradient(120deg, var(--navy) 0%, var(--steel) 100%)',
+  color: 'var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+  flexShrink: 0,
+};
+const wizHeaderTitleStyle: React.CSSProperties = { fontSize: 14, fontWeight: 600, letterSpacing: 0.3 };
+const wizCloseBtnStyle: React.CSSProperties = {
+  background: 'transparent', border: '1px solid rgba(255,255,255,0.4)',
+  color: 'var(--card)', width: 28, height: 28, borderRadius: 5,
+  cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
+};
+const wizStepBarStyle: React.CSSProperties = {
+  display: 'flex', background: 'var(--neutral-50)',
+  borderBottom: '1px solid var(--neutral-200)', flexShrink: 0,
+};
+const wizBodyStyle: React.CSSProperties = { flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' };
+const wizStepContentStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, padding: '14px 18px', gap: 8 };
+const wizGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, overflowY: 'auto', flex: 1 };
+const wizCardNameStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--navy)' };
+const wizCardSubStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', marginTop: 2 };
+const wizEmptyStyle: React.CSSProperties = { gridColumn: '1/-1', padding: 20, textAlign: 'center', fontSize: 11, color: 'var(--muted)' };
+const wizScopeGridStyle: React.CSSProperties = { overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, alignContent: 'start' };
+const wizNewScopeBoxStyle: React.CSSProperties = {
+  border: '1px solid var(--neutral-200)', borderRadius: 6,
+  background: 'var(--neutral-50)', padding: '10px 12px', flexShrink: 0,
+};
+const wizNewScopeTitleStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 };
+const wizNewScopeHintStyle: React.CSSProperties = { fontSize: 9, color: 'var(--muted)', fontWeight: 400, marginLeft: 'auto' };
+const wizNewScopeGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '140px 1fr', gap: '6px 10px' };
+const wizModelDropdownStyle: React.CSSProperties = { maxHeight: 120, overflowY: 'auto', border: '1px solid var(--neutral-200)', borderRadius: 4, background: 'var(--card)', marginTop: 6 };
+const wizModelEmptyStyle: React.CSSProperties = { padding: 8, fontSize: 10, color: 'var(--muted)', textAlign: 'center' };
+const wizSerialRowStyle: React.CSSProperties = { display: 'flex', gap: 10, marginTop: 8, alignItems: 'flex-end' };
+const wizAddScopeBtnStyle: React.CSSProperties = {
+  height: 28, padding: '0 16px', background: 'var(--success)', color: 'var(--card)',
+  border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 700,
+  cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+  display: 'flex', alignItems: 'center', gap: 4,
+};
+const wizStep4Style: React.CSSProperties = { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, padding: '14px 18px', gap: 10, overflowY: 'auto' };
+const wizSummaryChipStyle: React.CSSProperties = {
+  background: 'rgba(var(--success-rgb), 0.08)', border: '1px solid rgba(var(--success-rgb), 0.25)',
+  borderRadius: 6, padding: '8px 12px', display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 11, flexShrink: 0,
+};
+const wizAccessoryRowStyle: React.CSSProperties = { display: 'flex', gap: 16, marginTop: 4 };
+const wizAccessoryLabelStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, cursor: 'pointer' };
+const wizPoGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 };
+const wizStepNumBaseStyle: React.CSSProperties = {
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  width: 16, height: 16, borderRadius: '50%', fontSize: 9,
+  color: 'var(--card)',
+};
+const wizModelMfgStyle: React.CSSProperties = { fontSize: 9, color: 'var(--muted)' };
+const wizIconStyle: React.CSSProperties = { width: 16, height: 16 };
+const wizSmallIconStyle: React.CSSProperties = { width: 14, height: 14 };
+const wizChipBreadcrumbStyle: React.CSSProperties = {
+  background: 'rgba(var(--success-rgb), 0.08)', border: '1px solid rgba(var(--success-rgb), 0.25)',
+  borderRadius: 6, padding: '7px 12px', display: 'flex', alignItems: 'center',
+  justifyContent: 'space-between', flexShrink: 0,
+};
+const wizChipLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase' };
+const wizChipValueStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--navy)' };
+const wizChipExtraStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', marginLeft: 4 };
+const wizChangeBtnStyle: React.CSSProperties = {
+  background: 'none', border: 'none', color: 'var(--primary)',
+  fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline',
+};
+const wizScopeEmptyNoSearchStyle: React.CSSProperties = { gridColumn: '1/-1', padding: 16, textAlign: 'center', fontSize: 11, color: 'var(--muted)' };
+
 export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
   const navigate = useNavigate();
 
@@ -254,60 +334,33 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
 
   // ── Breadcrumb chip ──
   const Chip = ({ label, value, extra, onChangeStep }: { label: string; value: string; extra?: string; onChangeStep: number }) => (
-    <div style={{
-      background: 'rgba(var(--success-rgb), 0.08)', border: '1px solid rgba(var(--success-rgb), 0.25)',
-      borderRadius: 6, padding: '7px 12px', display: 'flex', alignItems: 'center',
-      justifyContent: 'space-between', flexShrink: 0,
-    }}>
+    <div style={wizChipBreadcrumbStyle}>
       <div>
-        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase' }}>{label}</span><br />
-        <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>{value}</span>
-        {extra && <span style={{ fontSize: 10, color: 'var(--muted)', marginLeft: 4 }}>{extra}</span>}
+        <span style={wizChipLabelStyle}>{label}</span><br />
+        <span style={wizChipValueStyle}>{value}</span>
+        {extra && <span style={wizChipExtraStyle}>{extra}</span>}
       </div>
-      <button onClick={() => goStep(onChangeStep)} style={{
-        background: 'none', border: 'none', color: 'var(--primary)',
-        fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline',
-      }}>Change</button>
+      <button onClick={() => goStep(onChangeStep)} style={wizChangeBtnStyle}>Change</button>
     </div>
   );
 
   return (
     <div
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
-      style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,37,0.35)',
-        zIndex: 9998, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        backdropFilter: 'blur(2px)',
-      }}
+      style={wizOverlayStyle}
     >
-      <div style={{
-        background: 'var(--card)', borderRadius: 10, width: 660, maxHeight: '85vh',
-        overflow: 'hidden', boxShadow: '0 24px 72px rgba(0,0,37,0.28)',
-        display: 'flex', flexDirection: 'column',
-      }}>
+      <div style={wizDialogStyle}>
         {/* Header */}
-        <div style={{
-          padding: '14px 20px',
-          background: 'linear-gradient(120deg, var(--navy) 0%, var(--steel) 100%)',
-          color: 'var(--card)', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexShrink: 0,
-        }}>
+        <div style={wizHeaderStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <WizardIcon type={orderType} />
-            <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: 0.3 }}>{title}</span>
+            <span style={wizHeaderTitleStyle}>{title}</span>
           </div>
-          <button onClick={onClose} style={{
-            background: 'transparent', border: '1px solid rgba(255,255,255,0.4)',
-            color: 'var(--card)', width: 28, height: 28, borderRadius: 5,
-            cursor: 'pointer', fontSize: 16, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>x</button>
+          <button onClick={onClose} style={wizCloseBtnStyle}>x</button>
         </div>
 
         {/* Step tabs */}
-        <div style={{
-          display: 'flex', background: 'var(--neutral-50)',
-          borderBottom: '1px solid var(--neutral-200)', flexShrink: 0,
-        }}>
+        <div style={wizStepBarStyle}>
           {stepTabs.map((t) => {
             const active = t.num === step;
             const past = t.num < step;
@@ -321,10 +374,8 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                 display: 'flex', alignItems: 'center', gap: 5,
               }}>
                 <span style={{
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  width: 16, height: 16, borderRadius: '50%', fontSize: 9,
+                  ...wizStepNumBaseStyle,
                   background: (active || past) ? 'var(--navy)' : 'var(--neutral-200)',
-                  color: 'var(--card)',
                 }}>{t.num}</span>
                 {t.label}
               </div>
@@ -333,20 +384,20 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={wizBodyStyle}>
 
           {/* ════ Step 1: Client ════ */}
           {step === 1 && (
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, padding: '14px 18px', gap: 8 }}>
+            <div style={wizStepContentStyle}>
               <input ref={clientSearchRef} value={clientSearch} onChange={e => setClientSearch(e.target.value)}
                 placeholder="Search by name, city, state, zip, or ID..." aria-label="Search clients" style={{ ...fld, height: 32, flexShrink: 0 }} />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, overflowY: 'auto', flex: 1 }}>
+              <div style={wizGridStyle}>
                 {filteredClients.length === 0
-                  ? <div style={{ gridColumn: '1/-1', padding: 20, textAlign: 'center', fontSize: 11, color: 'var(--muted)' }}>No clients found</div>
+                  ? <div style={wizEmptyStyle}>No clients found</div>
                   : filteredClients.map(c => (
                     <div key={c.clientKey} onClick={() => handleSelectClient(c)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectClient(c); } }} style={cardStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>{c.name}</div>
-                      <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>
+                      <div style={wizCardNameStyle}>{c.name}</div>
+                      <div style={wizCardSubStyle}>
                         {c.city}{c.state ? `, ${c.state}` : ''}
                       </div>
                     </div>
@@ -357,16 +408,16 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
 
           {/* ════ Step 2: Department ════ */}
           {step === 2 && selectedClient && (
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, padding: '14px 18px', gap: 8 }}>
+            <div style={wizStepContentStyle}>
               <Chip label="Client" value={selectedClient.name} extra={`${selectedClient.city}${selectedClient.state ? `, ${selectedClient.state}` : ''}`} onChangeStep={1} />
               <input ref={deptSearchRef} value={deptSearch} onChange={e => setDeptSearch(e.target.value)}
                 placeholder="Search departments..." aria-label="Search departments" style={{ ...fld, height: 32, flexShrink: 0 }} />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, overflowY: 'auto', flex: 1 }}>
+              <div style={wizGridStyle}>
                 {filteredDepts.length === 0
-                  ? <div style={{ gridColumn: '1/-1', padding: 20, textAlign: 'center', fontSize: 11, color: 'var(--muted)' }}>No departments found</div>
+                  ? <div style={wizEmptyStyle}>No departments found</div>
                   : filteredDepts.map(d => (
                     <div key={d.departmentKey} onClick={() => handleSelectDept(d)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectDept(d); } }} style={cardStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>{d.name}</div>
+                      <div style={wizCardNameStyle}>{d.name}</div>
                     </div>
                   ))}
               </div>
@@ -375,21 +426,21 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
 
           {/* ════ Step 3: Scope ════ */}
           {step === 3 && selectedClient && selectedDept && (
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, padding: '14px 18px', gap: 8 }}>
+            <div style={wizStepContentStyle}>
               <Chip label="Client / Department" value={`${selectedClient.name} / ${selectedDept.name}`} onChangeStep={2} />
               <input ref={scopeSearchRef} value={scopeSearch} onChange={e => setScopeSearch(e.target.value)}
                 placeholder="Search by serial number or model..." aria-label="Search scopes" style={{ ...fld, height: 32, flexShrink: 0 }} />
 
               {/* Existing scopes grid */}
-              <div style={{ overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, alignContent: 'start' }}>
+              <div style={wizScopeGridStyle}>
                 {filteredScopes.length === 0 && !scopeSearch
-                  ? <div style={{ gridColumn: '1/-1', padding: 16, textAlign: 'center', fontSize: 11, color: 'var(--muted)' }}>No scopes for this department. Use <b>Add New Scope</b> below.</div>
+                  ? <div style={wizScopeEmptyNoSearchStyle}>No scopes for this department. Use <b>Add New Scope</b> below.</div>
                   : filteredScopes.length === 0
-                  ? <div style={{ gridColumn: '1/-1', padding: 16, textAlign: 'center', fontSize: 11, color: 'var(--muted)' }}>No scopes matching &quot;{scopeSearch}&quot;</div>
+                  ? <div style={wizScopeEmptyNoSearchStyle}>No scopes matching &quot;{scopeSearch}&quot;</div>
                   : filteredScopes.map(s => (
                     <div key={s.scopeKey} onClick={() => handleSelectScope(s)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectScope(s); } }} style={cardStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>SN# {s.serialNumber || '\u2014'}</div>
-                      <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>
+                      <div style={wizCardNameStyle}>SN# {s.serialNumber || '\u2014'}</div>
+                      <div style={wizCardSubStyle}>
                         {s.model || '\u2014'}{s.manufacturer ? ` \u00b7 ${s.manufacturer}` : ''}{s.type ? ` \u00b7 ${TYPE_LABELS[s.type] || s.type}` : ''}
                       </div>
                     </div>
@@ -397,18 +448,15 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
               </div>
 
               {/* Add New Scope */}
-              <div style={{
-                border: '1px solid var(--neutral-200)', borderRadius: 6,
-                background: 'var(--neutral-50)', padding: '10px 12px', flexShrink: 0,
-              }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <div style={wizNewScopeBoxStyle}>
+                <div style={wizNewScopeTitleStyle}>
                   <span style={{ fontSize: 14 }}>+</span> Add New Scope
-                  <span style={{ fontSize: 9, color: 'var(--muted)', fontWeight: 400, marginLeft: 'auto' }}>Scope not in system yet</span>
+                  <span style={wizNewScopeHintStyle}>Scope not in system yet</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '6px 10px' }}>
+                <div style={wizNewScopeGridStyle}>
                   <div>
                     <div style={lbl}>Instrument Type *</div>
-                    <select value={newInstType} onChange={e => handleInstTypeChange(e.target.value)} style={fld}>
+                    <select value={newInstType} onChange={e => handleInstTypeChange(e.target.value)} aria-label="Instrument type" style={fld}>
                       <option value="">-- Select --</option>
                       {instTypes.map(t => <option key={t.typeCode} value={t.typeCode}>{t.label}</option>)}
                     </select>

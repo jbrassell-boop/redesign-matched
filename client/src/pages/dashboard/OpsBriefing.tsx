@@ -10,31 +10,59 @@ interface Props {
 
 const fmt$ = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
+// ── Extracted static styles ──
+const sectionCardBaseStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--neutral-200)', borderRadius: 6, overflow: 'hidden' };
+const sectionHeaderStyle: React.CSSProperties = { padding: '8px 14px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', fontSize: 11, fontWeight: 800, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '.06em' };
+const sectionBodyStyle: React.CSSProperties = { padding: 0 };
+const kpiContainerStyle: React.CSSProperties = { textAlign: 'center', padding: '12px 16px', flex: 1, minWidth: 100 };
+const kpiValueBaseStyle: React.CSSProperties = { fontSize: 28, fontWeight: 900, lineHeight: 1 };
+const kpiLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 4 };
+const kpiSubStyle: React.CSSProperties = { fontSize: 9, color: 'var(--muted)', marginTop: 2 };
+const flowTdBaseStyle: React.CSSProperties = { padding: '6px 12px', fontSize: 12, borderBottom: '1px solid var(--neutral-100)' };
+const briefingContainerStyle: React.CSSProperties = { padding: 16, overflow: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 };
+const briefingHeaderStyle: React.CSSProperties = { background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%)', borderRadius: 8, padding: '16px 20px', color: 'var(--card)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
+const greetingStyle: React.CSSProperties = { fontSize: 20, fontWeight: 900 };
+const dateSubStyle: React.CSSProperties = { fontSize: 11, opacity: .5, marginTop: 2 };
+const headerStatsRowStyle: React.CSSProperties = { display: 'flex', gap: 20, alignItems: 'center' };
+const headerStatBoxStyle: React.CSSProperties = { textAlign: 'center' };
+const headerStatValueStyle: React.CSSProperties = { fontSize: 28, fontWeight: 900 };
+const headerStatLabelStyle: React.CSSProperties = { fontSize: 9, opacity: .5, textTransform: 'uppercase' };
+const urgentBoxStyle: React.CSSProperties = { textAlign: 'center', background: 'rgba(239,68,68,.2)', padding: '8px 16px', borderRadius: 6 };
+const urgentValueStyle: React.CSSProperties = { fontSize: 28, fontWeight: 900, color: 'var(--danger-text-lt)' };
+const urgentLabelStyle: React.CSSProperties = { fontSize: 9, opacity: .7, textTransform: 'uppercase' };
+const twoColGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 };
+const flowTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse' };
+const flowThBaseStyle: React.CSSProperties = { padding: '6px 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.04em', borderBottom: '1px solid var(--neutral-200)', background: 'linear-gradient(180deg, var(--gradient-blue-start), var(--gradient-blue-end))' };
+const kpiGrid2Style: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid var(--neutral-100)' };
+const kpiGrid2NoBorderStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr' };
+const prioritiesGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' };
+const prodPlanPadStyle: React.CSSProperties = { padding: '12px 14px', fontSize: 12, color: 'var(--muted)', textAlign: 'center' };
+const prodGrid3Style: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 };
+const delayPadStyle: React.CSSProperties = { padding: '12px 14px' };
+const delayGrid4Style: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, textAlign: 'center' };
+const bigNumStyle: React.CSSProperties = { fontSize: 22, fontWeight: 900 };
+const smallLabelStyle: React.CSSProperties = { fontSize: 9, textTransform: 'uppercase' };
+const delayNumStyle: React.CSSProperties = { fontSize: 18, fontWeight: 900 };
+const delayLabelStyle: React.CSSProperties = { fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase' };
+const loadingContainerStyle: React.CSSProperties = { padding: 20, display: 'flex', flexDirection: 'column', gap: 12 };
+const loadingBlockStyle: React.CSSProperties = { height: 120, background: 'var(--neutral-100)', borderRadius: 6 };
+
 // ── Section Card ──
 const Section = ({ title, children, accent }: { title: string; children: React.ReactNode; accent?: string }) => (
-  <div style={{
-    background: 'var(--card)', border: '1px solid var(--neutral-200)',
-    borderRadius: 6, overflow: 'hidden',
-    borderTop: accent ? `3px solid ${accent}` : undefined,
-  }}>
-    <div style={{
-      padding: '8px 14px', background: 'var(--neutral-50)',
-      borderBottom: '1px solid var(--neutral-200)',
-      fontSize: 11, fontWeight: 800, color: 'var(--navy)',
-      textTransform: 'uppercase', letterSpacing: '.06em',
-    }}>
+  <div style={{ ...sectionCardBaseStyle, borderTop: accent ? `3px solid ${accent}` : undefined }}>
+    <div style={sectionHeaderStyle}>
       {title}
     </div>
-    <div style={{ padding: 0 }}>{children}</div>
+    <div style={sectionBodyStyle}>{children}</div>
   </div>
 );
 
 // ── KPI Pill ──
 const Kpi = ({ label, value, color, sub }: { label: string; value: string; color: string; sub?: string }) => (
-  <div style={{ textAlign: 'center', padding: '12px 16px', flex: 1, minWidth: 100 }}>
-    <div style={{ fontSize: 28, fontWeight: 900, color, lineHeight: 1 }}>{value}</div>
-    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em', marginTop: 4 }}>{label}</div>
-    {sub && <div style={{ fontSize: 9, color: 'var(--muted)', marginTop: 2 }}>{sub}</div>}
+  <div style={kpiContainerStyle}>
+    <div style={{ ...kpiValueBaseStyle, color }}>{value}</div>
+    <div style={kpiLabelStyle}>{label}</div>
+    {sub && <div style={kpiSubStyle}>{sub}</div>}
   </div>
 );
 
@@ -43,7 +71,7 @@ const FlowRow = ({ type, inn, closed, missed, net, bold }: {
   type: string; inn: number; closed: number; missed: number; net: number; bold?: boolean;
 }) => {
   const td: React.CSSProperties = {
-    padding: '6px 12px', fontSize: 12, borderBottom: '1px solid var(--neutral-100)',
+    ...flowTdBaseStyle,
     fontWeight: bold ? 700 : 400, background: bold ? 'var(--neutral-50)' : undefined,
   };
   const numTd: React.CSSProperties = { ...td, textAlign: 'right' as const, fontVariantNumeric: 'tabular-nums' };
@@ -81,9 +109,9 @@ export const OpsBriefing = ({ stats }: Props) => {
   }, []);
 
   if (loading) return (
-    <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+    <div style={loadingContainerStyle}>
       {[1, 2, 3].map(i => (
-        <div key={i} style={{ height: 120, background: 'var(--neutral-100)', borderRadius: 6 }} />
+        <div key={i} style={loadingBlockStyle} />
       ))}
     </div>
   );
@@ -101,33 +129,29 @@ export const OpsBriefing = ({ stats }: Props) => {
   const pendingShip = stats?.pendingShip ?? 0;
 
   return (
-    <div style={{ padding: 16, overflow: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={briefingContainerStyle}>
       {/* Header */}
-      <div style={{
-        background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%)',
-        borderRadius: 8, padding: '16px 20px', color: 'var(--card)',
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-      }}>
+      <div style={briefingHeaderStyle}>
         <div>
-          <div style={{ fontSize: 20, fontWeight: 900 }}>{greeting}</div>
-          <div style={{ fontSize: 11, opacity: .5, marginTop: 2 }}>{dateStr} — Daily Operations Briefing</div>
+          <div style={greetingStyle}>{greeting}</div>
+          <div style={dateSubStyle}>{dateStr} — Daily Operations Briefing</div>
         </div>
-        <div style={{ display: 'flex', gap: 20, alignItems: 'center' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 900 }}>{open.toLocaleString()}</div>
-            <div style={{ fontSize: 9, opacity: .5, textTransform: 'uppercase' }}>Open Repairs</div>
+        <div style={headerStatsRowStyle}>
+          <div style={headerStatBoxStyle}>
+            <div style={headerStatValueStyle}>{open.toLocaleString()}</div>
+            <div style={headerStatLabelStyle}>Open Repairs</div>
           </div>
           {urgent > 0 && (
-            <div style={{ textAlign: 'center', background: 'rgba(239,68,68,.2)', padding: '8px 16px', borderRadius: 6 }}>
-              <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--danger-text-lt)' }}>{urgent}</div>
-              <div style={{ fontSize: 9, opacity: .7, textTransform: 'uppercase' }}>Urgent</div>
+            <div style={urgentBoxStyle}>
+              <div style={urgentValueStyle}>{urgent}</div>
+              <div style={urgentLabelStyle}>Urgent</div>
             </div>
           )}
         </div>
       </div>
 
       {/* Two-column layout */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div style={twoColGridStyle}>
         {/* Left: Flow table */}
         <Section title="Overall Flow — Previous Work Day" accent="var(--primary)">
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>

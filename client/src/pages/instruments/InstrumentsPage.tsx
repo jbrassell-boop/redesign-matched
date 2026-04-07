@@ -326,7 +326,7 @@ export const InstrumentsPage = () => {
       {/* Split pane */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
         {/* Left panel — list */}
-        <div style={{
+        <aside aria-label="Instruments list" style={{
           width: anyDetailOpen ? 340 : '100%',
           minWidth: anyDetailOpen ? 340 : undefined,
           borderRight: anyDetailOpen ? '1px solid var(--neutral-200)' : undefined,
@@ -416,26 +416,26 @@ export const InstrumentsPage = () => {
           </div>
 
           {paginationBar}
-        </div>
+        </aside>
 
         {/* Right panel — detail */}
         {repairDetailOpen && (
-          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+          <section aria-label="Instrument repair details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
             <RepairDetailPane
               detail={repairDetail}
               loading={repairDetailLoading}
               onClose={() => { setSelectedRepairKey(null); setRepairDetail(null); }}
             />
-          </div>
+          </section>
         )}
         {catalogDetailOpen && (
-          <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+          <section aria-label="Instrument catalog details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
             <CatalogDetailPane
               detail={catalogDetail}
               loading={catalogDetailLoading}
               onClose={() => { setSelectedCatalogKey(null); setCatalogDetail(null); }}
             />
-          </div>
+          </section>
         )}
       </div>
     </div>
