@@ -102,7 +102,6 @@ const IconDollar = () => (
 );
 
 // ── Extracted static styles (performance: avoid re-creating objects each render) ──
-const iconSvgStyle: React.CSSProperties = { width: 14, height: 14 };
 const spinnerContainerStyle: React.CSSProperties = { padding: 24, textAlign: 'center' };
 const emptyStateStyle: React.CSSProperties = { padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12, fontStyle: 'italic' };
 const tabPaddingStyle: React.CSSProperties = { padding: '10px 14px' };

@@ -114,7 +114,6 @@ const cellStyleCenter: React.CSSProperties = { ...cellStyle, textAlign: 'center'
 const cellStyleRightBold: React.CSSProperties = { ...cellStyle, textAlign: 'right', fontWeight: 700 };
 const cellStyleNavyBold: React.CSSProperties = { ...cellStyle, fontWeight: 700, color: 'var(--navy)' };
 const cellStyleRightWeight600: React.CSSProperties = { ...cellStyle, textAlign: 'right', fontWeight: 600 };
-const navyBtnStyle: React.CSSProperties = { height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 };
 const filterLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' };
 const searchWrapStyle: React.CSSProperties = { position: 'relative', marginLeft: 'auto' };
 const searchIconWrapStyle: React.CSSProperties = { position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' };

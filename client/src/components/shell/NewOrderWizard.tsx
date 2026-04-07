@@ -93,7 +93,6 @@ const wizStepNumBaseStyle: React.CSSProperties = {
 };
 const wizModelMfgStyle: React.CSSProperties = { fontSize: 9, color: 'var(--muted)' };
 const wizIconStyle: React.CSSProperties = { width: 16, height: 16 };
-const wizSmallIconStyle: React.CSSProperties = { width: 14, height: 14 };
 const wizChipBreadcrumbStyle: React.CSSProperties = {
   background: 'rgba(var(--success-rgb), 0.08)', border: '1px solid rgba(var(--success-rgb), 0.25)',
   borderRadius: 6, padding: '7px 12px', display: 'flex', alignItems: 'center',
