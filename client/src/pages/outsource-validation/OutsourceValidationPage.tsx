@@ -316,20 +316,20 @@ export const OutsourceValidationPage = () => {
         <span style={{ fontWeight: 500 }}>{totalCount.toLocaleString()} records</span>
         <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
           <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
-            style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: page <= 1 ? 'default' : 'pointer', opacity: page <= 1 ? 0.4 : 1, fontFamily: 'inherit' }}>
+            style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: page <= 1 ? 'default' : 'pointer', opacity: page <= 1 ? 0.4 : 1, fontFamily: 'inherit' }}>
             {'\u2039'}
           </button>
           {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
             const pg = i + 1;
             return (
               <button key={pg} onClick={() => setPage(pg)}
-                style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: page === pg ? 'var(--navy)' : 'var(--card)', color: page === pg ? 'var(--card)' : 'var(--label)', fontSize: 11, fontWeight: page === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
+                style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: page === pg ? 'var(--navy)' : 'var(--card)', color: page === pg ? 'var(--card)' : 'var(--label)', fontSize: 11, fontWeight: page === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
                 {pg}
               </button>
             );
           })}
           <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}
-            style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: page >= totalPages ? 'default' : 'pointer', opacity: page >= totalPages ? 0.4 : 1, fontFamily: 'inherit' }}>
+            style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: page >= totalPages ? 'default' : 'pointer', opacity: page >= totalPages ? 0.4 : 1, fontFamily: 'inherit' }}>
             {'\u203A'}
           </button>
         </div>
