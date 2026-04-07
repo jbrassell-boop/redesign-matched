@@ -485,7 +485,7 @@ export const EndoCartsPage = () => {
                 New Quote
               </button>
               <div style={endoSeparatorStyle} />
-              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>Status</span>
+              <span style={filterLabelStyle}>Status</span>
               <SegmentedControl items={STATUS_SEGMENTS} value={filters.status} onChange={v => { setFilters(f => ({ ...f, status: v })); setChipFilter(''); setPage(1); }} />
               <div style={endoSeparatorStyle} />
               <select value={filters.rep} onChange={e => { setFilters(f => ({ ...f, rep: e.target.value })); setPage(1); }} style={{
@@ -495,8 +495,8 @@ export const EndoCartsPage = () => {
                 <option value="">All Sales Reps</option>
                 {SALES_REPS.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
-              <div style={{ position: 'relative', marginLeft: 'auto' }}>
-                <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
+              <div style={searchWrapStyle}>
+                <span style={searchIconWrapStyle}><IconSearch /></span>
                 <input placeholder="Search quote#, client, model..." aria-label="Search EndoCart quotes" value={filters.search} onChange={e => { setFilters(f => ({ ...f, search: e.target.value })); setPage(1); }} style={{
                   height: 30, width: 200, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
                 }} />
@@ -594,7 +594,7 @@ export const EndoCartsPage = () => {
               Add Component
             </button>
             <div style={endoSeparatorStyle} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>Category</span>
+            <span style={filterLabelStyle}>Category</span>
             <select value={catCategory} onChange={e => setCatCategory(e.target.value)} style={{
               height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit',
               color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 130,
@@ -602,11 +602,9 @@ export const EndoCartsPage = () => {
               <option value="">All Categories</option>
               {CATALOG_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
-            <div style={{ position: 'relative', marginLeft: 'auto' }}>
-              <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
-              <input placeholder="Search parts..." aria-label="Search EndoCart parts catalog" value={catSearch} onChange={e => setCatSearch(e.target.value)} style={{
-                height: 30, width: 200, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
-              }} />
+            <div style={searchWrapStyle}>
+              <span style={searchIconWrapStyle}><IconSearch /></span>
+              <input placeholder="Search parts..." aria-label="Search EndoCart parts catalog" value={catSearch} onChange={e => setCatSearch(e.target.value)} style={searchInputStyle} />
             </div>
           </div>
           <div style={endoTableCardBg}>
@@ -648,11 +646,9 @@ export const EndoCartsPage = () => {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New Model
             </button>
-            <div style={{ position: 'relative', marginLeft: 'auto' }}>
-              <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
-              <input placeholder="Search models..." aria-label="Search EndoCart models" value={modelSearch} onChange={e => setModelSearch(e.target.value)} style={{
-                height: 30, width: 200, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
-              }} />
+            <div style={searchWrapStyle}>
+              <span style={searchIconWrapStyle}><IconSearch /></span>
+              <input placeholder="Search models..." aria-label="Search EndoCart models" value={modelSearch} onChange={e => setModelSearch(e.target.value)} style={searchInputStyle} />
             </div>
           </div>
           <div style={endoTableCardBg}>
@@ -724,14 +720,14 @@ export const EndoCartsPage = () => {
       {activeTab === 'scope-inventory' && (
         <div style={endoTabFlexStyle}>
           <div style={endoToolbarStyle}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>Type</span>
+            <span style={filterLabelStyle}>Type</span>
             <SegmentedControl
               items={[{ label: 'All', value: '' }, { label: 'Flexible', value: 'F' }, { label: 'Rigid', value: 'R' }]}
               value={scopeTypeFilter}
               onChange={v => { setScopeTypeFilter(v); setScopePage(1); }}
             />
-            <div style={{ position: 'relative', marginLeft: 'auto' }}>
-              <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
+            <div style={searchWrapStyle}>
+              <span style={searchIconWrapStyle}><IconSearch /></span>
               <input placeholder="Search serial#, type, client..." aria-label="Search EndoCart scopes" value={scopeSearch} onChange={e => { setScopeSearch(e.target.value); setScopePage(1); }} style={{
                 height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
               }} />
@@ -798,8 +794,8 @@ export const EndoCartsPage = () => {
       {activeTab === 'service-history' && (
         <div style={endoTabFlexStyle}>
           <div style={endoToolbarStyle}>
-            <div style={{ position: 'relative', marginLeft: 'auto' }}>
-              <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
+            <div style={searchWrapStyle}>
+              <span style={searchIconWrapStyle}><IconSearch /></span>
               <input placeholder="Search WO#, serial#, client..." aria-label="Search EndoCart service history" value={serviceSearch} onChange={e => { setServiceSearch(e.target.value); setServicePage(1); }} style={{
                 height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
               }} />
