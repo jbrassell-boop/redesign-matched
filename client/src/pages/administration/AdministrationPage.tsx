@@ -788,7 +788,7 @@ export function AdministrationPage() {
         width={600}
         styles={{ header: { background: 'var(--primary-dark)', color: 'var(--card)' }, body: { padding: 0 } }}
         footer={editingUser ? (
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <div style={adminModalFooterStyle}>
             <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>
             <Button type="primary" loading={userSaving} onClick={saveUser} style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>
               Save Changes
@@ -818,8 +818,8 @@ export function AdministrationPage() {
                 { label: 'Location', value: editingUser.location },
                 { label: 'Last Login', value: editingUser.lastLogin ? new Date(editingUser.lastLogin).toLocaleDateString() : '—' },
               ].map(f => (
-                <div key={f.label} style={{ display: 'flex', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
-                  <span style={{ width: 100, fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>{f.label}</span>
+                <div key={f.label} style={adminUserInfoRowStyle}>
+                  <span style={adminUserInfoLabelStyle}>{f.label}</span>
                   <span style={{ fontSize: 12, color: 'var(--neutral-900)' }}>{f.value || '—'}</span>
                 </div>
               ))}
@@ -848,14 +848,14 @@ export function AdministrationPage() {
         open={reasonModalOpen}
         onCancel={() => setReasonModalOpen(false)}
         footer={
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <div style={adminModalFooterStyle}>
             <Button onClick={() => setReasonModalOpen(false)}>Cancel</Button>
             <Button type="primary" loading={reasonSaving} onClick={saveReason} style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>Save</Button>
           </div>
         }
         width={420}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' }}>
+        <div style={adminModalBodyStyle}>
           <div>
             <label style={adminFormLabelStyle}>Reason Text</label>
             <Input aria-label="Reason Text" value={reasonText} onChange={e => setReasonText(e.target.value)} placeholder="Enter repair reason..." style={{ fontSize: 12 }} />
@@ -873,14 +873,14 @@ export function AdministrationPage() {
         open={statusModalOpen}
         onCancel={() => setStatusModalOpen(false)}
         footer={
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+          <div style={adminModalFooterStyle}>
             <Button onClick={() => setStatusModalOpen(false)}>Cancel</Button>
             <Button type="primary" loading={statusSaving} onClick={saveStatus} style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>Save</Button>
           </div>
         }
         width={420}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' }}>
+        <div style={adminModalBodyStyle}>
           <div>
             <label style={adminFormLabelStyle}>Status Name</label>
             <Input aria-label="Status Name" value={statusText} onChange={e => setStatusText(e.target.value)} placeholder="Enter status name..." style={{ fontSize: 12 }} />
