@@ -50,6 +50,37 @@ const STAT_CHIPS: {
   { key: 'value', label: 'Total Value', iconBg: 'rgba(var(--success-rgb), 0.13)', iconColor: 'var(--success)', valueColor: 'var(--success)', icon: '\u2191' },
 ];
 
+// ── Extracted static styles (performance: avoid re-creating objects each render) ──
+const instPageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
+const instStatStripStyle: React.CSSProperties = { display: 'flex', borderBottom: '1px solid var(--border)', background: 'var(--card)', flexShrink: 0, overflowX: 'auto' };
+const instStatChipValueStyle: React.CSSProperties = { fontSize: 14, fontWeight: 800, lineHeight: 1.2 };
+const instStatChipLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' };
+const instSplitFlexStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex' };
+const instToolbarStyle: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 };
+const instToolbarRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' };
+const instSearchIconStyle: React.CSSProperties = { color: 'var(--muted)', fontSize: 12 };
+const instSearchInputStyle: React.CSSProperties = { height: 28, fontSize: 11, flex: 1, minWidth: 140 };
+const instStatusSelectStyle: React.CSSProperties = { width: 140 };
+const instTypeSelectStyle: React.CSSProperties = { width: 110 };
+const instActiveSelectStyle: React.CSSProperties = { width: 100 };
+const instCountRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6 };
+const instCountBadgeStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' };
+const instListOverflowStyle: React.CSSProperties = { flex: 1, overflow: 'auto' };
+const instEmptyStyle: React.CSSProperties = { padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 };
+const instDetailSectionStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' };
+const instPagBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 };
+const instPagCountStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
+const instPagBtnsStyle: React.CSSProperties = { display: 'flex', gap: 3 };
+const instRepairRowTopStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' };
+const instRepairOrderStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--navy)' };
+const instRepairClientStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginTop: 2 };
+const instRepairBottomStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' };
+const instRepairValueStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--navy)' };
+const instCatalogNameStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--navy)', flex: 1, marginRight: 8 };
+const instCatalogMetaStyle: React.CSSProperties = { display: 'flex', gap: 12, marginTop: 3, fontSize: 10, color: 'var(--muted)' };
+const instCatalogUsageStyle: React.CSSProperties = { marginLeft: 'auto' };
+const instStatChipIconStyle: React.CSSProperties = { width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 };
+
 export const InstrumentsPage = () => {
   const [activeTab, setActiveTab] = useState<InstrumentTab>('repairs');
   const [search, setSearch] = useState('');
@@ -200,14 +231,14 @@ export const InstrumentsPage = () => {
         onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
         onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>{item.orderNumber}</div>
+        <div style={instRepairRowTopStyle}>
+          <div style={instRepairOrderStyle}>{item.orderNumber}</div>
           <StatusBadge status={item.status} />
         </div>
-        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{item.clientName}</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+        <div style={instRepairClientStyle}>{item.clientName}</div>
+        <div style={instRepairBottomStyle}>
           <span>{item.departmentName}</span>
-          <span style={{ fontWeight: 600, color: 'var(--navy)' }}>{fmt$(item.totalValue)}</span>
+          <span style={instRepairValueStyle}>{fmt$(item.totalValue)}</span>
         </div>
       </div>
     );
@@ -231,14 +262,14 @@ export const InstrumentsPage = () => {
         onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
         onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)', flex: 1, marginRight: 8 }}>{item.itemDescription}</div>
+        <div style={instRepairRowTopStyle}>
+          <div style={instCatalogNameStyle}>{item.itemDescription}</div>
           <StatusBadge status={item.isActive ? 'Active' : 'Inactive'} />
         </div>
-        <div style={{ display: 'flex', gap: 12, marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+        <div style={instCatalogMetaStyle}>
           <span>{item.rigidOrFlexible === 'R' ? 'Rigid' : item.rigidOrFlexible === 'F' ? 'Flexible' : item.rigidOrFlexible || '\u2014'}</span>
           <span>{item.tsiCode || '\u2014'}</span>
-          <span style={{ marginLeft: 'auto' }}>Usage: {item.usageCount}</span>
+          <span style={instCatalogUsageStyle}>Usage: {item.usageCount}</span>
         </div>
       </div>
     );
@@ -249,12 +280,12 @@ export const InstrumentsPage = () => {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
   const paginationBar = (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
-      <span style={{ fontSize: 10, color: 'var(--muted)' }}>
+    <div style={instPagBarStyle}>
+      <span style={instPagCountStyle}>
         {(activeTab === 'repairs' || activeTab === 'quotes') ? repairs.length : catalogItems.length} of {totalItems}
       </span>
       {totalPages > 1 && (
-        <div style={{ display: 'flex', gap: 3 }}>
+        <div style={instPagBtnsStyle}>
           <PgBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{'\u2039'}</PgBtn>
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             const start = Math.max(1, Math.min(page - 2, totalPages - 4));
@@ -268,7 +299,7 @@ export const InstrumentsPage = () => {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div style={instPageContainerStyle}>
       {/* Page tabs */}
       <TabBar
         tabs={TABS.map(t =>
@@ -282,13 +313,7 @@ export const InstrumentsPage = () => {
 
       {/* Stat strip — only for repairs/quotes tab */}
       {(activeTab === 'repairs' || activeTab === 'quotes') && (
-        <div style={{
-          display: 'flex',
-          borderBottom: '1px solid var(--border)',
-          background: 'var(--card)',
-          flexShrink: 0,
-          overflowX: 'auto',
-        }}>
+        <div style={instStatStripStyle}>
           {STAT_CHIPS.map((chip, i) => (
             <div
               key={chip.key}
@@ -308,15 +333,12 @@ export const InstrumentsPage = () => {
                 minWidth: 100,
               }}
             >
-              <div style={{
-                width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: chip.iconBg, color: chip.iconColor, fontSize: 13, fontWeight: 700, flexShrink: 0,
-              }}>
+              <div style={{ ...instStatChipIconStyle, background: chip.iconBg, color: chip.iconColor }}>
                 {chip.icon}
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: chip.valueColor, lineHeight: 1.2 }}>{getStatValue(chip.key)}</div>
-                <div style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{chip.label}</div>
+                <div style={{ ...instStatChipValueStyle, color: chip.valueColor }}>{getStatValue(chip.key)}</div>
+                <div style={instStatChipLabelStyle}>{chip.label}</div>
               </div>
             </div>
           ))}
@@ -324,7 +346,7 @@ export const InstrumentsPage = () => {
       )}
 
       {/* Split pane */}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+      <div style={instSplitFlexStyle}>
         {/* Left panel — list */}
         <aside aria-label="Instruments list" style={{
           width: anyDetailOpen ? 340 : '100%',
@@ -337,22 +359,22 @@ export const InstrumentsPage = () => {
           overflow: 'hidden',
         }}>
           {/* Toolbar */}
-          <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+          <div style={instToolbarStyle}>
+            <div style={instToolbarRowStyle}>
               <Input
-                prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+                prefix={<SearchOutlined style={instSearchIconStyle} />}
                 placeholder={activeTab === 'catalog' ? 'Search instruments...' : 'Search order, client, dept...'}
                 aria-label="Search instruments"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                style={{ height: 28, fontSize: 11, flex: 1, minWidth: 140 }}
+                style={instSearchInputStyle}
                 allowClear
               />
               {(activeTab === 'repairs' || activeTab === 'quotes') && !anyDetailOpen && (
                 <Select
                   value={statusFilter}
                   onChange={(v) => { setStatusFilter(v); setPage(1); }}
-                  style={{ width: 140 }}
+                  style={instStatusSelectStyle}
                   size="small"
                   aria-label="Filter by status"
                   options={[
@@ -371,7 +393,7 @@ export const InstrumentsPage = () => {
                   <Select
                     value={typeFilter}
                     onChange={(v) => { setTypeFilter(v); setPage(1); }}
-                    style={{ width: 110 }}
+                    style={instTypeSelectStyle}
                     size="small"
                     aria-label="Filter by type"
                     options={[
@@ -383,7 +405,7 @@ export const InstrumentsPage = () => {
                   <Select
                     value={activeFilter}
                     onChange={(v) => { setActiveFilter(v); setPage(1); }}
-                    style={{ width: 100 }}
+                    style={instActiveSelectStyle}
                     size="small"
                     aria-label="Filter by active status"
                     options={[
@@ -396,21 +418,21 @@ export const InstrumentsPage = () => {
               )}
             </div>
             {/* Count badge */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' }}>
+            <div style={instCountRowStyle}>
+              <span style={instCountBadgeStyle}>
                 {totalItems.toLocaleString()} records
               </span>
             </div>
           </div>
 
           {/* List rows */}
-          <div style={{ flex: 1, overflow: 'auto' }}>
-            {loading && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>}
+          <div style={instListOverflowStyle}>
+            {loading && <div style={instEmptyStyle}>Loading...</div>}
             {!loading && (activeTab === 'repairs' || activeTab === 'quotes') && repairs.length === 0 && (
-              <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No records found</div>
+              <div style={instEmptyStyle}>No records found</div>
             )}
             {!loading && activeTab === 'catalog' && catalogItems.length === 0 && (
-              <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No records found</div>
+              <div style={instEmptyStyle}>No records found</div>
             )}
             {(activeTab === 'repairs' || activeTab === 'quotes') && repairs.map(renderRepairRow)}
             {activeTab === 'catalog' && catalogItems.map(renderCatalogRow)}
@@ -421,7 +443,7 @@ export const InstrumentsPage = () => {
 
         {/* Right panel — detail */}
         {repairDetailOpen && (
-          <section aria-label="Instrument repair details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+          <section aria-label="Instrument repair details" style={instDetailSectionStyle}>
             <RepairDetailPane
               detail={repairDetail}
               loading={repairDetailLoading}
@@ -430,7 +452,7 @@ export const InstrumentsPage = () => {
           </section>
         )}
         {catalogDetailOpen && (
-          <section aria-label="Instrument catalog details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+          <section aria-label="Instrument catalog details" style={instDetailSectionStyle}>
             <CatalogDetailPane
               detail={catalogDetail}
               loading={catalogDetailLoading}

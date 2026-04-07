@@ -82,6 +82,28 @@ const adminUserInfoRowStyle: React.CSSProperties = { display: 'flex', padding: '
 const adminUserInfoLabelStyle: React.CSSProperties = { width: 100, fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' };
 const adminModalFooterStyle: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', gap: 8 };
 const adminModalBodyStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' };
+const adminMutedDashStyle: React.CSSProperties = { color: 'var(--muted)', fontSize: 12 };
+const adminFlexGap4Style: React.CSSProperties = { display: 'flex', gap: 4 };
+const adminAddBtnRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', marginBottom: 8 };
+const adminPrimaryBtnStyle: React.CSSProperties = { background: 'var(--primary)', borderColor: 'var(--primary)' };
+const adminFlexColGap0Style: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 0 };
+const adminFlexCenterGap8Style: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
+const adminPrevRepLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--label)' };
+const adminSelectW200Style: React.CSSProperties = { width: 200 };
+const adminPad10Style: React.CSSProperties = { padding: '10px 0' };
+const adminSelectFallbackStyle: React.CSSProperties = { padding: 24, color: 'var(--muted)', fontSize: 13 };
+const adminSearchIconStyle: React.CSSProperties = { color: 'var(--muted)' };
+const adminSearchInputStyle: React.CSSProperties = { width: 260, height: 30 };
+const adminUserEditBodyStyle: React.CSSProperties = { padding: 20, display: 'flex', flexDirection: 'column', gap: 16 };
+const adminFontSize12Style: React.CSSProperties = { fontSize: 12 };
+const adminReadOnlyBoxStyle: React.CSSProperties = { marginTop: 8, padding: '12px', background: 'var(--neutral-50)', borderRadius: 6, border: '1px solid var(--border)' };
+const adminValueTextStyle: React.CSSProperties = { fontSize: 12, color: 'var(--neutral-900)' };
+const adminDrawerBodyPadStyle: React.CSSProperties = { padding: 20 };
+const adminDrawerValueStyle: React.CSSProperties = { flex: 1, fontSize: 13, color: 'var(--neutral-900)' };
+const adminStatusSortStyle: React.CSSProperties = { width: 120, fontSize: 12 };
+const adminFlexCenterGap8PadStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0' };
+const adminSelectW140Style: React.CSSProperties = { width: 140, height: 30 };
+const adminSelectW120Style: React.CSSProperties = { width: 120, height: 30 };
 
 export function AdministrationPage() {
   const [activeCategory, setActiveCategory] = useState('users-security');
@@ -363,7 +385,7 @@ export function AdministrationPage() {
   );
 
   const defaultBadge = (isDefault: boolean) =>
-    isDefault ? <StatusBadge status="Default" variant="blue" /> : <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>;
+    isDefault ? <StatusBadge status="Default" variant="blue" /> : <span style={adminMutedDashStyle}>—</span>;
 
   // ── Column definitions ──
   const userColumns = [
@@ -442,7 +464,7 @@ export function AdministrationPage() {
     {
       title: '', key: 'actions', width: 80,
       render: (_: unknown, r: RepairReasonItem) => (
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={adminFlexGap4Style}>
           <Button size="small" aria-label="Edit reason" icon={<EditOutlined />} onClick={e => { e.stopPropagation(); openReasonModal(r); }} />
           <Button size="small" danger aria-label="Delete reason" icon={<DeleteOutlined />} onClick={e => { e.stopPropagation(); deleteReason(r.reasonKey); }} />
         </div>
@@ -455,12 +477,12 @@ export function AdministrationPage() {
     { title: 'Status Name', dataIndex: 'statusName', key: 'statusName', width: 240 },
     {
       title: 'Read-Only', dataIndex: 'isReadOnly', key: 'isReadOnly', width: 90,
-      render: (v: boolean) => v ? <StatusBadge status="Read-Only" variant="blue" /> : <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>,
+      render: (v: boolean) => v ? <StatusBadge status="Read-Only" variant="blue" /> : <span style={adminMutedDashStyle}>—</span>,
     },
     {
       title: '', key: 'actions', width: 80,
       render: (_: unknown, r: RepairStatusItem) => (
-        <div style={{ display: 'flex', gap: 4 }}>
+        <div style={adminFlexGap4Style}>
           <Button size="small" aria-label="Edit status" icon={<EditOutlined />} disabled={r.isReadOnly} onClick={e => { e.stopPropagation(); openStatusModal(r); }} />
           <Button size="small" danger aria-label="Delete status" icon={<DeleteOutlined />} disabled={r.isReadOnly} onClick={e => { e.stopPropagation(); deleteStatus(r.statusId); }} />
         </div>
@@ -472,7 +494,7 @@ export function AdministrationPage() {
     { title: 'Holiday Name', dataIndex: 'holidayName', key: 'holidayName', width: 200 },
     { title: 'Date', dataIndex: 'holidayDate', key: 'holidayDate', width: 120, render: (v: string | null) => v ? new Date(v).toLocaleDateString() : '—' },
     { title: 'Day', dataIndex: 'dayOfWeek', key: 'dayOfWeek', width: 80, render: (v: string | null) => v || '—' },
-    { title: 'Recurring', dataIndex: 'isRecurring', key: 'isRecurring', width: 90, render: (v: boolean) => v ? <StatusBadge status="Yes" /> : <span style={{ color: 'var(--muted)', fontSize: 12 }}>No</span> },
+    { title: 'Recurring', dataIndex: 'isRecurring', key: 'isRecurring', width: 90, render: (v: boolean) => v ? <StatusBadge status="Yes" /> : <span style={adminMutedDashStyle}>No</span> },
     { title: 'Active', dataIndex: 'isActive', key: 'isActive', width: 90, render: statusBadge },
   ];
 
@@ -587,8 +609,8 @@ export function AdministrationPage() {
       case 'reasons':
         return (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-              <Button icon={<PlusOutlined />} type="primary" size="small" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }} onClick={() => openReasonModal(null)}>
+            <div style={adminAddBtnRowStyle}>
+              <Button icon={<PlusOutlined />} type="primary" size="small" style={adminPrimaryBtnStyle} onClick={() => openReasonModal(null)}>
                 New Reason
               </Button>
             </div>
@@ -598,8 +620,8 @@ export function AdministrationPage() {
       case 'statuses':
         return (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
-              <Button icon={<PlusOutlined />} type="primary" size="small" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }} onClick={() => openStatusModal(null)}>
+            <div style={adminAddBtnRowStyle}>
+              <Button icon={<PlusOutlined />} type="primary" size="small" style={adminPrimaryBtnStyle} onClick={() => openStatusModal(null)}>
                 New Status
               </Button>
             </div>
@@ -636,13 +658,13 @@ export function AdministrationPage() {
           onRow={(r) => ({ onClick: () => openDrawer(`Country: ${r.countryName}`, r), style: { cursor: 'pointer' } })} />;
       case 'salesreassign':
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 0' }}>
-              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--label)' }}>Previous Rep</span>
+          <div style={adminFlexColGap0Style}>
+            <div style={adminFlexCenterGap8PadStyle}>
+              <span style={adminPrevRepLabelStyle}>Previous Rep</span>
               <Select
                 value={selectedFromRep}
                 onChange={(v) => { setSelectedFromRep(v); if (v) getSalesRepAssignments(v).then(setReassignments).catch(() => { message.error('Failed to load reassignments'); }); else setReassignments([]); }}
-                style={{ width: 200 }}
+                style={adminSelectW200Style}
                 placeholder="Select Rep..."
                 allowClear
                 aria-label="Previous Sales Rep"
@@ -654,12 +676,12 @@ export function AdministrationPage() {
         );
       case 'bonuspools':
         return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
-            <div style={{ padding: '10px 0' }}>
+          <div style={adminFlexColGap0Style}>
+            <div style={adminPad10Style}>
               <Select
                 value={bonusPoolType}
                 onChange={(v) => { setBonusPoolType(v); }}
-                style={{ width: 200 }}
+                style={adminSelectW200Style}
                 aria-label="Bonus Pool Type"
                 options={[
                   { value: 'tech', label: 'Tech Bonus Pool' },
@@ -672,7 +694,7 @@ export function AdministrationPage() {
           </div>
         );
       default:
-        return <div style={{ padding: 24, color: 'var(--muted)', fontSize: 13 }}>Select a tab</div>;
+        return <div style={adminSelectFallbackStyle}>Select a tab</div>;
     }
   };
 
@@ -721,20 +743,20 @@ export function AdministrationPage() {
       {/* Toolbar */}
       <div style={adminToolbarStyle}>
         <Input
-          prefix={<SearchOutlined style={{ color: 'var(--muted)' }} />}
+          prefix={<SearchOutlined style={adminSearchIconStyle} />}
           placeholder={`Search ${visibleTabs.find(t => t.key === activeTab)?.label || ''}...`}
           aria-label={`Search ${visibleTabs.find(t => t.key === activeTab)?.label ?? ''}`}
           value={search}
           onChange={e => setSearch(e.target.value)}
           onPressEnter={() => loadTabData(activeTab)}
-          style={{ width: 260, height: 30 }}
+          style={adminSearchInputStyle}
           allowClear
         />
         {activeTab === 'scopecat' && (
           <Select
             value={scopeTypeFilter}
             onChange={v => { setScopeTypeFilter(v); }}
-            style={{ width: 140, height: 30 }}
+            style={adminSelectW140Style}
             aria-label="Filter by type"
             options={[
               { value: '', label: 'All Types' },
@@ -749,7 +771,7 @@ export function AdministrationPage() {
           <Select
             value={distribActiveFilter}
             onChange={v => { setDistribActiveFilter(v); }}
-            style={{ width: 120, height: 30 }}
+            style={adminSelectW120Style}
             aria-label="Filter by status"
             options={[
               { value: '', label: 'All' },
@@ -762,7 +784,7 @@ export function AdministrationPage() {
           <Select
             value={auditAction}
             onChange={v => { setAuditAction(v); }}
-            style={{ width: 140, height: 30 }}
+            style={adminSelectW140Style}
             aria-label="Filter by action"
             options={[
               { value: '', label: 'All Actions' },
@@ -790,7 +812,7 @@ export function AdministrationPage() {
         footer={editingUser ? (
           <div style={adminModalFooterStyle}>
             <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>
-            <Button type="primary" loading={userSaving} onClick={saveUser} style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>
+            <Button type="primary" loading={userSaving} onClick={saveUser} style={adminPrimaryBtnStyle}>
               Save Changes
             </Button>
           </div>
@@ -798,21 +820,21 @@ export function AdministrationPage() {
       >
         {drawerRecord && editingUser ? (
           /* User edit form */
-          <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={adminUserEditBodyStyle}>
             <div>
               <label style={adminFormLabelStyle}>Full Name</label>
-              <Input aria-label="Full Name" value={userEditName} onChange={e => setUserEditName(e.target.value)} style={{ fontSize: 12 }} />
+              <Input aria-label="Full Name" value={userEditName} onChange={e => setUserEditName(e.target.value)} style={adminFontSize12Style} />
             </div>
             <div>
               <label style={adminFormLabelStyle}>Email Address</label>
-              <Input aria-label="Email Address" value={userEditEmail} onChange={e => setUserEditEmail(e.target.value)} style={{ fontSize: 12 }} />
+              <Input aria-label="Email Address" value={userEditEmail} onChange={e => setUserEditEmail(e.target.value)} style={adminFontSize12Style} />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={adminFlexCenterGap8Style}>
               <label style={adminInlineLabelStyle}>Active</label>
               <Switch aria-label="Active" checked={userEditActive} onChange={setUserEditActive} />
             </div>
             {/* Read-only info */}
-            <div style={{ marginTop: 8, padding: '12px', background: 'var(--neutral-50)', borderRadius: 6, border: '1px solid var(--border)' }}>
+            <div style={adminReadOnlyBoxStyle}>
               {[
                 { label: 'Role', value: editingUser.role },
                 { label: 'Location', value: editingUser.location },
@@ -820,20 +842,20 @@ export function AdministrationPage() {
               ].map(f => (
                 <div key={f.label} style={adminUserInfoRowStyle}>
                   <span style={adminUserInfoLabelStyle}>{f.label}</span>
-                  <span style={{ fontSize: 12, color: 'var(--neutral-900)' }}>{f.value || '—'}</span>
+                  <span style={adminValueTextStyle}>{f.value || '—'}</span>
                 </div>
               ))}
             </div>
           </div>
         ) : drawerRecord ? (
           /* Generic JSON drawer for non-user records */
-          <div style={{ padding: 20 }}>
+          <div style={adminDrawerBodyPadStyle}>
             {Object.entries(drawerRecord).map(([k, v]) => (
               <div key={k} style={adminDrawerRowStyle}>
                 <span style={adminDrawerFieldLabelStyle}>
                   {k.replace(/([A-Z])/g, ' $1').trim()}
                 </span>
-                <span style={{ flex: 1, fontSize: 13, color: 'var(--neutral-900)' }}>
+                <span style={adminDrawerValueStyle}>
                   {v === null || v === undefined ? '—' : typeof v === 'boolean' ? (v ? 'Yes' : 'No') : String(v)}
                 </span>
               </div>
@@ -850,7 +872,7 @@ export function AdministrationPage() {
         footer={
           <div style={adminModalFooterStyle}>
             <Button onClick={() => setReasonModalOpen(false)}>Cancel</Button>
-            <Button type="primary" loading={reasonSaving} onClick={saveReason} style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>Save</Button>
+            <Button type="primary" loading={reasonSaving} onClick={saveReason} style={adminPrimaryBtnStyle}>Save</Button>
           </div>
         }
         width={420}
@@ -858,9 +880,9 @@ export function AdministrationPage() {
         <div style={adminModalBodyStyle}>
           <div>
             <label style={adminFormLabelStyle}>Reason Text</label>
-            <Input aria-label="Reason Text" value={reasonText} onChange={e => setReasonText(e.target.value)} placeholder="Enter repair reason..." style={{ fontSize: 12 }} />
+            <Input aria-label="Reason Text" value={reasonText} onChange={e => setReasonText(e.target.value)} placeholder="Enter repair reason..." style={adminFontSize12Style} />
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={adminFlexCenterGap8Style}>
             <label style={adminInlineLabelStyle}>Active</label>
             <Switch aria-label="Active" checked={reasonActive} onChange={setReasonActive} />
           </div>
@@ -875,7 +897,7 @@ export function AdministrationPage() {
         footer={
           <div style={adminModalFooterStyle}>
             <Button onClick={() => setStatusModalOpen(false)}>Cancel</Button>
-            <Button type="primary" loading={statusSaving} onClick={saveStatus} style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>Save</Button>
+            <Button type="primary" loading={statusSaving} onClick={saveStatus} style={adminPrimaryBtnStyle}>Save</Button>
           </div>
         }
         width={420}
@@ -883,11 +905,11 @@ export function AdministrationPage() {
         <div style={adminModalBodyStyle}>
           <div>
             <label style={adminFormLabelStyle}>Status Name</label>
-            <Input aria-label="Status Name" value={statusText} onChange={e => setStatusText(e.target.value)} placeholder="Enter status name..." style={{ fontSize: 12 }} />
+            <Input aria-label="Status Name" value={statusText} onChange={e => setStatusText(e.target.value)} placeholder="Enter status name..." style={adminFontSize12Style} />
           </div>
           <div>
             <label style={adminFormLabelStyle}>Sort Order</label>
-            <Input aria-label="Sort Order" type="number" value={statusSortOrder} onChange={e => setStatusSortOrder(e.target.value)} placeholder="e.g. 10" style={{ width: 120, fontSize: 12 }} />
+            <Input aria-label="Sort Order" type="number" value={statusSortOrder} onChange={e => setStatusSortOrder(e.target.value)} placeholder="e.g. 10" style={adminStatusSortStyle} />
           </div>
         </div>
       </Modal>

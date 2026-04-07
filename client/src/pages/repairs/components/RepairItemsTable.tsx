@@ -50,6 +50,38 @@ const ritApprovedStyle: React.CSSProperties = { color: 'var(--success)', fontWei
 const ritPendingStyle: React.CSSProperties = { color: 'var(--amber)', fontSize: 11 };
 const ritWarrantyListStyle: React.CSSProperties = { fontSize: 9, color: 'var(--muted)', fontWeight: 400 };
 const ritOverflowStyle: React.CSSProperties = { overflowX: 'auto', flex: 1 };
+const ritBadgeBaseStyle: React.CSSProperties = { display: 'inline-block', padding: '1px 6px', borderRadius: 10, fontSize: 10, fontWeight: 700 };
+const ritApprovalDotStyle: React.CSSProperties = { width: 9, height: 9, borderRadius: '50%', display: 'inline-block' };
+const ritFlexCenterGap8: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
+const ritFlexCenterGap10: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10 };
+const ritSummaryTextStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
+const ritWarrantyColorStyle: React.CSSProperties = { color: 'var(--success)' };
+const ritCustomerColorStyle: React.CSSProperties = { color: 'var(--amber)' };
+const ritWarrantyBoldStyle: React.CSSProperties = { color: 'var(--success)', fontWeight: 600 };
+const ritCustomerBoldStyle: React.CSSProperties = { color: 'var(--amber)', fontWeight: 600 };
+const ritGrandTotalStyle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: 'var(--navy)' };
+const ritDashBorderStyle: React.CSSProperties = { borderTop: '2px dashed var(--border)' };
+const ritCursorDefaultStyle: React.CSSProperties = { cursor: 'default' };
+const ritCommentEditStyle: React.CSSProperties = { width: '100%', fontSize: 11, border: '1px solid var(--primary)', borderRadius: 2, padding: '1px 4px' };
+const ritCursorPointerStyle: React.CSSProperties = { cursor: 'pointer' };
+const thStyle: React.CSSProperties = {
+  background: 'var(--neutral-50)', color: 'var(--muted)',
+  padding: '6px 10px', textAlign: 'left',
+  fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap',
+  letterSpacing: '0.04em', textTransform: 'uppercase',
+  borderBottom: '1px solid var(--border)',
+  position: 'sticky', top: 0,
+};
+const tdStyle: React.CSSProperties = {
+  padding: '5px 10px', borderBottom: '1px solid var(--border)', verticalAlign: 'middle', fontSize: 12,
+};
+const addTdStyle: React.CSSProperties = { ...tdStyle, background: 'var(--neutral-50)' };
+const tdCenterStyle: React.CSSProperties = { ...tdStyle, textAlign: 'center' };
+const tdFw500Style: React.CSSProperties = { ...tdStyle, fontWeight: 500 };
+const tdCenterPointerStyle: React.CSSProperties = { ...tdStyle, textAlign: 'center', cursor: 'pointer' };
+const addTdCenterStyle: React.CSSProperties = { ...addTdStyle, textAlign: 'center' };
+const addTdRightStyle: React.CSSProperties = { ...addTdStyle, textAlign: 'right' };
+const addTdMinW280Style: React.CSSProperties = { ...addTdStyle, minWidth: 280 };
 
 interface RepairItemsTableProps {
   repairKey: number;
@@ -87,8 +119,7 @@ const causeBadge = (cause: string) => {
   const s = styles[cause?.toUpperCase()] ?? { bg: 'var(--neutral-50)', color: 'var(--muted)', border: 'var(--border)' };
   return (
     <span title={CAUSE_TITLES[cause?.toUpperCase()] ?? undefined} style={{
-      display: 'inline-block', padding: '1px 6px', borderRadius: 10,
-      fontSize: 10, fontWeight: 700,
+      ...ritBadgeBaseStyle,
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
     }}>
       {cause || '—'}
@@ -115,8 +146,7 @@ const fixBadge = (fix: string) => {
   const s = styles[fix?.toUpperCase()] ?? { bg: 'var(--neutral-50)', color: 'var(--muted)', border: 'var(--border)' };
   return (
     <span title={FIX_TITLES[fix?.toUpperCase()] ?? undefined} style={{
-      display: 'inline-block', padding: '1px 6px', borderRadius: 10,
-      fontSize: 10, fontWeight: 700,
+      ...ritBadgeBaseStyle,
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
     }}>
       {fix || '—'}
@@ -126,7 +156,7 @@ const fixBadge = (fix: string) => {
 
 const approvalDot = (approved: string) => {
   const color = approved === 'Y' ? 'var(--success)' : approved === 'N' ? 'var(--danger)' : 'var(--amber)';
-  return <span style={{ width: 9, height: 9, borderRadius: '50%', background: color, display: 'inline-block' }} />;
+  return <span style={{ ...ritApprovalDotStyle, background: color }} />;
 };
 
 export const RepairItemsTable = ({
@@ -275,18 +305,7 @@ export const RepairItemsTable = ({
     }
   };
 
-  const thStyle: React.CSSProperties = {
-    background: 'var(--neutral-50)', color: 'var(--muted)',
-    padding: '6px 10px', textAlign: 'left',
-    fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap',
-    letterSpacing: '0.04em', textTransform: 'uppercase',
-    borderBottom: '1px solid var(--border)',
-    position: 'sticky', top: 0,
-  };
-  const tdStyle: React.CSSProperties = {
-    padding: '5px 10px', borderBottom: '1px solid var(--border)', verticalAlign: 'middle', fontSize: 12,
-  };
-  const addTdStyle: React.CSSProperties = { ...tdStyle, background: 'var(--neutral-50)' };
+  // thStyle, tdStyle, addTdStyle are now module-scope constants
 
   const fixTypeButtons: { label: string; value: FixType; title: string }[] = [
     { label: 'R', value: 'R', title: 'Repair' },
@@ -300,15 +319,15 @@ export const RepairItemsTable = ({
     <div style={ritContainerStyle}>
       {/* Section head */}
       <div style={ritSectionHeadStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={ritFlexCenterGap8}>
           <span style={ritTitleStyle}>Repair Items</span>
           <button onClick={() => setPickerOpen(true)} style={ritAddBtnStyle}>+ Add Items</button>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+        <div style={ritFlexCenterGap10}>
+          <span style={ritSummaryTextStyle}>
             {visibleItems.length} item{visibleItems.length !== 1 ? 's' : ''} ·{' '}
-            <span style={{ color: 'var(--success)' }}>{fmt(warrantyTotal)} warranty</span> ·{' '}
-            <span style={{ color: 'var(--amber)' }}>{fmt(customerTotal)} customer</span>
+            <span style={ritWarrantyColorStyle}>{fmt(warrantyTotal)} warranty</span> ·{' '}
+            <span style={ritCustomerColorStyle}>{fmt(customerTotal)} customer</span>
           </span>
           {visibleItems.length > 0 && (
             <>
@@ -372,11 +391,11 @@ export const RepairItemsTable = ({
             ))}
 
             {/* Fast add row */}
-            <tr style={{ borderTop: '2px dashed var(--border)' }}>
+            <tr style={ritDashBorderStyle}>
               {/* Approval dot — empty for new row */}
               <td style={addTdStyle}></td>
               {/* Autocomplete search spans Code + Description */}
-              <td style={{ ...addTdStyle, minWidth: 280 }} colSpan={2}>
+              <td style={addTdMinW280Style} colSpan={2}>
                 <RepairItemAutoComplete
                   repairKey={repairKey}
                   onSelect={handleItemSelect}
@@ -384,7 +403,7 @@ export const RepairItemsTable = ({
                 />
               </td>
               {/* Cause toggles */}
-              <td style={{ ...addTdStyle, textAlign: 'center' }}>
+              <td style={addTdCenterStyle}>
                 <div style={ritCauseRowStyle}>
                   {(['UA', 'NW'] as CauseType[]).map(c => (
                     <button key={c} title={c === 'UA' ? 'User Abuse' : 'Normal Wear'} onClick={() => setAddRow(r => ({ ...r, cause: r.cause === c ? '' : c }))}
@@ -401,7 +420,7 @@ export const RepairItemsTable = ({
                 </div>
               </td>
               {/* Fix Type button group */}
-              <td style={{ ...addTdStyle, textAlign: 'center' }}>
+              <td style={addTdCenterStyle}>
                 <div style={ritFixRowStyle}>
                   {fixTypeButtons.map(({ label, value, title }) => (
                     <button key={value} title={title} onClick={() => handleFixType(value)}
@@ -420,7 +439,7 @@ export const RepairItemsTable = ({
               {/* Approval — empty */}
               <td style={addTdStyle}></td>
               {/* Amount */}
-              <td style={{ ...addTdStyle, textAlign: 'right' }}>
+              <td style={addTdRightStyle}>
                 <input
                   style={ritAmountInputStyle}
                   type="number" min="0" step="0.01"
@@ -463,13 +482,13 @@ export const RepairItemsTable = ({
 
       {/* Totals footer */}
       <div style={ritFooterStyle}>
-        <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-          Warranty: <span style={{ color: 'var(--success)', fontWeight: 600 }}>{fmt(warrantyTotal)}</span>
+        <span style={ritSummaryTextStyle}>
+          Warranty: <span style={ritWarrantyBoldStyle}>{fmt(warrantyTotal)}</span>
         </span>
-        <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-          Non-Warranty: <span style={{ color: 'var(--amber)', fontWeight: 600 }}>{fmt(customerTotal)}</span>
+        <span style={ritSummaryTextStyle}>
+          Non-Warranty: <span style={ritCustomerBoldStyle}>{fmt(customerTotal)}</span>
         </span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>Total: {fmt(grandTotal)}</span>
+        <span style={ritGrandTotalStyle}>Total: {fmt(grandTotal)}</span>
       </div>
 
       <RepairItemPicker
@@ -498,16 +517,16 @@ const RepairItemRow = ({ item, fmt, tdStyle, onDelete, onOpenAmendments, onPatch
   const [commentDraft, setCommentDraft] = useState(item.comments);
 
   return (
-    <tr style={{ cursor: 'default' }}
+    <tr style={ritCursorDefaultStyle}
       onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-hover-bg)')}
       onMouseLeave={e => (e.currentTarget.style.background = '')}>
-      <td style={{ ...tdStyle, textAlign: 'center' }}>
+      <td style={tdCenterStyle}>
         {approvalDot(item.approved)}
       </td>
       <td style={tdStyle}>{item.itemCode}</td>
-      <td style={{ ...tdStyle, fontWeight: 500 }}>{item.description}</td>
+      <td style={tdFw500Style}>{item.description}</td>
       {/* Cause — click to cycle UA → NW → blank */}
-      <td style={{ ...tdStyle, textAlign: 'center', cursor: 'pointer' }}
+      <td style={tdCenterPointerStyle}
         onClick={() => {
           const next = item.cause === '' ? 'UA' : item.cause === 'UA' ? 'NW' : '';
           onPatchCause(next);
@@ -516,11 +535,11 @@ const RepairItemRow = ({ item, fmt, tdStyle, onDelete, onOpenAmendments, onPatch
         {causeBadge(item.cause)}
       </td>
       {/* Fix Type — click to open amendments */}
-      <td style={{ ...tdStyle, textAlign: 'center', cursor: 'pointer' }}
+      <td style={tdCenterPointerStyle}
         onClick={onOpenAmendments} title="Click to amend">
         {fixBadge(item.fixType)}
       </td>
-      <td style={{ ...tdStyle, textAlign: 'center' }}>
+      <td style={tdCenterStyle}>
         {item.approved === 'Y'
           ? <span style={ritApprovedStyle}>✓ Approved</span>
           : <span style={ritPendingStyle}>Pending</span>}
@@ -541,7 +560,7 @@ const RepairItemRow = ({ item, fmt, tdStyle, onDelete, onOpenAmendments, onPatch
         {editingComment ? (
           <input
             autoFocus
-            style={{ width: '100%', fontSize: 11, border: '1px solid var(--primary)', borderRadius: 2, padding: '1px 4px' }}
+            style={ritCommentEditStyle}
             maxLength={80}
             value={commentDraft}
             onChange={e => setCommentDraft(e.target.value)}
@@ -549,13 +568,13 @@ const RepairItemRow = ({ item, fmt, tdStyle, onDelete, onOpenAmendments, onPatch
             onKeyDown={e => { if (e.key === 'Enter') { setEditingComment(false); onPatchComment(commentDraft); } }}
           />
         ) : (
-          <span style={{ cursor: 'pointer' }} onClick={() => { setCommentDraft(item.comments); setEditingComment(true); }} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCommentDraft(item.comments); setEditingComment(true); } }}
+          <span style={ritCursorPointerStyle} onClick={() => { setCommentDraft(item.comments); setEditingComment(true); }} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCommentDraft(item.comments); setEditingComment(true); } }}
             title="Click to edit">
             {item.comments || '—'}
           </span>
         )}
       </td>
-      <td style={{ ...tdStyle, textAlign: 'center' }}>
+      <td style={tdCenterStyle}>
         <button onClick={onDelete}
           style={ritDeleteBtnStyle}
           title="Remove item">×</button>

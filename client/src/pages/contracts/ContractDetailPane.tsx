@@ -280,12 +280,12 @@ const ScopesTab = ({ contractKey }: { contractKey: number }) => {
               <tbody>
                 {scopes.map(s => (
                   <tr key={s.contractScopeKey}>
-                    <td style={{ ...tdStyle, ...tdPrimaryBoldStyle }}>{s.serialNumber || '—'}</td>
+                    <td style={tdPrimaryStyle}>{s.serialNumber || '—'}</td>
                     <td style={tdStyle}>{s.model || '—'}</td>
                     <td style={tdStyle}>{s.manufacturer || '—'}</td>
                     <td style={tdStyle}>{s.rigidOrFlexible === 'F' ? 'Flexible' : s.rigidOrFlexible === 'R' ? 'Rigid' : s.rigidOrFlexible || '—'}</td>
                     <td style={tdStyle}>{fmtDate(s.scopeAdded)}</td>
-                    <td style={{ ...tdStyle, ...tdRightAlignStyle }}>{s.cost > 0 ? fmtMoneyDecimal(s.cost) : '—'}</td>
+                    <td style={tdRightStyle}>{s.cost > 0 ? fmtMoneyDecimal(s.cost) : '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -335,13 +335,13 @@ const RepairsTab = ({ contractKey }: { contractKey: number }) => {
               <tbody>
                 {repairs.map(r => (
                   <tr key={r.repairKey}>
-                    <td style={{ ...tdStyle, ...tdPrimaryBoldStyle }}>{r.wo || '—'}</td>
+                    <td style={tdPrimaryStyle}>{r.wo || '—'}</td>
                     <td style={tdStyle}>{r.serialNumber || '—'}</td>
                     <td style={tdStyle}>{r.model || '—'}</td>
                     <td style={tdStyle}>{r.repairType || '—'}</td>
                     <td style={tdStyle}>{fmtDate(r.dateIn)}</td>
                     <td style={tdStyle}><span style={{ color: repairStatusColor(r.status), fontWeight: 600 }}>{r.status || '—'}</span></td>
-                    <td style={{ ...tdStyle, ...tdRightAlignStyle }}>{fmtMoneyDecimal(r.cost)}</td>
+                    <td style={tdRightStyle}>{fmtMoneyDecimal(r.cost)}</td>
                     <td style={tdStyle}>{r.tech || '—'}</td>
                   </tr>
                 ))}
@@ -407,10 +407,10 @@ const InvoicesTab = ({ contractKey, detail }: { contractKey: number; detail: Con
               <tbody>
                 {invoices.map(inv => (
                   <tr key={inv.installmentKey}>
-                    <td style={{ ...tdStyle, ...tdPrimaryBoldStyle }}>{inv.invoiceNumber || '—'}</td>
+                    <td style={tdPrimaryStyle}>{inv.invoiceNumber || '—'}</td>
                     <td style={tdStyle}>{fmtDate(inv.dateCreated)}</td>
                     <td style={tdStyle}>{fmtDate(inv.dateDue)}</td>
-                    <td style={{ ...tdStyle, ...tdRightBoldStyle }}>{fmtMoneyDecimal(inv.amount)}</td>
+                    <td style={tdRightBoldCombStyle}>{fmtMoneyDecimal(inv.amount)}</td>
                     <td style={tdStyle}>
                       <span style={{
                         color: inv.status === 'Invoiced' ? 'var(--success)' : 'var(--warning)',
@@ -461,8 +461,8 @@ const NotesTab = ({ contractKey }: { contractKey: number }) => {
               <tbody>
                 {notes.map(n => (
                   <tr key={n.noteKey}>
-                    <td style={{ ...tdStyle, ...tdNoWrapStyle }}>{fmtDate(n.noteDate)}</td>
-                    <td style={{ ...tdStyle, ...tdNoWrapBoldStyle }}>{n.author}</td>
+                    <td style={tdNoWrapCombStyle}>{fmtDate(n.noteDate)}</td>
+                    <td style={tdNoWrapBoldCombStyle}>{n.author}</td>
                     <td style={tdStyle}>{n.note}</td>
                   </tr>
                 ))}
@@ -525,7 +525,7 @@ const DocumentsTab = ({ contractKey }: { contractKey: number }) => {
                         {d.documentName}
                       </span>
                     </td>
-                    <td style={{ ...tdStyle, ...tdNoWrapStyle }}>{fmtDate(d.documentDate)}</td>
+                    <td style={tdNoWrapCombStyle}>{fmtDate(d.documentDate)}</td>
                     <td style={tdStyle}>{d.categoryType || '—'}</td>
                   </tr>
                 ))}
@@ -625,7 +625,7 @@ const DepartmentsTab = ({ contractKey }: { contractKey: number }) => {
               <tbody>
                 {depts.map(d => (
                   <tr key={d.contractDepartmentKey}>
-                    <td style={{ ...tdStyle, ...tdPrimaryBoldStyle }}>{d.departmentName || '—'}</td>
+                    <td style={tdPrimaryStyle}>{d.departmentName || '—'}</td>
                     <td style={tdStyle}>{fmtDate(d.effectiveDate)}</td>
                     <td style={tdStyle}>{fmtDate(d.endDate)}</td>
                     <td style={tdStyle}>{d.poNumber || '—'}</td>
@@ -820,10 +820,10 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                   <tr key={a.amendmentKey}>
                     <td style={tdStyle}>{fmtDate(a.amendmentDate)}</td>
                     <td style={tdStyle}><span style={{ color: amendStatusColor(a.status), fontWeight: 600 }}>{a.status}</span></td>
-                    <td style={{ ...tdStyle, ...tdRightAlignStyle }}>{fmtMoneyDecimal(a.previousTotal)}</td>
-                    <td style={{ ...tdStyle, ...tdRightBoldNavyStyle }}>{fmtMoneyDecimal(a.newTotal)}</td>
-                    <td style={{ ...tdStyle, ...tdRightAlignStyle }}>{fmtMoneyDecimal(a.previousInvoiceAmount)}</td>
-                    <td style={{ ...tdStyle, ...tdRightBold700Style }}>{fmtMoneyDecimal(a.newInvoiceAmount)}</td>
+                    <td style={tdRightStyle}>{fmtMoneyDecimal(a.previousTotal)}</td>
+                    <td style={tdRightBoldNavyCombStyle}>{fmtMoneyDecimal(a.newTotal)}</td>
+                    <td style={tdRightStyle}>{fmtMoneyDecimal(a.previousInvoiceAmount)}</td>
+                    <td style={tdRightBold700CombStyle}>{fmtMoneyDecimal(a.newInvoiceAmount)}</td>
                     <td style={tdStyle}>{a.remainingMonths || '—'}</td>
                   </tr>
                 ))}
@@ -934,7 +934,7 @@ const AffiliatesTab = ({ contractKey }: { contractKey: number }) => {
               <tbody>
                 {affiliates.map(a => (
                   <tr key={a.affiliateKey}>
-                    <td style={{ ...tdStyle, ...tdPrimaryBoldStyle }}>{a.departmentName || '—'}</td>
+                    <td style={tdPrimaryStyle}>{a.departmentName || '—'}</td>
                     <td style={tdStyle}>{a.clientName || '—'}</td>
                     <td style={tdStyle}>{fmtDate(a.startDate)}</td>
                     <td style={tdStyle}>{fmtDate(a.endDate)}</td>
