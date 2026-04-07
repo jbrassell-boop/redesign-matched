@@ -27,8 +27,8 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
     >
       {/* Action bar */}
       <div className="no-print" style={{ position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200 }}>
-        <button onClick={() => window.print()} style={{ height: 32, padding: '0 16px', border: 'none', borderRadius: 5, background: 'var(--primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Print</button>
-        <button onClick={onClose} style={{ height: 32, padding: '0 14px', border: '1px solid #ccc', borderRadius: 5, background: 'var(--card)', color: '#555', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
+        <button onClick={() => window.print()} style={{ height: 32, padding: '0 16px', border: 'none', borderRadius: 5, background: 'var(--primary)', color: 'var(--card)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Print</button>
+        <button onClick={onClose} style={{ height: 32, padding: '0 14px', border: '1px solid var(--print-border)', borderRadius: 5, background: 'var(--card)', color: 'var(--print-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
       </div>
 
       <div className="print-form flex-col" style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -41,14 +41,14 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <img src="/logo-color.png" alt="Total Scope Inc." loading="lazy" style={{ height: 44 }} />
               <div>
-                <div style={{ fontSize: 9, color: '#444' }}>17 Creek Parkway | Upper Chichester, PA 19061</div>
-                <div style={{ fontSize: 9, color: '#444' }}>Phone: (610) 485-3838 | Fax: (610) 485-0404</div>
+                <div style={{ fontSize: 9, color: 'var(--print-subtle)' }}>17 Creek Parkway | Upper Chichester, PA 19061</div>
+                <div style={{ fontSize: 9, color: 'var(--print-subtle)' }}>Phone: (610) 485-3838 | Fax: (610) 485-0404</div>
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: '#111' }}>Flexible Endoscope Diagnostic Report</div>
-              <div style={{ fontSize: 10, color: '#555', marginTop: 2 }}>Form #: OM05-1</div>
-              <div style={{ fontSize: 9, color: '#777', marginTop: 1 }}>An ISO 13485:2016 Certified Company</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--print-text)' }}>Flexible Endoscope Diagnostic Report</div>
+              <div style={{ fontSize: 10, color: 'var(--print-muted)', marginTop: 2 }}>Form #: OM05-1</div>
+              <div style={{ fontSize: 9, color: 'var(--print-subtext)', marginTop: 1 }}>An ISO 13485:2016 Certified Company</div>
             </div>
           </div>
 
@@ -92,7 +92,7 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <span style={fl}>External Condition:</span>
               <Radio label="Clean" /><Radio label="Unclean" />
-              <span style={{ fontSize: 9, color: '#92400E', background: 'var(--amber-subtle)', border: '1px solid var(--amber-border)', borderRadius: 3, padding: '2px 7px', fontWeight: 600 }}>
+              <span style={{ fontSize: 9, color: 'var(--badge-amber-text)', background: 'var(--amber-subtle)', border: '1px solid var(--amber-border)', borderRadius: 3, padding: '2px 7px', fontWeight: 600 }}>
                 (if unclean, follow OM-22 SOP) — Cleaned By: <span style={underline100} />
               </span>
             </div>
@@ -115,7 +115,7 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
 
           {/* 3B */}
           <SubBar>3B. Angulation System</SubBar>
-          <PfRow>Angulation Specs U: <span style={underline40} /> D: <span style={underline40} /> R: <span style={underline40} /> L: <span style={underline40} /> <span style={{ fontSize: 9, color: '#666', marginLeft: 6 }}>(Factory: U180/D180/R160/L160)</span></PfRow>
+          <PfRow>Angulation Specs U: <span style={underline40} /> D: <span style={underline40} /> R: <span style={underline40} /> L: <span style={underline40} /> <span style={{ fontSize: 9, color: 'var(--print-light)', marginLeft: 6 }}>(Factory: U180/D180/R160/L160)</span></PfRow>
           <PfRow>Angulation System {['Play','Stiff/Grinding','Broken Cable','Slip Stopper','Orientation Off','Broken Bracket'].map(d=><Cbx key={d} label={d} />)}</PfRow>
           <PfRow>Angulation Knobs {['Moving Together','Not Locking'].map(d=><Cbx key={d} label={d} />)} Leaking — Location: <span style={underline60} /></PfRow>
           <PfRow>Angulation Lock {['Too Tight','Too Loose','Brake Not Functioning','Missing'].map(d=><Cbx key={d} label={d} />)}</PfRow>
@@ -152,7 +152,7 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ccc', paddingBottom: 4, marginBottom: 6 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)' }}>Total Scope, Inc.</div>
             <div style={{ fontSize: 11, fontWeight: 700 }}>Flexible Endoscope Diagnostic Report — continued</div>
-            <div style={{ fontSize: 10, color: '#666' }}>WO# {wo}</div>
+            <div style={{ fontSize: 10, color: 'var(--print-light)' }}>WO# {wo}</div>
           </div>
 
           {/* 3F */}
@@ -198,7 +198,7 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
 
           {/* Section 5 */}
           <SectionLabel>5. Repair Assessment</SectionLabel>
-          <div style={{ border: '1px solid #ccc', borderRadius: 3, minHeight: 60, padding: '4px 8px', fontSize: 10.5, color: '#aaa', marginTop: 3 }}>Tech notes...</div>
+          <div style={{ border: '1px solid var(--print-border)', borderRadius: 3, minHeight: 60, padding: '4px 8px', fontSize: 10.5, color: 'var(--print-placeholder)', marginTop: 3 }}>Tech notes...</div>
 
           <FormFooter page="Form #: OM05-1 — Revision Pending (01/2026)" />
         </div>
@@ -213,13 +213,13 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
 const page: React.CSSProperties = {
   width: '8.5in', minHeight: '11in', background: 'var(--card)',
   padding: '0.5in', display: 'flex', flexDirection: 'column', gap: 5,
-  fontFamily: "'Inter', Arial, sans-serif", fontSize: 11, color: '#111',
+  fontFamily: "'Inter', Arial, sans-serif", fontSize: 11, color: 'var(--print-text)',
   boxSizing: 'border-box',
 };
 
 const fl: React.CSSProperties = {
   fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase',
-  color: '#555', letterSpacing: '.04em',
+  color: 'var(--print-muted)', letterSpacing: '.04em',
 };
 
 const fv: React.CSSProperties = {
@@ -232,7 +232,7 @@ const underline80: React.CSSProperties = { ...underline40, width: 80 };
 const underline100: React.CSSProperties = { ...underline40, width: 100 };
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ fontSize: 10, fontWeight: 700, color: '#111', marginTop: 5, marginBottom: 2, borderBottom: '1px solid #ddd', paddingBottom: 2 }}>{children}</div>
+  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--print-text)', marginTop: 5, marginBottom: 2, borderBottom: '1px solid var(--print-border-lt)', paddingBottom: 2 }}>{children}</div>
 );
 
 const SubBar = ({ children }: { children: React.ReactNode }) => (
@@ -258,7 +258,7 @@ const PfRow = ({ children }: { children: React.ReactNode }) => (
     <span style={{ display: 'inline-flex', gap: 1, flexShrink: 0 }}>
       <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid var(--success)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--success)' }}>P</span>
       <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid var(--danger)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--danger)' }}>F</span>
-      <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid #aaa', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: '#666' }}>N/A</span>
+      <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid var(--print-placeholder)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--print-light)' }}>N/A</span>
     </span>
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>{children}</span>
   </div>
@@ -272,7 +272,7 @@ const Fld = ({ label, value, span2 }: { label: string; value?: string | null; sp
 );
 
 const FormFooter = ({ page: pageLabel }: { page: string }) => (
-  <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: '#888' }}>
+  <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid var(--print-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: 'var(--print-footer)' }}>
     <span>ISO 13485 Certified</span>
     <span>Total Scope, Inc. &nbsp;|&nbsp; 17 Creek Pkwy, Upper Chichester PA 19061 &nbsp;|&nbsp; (610) 485-1616</span>
     <span>{pageLabel}</span>
