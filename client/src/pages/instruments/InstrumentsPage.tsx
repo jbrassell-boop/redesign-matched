@@ -445,7 +445,7 @@ export const InstrumentsPage = () => {
 /* ── Shared ───────────────────────────────────────────────── */
 const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (
   <button disabled={disabled} onClick={onClick} style={{
-    height: 22, minWidth: 22, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 10, fontFamily: 'inherit',
+    height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 10, fontFamily: 'inherit',
     cursor: disabled ? 'default' : 'pointer', fontWeight: active ? 600 : 400,
     background: active ? 'var(--navy)' : 'var(--card)', color: active ? 'var(--card)' : 'var(--muted)', opacity: disabled ? 0.4 : 1,
   }}>{children}</button>

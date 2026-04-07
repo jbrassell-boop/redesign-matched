@@ -145,6 +145,8 @@ function PairedTableInner<T extends Record<string, unknown>>({
   );
 }
 
+export const PairedTable = memo(PairedTableInner) as typeof PairedTableInner;
+
 /* ── PairedRow sub-component ────────────────────────────────────────── */
 
 interface PairedRowProps<T> {
