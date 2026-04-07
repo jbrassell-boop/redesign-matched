@@ -623,7 +623,7 @@ export const ScopeModelPage = () => {
             Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{totalCount}</strong> models
           </div>
           {totalPages > 1 && (
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+            <div style={smPagBtnsStyle}>
               <PgBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{'\u2039'}</PgBtn>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                 const start = Math.max(1, Math.min(page - 2, totalPages - 4));
@@ -638,14 +638,7 @@ export const ScopeModelPage = () => {
 
       {/* Right panel — detail pane */}
       {selectedKey && (
-        <section aria-label="Scope model details" style={{
-          width: 560,
-          minWidth: 560,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          background: 'var(--card)',
-        }}>
+        <section aria-label="Scope model details" style={smDetailPaneStyle}>
           {detailPaneBody}
         </section>
       )}
@@ -667,7 +660,7 @@ export const ScopeModelPage = () => {
           setNewModelOpen(false);
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8 }}>
+        <div style={smModalBodyStyle}>
           <div>
             <div style={smModalFieldLabelStyle}>Model Name *</div>
             <input
