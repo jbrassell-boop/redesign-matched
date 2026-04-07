@@ -16,7 +16,7 @@ const DaysChip = ({ days, status }: { days: number; status: string }) => {
   if (status === 'Overdue') { bg = 'rgba(var(--danger-rgb), 0.1)'; color = 'var(--danger)'; }
   else if (days >= 14) { bg = 'rgba(var(--amber-rgb), 0.1)'; color = 'var(--amber)'; }
   return (
-    <span style={{ display: 'inline-block', padding: '1px 7px', borderRadius: 4, fontSize: 10, fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.04em', background: bg, color }}>
+    <span style={{ ...daysChipBaseStyle, background: bg, color }}>
       {days}d
     </span>
   );
@@ -43,12 +43,12 @@ const StatChip = ({ label, value, iconBg, iconColor, valueColor, active, onClick
       outlineOffset: -2,
     }}
   >
-    <span style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: iconBg, color: iconColor }}>
+    <span style={{ ...statChipIconStyle, background: iconBg, color: iconColor }}>
       {icon}
     </span>
-    <span style={{ display: 'flex', flexDirection: 'column' }}>
+    <span style={statChipTextColStyle}>
       <span style={{ fontSize: 18, fontWeight: 800, color: valueColor, lineHeight: 1.2 }}>{value}</span>
-      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+      <span style={statChipLabelStyle}>{label}</span>
     </span>
   </div>
 );
@@ -56,6 +56,37 @@ const StatChip = ({ label, value, iconBg, iconColor, valueColor, active, onClick
 
 
 // ── Extracted static styles (performance: avoid re-creating objects each render) ──
+const icon14Style: React.CSSProperties = { width: 14, height: 14 };
+const icon14FontStyle: React.CSSProperties = { fontSize: 14 };
+const statChipIconStyle: React.CSSProperties = { width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const statChipTextColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column' };
+const statChipLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const daysChipBaseStyle: React.CSSProperties = { display: 'inline-block', padding: '1px 7px', borderRadius: 4, fontSize: 10, fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.04em' };
+const dataTableFlexStyle: React.CSSProperties = { flex: 1, overflow: 'auto' };
+const tableFullWidthStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse' };
+const stickyTheadStyle: React.CSSProperties = { position: 'sticky', top: 0, zIndex: 2 };
+const mlAutoFlexCenter: React.CSSProperties = { marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' };
+const strongTextColor: React.CSSProperties = { color: 'var(--text)' };
+const filterBtnGroupStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6 };
+const filterBtnSetStyle: React.CSSProperties = { display: 'flex', gap: 0 };
+const toolbarRightFlexStyle: React.CSSProperties = { marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 };
+const countTextLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
+const bulkActionsRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6 };
+const bulkFulfillBtnStyle: React.CSSProperties = { height: 36, minWidth: 36, padding: '0 10px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', border: '1px solid rgba(var(--success-rgb), 0.4)', borderRadius: 4, cursor: 'pointer', background: 'rgba(var(--success-rgb), 0.1)', color: 'var(--success)' };
+const bulkDeclineBtnStyle: React.CSSProperties = { height: 36, minWidth: 36, padding: '0 10px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', border: '1px solid rgba(var(--danger-rgb), 0.4)', borderRadius: 4, cursor: 'pointer', background: 'rgba(var(--danger-rgb), 0.1)', color: 'var(--danger)' };
+const bulkClearBtnStyle: React.CSSProperties = { height: 36, minWidth: 36, padding: '0 8px', fontSize: 11, fontWeight: 500, fontFamily: 'inherit', border: '1px solid var(--border-dk)', borderRadius: 4, cursor: 'pointer', background: 'var(--card)', color: 'var(--muted)' };
+const subToolDescStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' };
+const cursorPointerStyle: React.CSSProperties = { cursor: 'pointer' };
+const splitFlexStyle: React.CSSProperties = { display: 'flex', flex: 1, overflow: 'hidden' };
+const footerCountStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
+const pagerRowStyle: React.CSSProperties = { display: 'flex', gap: 3, alignItems: 'center' };
+const searchInputSmStyle: React.CSSProperties = { height: 30, width: 260, fontSize: 12 };
+const searchInputMedStyle: React.CSSProperties = { height: 30, width: 220, fontSize: 12 };
+const antSearchIconStyle: React.CSSProperties = { color: 'var(--muted)', fontSize: 12 };
+const needsTdCenterMonoStyle: React.CSSProperties = { textAlign: 'center', fontFamily: 'monospace', fontWeight: 600 };
+const reqTdCenterStyle: React.CSSProperties = { textAlign: 'center' };
+const checkboxTdPadStyle: React.CSSProperties = { textAlign: 'center', padding: '6px' };
+
 const loanerPageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
 const loanerStatStripStyle: React.CSSProperties = { display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' };
 const loanerToolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap', flexShrink: 0 };
@@ -143,12 +174,12 @@ const MAIN_COLS = [
 ];
 
 /* ── SVG Icons ───────────────────────────────────────────────── */
-const IconTotal = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><rect x="2" y="2" width="12" height="12" rx="2" /><path d="M5 5h6M5 8h6M5 11h4" /></svg>;
-const IconOut = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><path d="M10 2l4 4-4 4" /><path d="M2 8h12" /></svg>;
-const IconOverdue = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><circle cx="8" cy="8" r="5.5" /><path d="M8 5v3.5l2.5 1.5" /></svg>;
-const IconReturned = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><polyline points="12 5 7 11 4 8" /></svg>;
-const IconDeclined = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><circle cx="8" cy="8" r="5.5" /><path d="M10 6L6 10M6 6l4 4" /></svg>;
-const IconFillRate = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><polyline points="2 12 6 6 10 9 14 3" /></svg>;
+const IconTotal = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><rect x="2" y="2" width="12" height="12" rx="2" /><path d="M5 5h6M5 8h6M5 11h4" /></svg>;
+const IconOut = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><path d="M10 2l4 4-4 4" /><path d="M2 8h12" /></svg>;
+const IconOverdue = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><circle cx="8" cy="8" r="5.5" /><path d="M8 5v3.5l2.5 1.5" /></svg>;
+const IconReturned = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><polyline points="12 5 7 11 4 8" /></svg>;
+const IconDeclined = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><circle cx="8" cy="8" r="5.5" /><path d="M10 6L6 10M6 6l4 4" /></svg>;
+const IconFillRate = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><polyline points="2 12 6 6 10 9 14 3" /></svg>;
 
 const LOANER_EXPORT_COLS = [
   { key: 'workOrder', label: 'Work Order' },
@@ -193,21 +224,21 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
     <div style={loanerTabInnerStyle}>
       <div style={loanerSubToolbarStyle}>
         <Input
-          prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+          prefix={<SearchOutlined style={antSearchIconStyle} />}
           placeholder="Search active loaners..."
           aria-label="Search active loaners"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ height: 30, width: 260, fontSize: 12 }}
+          style={searchInputSmStyle}
           allowClear
         />
-        <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }} aria-live="polite">
-          <strong style={{ color: 'var(--text)' }}>{items.length}</strong> active loaners
+        <div style={mlAutoFlexCenter} aria-live="polite">
+          <strong style={strongTextColor}>{items.length}</strong> active loaners
         </div>
       </div>
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      <div style={dataTableFlexStyle}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
-          <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
+          <thead style={stickyTheadStyle}>
             <tr>
               {ACTIVE_COLS.map(col => (
                 <th key={col.key} style={{ ...loanerThStyle, width: col.width }}>
@@ -272,16 +303,16 @@ const ScopeNeedsTab = () => {
   return (
     <div style={loanerTabInnerStyle}>
       <div style={loanerSubToolbarStyle}>
-        <span style={{ fontSize: 12, color: 'var(--muted)' }}>
+        <span style={subToolDescStyle}>
           Scope types currently in repair with loaner requests — estimated need dates based on average turnaround time.
         </span>
-        <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>
-          <strong style={{ color: 'var(--text)' }}>{items.length}</strong> scope types
+        <div style={mlAutoFlexCenter}>
+          <strong style={strongTextColor}>{items.length}</strong> scope types
         </div>
       </div>
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      <div style={dataTableFlexStyle}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 920 }}>
-          <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
+          <thead style={stickyTheadStyle}>
             <tr>
               {SCOPE_NEEDS_COLS.map(col => (
                 <th key={col.key} style={{ ...loanerThStyle, width: col.width, textAlign: col.align || 'left' }}>
@@ -459,9 +490,9 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
   return (
     <div style={loanerTabInnerStyle}>
       <div style={{ ...loanerSubToolbarStyle, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={filterBtnGroupStyle}>
           <span style={loanerFilterLabelStyle}>Status</span>
-          <div style={{ display: 'flex', gap: 0 }}>
+          <div style={filterBtnSetStyle}>
             {['All', 'Pending', 'Fulfilled', 'Declined'].map(s => (
               <button
                 key={s}
@@ -476,77 +507,63 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                 {s}
               </button>
             ))}
-            <div style={{ width: 0, borderRight: '1px solid var(--border-dk)' }} />
+            <div style={borderEndCapStyle} />
           </div>
         </div>
         <div style={loanerSeparatorStyle} />
         <Input
-          prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+          prefix={<SearchOutlined style={antSearchIconStyle} />}
           placeholder="Search requests..."
           aria-label="Search loaner requests"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ height: 30, width: 220, fontSize: 12 }}
+          style={searchInputMedStyle}
           allowClear
         />
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={toolbarRightFlexStyle}>
           {selectedKeys.size > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-                <strong style={{ color: 'var(--text)' }}>{selectedKeys.size}</strong> selected
+            <div style={filterBtnGroupStyle}>
+              <span style={countTextLabelStyle}>
+                <strong style={strongTextColor}>{selectedKeys.size}</strong> selected
                 {pendingSelected > 0 && <span> ({pendingSelected} pending)</span>}
               </span>
               <button
                 onClick={() => handleBulkAction('fulfill')}
                 disabled={bulkLoading || pendingSelected === 0}
-                style={{
-                  height: 36, minWidth: 36, padding: '0 10px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
-                  border: '1px solid rgba(var(--success-rgb), 0.4)', borderRadius: 4, cursor: 'pointer',
-                  background: 'rgba(var(--success-rgb), 0.1)', color: 'var(--success)',
-                  opacity: pendingSelected === 0 ? 0.4 : 1,
-                }}
+                style={{ ...bulkFulfillBtnStyle, opacity: pendingSelected === 0 ? 0.4 : 1 }}
               >
                 Fulfill All
               </button>
               <button
                 onClick={() => handleBulkAction('decline')}
                 disabled={bulkLoading || pendingSelected === 0}
-                style={{
-                  height: 36, minWidth: 36, padding: '0 10px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
-                  border: '1px solid rgba(var(--danger-rgb), 0.4)', borderRadius: 4, cursor: 'pointer',
-                  background: 'rgba(var(--danger-rgb), 0.1)', color: 'var(--danger)',
-                  opacity: pendingSelected === 0 ? 0.4 : 1,
-                }}
+                style={{ ...bulkDeclineBtnStyle, opacity: pendingSelected === 0 ? 0.4 : 1 }}
               >
                 Decline All
               </button>
               <button
                 onClick={() => setSelectedKeys(new Set())}
-                style={{
-                  height: 36, minWidth: 36, padding: '0 8px', fontSize: 11, fontWeight: 500, fontFamily: 'inherit',
-                  border: '1px solid var(--border-dk)', borderRadius: 4, cursor: 'pointer',
-                  background: 'var(--card)', color: 'var(--muted)',
-                }}
+                style={bulkClearBtnStyle}
               >
                 Clear
               </button>
             </div>
           )}
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-            <strong style={{ color: 'var(--text)' }}>{requests.length}</strong> requests
+          <span style={countTextLabelStyle}>
+            <strong style={strongTextColor}>{requests.length}</strong> requests
           </span>
         </div>
       </div>
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      <div style={dataTableFlexStyle}>
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
-          <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
+          <thead style={stickyTheadStyle}>
             <tr>
               <th style={loanerCheckboxThStyle}>
                 <input
                   type="checkbox"
                   checked={requests.length > 0 && selectedKeys.size === requests.length}
                   onChange={toggleSelectAll}
-                  style={{ cursor: 'pointer' }}
+                  style={cursorPointerStyle}
                 />
               </th>
               {REQ_COLS.slice(1).map(col => (
@@ -570,12 +587,12 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                     background: isSelected ? 'rgba(var(--primary-rgb), 0.06)' : idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)',
                   }}
                 >
-                  <td style={{ ...reqTdStyle, textAlign: 'center', padding: '6px' }}>
+                  <td style={{ ...reqTdStyle, ...checkboxTdPadStyle }}>
                     <input
                       type="checkbox"
                       checked={isSelected}
                       onChange={() => toggleSelect(req.repairKey)}
-                      style={{ cursor: 'pointer' }}
+                      style={cursorPointerStyle}
                     />
                   </td>
                   <td style={reqTdStyle}><span style={woLinkStyle}>{req.workOrder || '\u2014'}</span></td>
@@ -585,7 +602,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                   <td style={reqTdStyle}>{req.department || '\u2014'}</td>
                   <td style={reqTdStyle}>{fmtDate(req.dateRequested)}</td>
                   <td style={reqTdStyle}><StatusBadge status={req.status} /></td>
-                  <td style={{ ...reqTdStyle, textAlign: 'center' }}>
+                  <td style={{ ...reqTdStyle, ...reqTdCenterStyle }}>
                     {req.status === 'Pending' ? (
                       <div style={actionCenterStyle}>
                         <button
@@ -596,7 +613,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(var(--success-rgb), 0.2)'; }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(var(--success-rgb), 0.1)'; }}
                         >
-                          <CheckCircleOutlined style={{ fontSize: 14 }} />
+                          <CheckCircleOutlined style={icon14FontStyle} />
                         </button>
                         <button
                           onClick={() => handleAction(req.repairKey, 'decline')}
@@ -606,7 +623,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(var(--danger-rgb), 0.2)'; }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(var(--danger-rgb), 0.1)'; }}
                         >
-                          <CloseCircleOutlined style={{ fontSize: 14 }} />
+                          <CloseCircleOutlined style={icon14FontStyle} />
                         </button>
                       </div>
                     ) : (
@@ -724,9 +741,9 @@ export const LoanersPage = () => {
   /* ── Toolbar ─────────────────────────────────────────────── */
   const toolbar = (
     <div style={loanerToolbarStyle}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={filterBtnGroupStyle}>
         <span style={loanerFilterLabelStyle}>Status</span>
-        <div style={{ display: 'flex', gap: 0 }}>
+        <div style={filterBtnSetStyle}>
           {['All', 'Out', 'Overdue', 'Returned', 'Declined'].map(s => (
             <button
               key={s}
@@ -741,22 +758,22 @@ export const LoanersPage = () => {
               {s}
             </button>
           ))}
-          <div style={{ width: 0, borderRight: '1px solid var(--border-dk)' }} />
+          <div style={borderEndCapStyle} />
         </div>
       </div>
       <div style={loanerSeparatorStyle} />
       <Input
-        prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+        prefix={<SearchOutlined style={antSearchIconStyle} />}
         placeholder="Search loaners..."
         aria-label="Search loaners"
         value={search}
         onChange={e => { setSearch(e.target.value); setPage(1); }}
-        style={{ height: 30, width: 220, fontSize: 12 }}
+        style={searchInputMedStyle}
         allowClear
       />
-      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-          <strong style={{ color: 'var(--text)' }}>{totalCount}</strong> records
+      <div style={toolbarRightFlexStyle}>
+        <span style={countTextLabelStyle}>
+          <strong style={strongTextColor}>{totalCount}</strong> records
         </span>
         <ExportButton
           data={items as unknown as Record<string, unknown>[]}
@@ -774,14 +791,14 @@ export const LoanersPage = () => {
   const dataTable = (
     <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: selectedKey ? 800 : 1200 }}>
-        <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
+        <thead style={stickyTheadStyle}>
           <tr>
             <th style={loanerCheckboxThStyle}>
               <input
                 type="checkbox"
                 checked={bulk.isAllSelected(items.map(i => i.loanerTranKey))}
                 onChange={() => bulk.toggleAll(items.map(i => i.loanerTranKey))}
-                style={{ cursor: 'pointer' }}
+                style={cursorPointerStyle}
               />
             </th>
             {MAIN_COLS.map(col => (
@@ -811,12 +828,12 @@ export const LoanersPage = () => {
                 onMouseEnter={e => { if (!isDetailSelected) (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                 onMouseLeave={e => { if (!isDetailSelected) (e.currentTarget as HTMLTableRowElement).style.background = selected ? 'rgba(var(--primary-rgb), 0.06)' : idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}
               >
-                <td style={{ ...tdStyle, textAlign: 'center', padding: '6px' }} onClick={e => e.stopPropagation()}>
+                <td style={{ ...tdStyle, ...checkboxTdPadStyle }} onClick={e => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     checked={selected}
                     onChange={() => bulk.toggle(item.loanerTranKey)}
-                    style={{ cursor: 'pointer' }}
+                    style={cursorPointerStyle}
                   />
                 </td>
                 <td style={tdStyle}><span style={woLinkStyle}>{item.workOrder || '\u2014'}</span></td>
@@ -840,11 +857,11 @@ export const LoanersPage = () => {
   /* ── Pagination Footer ───────────────────────────────────── */
   const footer = (
     <div style={loanerFooterStyle}>
-      <div style={{ fontSize: 11, color: 'var(--muted)' }} aria-live="polite" aria-atomic="true">
-        Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{totalCount}</strong>
+      <div style={countTextLabelStyle} aria-live="polite" aria-atomic="true">
+        Showing <strong style={strongTextColor}>{items.length}</strong> of <strong style={strongTextColor}>{totalCount}</strong>
       </div>
       {totalPages > 1 && (
-        <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+        <div style={pagerRowStyle}>
           <PgBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{'\u2039'}</PgBtn>
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             const start = Math.max(1, Math.min(page - 2, totalPages - 4));
@@ -909,7 +926,7 @@ export const LoanersPage = () => {
       case 'loaners':
         return (
           /* Split-pane layout for Task Loaners tab */
-          <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+          <div style={splitFlexStyle}>
             {/* Left panel — list */}
             <aside aria-label="Loaner list" style={{
               display: 'flex', flexDirection: 'column',

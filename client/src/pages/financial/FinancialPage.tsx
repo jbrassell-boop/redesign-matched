@@ -127,6 +127,36 @@ const invoiceRowFullStyle: React.CSSProperties = { display: 'flex', justifyConte
 const invoiceTaxStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
 const invoiceIssuedStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', marginTop: 2 };
 const holdRowFlexStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 };
+const listFlexOverflow: React.CSSProperties = { flex: 1, overflow: 'auto' };
+const fontWeight600Style: React.CSSProperties = { fontWeight: 600 };
+const fontWeight700Style: React.CSSProperties = { fontWeight: 700 };
+const colorMutedStyle: React.CSSProperties = { color: 'var(--muted)' };
+const antSearchIconStyle: React.CSSProperties = { color: 'var(--muted)', fontSize: 12 };
+const invoiceNameNavyStyle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: 'var(--primary)' };
+const invoiceNameSmStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--primary)' };
+const invoiceClientStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginTop: 2 };
+const invoiceTextStyle: React.CSSProperties = { fontSize: 12, color: 'var(--text)', marginTop: 2 };
+const invoiceSubtextStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginTop: 1 };
+const invoiceFlexRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' };
+const invoiceFlexRowGapStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 };
+const invoiceFlexCenterRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 };
+const invoiceFlexWrapRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' };
+const invoiceLeftFlex: React.CSSProperties = { flex: 1, minWidth: 0 };
+const invoiceRightAlign: React.CSSProperties = { textAlign: 'right', flexShrink: 0 };
+const holdNameNavy: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: 'var(--navy)' };
+const holdDeptMuted: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginTop: 2 };
+const holdReasonStyle: React.CSSProperties = { fontSize: 11, color: 'var(--text)', marginTop: 2 };
+const paymentInvStyle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: 'var(--primary)' };
+const paymentClientStyle: React.CSSProperties = { fontSize: 12, color: 'var(--text)', marginTop: 2 };
+const paymentDateStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginTop: 1 };
+const paymentAmountStyle: React.CSSProperties = { fontSize: 15, fontWeight: 800, color: 'var(--success)' };
+const overdueChipStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--danger)' };
+const chipValueSmStyle: React.CSSProperties = { fontSize: 14, fontWeight: 800, lineHeight: 1.2 };
+const paginationCountStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
+const statusBadgeInlineBase: React.CSSProperties = { fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8 };
+const splitFlexOverflowStyle: React.CSSProperties = { flex: 1, display: 'flex', overflow: 'hidden' };
+const filterRowFlexStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 };
+const filterGapFlexStyle: React.CSSProperties = { display: 'flex', gap: 8, alignItems: 'center' };
 
 const INVOICE_EXPORT_COLS = [
   { key: 'invoiceNumber', label: 'Invoice #' },
@@ -280,7 +310,7 @@ export const FinancialPage = () => {
 
 
   const glColumns = [
-    { title: 'Account #', dataIndex: 'accountNumber', key: 'accountNumber', render: (v: string) => <span style={{ fontWeight: 600 }}>{v}</span> },
+    { title: 'Account #', dataIndex: 'accountNumber', key: 'accountNumber', render: (v: string) => <span style={fontWeight600Style}>{v}</span> },
     { title: 'Batch Number', dataIndex: 'batchNumber', key: 'batchNumber', render: (v: string) => v || '\u2014' },
   ];
 
@@ -358,7 +388,7 @@ export const FinancialPage = () => {
           {/* Colored dot square replacing emoji icon */}
           <div style={{ ...statDotBaseStyle, background: chip.dotColor }} />
           <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: chip.valueColor, lineHeight: 1.2 }}>
+            <div style={{ ...chipValueSmStyle, color: chip.valueColor }}>
               {getStatValue(chip.key)}
             </div>
             <div style={statLabelMutedStyle}>{chip.label}</div>
@@ -381,7 +411,7 @@ export const FinancialPage = () => {
 
       {/* Body: scrollable for non-split tabs, split-pane for list tabs */}
       {isListTab ? (
-        <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+        <div style={splitFlexOverflowStyle}>
           {/* Left: list panel */}
           <div style={{
             width: detailOpen ? 340 : '100%',
@@ -400,10 +430,10 @@ export const FinancialPage = () => {
 
               {/* Filter row */}
               {showFilters && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div style={filterRowFlexStyle}>
+                  <div style={filterGapFlexStyle}>
                     <Input
-                      prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+                      prefix={<SearchOutlined style={antSearchIconStyle} />}
                       placeholder="Search invoices..."
                       aria-label="Search invoices"
                       value={search}
@@ -439,7 +469,7 @@ export const FinancialPage = () => {
             </div>
 
             {/* Invoice/payment/hold rows */}
-            <div style={{ flex: 1, overflow: 'auto' }}>
+            <div style={listFlexOverflow}>
               {activeTab === 'outstanding' && renderInvoiceRows(invoices, loading, detailOpen, selectedInvoice, handleViewInvoice, false)}
               {activeTab === 'drafts' && renderInvoiceRows(invoices, loading, detailOpen, selectedInvoice, handleViewInvoice, true)}
               {activeTab === 'payments' && renderPaymentRows(payments, loading)}
@@ -570,12 +600,12 @@ export const FinancialPage = () => {
                   style={{ fontSize: 12 }}
                   rowClassName={(r) => r.marginPct < 40 ? 'at-risk-row' : ''}
                   columns={[
-                    { title: 'Department', dataIndex: 'departmentName', key: 'departmentName', render: (v: string) => <span style={{ fontWeight: 600 }}>{v}</span> },
-                    { title: 'Client', dataIndex: 'clientName', key: 'clientName', render: (v: string) => <span style={{ color: 'var(--muted)' }}>{v || '\u2014'}</span> },
+                    { title: 'Department', dataIndex: 'departmentName', key: 'departmentName', render: (v: string) => <span style={fontWeight600Style}>{v}</span> },
+                    { title: 'Client', dataIndex: 'clientName', key: 'clientName', render: (v: string) => <span style={colorMutedStyle}>{v || '\u2014'}</span> },
                     { title: 'Repairs', dataIndex: 'repairCount', key: 'repairCount', align: 'right' as const },
                     { title: 'Revenue', dataIndex: 'revenue', key: 'revenue', align: 'right' as const, sorter: (a: AtRiskItem, b: AtRiskItem) => a.revenue - b.revenue, defaultSortOrder: 'descend' as const, render: (v: number) => <span style={{ fontWeight: 700, color: 'var(--navy)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
                     { title: 'Expenses', dataIndex: 'totalExpenses', key: 'totalExpenses', align: 'right' as const, render: (v: number) => <span style={{ color: 'var(--warning)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
-                    { title: 'Margin', dataIndex: 'margin', key: 'margin', align: 'right' as const, render: (v: number) => <span style={{ fontWeight: 600 }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                    { title: 'Margin', dataIndex: 'margin', key: 'margin', align: 'right' as const, render: (v: number) => <span style={fontWeight600Style}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
                     { title: 'Margin %', dataIndex: 'marginPct', key: 'marginPct', align: 'right' as const, sorter: (a: AtRiskItem, b: AtRiskItem) => a.marginPct - b.marginPct, render: (v: number) => (
                       <span style={{ fontWeight: 700, color: v < 40 ? 'var(--danger)' : v < 60 ? 'var(--warning)' : 'var(--success)' }}>{v}%</span>
                     )},
@@ -637,14 +667,14 @@ export const FinancialPage = () => {
                   pagination={false}
                   style={{ fontSize: 12 }}
                   columns={[
-                    { title: 'Month', dataIndex: 'month', key: 'month', render: (v: string) => <span style={{ fontWeight: 700 }}>{v}</span> },
+                    { title: 'Month', dataIndex: 'month', key: 'month', render: (v: string) => <span style={fontWeight700Style}>{v}</span> },
                     { title: 'Repairs', dataIndex: 'repairCount', key: 'repairCount', align: 'right' as const },
                     { title: 'Revenue', dataIndex: 'revenue', key: 'revenue', align: 'right' as const, render: (v: number) => <span style={{ fontWeight: 700, color: 'var(--navy)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
                     { title: 'Labor', dataIndex: 'laborCost', key: 'laborCost', align: 'right' as const, render: (v: number) => <span style={{ color: 'var(--muted)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
                     { title: 'Material', dataIndex: 'materialCost', key: 'materialCost', align: 'right' as const, render: (v: number) => <span style={{ color: 'var(--muted)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
                     { title: 'Outsource', dataIndex: 'outsourceCost', key: 'outsourceCost', align: 'right' as const, render: (v: number) => <span style={{ color: 'var(--muted)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
                     { title: 'Total Expenses', dataIndex: 'totalExpenses', key: 'totalExpenses', align: 'right' as const, render: (v: number) => <span style={{ color: 'var(--warning)' }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
-                    { title: 'Margin', dataIndex: 'margin', key: 'margin', align: 'right' as const, render: (v: number) => <span style={{ fontWeight: 600 }}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
+                    { title: 'Margin', dataIndex: 'margin', key: 'margin', align: 'right' as const, render: (v: number) => <span style={fontWeight600Style}>${v.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span> },
                     { title: 'Margin %', dataIndex: 'marginPct', key: 'marginPct', align: 'right' as const, render: (v: number) => (
                       <span style={{ fontWeight: 700, color: v < 40 ? 'var(--danger)' : v < 60 ? 'var(--warning)' : 'var(--success)' }}>{v}%</span>
                     )},
@@ -699,33 +729,33 @@ function renderInvoiceRows(
             {detailOpen ? (
               /* Compact layout when pane is open */
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary)' }}>{inv.invoiceNumber}</span>
+                <div style={invoiceFlexRowStyle}>
+                  <span style={invoiceNameSmStyle}>{inv.invoiceNumber}</span>
                   <span style={{ fontSize: 13, fontWeight: 800, color: amtColor }}>{fmt$(inv.amount)}</span>
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{inv.clientName}</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                <div style={invoiceClientStyle}>{inv.clientName}</div>
+                <div style={invoiceFlexCenterRowStyle}>
                   <StatusBadgeInline status={isDraft ? 'Draft' : inv.status} />
-                  <span style={{ fontSize: 10, color: 'var(--muted)' }}>{fmtDate(inv.issuedDate)}</span>
+                  <span style={invoiceTaxStyle}>{fmtDate(inv.issuedDate)}</span>
                 </div>
               </div>
             ) : (
               /* Full layout when no pane open */
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>{inv.invoiceNumber}</span>
+              <div style={invoiceFlexRowGapStyle}>
+                <div style={invoiceLeftFlex}>
+                  <div style={invoiceFlexWrapRowStyle}>
+                    <span style={invoiceNameNavyStyle}>{inv.invoiceNumber}</span>
                     <StatusBadgeInline status={isDraft ? 'Draft' : inv.status} />
                     {inv.agingDays > 30 && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--danger)' }}>{inv.agingDays}d overdue</span>
+                      <span style={overdueChipStyle}>{inv.agingDays}d overdue</span>
                     )}
                   </div>
-                  <div style={{ fontSize: 12, color: 'var(--text)', marginTop: 2 }}>{inv.clientName}</div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>
+                  <div style={invoiceTextStyle}>{inv.clientName}</div>
+                  <div style={invoiceSubtextStyle}>
                     {inv.paymentTerms || '\u2014'} · Due {fmtDate(inv.dueDate)}
                   </div>
                 </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <div style={invoiceRightAlign}>
                   <div style={{ fontSize: 15, fontWeight: 800, color: amtColor }}>{fmt$(inv.amount)}</div>
                   {inv.taxAmount > 0 && (
                     <div style={{ fontSize: 10, color: 'var(--muted)' }}>+{fmt$(inv.taxAmount)} tax</div>
@@ -759,15 +789,15 @@ function renderPaymentRows(payments: InvoicePaymentItem[], loading: boolean) {
             ...finPaymentRowStyle,
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <div style={invoiceFlexRowStyle}>
             <div>
-              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>{p.invoiceNumber}</span>
-              <div style={{ fontSize: 12, color: 'var(--text)', marginTop: 2 }}>{p.clientName}</div>
-              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>
+              <span style={invoiceNameNavyStyle}>{p.invoiceNumber}</span>
+              <div style={invoiceTextStyle}>{p.clientName}</div>
+              <div style={invoiceSubtextStyle}>
                 Paid {fmtDate(p.paymentDate)}
               </div>
             </div>
-            <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--success)' }}>{fmt$(p.paymentAmount)}</div>
+            <div style={paymentAmountStyle}>{fmt$(p.paymentAmount)}</div>
           </div>
         </div>
       ))}
@@ -793,13 +823,13 @@ function renderHoldRows(holds: ClientOnHold[], loading: boolean) {
         >
           <div style={holdRowFlexStyle}>
             <div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{h.clientName}</div>
-              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{h.departmentName}</div>
+              <div style={holdNameNavy}>{h.clientName}</div>
+              <div style={invoiceClientStyle}>{h.departmentName}</div>
               {h.reason && (
                 <div style={{ fontSize: 11, color: 'var(--text)', marginTop: 2 }}>{h.reason}</div>
               )}
             </div>
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <div style={invoiceRightAlign}>
               <div style={holdOnHoldStyle}>On Hold</div>
               <div style={holdSinceStyle}>Since {fmtDate(h.onHoldDate)}</div>
             </div>
@@ -822,10 +852,7 @@ function StatusBadgeInline({ status }: { status: string }) {
                 s === 'draft' ? 'var(--amber)' :
                 'var(--muted)';
   return (
-    <span style={{
-      fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
-      background: bg, color,
-    }}>
+    <span style={{ ...statusBadgeInlineBase, background: bg, color }}>
       {status}
     </span>
   );

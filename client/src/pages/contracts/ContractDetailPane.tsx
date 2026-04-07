@@ -30,38 +30,26 @@ interface StatChipProps {
   valueColor?: string;
 }
 const StatChip = ({ label, value, iconColor, iconBg, icon, valueColor }: StatChipProps) => (
-  <div style={{
-    display: 'flex', alignItems: 'center', gap: 8, flex: 1,
-    padding: '8px 12px', borderRight: '1px solid var(--neutral-200)',
-  }}>
-    <div style={{
-      width: 28, height: 28, borderRadius: 6, flexShrink: 0,
-      background: iconBg, color: iconColor,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-    }}>
+  <div style={statChipOuterStyle}>
+    <div style={{ ...statChipIconBoxStyle, background: iconBg, color: iconColor }}>
       {icon}
     </div>
     <div>
-      <div style={{ fontSize: 15, fontWeight: 800, color: valueColor ?? 'var(--navy)', lineHeight: 1.1 }}>{value}</div>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted)', whiteSpace: 'nowrap' }}>{label}</div>
+      <div style={{ ...statChipValueStyle, color: valueColor ?? 'var(--navy)' }}>{value}</div>
+      <div style={statChipLabelCStyle}>{label}</div>
     </div>
   </div>
 );
 
 // Panel section
 const PanelHead = ({ children }: { children: React.ReactNode }) => (
-  <div style={{
-    background: 'var(--neutral-50)', padding: '7px 12px',
-    fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
-    color: 'var(--navy)', borderBottom: '1px solid var(--neutral-200)',
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  }}>
+  <div style={panelHeadStyle}>
     {children}
   </div>
 );
 
 const Panel = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ border: '1px solid var(--neutral-200)', borderRadius: 8, overflow: 'hidden', boxShadow: 'var(--shadow-card)' }}>
+  <div style={panelOuterStyle}>
     {children}
   </div>
 );
@@ -73,35 +61,58 @@ interface ContractDetailPaneProps {
 }
 
 const IconDoc = () => (
-  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}>
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={iconSvgStyle}>
     <rect x="2" y="2" width="12" height="12" rx="2" /><path d="M5 5h6M5 8h6M5 11h4" />
   </svg>
 );
 const IconCheck = () => (
-  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}>
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={iconSvgStyle}>
     <circle cx="8" cy="8" r="5.5" /><polyline points="5.5 8 7 10 10.5 6" />
   </svg>
 );
 const IconWarn = () => (
-  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}>
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={iconSvgStyle}>
     <path d="M7.13 2.5L1.5 12.5a1 1 0 0 0 .87 1.5h11.26a1 1 0 0 0 .87-1.5L8.87 2.5a1 1 0 0 0-1.74 0z" />
     <line x1="8" y1="6" x2="8" y2="9" /><circle cx="8" cy="11.5" r=".5" fill="currentColor" stroke="none" />
   </svg>
 );
 const IconX = () => (
-  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}>
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={iconSvgStyle}>
     <circle cx="8" cy="8" r="5.5" />
     <line x1="5.5" y1="5.5" x2="10.5" y2="10.5" /><line x1="10.5" y1="5.5" x2="5.5" y2="10.5" />
   </svg>
 );
 const IconDollar = () => (
-  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}>
+  <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={iconSvgStyle}>
     <line x1="8" y1="1.5" x2="8" y2="14.5" />
     <path d="M11 4.5H6.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H5" />
   </svg>
 );
 
 // ── Extracted static styles (performance: avoid re-creating objects each render) ──
+const tdPrimaryBoldStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--primary)' };
+const tdRightAlignStyle: React.CSSProperties = { textAlign: 'right' };
+const tdRightBoldStyle: React.CSSProperties = { textAlign: 'right', fontWeight: 600 };
+const tdRightBoldNavyStyle: React.CSSProperties = { textAlign: 'right', fontWeight: 700, color: 'var(--navy)' };
+const tdNoWrapStyle: React.CSSProperties = { whiteSpace: 'nowrap' };
+const tdNoWrapBoldStyle: React.CSSProperties = { whiteSpace: 'nowrap', fontWeight: 600 };
+const thRightAlignStyle: React.CSSProperties = { textAlign: 'right' };
+const invoiceStatFontStyle: React.CSSProperties = { fontSize: 16, fontWeight: 800 };
+const miniStatValueLgStyle: React.CSSProperties = { fontSize: 18, fontWeight: 800 };
+const invoiceStatLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' };
+const healthScoreLgStyle: React.CSSProperties = { fontSize: 28, fontWeight: 900 };
+const healthMarginTopStyle: React.CSSProperties = { marginTop: 12, textAlign: 'left' };
+const renewalCenterMb: React.CSSProperties = { textAlign: 'center', marginBottom: 16 };
+const renewalExpDateStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)', marginTop: 4 };
+const metricValueLgStyle: React.CSSProperties = { fontSize: 20, fontWeight: 900, lineHeight: 1.1 };
+const cEditFieldFlexCol: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 2, padding: '3px 0' };
+const tabScrollStyle: React.CSSProperties = { flex: 1, overflowY: 'auto' };
+const nonBillableStyle: React.CSSProperties = { color: 'var(--warning)', fontWeight: 700, fontSize: 11 };
+const billableStyle: React.CSSProperties = { color: 'var(--muted)', fontSize: 11 };
+const marginBottomExpStyle: React.CSSProperties = { marginBottom: 12 };
+const configMarginTopStyle: React.CSSProperties = { marginTop: 12 };
+const notesMarginTopStyle: React.CSSProperties = { marginTop: 8 };
+
 const iconSvgStyle: React.CSSProperties = { width: 14, height: 14 };
 const spinnerContainerStyle: React.CSSProperties = { padding: 24, textAlign: 'center' };
 const emptyStateStyle: React.CSSProperties = { padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12, fontStyle: 'italic' };
@@ -169,6 +180,34 @@ const sharedRiskBadgeStyle: React.CSSProperties = { fontSize: 11, fontWeight: 70
 const taxExemptBadgeStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 9999, background: 'var(--neutral-100)', border: '1px solid var(--neutral-200)', color: 'var(--muted)' };
 const inlineFlexIconStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center' };
 const notesBodyStyle: React.CSSProperties = { padding: '12px 14px', fontSize: 13, color: 'var(--text)', lineHeight: 1.5 };
+const statChipOuterStyle: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 8, flex: 1,
+  padding: '8px 12px', borderRight: '1px solid var(--neutral-200)',
+};
+const statChipIconBoxStyle: React.CSSProperties = {
+  width: 28, height: 28, borderRadius: 6, flexShrink: 0,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+};
+const statChipValueStyle: React.CSSProperties = { fontSize: 15, fontWeight: 800, lineHeight: 1.1 };
+const statChipLabelCStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted)', whiteSpace: 'nowrap' };
+const panelHeadStyle: React.CSSProperties = {
+  background: 'var(--neutral-50)', padding: '7px 12px',
+  fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
+  color: 'var(--navy)', borderBottom: '1px solid var(--neutral-200)',
+  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+};
+const panelOuterStyle: React.CSSProperties = { border: '1px solid var(--neutral-200)', borderRadius: 8, overflow: 'hidden', boxShadow: 'var(--shadow-card)' };
+const fileIconSvgStyle: React.CSSProperties = { width: 13, height: 13, verticalAlign: -2, marginRight: 4, flexShrink: 0 };
+const inputFullWidthStyle: React.CSSProperties = { width: '100%' };
+const tdRightBold700Style: React.CSSProperties = { textAlign: 'right', fontWeight: 700 };
+const thRightStyle: React.CSSProperties = { ...thStyle, textAlign: 'right' };
+const tdPrimaryStyle: React.CSSProperties = { ...tdStyle, fontWeight: 600, color: 'var(--primary)' };
+const tdRightStyle: React.CSSProperties = { ...tdStyle, textAlign: 'right' };
+const tdRightBoldCombStyle: React.CSSProperties = { ...tdStyle, textAlign: 'right', fontWeight: 600 };
+const tdRightBoldNavyCombStyle: React.CSSProperties = { ...tdStyle, textAlign: 'right', fontWeight: 700, color: 'var(--navy)' };
+const tdNoWrapCombStyle: React.CSSProperties = { ...tdStyle, whiteSpace: 'nowrap' };
+const tdNoWrapBoldCombStyle: React.CSSProperties = { ...tdStyle, whiteSpace: 'nowrap', fontWeight: 600 };
+const tdRightBold700CombStyle: React.CSSProperties = { ...tdStyle, textAlign: 'right', fontWeight: 700 };
 
 // Table styling
 const thStyle: React.CSSProperties = {
@@ -215,7 +254,7 @@ const ScopesTab = ({ contractKey }: { contractKey: number }) => {
           { label: 'Rigid', value: countRigid, color: 'var(--success)' },
         ].map(s => (
           <div key={s.label} style={miniStatCardStyle}>
-            <div style={{ fontSize: 18, fontWeight: 800, color: s.color }}>{s.value}</div>
+            <div style={{ ...miniStatValueLgStyle, color: s.color }}>{s.value}</div>
             <div style={miniStatLabelStyle}>{s.label}</div>
           </div>
         ))}
@@ -235,18 +274,18 @@ const ScopesTab = ({ contractKey }: { contractKey: number }) => {
                   <th style={thStyle}>Manufacturer</th>
                   <th style={thStyle}>Type</th>
                   <th style={thStyle}>Effective</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>Cost</th>
+                  <th style={thRightStyle}>Cost</th>
                 </tr>
               </thead>
               <tbody>
                 {scopes.map(s => (
                   <tr key={s.contractScopeKey}>
-                    <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--primary)' }}>{s.serialNumber || '—'}</td>
+                    <td style={{ ...tdStyle, ...tdPrimaryBoldStyle }}>{s.serialNumber || '—'}</td>
                     <td style={tdStyle}>{s.model || '—'}</td>
                     <td style={tdStyle}>{s.manufacturer || '—'}</td>
                     <td style={tdStyle}>{s.rigidOrFlexible === 'F' ? 'Flexible' : s.rigidOrFlexible === 'R' ? 'Rigid' : s.rigidOrFlexible || '—'}</td>
                     <td style={tdStyle}>{fmtDate(s.scopeAdded)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>{s.cost > 0 ? fmtMoneyDecimal(s.cost) : '—'}</td>
+                    <td style={{ ...tdStyle, ...tdRightAlignStyle }}>{s.cost > 0 ? fmtMoneyDecimal(s.cost) : '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -289,20 +328,20 @@ const RepairsTab = ({ contractKey }: { contractKey: number }) => {
                   <th style={thStyle}>Type</th>
                   <th style={thStyle}>Date In</th>
                   <th style={thStyle}>Status</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>Cost</th>
+                  <th style={thRightStyle}>Cost</th>
                   <th style={thStyle}>Tech</th>
                 </tr>
               </thead>
               <tbody>
                 {repairs.map(r => (
                   <tr key={r.repairKey}>
-                    <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--primary)' }}>{r.wo || '—'}</td>
+                    <td style={{ ...tdStyle, ...tdPrimaryBoldStyle }}>{r.wo || '—'}</td>
                     <td style={tdStyle}>{r.serialNumber || '—'}</td>
                     <td style={tdStyle}>{r.model || '—'}</td>
                     <td style={tdStyle}>{r.repairType || '—'}</td>
                     <td style={tdStyle}>{fmtDate(r.dateIn)}</td>
                     <td style={tdStyle}><span style={{ color: repairStatusColor(r.status), fontWeight: 600 }}>{r.status || '—'}</span></td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtMoneyDecimal(r.cost)}</td>
+                    <td style={{ ...tdStyle, ...tdRightAlignStyle }}>{fmtMoneyDecimal(r.cost)}</td>
                     <td style={tdStyle}>{r.tech || '—'}</td>
                   </tr>
                 ))}
@@ -335,7 +374,7 @@ const InvoicesTab = ({ contractKey, detail }: { contractKey: number; detail: Con
   return (
     <div style={tabPaddingStyle}>
       {/* Invoice stats */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+      <div style={miniStatStripStyle}>
         {[
           { label: 'Total Installments', value: invoices.length, color: 'var(--navy)' },
           { label: 'Invoiced', value: countInvoiced, color: 'var(--success)' },
@@ -343,8 +382,8 @@ const InvoicesTab = ({ contractKey, detail }: { contractKey: number; detail: Con
           { label: 'Remaining', value: fmtMoney(detail.totalAmount - totalInvoiced), color: 'var(--warning)' },
         ].map(s => (
           <div key={s.label} style={miniStatCardStyle}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{s.label}</div>
+            <div style={{ ...invoiceStatFontStyle, color: s.color }}>{s.value}</div>
+            <div style={invoiceStatLabelStyle}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -361,17 +400,17 @@ const InvoicesTab = ({ contractKey, detail }: { contractKey: number; detail: Con
                   <th style={thStyle}>Invoice #</th>
                   <th style={thStyle}>Created</th>
                   <th style={thStyle}>Due Date</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>Amount</th>
+                  <th style={thRightStyle}>Amount</th>
                   <th style={thStyle}>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {invoices.map(inv => (
                   <tr key={inv.installmentKey}>
-                    <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--primary)' }}>{inv.invoiceNumber || '—'}</td>
+                    <td style={{ ...tdStyle, ...tdPrimaryBoldStyle }}>{inv.invoiceNumber || '—'}</td>
                     <td style={tdStyle}>{fmtDate(inv.dateCreated)}</td>
                     <td style={tdStyle}>{fmtDate(inv.dateDue)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 600 }}>{fmtMoneyDecimal(inv.amount)}</td>
+                    <td style={{ ...tdStyle, ...tdRightBoldStyle }}>{fmtMoneyDecimal(inv.amount)}</td>
                     <td style={tdStyle}>
                       <span style={{
                         color: inv.status === 'Invoiced' ? 'var(--success)' : 'var(--warning)',
@@ -422,8 +461,8 @@ const NotesTab = ({ contractKey }: { contractKey: number }) => {
               <tbody>
                 {notes.map(n => (
                   <tr key={n.noteKey}>
-                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{fmtDate(n.noteDate)}</td>
-                    <td style={{ ...tdStyle, whiteSpace: 'nowrap', fontWeight: 600 }}>{n.author}</td>
+                    <td style={{ ...tdStyle, ...tdNoWrapStyle }}>{fmtDate(n.noteDate)}</td>
+                    <td style={{ ...tdStyle, ...tdNoWrapBoldStyle }}>{n.author}</td>
                     <td style={tdStyle}>{n.note}</td>
                   </tr>
                 ))}
@@ -454,7 +493,7 @@ const DocumentsTab = ({ contractKey }: { contractKey: number }) => {
     const lower = name.toLowerCase();
     const color = lower.endsWith('.pdf') ? 'var(--danger)' : lower.endsWith('.xlsx') || lower.endsWith('.xls') ? 'var(--success)' : 'var(--primary)';
     return (
-      <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" style={{ width: 13, height: 13, verticalAlign: -2, marginRight: 4, flexShrink: 0 }}>
+      <svg viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" style={fileIconSvgStyle}>
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
         <polyline points="14 2 14 8 20 8" />
       </svg>
@@ -486,7 +525,7 @@ const DocumentsTab = ({ contractKey }: { contractKey: number }) => {
                         {d.documentName}
                       </span>
                     </td>
-                    <td style={{ ...tdStyle, whiteSpace: 'nowrap' }}>{fmtDate(d.documentDate)}</td>
+                    <td style={{ ...tdStyle, ...tdNoWrapStyle }}>{fmtDate(d.documentDate)}</td>
                     <td style={tdStyle}>{d.categoryType || '—'}</td>
                   </tr>
                 ))}
@@ -521,14 +560,14 @@ const HealthIndicator = ({ contractKey }: { contractKey: number }) => {
     <Panel>
       <PanelHead><span>Contract Health</span></PanelHead>
       <div style={healthCenterStyle}>
-        <div style={{ fontSize: 28, fontWeight: 900, color: gradeColor }}>{health.margin}%</div>
+        <div style={{ ...healthScoreLgStyle, color: gradeColor }}>{health.margin}%</div>
         <div style={{
           display: 'inline-block', padding: '2px 12px', borderRadius: 12,
           fontSize: 11, fontWeight: 700, color: gradeColor, background: gradeBg, marginTop: 4,
         }}>
           {health.grade.toUpperCase()}
         </div>
-        <div style={{ marginTop: 12, textAlign: 'left' }}>
+        <div style={healthMarginTopStyle}>
           {[
             { label: 'Revenue', value: fmtMoneyDecimal(health.revenue), pct: 100, color: 'var(--navy)' },
             { label: 'Consumption', value: fmtMoneyDecimal(health.consumption), pct: health.percentConsumed, color: 'var(--warning)' },
@@ -586,14 +625,14 @@ const DepartmentsTab = ({ contractKey }: { contractKey: number }) => {
               <tbody>
                 {depts.map(d => (
                   <tr key={d.contractDepartmentKey}>
-                    <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--primary)' }}>{d.departmentName || '—'}</td>
+                    <td style={{ ...tdStyle, ...tdPrimaryBoldStyle }}>{d.departmentName || '—'}</td>
                     <td style={tdStyle}>{fmtDate(d.effectiveDate)}</td>
                     <td style={tdStyle}>{fmtDate(d.endDate)}</td>
                     <td style={tdStyle}>{d.poNumber || '—'}</td>
                     <td style={tdStyle}>
                       {d.nonBillable
-                        ? <span style={{ color: 'var(--warning)', fontWeight: 700, fontSize: 11 }}>Non-Billable</span>
-                        : <span style={{ color: 'var(--muted)', fontSize: 11 }}>Billable</span>}
+                        ? <span style={nonBillableStyle}>Non-Billable</span>
+                        : <span style={billableStyle}>Billable</span>}
                     </td>
                   </tr>
                 ))}
@@ -678,7 +717,7 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                 <DatePicker
                   value={dayjs(form.amendmentDate)}
                   onChange={(d) => d && setForm(f => ({ ...f, amendmentDate: d.format('YYYY-MM-DD') }))}
-                  style={{ width: '100%' }}
+                  style={inputFullWidthStyle}
                   size="small"
                   aria-label="Amendment Date"
                 />
@@ -688,7 +727,7 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                 <InputNumber
                   value={form.remainingMonths}
                   onChange={(v) => setForm(f => ({ ...f, remainingMonths: v ?? 0 }))}
-                  min={0} style={{ width: '100%' }} size="small"
+                  min={0} style={inputFullWidthStyle} size="small"
                   aria-label="Remaining Months"
                 />
               </div>
@@ -697,7 +736,7 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                 <InputNumber
                   value={form.previousTotal}
                   onChange={(v) => setForm(f => ({ ...f, previousTotal: v ?? 0 }))}
-                  min={0} prefix="$" style={{ width: '100%' }} size="small"
+                  min={0} prefix="$" style={inputFullWidthStyle} size="small"
                   aria-label="Previous Contract Total"
                 />
               </div>
@@ -706,7 +745,7 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                 <InputNumber
                   value={form.newTotal}
                   onChange={(v) => setForm(f => ({ ...f, newTotal: v ?? 0 }))}
-                  min={0} prefix="$" style={{ width: '100%' }} size="small"
+                  min={0} prefix="$" style={inputFullWidthStyle} size="small"
                   aria-label="New Contract Total"
                 />
               </div>
@@ -715,7 +754,7 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                 <InputNumber
                   value={form.previousInvoiceAmount}
                   onChange={(v) => setForm(f => ({ ...f, previousInvoiceAmount: v ?? 0 }))}
-                  min={0} prefix="$" style={{ width: '100%' }} size="small"
+                  min={0} prefix="$" style={inputFullWidthStyle} size="small"
                   aria-label="Previous Invoice Amount"
                 />
               </div>
@@ -724,7 +763,7 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                 <InputNumber
                   value={form.newInvoiceAmount}
                   onChange={(v) => setForm(f => ({ ...f, newInvoiceAmount: v ?? 0 }))}
-                  min={0} prefix="$" style={{ width: '100%' }} size="small"
+                  min={0} prefix="$" style={inputFullWidthStyle} size="small"
                   aria-label="New Invoice Amount"
                 />
               </div>
@@ -769,10 +808,10 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                 <tr>
                   <th style={thStyle}>Date</th>
                   <th style={thStyle}>Status</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>Prev Total</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>New Total</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>Prev Invoice</th>
-                  <th style={{ ...thStyle, textAlign: 'right' }}>New Invoice</th>
+                  <th style={thRightStyle}>Prev Total</th>
+                  <th style={thRightStyle}>New Total</th>
+                  <th style={thRightStyle}>Prev Invoice</th>
+                  <th style={thRightStyle}>New Invoice</th>
                   <th style={thStyle}>Rem. Months</th>
                 </tr>
               </thead>
@@ -781,10 +820,10 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                   <tr key={a.amendmentKey}>
                     <td style={tdStyle}>{fmtDate(a.amendmentDate)}</td>
                     <td style={tdStyle}><span style={{ color: amendStatusColor(a.status), fontWeight: 600 }}>{a.status}</span></td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtMoneyDecimal(a.previousTotal)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: 'var(--navy)' }}>{fmtMoneyDecimal(a.newTotal)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtMoneyDecimal(a.previousInvoiceAmount)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700 }}>{fmtMoneyDecimal(a.newInvoiceAmount)}</td>
+                    <td style={{ ...tdStyle, ...tdRightAlignStyle }}>{fmtMoneyDecimal(a.previousTotal)}</td>
+                    <td style={{ ...tdStyle, ...tdRightBoldNavyStyle }}>{fmtMoneyDecimal(a.newTotal)}</td>
+                    <td style={{ ...tdStyle, ...tdRightAlignStyle }}>{fmtMoneyDecimal(a.previousInvoiceAmount)}</td>
+                    <td style={{ ...tdStyle, ...tdRightBold700Style }}>{fmtMoneyDecimal(a.newInvoiceAmount)}</td>
                     <td style={tdStyle}>{a.remainingMonths || '—'}</td>
                   </tr>
                 ))}
@@ -818,10 +857,10 @@ const RenewalTab = ({ detail }: { detail: ContractDetail }) => {
       <Panel>
         <PanelHead><span>Renewal Status</span></PanelHead>
         <div style={panelBodyLargeStyle}>
-          <div style={{ textAlign: 'center', marginBottom: 16 }}>
-            <div style={{ fontSize: 28, fontWeight: 900, color: expiryColor }}>{expiryLabel}</div>
+          <div style={renewalCenterMb}>
+            <div style={{ ...healthScoreLgStyle, color: expiryColor }}>{expiryLabel}</div>
             {detail.terminationDate && (
-              <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+              <div style={renewalExpDateStyle}>
                 Termination: {fmtDate(detail.terminationDate)}
               </div>
             )}
@@ -895,7 +934,7 @@ const AffiliatesTab = ({ contractKey }: { contractKey: number }) => {
               <tbody>
                 {affiliates.map(a => (
                   <tr key={a.affiliateKey}>
-                    <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--primary)' }}>{a.departmentName || '—'}</td>
+                    <td style={{ ...tdStyle, ...tdPrimaryBoldStyle }}>{a.departmentName || '—'}</td>
                     <td style={tdStyle}>{a.clientName || '—'}</td>
                     <td style={tdStyle}>{fmtDate(a.startDate)}</td>
                     <td style={tdStyle}>{fmtDate(a.endDate)}</td>
@@ -948,7 +987,7 @@ const ExpenseTrendingTab = ({ contractKey }: { contractKey: number }) => {
       <Panel>
         <PanelHead><span>Expense Trending</span></PanelHead>
         <div style={expensePlaceholderStyle}>
-          <div style={{ marginBottom: 12 }}>
+          <div style={marginBottomExpStyle}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
               style={expenseIconStyle}>
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
@@ -996,7 +1035,7 @@ const ContractReportCardTab = ({ detail }: { detail: ContractDetail }) => {
                 <div style={reportMetricLabelStyle}>
                   {m.label}
                 </div>
-                <div style={{ fontSize: 20, fontWeight: 900, color: m.color, lineHeight: 1.1 }}>
+                <div style={{ ...metricValueLgStyle, color: m.color }}>
                   {m.value}
                 </div>
               </div>
@@ -1059,7 +1098,7 @@ interface CEditFieldProps {
 }
 
 const CEditField = ({ label, value, field, onChange }: CEditFieldProps) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '3px 0' }}>
+  <div style={cEditFieldFlexCol}>
     <span style={formLabelStyle}>{label}</span>
     <input
       value={value ?? ''}
@@ -1287,7 +1326,7 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
 
       <TabBar tabs={TABS} activeKey={activeTab} onChange={setActiveTab} />
 
-      <div style={{ flex: 1, overflowY: 'auto' }}>
+      <div style={tabScrollStyle}>
         {activeTab === 'specs'       && specsContent}
         {activeTab === 'departments' && <DepartmentsTab contractKey={d.contractKey} />}
         {activeTab === 'scopes'      && <ScopesTab contractKey={d.contractKey} />}

@@ -90,7 +90,7 @@ const ColHeader = ({ label, sortKey, currentSort, currentDir, onSort, style }: {
     userSelect: 'none', transition: 'background 0.1s', ...style,
   }}>
     {label}{' '}
-    {currentSort === sortKey && <span style={{ fontSize: 9, marginLeft: 3 }}>{currentDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
+    {currentSort === sortKey && <span style={sortArrowStyle}>{currentDir === 'asc' ? '\u25B2' : '\u25BC'}</span>}
   </th>
 );
 
@@ -435,7 +435,7 @@ export const EndoCartsPage = () => {
           <div style={docEmptyStyle}>
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--border-dk)" strokeWidth="1.5" style={docIconStyle}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14,2 14,8 20,8" /></svg>
             <div style={docEmptyTitleStyle}>No documents attached</div>
-            <div style={{ fontSize: 11 }}>Quotes, specs, and supporting documents will appear here.</div>
+            <div style={docSubtextStyle}>Quotes, specs, and supporting documents will appear here.</div>
           </div>
         )}
       </div>
@@ -480,7 +480,7 @@ export const EndoCartsPage = () => {
 
             {/* Toolbar */}
             <div style={endoToolbarStyle}>
-              <button style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button style={navyBtnStyle}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                 New Quote
               </button>
@@ -488,10 +488,7 @@ export const EndoCartsPage = () => {
               <span style={filterLabelStyle}>Status</span>
               <SegmentedControl items={STATUS_SEGMENTS} value={filters.status} onChange={v => { setFilters(f => ({ ...f, status: v })); setChipFilter(''); setPage(1); }} />
               <div style={endoSeparatorStyle} />
-              <select value={filters.rep} onChange={e => { setFilters(f => ({ ...f, rep: e.target.value })); setPage(1); }} style={{
-                height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit',
-                color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 130,
-              }}>
+              <select value={filters.rep} onChange={e => { setFilters(f => ({ ...f, rep: e.target.value })); setPage(1); }} style={selectStyle}>
                 <option value="">All Sales Reps</option>
                 {SALES_REPS.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
@@ -531,7 +528,7 @@ export const EndoCartsPage = () => {
                       onMouseEnter={e => { if (q.lQuoteKey !== selectedKey) (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                       onMouseLeave={e => { if (q.lQuoteKey !== selectedKey) (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)'; }}
                     >
-                      <td style={cellStyle}><span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{q.quoteNum}</span></td>
+                      <td style={cellStyle}><span style={quoteNumCellStyle}>{q.quoteNum}</span></td>
                       <td style={cellStyle}>{q.clientName}</td>
                       <td style={cellStyle}>{q.deptName}</td>
                       <td style={cellStyle}>{q.cartModel}</td>
@@ -549,26 +546,26 @@ export const EndoCartsPage = () => {
 
             {/* Table Footer */}
             <div style={endoFooterStyle}>
-              <span style={{ fontWeight: 500 }}>{filtered.length} record{filtered.length !== 1 ? 's' : ''}</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--muted)' }}>
+              <span style={footerRecordCountStyle}>{filtered.length} record{filtered.length !== 1 ? 's' : ''}</span>
+              <div style={footerPagerRowStyle}>
+                <div style={footerRowsCountStyle}>
                   Rows:
-                  <select value={pageSize} onChange={e => { setPageSize(e.target.value === 'All' ? 9999 : Number(e.target.value)); setPage(1); }} style={{ height: 36, minWidth: 36, border: '1px solid var(--border-dk)', borderRadius: 4, padding: '0 6px', fontSize: 11, fontFamily: 'inherit', cursor: 'pointer' }}>
+                  <select value={pageSize} onChange={e => { setPageSize(e.target.value === 'All' ? 9999 : Number(e.target.value)); setPage(1); }} style={pagerRowSelectStyle}>
                     <option value={15}>15</option>
                     <option value={25}>25</option>
                     <option value={50}>50</option>
                     <option value="All">All</option>
                   </select>
                 </div>
-                <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                  <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: page <= 1 ? 0.4 : 1 }}>&laquo;</button>
+                <div style={pagerBtnsStyle}>
+                  <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={{ ...pagerBtnStyle, opacity: page <= 1 ? 0.4 : 1 }}>&laquo;</button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 5).map(p => (
                     <button key={p} onClick={() => setPage(p)} style={{
-                      height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
+                      ...pagerBtnStyle,
                       background: p === page ? 'var(--navy)' : 'var(--card)', color: p === page ? 'var(--card)' : 'var(--muted)', fontWeight: p === page ? 600 : 400,
                     }}>{p}</button>
                   ))}
-                  <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: page >= totalPages ? 0.4 : 1 }}>&raquo;</button>
+                  <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={{ ...pagerBtnStyle, opacity: page >= totalPages ? 0.4 : 1 }}>&raquo;</button>
                 </div>
               </div>
             </div>
@@ -589,7 +586,7 @@ export const EndoCartsPage = () => {
       {activeTab === 'catalog' && (
         <div style={endoTabFlexStyle}>
           <div style={endoToolbarStyle}>
-            <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button disabled style={navyBtnDisabledStyle}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               Add Component
             </button>
@@ -642,7 +639,7 @@ export const EndoCartsPage = () => {
       {activeTab === 'models' && (
         <div style={endoTabFlexStyle}>
           <div style={endoToolbarStyle}>
-            <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button disabled style={navyBtnDisabledStyle}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New Model
             </button>
@@ -678,7 +675,7 @@ export const EndoCartsPage = () => {
                     </tr>
                     {expandedModel === m.lModelKey && (
                       <tr key={`bom-${m.lModelKey}`}>
-                        <td colSpan={5} style={{ padding: 0, borderBottom: '1px solid var(--border)' }}>
+                        <td colSpan={5} style={bomExpandTdBorderStyle}>
                           <div style={bomExpandContainerStyle}>
                             <table style={bomExpandTableStyle}>
                               <thead>
@@ -728,13 +725,11 @@ export const EndoCartsPage = () => {
             />
             <div style={searchWrapStyle}>
               <span style={searchIconWrapStyle}><IconSearch /></span>
-              <input placeholder="Search serial#, type, client..." aria-label="Search EndoCart scopes" value={scopeSearch} onChange={e => { setScopeSearch(e.target.value); setScopePage(1); }} style={{
-                height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
-              }} />
+              <input placeholder="Search serial#, type, client..." aria-label="Search EndoCart scopes" value={scopeSearch} onChange={e => { setScopeSearch(e.target.value); setScopePage(1); }} style={searchInputWideStyle} />
             </div>
           </div>
           {scopeLoading ? (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin /></div>
+            <div style={spinnerCenterStyle}><Spin /></div>
           ) : (
             <div style={endoTableCardBg}>
               <table style={endoTableFixed}>
@@ -778,7 +773,7 @@ export const EndoCartsPage = () => {
           )}
           {/* Footer */}
           <div style={endoFooterStyle}>
-            <span style={{ fontWeight: 500 }}>{scopeTotal} scope{scopeTotal !== 1 ? 's' : ''}</span>
+            <span style={footerRecordCountStyle}>{scopeTotal} scope{scopeTotal !== 1 ? 's' : ''}</span>
             <div style={pagerBtnsStyle}>
               <button disabled={scopePage <= 1} onClick={() => setScopePage(p => p - 1)} style={{ ...pagerBtnStyle, opacity: scopePage <= 1 ? 0.4 : 1 }}>&laquo;</button>
               <span style={pagerSpanStyle}>Page {scopePage}</span>
@@ -796,13 +791,11 @@ export const EndoCartsPage = () => {
           <div style={endoToolbarStyle}>
             <div style={searchWrapStyle}>
               <span style={searchIconWrapStyle}><IconSearch /></span>
-              <input placeholder="Search WO#, serial#, client..." aria-label="Search EndoCart service history" value={serviceSearch} onChange={e => { setServiceSearch(e.target.value); setServicePage(1); }} style={{
-                height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
-              }} />
+              <input placeholder="Search WO#, serial#, client..." aria-label="Search EndoCart service history" value={serviceSearch} onChange={e => { setServiceSearch(e.target.value); setServicePage(1); }} style={searchInputWideStyle} />
             </div>
           </div>
           {serviceLoading ? (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin /></div>
+            <div style={spinnerCenterStyle}><Spin /></div>
           ) : (
             <div style={endoTableCardBg}>
               <table style={endoTableFixed}>
@@ -831,7 +824,7 @@ export const EndoCartsPage = () => {
                       </td>
                       <td style={cellStyle}>{r.dateIn || '\u2014'}</td>
                       <td style={cellStyle}>{r.dateOut || '\u2014'}</td>
-                      <td style={{ ...cellStyle, whiteSpace: 'normal', lineHeight: 1.3 }}>{r.complaint || '\u2014'}</td>
+                      <td style={cellStyleComplaintWrap}>{r.complaint || '\u2014'}</td>
                       <td style={cellStyleRightBold}>{fmtMoney(r.totalCost)}</td>
                     </tr>
                   ))}
@@ -841,7 +834,7 @@ export const EndoCartsPage = () => {
           )}
           {/* Footer */}
           <div style={endoFooterStyle}>
-            <span style={{ fontWeight: 500 }}>{serviceTotal} repair{serviceTotal !== 1 ? 's' : ''}</span>
+            <span style={footerRecordCountStyle}>{serviceTotal} repair{serviceTotal !== 1 ? 's' : ''}</span>
             <div style={pagerBtnsStyle}>
               <button disabled={servicePage <= 1} onClick={() => setServicePage(p => p - 1)} style={{ ...pagerBtnStyle, opacity: servicePage <= 1 ? 0.4 : 1 }}>&laquo;</button>
               <span style={pagerSpanStyle}>Page {servicePage}</span>
