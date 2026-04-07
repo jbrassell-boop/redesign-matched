@@ -52,28 +52,28 @@ const DateRangeRow = () => (
 const ClientRow = () => (
   <div style={rowStyle}>
     <span style={labelStyle}>Client</span>
-    <select style={selectStyle}><option>All Clients</option></select>
+    <select style={selectStyle} aria-label="Client filter"><option>All Clients</option></select>
   </div>
 );
 
 const DeptRow = () => (
   <div style={rowStyle}>
     <span style={labelStyle}>Department</span>
-    <select style={selectStyle}><option>All Departments</option></select>
+    <select style={selectStyle} aria-label="Department filter"><option>All Departments</option></select>
   </div>
 );
 
 const SalesRepRow = () => (
   <div style={rowStyle}>
     <span style={labelStyle}>Sales Rep</span>
-    <select style={selectStyle}>{SALES_REPS.map(r => <option key={r}>{r}</option>)}</select>
+    <select style={selectStyle} aria-label="Sales rep filter">{SALES_REPS.map(r => <option key={r}>{r}</option>)}</select>
   </div>
 );
 
 const InstTypeRow = () => (
   <div style={rowStyle}>
     <span style={labelStyle}>Inst. Type</span>
-    <select style={selectStyle}>{INST_TYPES.map(t => <option key={t}>{t}</option>)}</select>
+    <select style={selectStyle} aria-label="Instrument type filter">{INST_TYPES.map(t => <option key={t}>{t}</option>)}</select>
   </div>
 );
 
@@ -112,11 +112,11 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <DateRangeRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Status</span>
-              <select style={selectStyle}>{REPAIR_STATUSES.map(s => <option key={s}>{s}</option>)}</select>
+              <select style={selectStyle} aria-label="Status filter">{REPAIR_STATUSES.map(s => <option key={s}>{s}</option>)}</select>
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Sort By</span>
-              <select style={selectStyle}>
+              <select style={selectStyle} aria-label="Sort by">
                 <option>Date</option><option>Client</option><option>Status</option><option>Technician</option>
               </select>
             </div>
@@ -170,7 +170,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <ClientRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Report Type</span>
-              <select style={selectStyle}><option>Summary</option><option>By Scope Type</option></select>
+              <select style={selectStyle} aria-label="Report type"><option>Summary</option><option>By Scope Type</option></select>
             </div>
           </>
         );
@@ -212,11 +212,11 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <DateRangeRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Date Field</span>
-              <select style={selectStyle}>{DATE_RANGE_FIELDS.map(f => <option key={f}>{f}</option>)}</select>
+              <select style={selectStyle} aria-label="Date field">{DATE_RANGE_FIELDS.map(f => <option key={f}>{f}</option>)}</select>
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Repair Items</span>
-              <input type="text" style={{ ...inputStyle, width: 160 }} defaultValue="*" title="Wildcard * for all items" />
+              <input type="text" style={{ ...inputStyle, width: 160 }} defaultValue="*" title="Wildcard * for all items" aria-label="Repair items filter" />
             </div>
           </>
         );
@@ -228,7 +228,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <DeptRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Contract</span>
-              <select style={selectStyle}><option>All Contracts</option></select>
+              <select style={selectStyle} aria-label="Contract filter"><option>All Contracts</option></select>
             </div>
             <DateRangeRow />
             <div style={rowStyle}>

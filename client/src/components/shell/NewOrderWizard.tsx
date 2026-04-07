@@ -348,6 +348,9 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
     <div
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={wizOverlayStyle}
+      role="dialog"
+      aria-modal="true"
+      aria-label="New Work Order"
     >
       <div style={wizDialogStyle}>
         {/* Header */}
@@ -477,6 +480,9 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                       : filteredModels.slice(0, 50).map(t => (
                         <div key={t.scopeTypeKey}
                           onClick={() => handlePickModel(t.scopeTypeKey, t.description)}
+                          role="option"
+                          tabIndex={0}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handlePickModel(t.scopeTypeKey, t.description); } }}
                           style={{
                             padding: '4px 10px', fontSize: 11, cursor: 'pointer',
                             borderBottom: '1px solid var(--neutral-100)',

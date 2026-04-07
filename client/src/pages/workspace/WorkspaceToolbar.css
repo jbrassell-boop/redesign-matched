@@ -41,7 +41,7 @@
   cursor: pointer;
 }
 
-.workspace-toolbar__preset:focus {
+.workspace-toolbar__preset:focus-visible {
   outline: none;
   border-color: var(--primary);
 }
