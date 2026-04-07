@@ -106,8 +106,10 @@ export const InfoTab = ({ dept, onChange }: InfoTabProps) => {
   const [pricingCats, setPricingCats] = useState<LookupOption[]>([]);
 
   useEffect(() => {
-    getSalesReps().then(setSalesReps).catch(() => { message.error('Failed to load sales reps'); });
-    getPricingCategories().then(setPricingCats).catch(() => { message.error('Failed to load pricing categories'); });
+    let cancelled = false;
+    getSalesReps().then(d => { if (!cancelled) setSalesReps(d); }).catch(() => { if (!cancelled) message.error('Failed to load sales reps'); });
+    getPricingCategories().then(d => { if (!cancelled) setPricingCats(d); }).catch(() => { if (!cancelled) message.error('Failed to load pricing categories'); });
+    return () => { cancelled = true; };
   }, []);
 
   return (

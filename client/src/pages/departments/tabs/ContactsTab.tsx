@@ -13,12 +13,19 @@ export const ContactsTab = ({ deptKey }: ContactsTabProps) => {
 
   const reload = useCallback(() => {
     setLoading(true);
-    getDepartmentContacts(deptKey)
+    return getDepartmentContacts(deptKey)
       .then(setContacts)
       .finally(() => setLoading(false));
   }, [deptKey]);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getDepartmentContacts(deptKey)
+      .then(d => { if (!cancelled) setContacts(d); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [deptKey]);
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
 

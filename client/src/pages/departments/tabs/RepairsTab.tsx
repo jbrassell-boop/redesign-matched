@@ -25,14 +25,18 @@ export const RepairsTab = ({ deptKey }: RepairsTabProps) => {
   const pageSize = 25;
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     getDepartmentRepairs(deptKey, { page, pageSize })
-      .then(res => { setRepairs(res.items); setTotalCount(res.totalCount); })
-      .finally(() => setLoading(false));
+      .then(res => { if (!cancelled) { setRepairs(res.items); setTotalCount(res.totalCount); } })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [deptKey, page]);
 
   useEffect(() => {
-    getDepartmentKpis(deptKey).then(setKpis);
+    let cancelled = false;
+    getDepartmentKpis(deptKey).then(d => { if (!cancelled) setKpis(d); });
+    return () => { cancelled = true; };
   }, [deptKey]);
 
   const totalPages = Math.ceil(totalCount / pageSize);
