@@ -34,19 +34,19 @@ export const ReferenceStrip = ({
     <div className="reference-strip">
       <div className="reference-strip__cell">
         <span className="reference-strip__label">Client</span>
-        <span className="reference-strip__value reference-strip__value--link" onClick={onClientClick}>
+        <span className="reference-strip__value reference-strip__value--link" onClick={onClientClick} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClientClick?.(); } }}>
           {repair.client}
         </span>
       </div>
       <div className="reference-strip__cell">
         <span className="reference-strip__label">Department</span>
-        <span className="reference-strip__value reference-strip__value--link" onClick={onDeptClick}>
+        <span className="reference-strip__value reference-strip__value--link" onClick={onDeptClick} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onDeptClick?.(); } }}>
           {repair.dept}
         </span>
       </div>
       <div className="reference-strip__cell">
         <span className="reference-strip__label">Scope</span>
-        <span className="reference-strip__value reference-strip__value--link" onClick={onSerialClick}>
+        <span className="reference-strip__value reference-strip__value--link" onClick={onSerialClick} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSerialClick?.(); } }}>
           {repair.scopeType} &middot; {repair.serial}
         </span>
       </div>
@@ -90,6 +90,9 @@ export const ReferenceStrip = ({
           <span
             className="reference-strip__value reference-strip__value--link"
             onClick={() => setPoEditing(true)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setPoEditing(true); } }}
           >
             {poValue || 'Click to add'}
           </span>

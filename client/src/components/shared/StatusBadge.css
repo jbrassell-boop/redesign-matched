@@ -16,23 +16,23 @@
 
 /* Blue: received, new, open, info, standard */
 .status-badge--blue {
-  background: #E8F0FE;
-  color: #2E75B6;
+  background: var(--primary-light);
+  color: var(--primary);
   border: 1px solid #BFDBFE;
 }
 
 /* Green: approved, complete, active, yes, sent */
 .status-badge--green {
-  background: #F0FDF4;
+  background: var(--success-light);
   color: #166534;
-  border: 1px solid #BBF7D0;
+  border: 1px solid var(--success-border);
 }
 
 /* Amber: pending, expiring, in-progress, warning */
 .status-badge--amber {
-  background: #FEF3C7;
+  background: var(--amber-light);
   color: #92400E;
-  border: 1px solid #FDE68A;
+  border: 1px solid var(--amber-border);
 }
 
 /* Red: overdue, expired, hold, locked, delete, no */
@@ -52,7 +52,7 @@
 /* Purple: admin, shipped */
 .status-badge--purple {
   background: #EDE9FE;
-  color: #7C3AED;
+  color: var(--purple);
   border: 1px solid #C4B5FD;
 }
 

@@ -11,7 +11,7 @@ const s = {
   page: {
     width: '8.5in',
     minHeight: '11in',
-    background: '#fff',
+    background: 'var(--card)',
     padding: '0.5in',
     display: 'flex',
     flexDirection: 'column' as const,
@@ -27,11 +27,11 @@ const s = {
     justifyContent: 'space-between' as const,
     marginBottom: 6,
   },
-  formTitle: { fontSize: 15, fontWeight: 800, color: '#1B3A5C' },
-  formSubtitle: { fontSize: 11, fontWeight: 600, color: '#2E75B6', marginTop: 1 },
+  formTitle: { fontSize: 15, fontWeight: 800, color: 'var(--navy)' },
+  formSubtitle: { fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 },
   formNumber: { fontSize: 10, color: '#666', marginTop: 2 },
   sectionBar: {
-    background: '#2E75B6',
+    background: 'var(--primary)',
     color: '#fff',
     fontSize: 9,
     fontWeight: 700 as const,
@@ -197,7 +197,7 @@ const ACCESSORIES = [
 const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 
 const repairTableTh: React.CSSProperties = {
-  background: '#2E75B6',
+  background: 'var(--primary)',
   color: '#fff',
   fontSize: 8,
   fontWeight: 700,
@@ -217,7 +217,7 @@ const repairTableTd: React.CSSProperties = {
 };
 
 const pfTableTh: React.CSSProperties = {
-  background: '#2E75B6',
+  background: 'var(--primary)',
   color: '#fff',
   fontSize: 8,
   fontWeight: 700,
@@ -240,14 +240,14 @@ const pfBtn = (type: 'p' | 'f' | 'na') => ({
   display: 'inline-block' as const,
   width: 24,
   height: 15,
-  border: type === 'p' ? '1px solid #16A34A' : type === 'f' ? '1px solid #B71234' : '1px solid #aaa',
+  border: type === 'p' ? '1px solid var(--success)' : type === 'f' ? '1px solid var(--danger)' : '1px solid #aaa',
   borderRadius: 2,
   textAlign: 'center' as const,
   lineHeight: '15px',
   fontSize: 8,
   fontWeight: 700 as const,
   margin: '0 1px',
-  color: type === 'p' ? '#16A34A' : type === 'f' ? '#B71234' : '#666',
+  color: type === 'p' ? 'var(--success)' : type === 'f' ? 'var(--danger)' : '#666',
 });
 
 const LogoBlock = () => (
@@ -287,7 +287,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           onClick={() => window.print()}
           style={{
             height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
-            background: '#2E75B6', color: '#fff',
+            background: 'var(--primary)', color: '#fff',
             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >Print</button>
@@ -295,7 +295,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           onClick={onClose}
           style={{
             height: 32, padding: '0 14px', border: '1px solid #ccc', borderRadius: 5,
-            background: '#fff', color: '#555',
+            background: 'var(--card)', color: '#555',
             fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >Close</button>
@@ -367,7 +367,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
             </thead>
             <tbody>
               {REPAIR_ITEMS.map((item, i) => (
-                <tr key={i} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+                <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
                   <td style={{ ...repairTableTd, borderRight: '1px solid #eee' }}><span style={s.cbBox}></span></td>
                   <td style={repairTableTd}>{item}</td>
                   <td style={{ ...repairTableTd, textAlign: 'center' }}><span style={s.costField}></span></td>
@@ -455,7 +455,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
             </thead>
             <tbody>
               {REPAIR_ITEMS.map((item, i) => (
-                <tr key={i} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+                <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
                   <td style={{ ...repairTableTd, borderRight: '1px solid #eee' }}><span style={s.cbBox}></span></td>
                   <td style={repairTableTd}>{item}</td>
                   <td style={{ ...repairTableTd, textAlign: 'center' }}><span style={s.costField}></span></td>
@@ -469,7 +469,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4, gap: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
               <span style={s.fl}>Total Repair Cost</span>
-              <div style={{ borderBottom: '2px solid #2E75B6', minWidth: 100, height: 17, fontWeight: 700 }}></div>
+              <div style={{ borderBottom: '2px solid var(--primary)', minWidth: 100, height: 17, fontWeight: 700 }}></div>
             </div>
           </div>
 
@@ -537,11 +537,11 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
             <tbody>
               {PF_CATEGORIES.map(cat => (
                 <>
-                  <tr key={`cat-${cat.cat}`} style={{ background: '#E8F0FE' }}>
-                    <td colSpan={5} style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: '#1B3A5C', letterSpacing: '0.04em', padding: '3px 8px' }}>{cat.cat}</td>
+                  <tr key={`cat-${cat.cat}`} style={{ background: 'var(--primary-light)' }}>
+                    <td colSpan={5} style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.04em', padding: '3px 8px' }}>{cat.cat}</td>
                   </tr>
                   {cat.items.map((item, ii) => (
-                    <tr key={`${cat.cat}-${ii}`} style={{ background: ii % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+                    <tr key={`${cat.cat}-${ii}`} style={{ background: ii % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
                       <td style={pfTableTd}>{item}</td>
                       <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfBtn('p')}>Y</span></td>
                       <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfBtn('f')}>N</span></td>
@@ -569,7 +569,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           <div style={{
             display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px 10px',
             padding: '8px 10px', border: '1px solid #ddd', borderRadius: 3,
-            background: '#F9FAFB', marginTop: 6,
+            background: 'var(--bg)', marginTop: 6,
           }}>
             {/* Scope Usable */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>

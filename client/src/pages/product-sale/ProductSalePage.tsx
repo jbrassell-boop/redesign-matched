@@ -220,6 +220,7 @@ export const ProductSalePage = () => {
             <Input
               prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
               placeholder="Search invoice#, client, PO#..."
+              aria-label="Search product sales"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{ height: 28, fontSize: 11 }}
@@ -231,6 +232,7 @@ export const ProductSalePage = () => {
                 onChange={(v) => { setStatusFilter(v); setPage(1); }}
                 style={{ width: '100%' }}
                 size="small"
+                aria-label="Filter by status"
                 options={[
                   { value: '', label: 'All Statuses' },
                   { value: 'Draft', label: 'Draft' },
@@ -253,6 +255,9 @@ export const ProductSalePage = () => {
                 <div
                   key={item.productSaleKey}
                   onClick={() => handleView(item.productSaleKey)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleView(item.productSaleKey); } }}
                   style={{
                     padding: '9px 12px',
                     borderBottom: '1px solid var(--neutral-100)',
@@ -332,6 +337,7 @@ export const ProductSalePage = () => {
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Purchase Order #</label>
             <Input
+              aria-label="Purchase Order #"
               value={createPO}
               onChange={e => setCreatePO(e.target.value)}
               placeholder="Optional PO number"
@@ -341,6 +347,7 @@ export const ProductSalePage = () => {
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Notes</label>
             <Input.TextArea
+              aria-label="Notes"
               rows={3}
               value={createNotes}
               onChange={e => setCreateNotes(e.target.value)}

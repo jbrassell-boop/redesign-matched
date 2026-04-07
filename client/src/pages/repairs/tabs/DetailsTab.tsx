@@ -19,8 +19,8 @@ interface DetailsTabProps {
 }
 
 const fieldStyle: React.CSSProperties = {
-  height: 28, border: '1px solid #d1d5db', borderRadius: 3,
-  background: '#fff', padding: '0 7px', fontSize: 11, color: '#374151',
+  height: 28, border: '1px solid var(--neutral-200)', borderRadius: 3,
+  background: 'var(--card)', padding: '0 7px', fontSize: 11, color: 'var(--label)',
   display: 'flex', alignItems: 'center',
 };
 const lblStyle: React.CSSProperties = {
@@ -28,7 +28,7 @@ const lblStyle: React.CSSProperties = {
   textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 4,
 };
 const sectionHd: React.CSSProperties = {
-  background: 'var(--neutral-50, #f9fafb)',
+  background: 'var(--neutral-50, var(--bg))',
   padding: '7px 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--navy)',
   textTransform: 'uppercase', letterSpacing: '.05em',
   borderBottom: '1px solid var(--border)',
@@ -89,7 +89,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
       try { await bulkApproveLineItems(repair.repairKey, 'Y'); loadItems(); message.success('All items approved (consumption)'); }
       catch { message.error('Failed to approve items'); }
     } },
-    { label: 'Unapproved',      style: { background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: async () => {
+    { label: 'Unapproved',      style: { background: 'var(--card)', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: async () => {
       try { await bulkApproveLineItems(repair.repairKey, ''); loadItems(); message.success('All items unapproved'); }
       catch { message.error('Failed to unapprove items'); }
     } },
@@ -97,24 +97,24 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
       try { await bulkApproveLineItems(repair.repairKey, 'Y'); loadItems(); message.success('All items approved'); }
       catch { message.error('Failed to approve items'); }
     } },
-    { label: 'Update Slips',    style: { background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: () => {
+    { label: 'Update Slips',    style: { background: 'var(--card)', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: () => {
       getUpdateSlips(repair.repairKey).then(setSlipsData).catch(() => message.error('Failed to load update slips'));
       setSlipsModalOpen(true);
     } },
     { label: 'Amend Repair',    style: { background: 'var(--amber)', color: '#1a1a1a' }, action: () => {
       handleOpenAmendments();
     } },
-    { label: 'Defect Tracking', style: { background: '#fff', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: () => {
+    { label: 'Defect Tracking', style: { background: 'var(--card)', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: () => {
       getDefectTracking(repair.repairKey).then(setDefectsData).catch(() => message.error('Failed to load defect tracking'));
       setDefectsModalOpen(true);
     } },
-    { label: 'Update Techs',    style: { background: 'var(--neutral-50, #f9fafb)', color: 'var(--navy)', border: '1px solid var(--border)' }, action: () => {
+    { label: 'Update Techs',    style: { background: 'var(--neutral-50, var(--bg))', color: 'var(--navy)', border: '1px solid var(--border)' }, action: () => {
       getRepairTechnicians().then(setTechList).catch(() => message.error('Failed to load technicians'));
       setSelectedTech(repair.techKey ?? 0);
       setSelectedTech2(null);
       setTechModalOpen(true);
     } },
-    { label: 'Inventory',       style: { background: 'var(--neutral-50, #f9fafb)', color: 'var(--navy)', border: '1px solid var(--border)' }, action: () => {
+    { label: 'Inventory',       style: { background: 'var(--neutral-50, var(--bg))', color: 'var(--navy)', border: '1px solid var(--border)' }, action: () => {
       getRepairInventoryUsage(repair.repairKey).then(setInvData).catch(() => message.error('Failed to load inventory'));
       setInvModalOpen(true);
     } },
@@ -125,7 +125,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
 
       {/* Action bar */}
       <div style={{
-        background: '#fff', border: '1px solid var(--border)', borderRadius: 6,
+        background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6,
         padding: '7px 10px', display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center',
       }}>
         <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginRight: 4 }}>
@@ -154,7 +154,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
 
           {/* Complaint form — editable */}
-          <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
             <div style={{ ...sectionHd, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>Customer Complaint</span>
               <AutosaveIndicator status={detailsStatus} />
@@ -186,8 +186,8 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
               </div>
               <textarea
                 style={{
-                  minHeight: 64, width: '100%', border: '1px solid #d1d5db', borderRadius: 3,
-                  background: '#fff', padding: '6px 7px', fontSize: 11, color: '#374151', lineHeight: 1.4,
+                  minHeight: 64, width: '100%', border: '1px solid var(--neutral-200)', borderRadius: 3,
+                  background: 'var(--card)', padding: '6px 7px', fontSize: 11, color: 'var(--label)', lineHeight: 1.4,
                   resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box',
                 }}
                 value={complaint}
@@ -198,7 +198,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
           </div>
 
           {/* Angulation IN */}
-          <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
             <div style={{ ...sectionHd, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>Angulation IN</span>
               <div style={{ display: 'flex', gap: 3 }}>
@@ -207,7 +207,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
                     onClick={() => message.info(`${lbl} angulation — use Inspections tab`)}
                     style={{
                       height: 20, padding: '0 7px', fontSize: 9, fontWeight: 600,
-                      background: '#fff', color: 'var(--navy)', border: '1px solid var(--border)',
+                      background: 'var(--card)', color: 'var(--navy)', border: '1px solid var(--border)',
                       borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit',
                     }}>
                     {lbl}
@@ -221,20 +221,20 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
                   <div key={lbl}>
                     <div style={lblStyle}>{lbl}</div>
                     <div style={fieldStyle}>
-                      <span style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: 10 }}>—</span>
+                      <span style={{ color: 'var(--muted)', fontStyle: 'italic', fontSize: 10 }}>—</span>
                     </div>
                   </div>
                 ))}
               </div>
               <div>
                 <div style={lblStyle}>Max Charge</div>
-                <div style={fieldStyle}><span style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: 10 }}>—</span></div>
+                <div style={fieldStyle}><span style={{ color: 'var(--muted)', fontStyle: 'italic', fontSize: 10 }}>—</span></div>
               </div>
             </div>
           </div>
 
           {/* Outsource */}
-          <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
             <div style={sectionHd}>Outsource</div>
             <div style={{ padding: '8px 12px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px' }}>
@@ -244,25 +244,25 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <div style={lblStyle}>{label}</div>
-                    <div style={fieldStyle}>{value || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>—</span>}</div>
+                    <div style={fieldStyle}>{value || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>—</span>}</div>
                   </div>
                 ))}
                 <div style={{ gridColumn: '1 / -1' }}>
                   <div style={lblStyle}>Tracking</div>
-                  <div style={fieldStyle}>{repair.outsourceTracking || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>—</span>}</div>
+                  <div style={fieldStyle}>{repair.outsourceTracking || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>—</span>}</div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Comments */}
-          <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
             <div style={sectionHd}>Comments</div>
             <div style={{ padding: '8px 12px' }}>
               <div style={{
-                minHeight: 44, border: '1px solid #d1d5db', borderRadius: 3,
-                background: '#fff', padding: '6px 7px', fontSize: 10,
-                color: '#9ca3af', fontStyle: 'italic', marginBottom: 8,
+                minHeight: 44, border: '1px solid var(--neutral-200)', borderRadius: 3,
+                background: 'var(--card)', padding: '6px 7px', fontSize: 10,
+                color: 'var(--muted)', fontStyle: 'italic', marginBottom: 8,
               }}>
                 Add a comment…
               </div>
@@ -272,7 +272,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
                   borderRadius: 4, padding: '5px 7px',
                 }}>
                   <div style={{ fontSize: 8, fontWeight: 700, color: 'var(--navy)', marginBottom: 1 }}>Notes</div>
-                  <div style={{ fontSize: 10, color: '#374151' }}>{repair.notes}</div>
+                  <div style={{ fontSize: 10, color: 'var(--label)' }}>{repair.notes}</div>
                 </div>
               )}
             </div>
@@ -284,7 +284,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
 
           {/* Complaint banner */}
           <div style={{
-            background: '#fff',
+            background: 'var(--card)',
             border: '1px solid var(--border)',
             borderLeft: '4px solid var(--primary)',
             borderRadius: '0 6px 6px 0',
@@ -295,17 +295,17 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
                 <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 }}>
                   Customer Complaint
                 </div>
-                <div style={{ fontSize: 12, color: '#374151', lineHeight: 1.5 }}>
+                <div style={{ fontSize: 12, color: 'var(--label)', lineHeight: 1.5 }}>
                   {repair.complaint || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>No complaint recorded</span>}
                 </div>
               </div>
               <div style={{ flexShrink: 0 }}>
                 <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>Reason</div>
-                <div style={{ fontSize: 11, color: '#374151', fontWeight: 600 }}>{repair.repairReason || '—'}</div>
+                <div style={{ fontSize: 11, color: 'var(--label)', fontWeight: 600 }}>{repair.repairReason || '—'}</div>
               </div>
               <div style={{ flexShrink: 0 }}>
                 <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>PS Level</div>
-                <div style={{ fontSize: 11, color: '#374151', fontWeight: 600 }}>{repair.psLevel || '—'}</div>
+                <div style={{ fontSize: 11, color: 'var(--label)', fontWeight: 600 }}>{repair.psLevel || '—'}</div>
               </div>
             </div>
           </div>
@@ -313,8 +313,8 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
           {/* Flags banner — only if flags exist or repair is urgent */}
           {(repair.isUrgent || flags.length > 0) && (
             <div style={{
-              background: '#FEF3C7',
-              border: '1px solid #FDE68A',
+              background: 'var(--amber-light)',
+              border: '1px solid var(--amber-border)',
               borderLeft: '4px solid var(--amber)',
               borderRadius: '0 6px 6px 0',
               padding: '7px 12px',
@@ -393,7 +393,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
           </div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
             <button onClick={() => setTechModalOpen(false)}
-              style={{ padding: '5px 14px', borderRadius: 4, border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: 12 }}>
+              style={{ padding: '5px 14px', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--card)', cursor: 'pointer', fontSize: 12 }}>
               Cancel
             </button>
             <button

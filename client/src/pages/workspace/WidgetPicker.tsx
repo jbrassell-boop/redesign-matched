@@ -13,7 +13,7 @@ export const WidgetPicker = ({ open, currentWidgetIds, onAddWidget, onClose }: W
 
   return (
     <>
-      {open && <div className="widget-picker__overlay" onClick={onClose} />}
+      {open && <div className="widget-picker__overlay" onClick={onClose} role="presentation" />}
       <div className={`widget-picker${open ? ' widget-picker--open' : ''}`}>
         <div className="widget-picker__header">
           <span className="widget-picker__title">Add Widget</span>

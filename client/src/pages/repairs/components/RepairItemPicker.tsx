@@ -107,7 +107,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
     >
       <div style={{
         width: '90vw', maxWidth: 700, height: '80vh',
-        background: '#fff', borderRadius: 10,
+        background: 'var(--card)', borderRadius: 10,
         display: 'flex', flexDirection: 'column',
         boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
         overflow: 'hidden',
@@ -164,15 +164,15 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '8px 16px', cursor: 'pointer',
                     borderBottom: '1px solid var(--neutral-100)',
-                    background: isSelected ? 'rgba(var(--primary-rgb), 0.06)' : '#fff',
+                    background: isSelected ? 'rgba(var(--primary-rgb), 0.06)' : 'var(--card)',
                     borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
                   }}
                   onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = '#fff'; }}
+                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
                 >
                   <input type="checkbox" checked={isSelected} readOnly style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--primary)' }} />
                   <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--navy)', minWidth: 60 }}>{item.itemCode}</span>
-                  <span style={{ flex: 1, fontSize: 12, color: '#374151' }}>{item.description}</span>
+                  <span style={{ flex: 1, fontSize: 12, color: 'var(--label)' }}>{item.description}</span>
                   <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', minWidth: 60, textAlign: 'right' }}>
                     {item.defaultPrice > 0 ? fmt$(item.defaultPrice) : '—'}
                   </span>
@@ -189,7 +189,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
                       <button key={ft} onClick={() => updateFixType(item.itemKey, ft)} style={{
                         padding: '2px 8px', fontSize: 10, fontWeight: 700, borderRadius: 3, cursor: 'pointer',
                         border: entry.fixType === ft ? '1px solid var(--primary)' : '1px solid var(--border)',
-                        background: entry.fixType === ft ? 'var(--primary)' : '#fff',
+                        background: entry.fixType === ft ? 'var(--primary)' : 'var(--card)',
                         color: entry.fixType === ft ? '#fff' : 'var(--muted)',
                       }}>{ft}</button>
                     ))}
@@ -224,7 +224,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => setSelected(new Map())} style={{
                 padding: '5px 14px', borderRadius: 4, border: '1px solid var(--border)',
-                background: '#fff', fontSize: 12, cursor: 'pointer',
+                background: 'var(--card)', fontSize: 12, cursor: 'pointer',
               }}>Clear</button>
               <button onClick={handleAddAll} disabled={adding} style={{
                 padding: '5px 14px', borderRadius: 4, border: 'none',

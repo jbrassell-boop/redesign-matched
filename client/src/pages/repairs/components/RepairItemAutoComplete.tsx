@@ -69,7 +69,7 @@ export const RepairItemAutoComplete = ({ repairKey, onSelect, inputRef }: Props)
         style={{
           width: '100%', height: 26,
           border: '1px solid #93c5fd', borderRadius: 3,
-          fontSize: 11, padding: '0 6px', background: '#fff',
+          fontSize: 11, padding: '0 6px', background: 'var(--card)',
           boxSizing: 'border-box',
           outline: 'none',
         }}
@@ -77,7 +77,7 @@ export const RepairItemAutoComplete = ({ repairKey, onSelect, inputRef }: Props)
       {open && filtered.length > 0 && (
         <div style={{
           position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000,
-          background: '#fff', border: '1px solid var(--border)',
+          background: 'var(--card)', border: '1px solid var(--border)',
           borderRadius: 4, boxShadow: '0 4px 12px rgba(0,0,0,.12)',
           maxHeight: 240, overflowY: 'auto',
         }}>
@@ -87,7 +87,7 @@ export const RepairItemAutoComplete = ({ repairKey, onSelect, inputRef }: Props)
               onMouseDown={() => select(item)}
               style={{
                 padding: '5px 10px',
-                background: idx === highlighted ? 'var(--primary-light)' : '#fff',
+                background: idx === highlighted ? 'var(--primary-light)' : 'var(--card)',
                 cursor: 'pointer',
                 fontSize: 12,
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',

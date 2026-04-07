@@ -339,6 +339,7 @@ export const InstrumentsPage = () => {
               <Input
                 prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
                 placeholder={activeTab === 'catalog' ? 'Search instruments...' : 'Search order, client, dept...'}
+                aria-label="Search instruments"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 style={{ height: 28, fontSize: 11, flex: 1, minWidth: 140 }}
@@ -350,6 +351,7 @@ export const InstrumentsPage = () => {
                   onChange={(v) => { setStatusFilter(v); setPage(1); }}
                   style={{ width: 140 }}
                   size="small"
+                  aria-label="Filter by status"
                   options={[
                     { value: '', label: 'All Statuses' },
                     { value: 'Received', label: 'Received' },
@@ -368,6 +370,7 @@ export const InstrumentsPage = () => {
                     onChange={(v) => { setTypeFilter(v); setPage(1); }}
                     style={{ width: 110 }}
                     size="small"
+                    aria-label="Filter by type"
                     options={[
                       { value: '', label: 'All Types' },
                       { value: 'R', label: 'Rigid' },
@@ -379,6 +382,7 @@ export const InstrumentsPage = () => {
                     onChange={(v) => { setActiveFilter(v); setPage(1); }}
                     style={{ width: 100 }}
                     size="small"
+                    aria-label="Filter by active status"
                     options={[
                       { value: '', label: 'All' },
                       { value: 'active', label: 'Active' },

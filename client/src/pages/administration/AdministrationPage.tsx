@@ -425,8 +425,8 @@ export function AdministrationPage() {
       title: '', key: 'actions', width: 80,
       render: (_: unknown, r: RepairReasonItem) => (
         <div style={{ display: 'flex', gap: 4 }}>
-          <Button size="small" icon={<EditOutlined />} onClick={e => { e.stopPropagation(); openReasonModal(r); }} />
-          <Button size="small" danger icon={<DeleteOutlined />} onClick={e => { e.stopPropagation(); deleteReason(r.reasonKey); }} />
+          <Button size="small" aria-label="Edit reason" icon={<EditOutlined />} onClick={e => { e.stopPropagation(); openReasonModal(r); }} />
+          <Button size="small" danger aria-label="Delete reason" icon={<DeleteOutlined />} onClick={e => { e.stopPropagation(); deleteReason(r.reasonKey); }} />
         </div>
       ),
     },
@@ -443,8 +443,8 @@ export function AdministrationPage() {
       title: '', key: 'actions', width: 80,
       render: (_: unknown, r: RepairStatusItem) => (
         <div style={{ display: 'flex', gap: 4 }}>
-          <Button size="small" icon={<EditOutlined />} disabled={r.isReadOnly} onClick={e => { e.stopPropagation(); openStatusModal(r); }} />
-          <Button size="small" danger icon={<DeleteOutlined />} disabled={r.isReadOnly} onClick={e => { e.stopPropagation(); deleteStatus(r.statusId); }} />
+          <Button size="small" aria-label="Edit status" icon={<EditOutlined />} disabled={r.isReadOnly} onClick={e => { e.stopPropagation(); openStatusModal(r); }} />
+          <Button size="small" danger aria-label="Delete status" icon={<DeleteOutlined />} disabled={r.isReadOnly} onClick={e => { e.stopPropagation(); deleteStatus(r.statusId); }} />
         </div>
       ),
     },
@@ -627,6 +627,7 @@ export function AdministrationPage() {
                 style={{ width: 200 }}
                 placeholder="Select Rep..."
                 allowClear
+                aria-label="Previous Sales Rep"
                 options={salesReps.map(r => ({ value: r.salesRepKey, label: r.name }))}
               />
             </div>
@@ -641,6 +642,7 @@ export function AdministrationPage() {
                 value={bonusPoolType}
                 onChange={(v) => { setBonusPoolType(v); }}
                 style={{ width: 200 }}
+                aria-label="Bonus Pool Type"
                 options={[
                   { value: 'tech', label: 'Tech Bonus Pool' },
                   { value: 'ops', label: 'Ops Bonus Pool' },
@@ -703,6 +705,7 @@ export function AdministrationPage() {
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--muted)' }} />}
           placeholder={`Search ${visibleTabs.find(t => t.key === activeTab)?.label || ''}...`}
+          aria-label={`Search ${visibleTabs.find(t => t.key === activeTab)?.label ?? ''}`}
           value={search}
           onChange={e => setSearch(e.target.value)}
           onPressEnter={() => loadTabData(activeTab)}
@@ -714,6 +717,7 @@ export function AdministrationPage() {
             value={scopeTypeFilter}
             onChange={v => { setScopeTypeFilter(v); }}
             style={{ width: 140, height: 30 }}
+            aria-label="Filter by type"
             options={[
               { value: '', label: 'All Types' },
               { value: 'F', label: 'Flexible' },
@@ -728,6 +732,7 @@ export function AdministrationPage() {
             value={distribActiveFilter}
             onChange={v => { setDistribActiveFilter(v); }}
             style={{ width: 120, height: 30 }}
+            aria-label="Filter by status"
             options={[
               { value: '', label: 'All' },
               { value: '1', label: 'Active' },
@@ -740,6 +745,7 @@ export function AdministrationPage() {
             value={auditAction}
             onChange={v => { setAuditAction(v); }}
             style={{ width: 140, height: 30 }}
+            aria-label="Filter by action"
             options={[
               { value: '', label: 'All Actions' },
               { value: 'Login', label: 'Login' },
@@ -777,15 +783,15 @@ export function AdministrationPage() {
           <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Full Name</label>
-              <Input value={userEditName} onChange={e => setUserEditName(e.target.value)} style={{ fontSize: 12 }} />
+              <Input aria-label="Full Name" value={userEditName} onChange={e => setUserEditName(e.target.value)} style={{ fontSize: 12 }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Email Address</label>
-              <Input value={userEditEmail} onChange={e => setUserEditEmail(e.target.value)} style={{ fontSize: 12 }} />
+              <Input aria-label="Email Address" value={userEditEmail} onChange={e => setUserEditEmail(e.target.value)} style={{ fontSize: 12 }} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>Active</label>
-              <Switch checked={userEditActive} onChange={setUserEditActive} />
+              <Switch aria-label="Active" checked={userEditActive} onChange={setUserEditActive} />
             </div>
             {/* Read-only info */}
             <div style={{ marginTop: 8, padding: '12px', background: 'var(--neutral-50)', borderRadius: 6, border: '1px solid var(--border)' }}>
@@ -834,11 +840,11 @@ export function AdministrationPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' }}>
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Reason Text</label>
-            <Input value={reasonText} onChange={e => setReasonText(e.target.value)} placeholder="Enter repair reason..." style={{ fontSize: 12 }} />
+            <Input aria-label="Reason Text" value={reasonText} onChange={e => setReasonText(e.target.value)} placeholder="Enter repair reason..." style={{ fontSize: 12 }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>Active</label>
-            <Switch checked={reasonActive} onChange={setReasonActive} />
+            <Switch aria-label="Active" checked={reasonActive} onChange={setReasonActive} />
           </div>
         </div>
       </Modal>
@@ -859,11 +865,11 @@ export function AdministrationPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' }}>
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Status Name</label>
-            <Input value={statusText} onChange={e => setStatusText(e.target.value)} placeholder="Enter status name..." style={{ fontSize: 12 }} />
+            <Input aria-label="Status Name" value={statusText} onChange={e => setStatusText(e.target.value)} placeholder="Enter status name..." style={{ fontSize: 12 }} />
           </div>
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>Sort Order</label>
-            <Input type="number" value={statusSortOrder} onChange={e => setStatusSortOrder(e.target.value)} placeholder="e.g. 10" style={{ width: 120, fontSize: 12 }} />
+            <Input aria-label="Sort Order" type="number" value={statusSortOrder} onChange={e => setStatusSortOrder(e.target.value)} placeholder="e.g. 10" style={{ width: 120, fontSize: 12 }} />
           </div>
         </div>
       </Modal>

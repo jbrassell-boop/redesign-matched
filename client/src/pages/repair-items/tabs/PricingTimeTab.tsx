@@ -73,7 +73,8 @@ const tgLblStyle: React.CSSProperties = {
 
 const numInput = (
   value: number | null | undefined,
-  onChange: (v: number | null) => void
+  onChange: (v: number | null) => void,
+  label?: string
 ) => (
   <Input
     type="number"
@@ -81,6 +82,7 @@ const numInput = (
     value={value ?? ''}
     onChange={e => onChange(e.target.value !== '' ? Number(e.target.value) : null)}
     style={{ height: 24, fontSize: 11 }}
+    aria-label={label}
   />
 );
 
@@ -94,6 +96,7 @@ export const PricingTimeTab = ({ draft, onChange }: PricingTimeTabProps) => (
           <div>
             <label style={labelStyle}>Avg Cost — Material ($)</label>
             <Input
+              aria-label="Avg Cost — Material ($)"
               type="number"
               min={0}
               step={0.01}
@@ -105,6 +108,7 @@ export const PricingTimeTab = ({ draft, onChange }: PricingTimeTabProps) => (
           <div>
             <label style={labelStyle}>Avg Cost — Labor ($)</label>
             <Input
+              aria-label="Avg Cost — Labor ($)"
               type="number"
               min={0}
               step={0.01}
@@ -165,9 +169,9 @@ export const PricingTimeTab = ({ draft, onChange }: PricingTimeTabProps) => (
             padding: '4px 0',
           }}>
             <div style={tgLblStyle}>Mins</div>
-            <div style={{ padding: '2px 6px' }}>{numInput(draft.minutesTech1, v => onChange({ minutesTech1: v }))}</div>
-            <div style={{ padding: '2px 6px' }}>{numInput(draft.minutesTech2, v => onChange({ minutesTech2: v }))}</div>
-            <div style={{ padding: '2px 6px' }}>{numInput(draft.minutesTech3, v => onChange({ minutesTech3: v }))}</div>
+            <div style={{ padding: '2px 6px' }}>{numInput(draft.minutesTech1, v => onChange({ minutesTech1: v }), 'Standard Tech 1 minutes')}</div>
+            <div style={{ padding: '2px 6px' }}>{numInput(draft.minutesTech2, v => onChange({ minutesTech2: v }), 'Standard Tech 2 minutes')}</div>
+            <div style={{ padding: '2px 6px' }}>{numInput(draft.minutesTech3, v => onChange({ minutesTech3: v }), 'Standard Tech 3 minutes')}</div>
           </div>
           {/* Input row — Small Diameter */}
           <div style={{
@@ -176,9 +180,9 @@ export const PricingTimeTab = ({ draft, onChange }: PricingTimeTabProps) => (
             padding: '4px 0',
           }}>
             <div style={tgLblStyle}>Mins</div>
-            <div style={{ padding: '2px 6px' }}>{numInput(draft.minutesTech1SmallDiameter, v => onChange({ minutesTech1SmallDiameter: v }))}</div>
-            <div style={{ padding: '2px 6px' }}>{numInput(draft.minutesTech2SmallDiameter, v => onChange({ minutesTech2SmallDiameter: v }))}</div>
-            <div style={{ padding: '2px 6px' }}>{numInput(draft.minutesTech3SmallDiameter, v => onChange({ minutesTech3SmallDiameter: v }))}</div>
+            <div style={{ padding: '2px 6px' }}>{numInput(draft.minutesTech1SmallDiameter, v => onChange({ minutesTech1SmallDiameter: v }), 'Small Diameter Tech 1 minutes')}</div>
+            <div style={{ padding: '2px 6px' }}>{numInput(draft.minutesTech2SmallDiameter, v => onChange({ minutesTech2SmallDiameter: v }), 'Small Diameter Tech 2 minutes')}</div>
+            <div style={{ padding: '2px 6px' }}>{numInput(draft.minutesTech3SmallDiameter, v => onChange({ minutesTech3SmallDiameter: v }), 'Small Diameter Tech 3 minutes')}</div>
           </div>
         </div>
       </div>

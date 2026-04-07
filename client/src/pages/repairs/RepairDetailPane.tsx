@@ -319,14 +319,14 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
               </svg>
             </button>
             {statusMenuOpen && (
-              <div style={{
+              <div role="listbox" style={{
                 position: 'absolute', top: '100%', left: 0, marginTop: 4,
                 background: 'var(--card)', border: '1px solid var(--neutral-200)',
                 borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
                 minWidth: 220, maxHeight: 300, overflowY: 'auto', zIndex: 100,
               }}>
                 {statuses.map(s => (
-                  <div key={s.statusId} onClick={() => handleSetStatus(s.statusId)} style={{
+                  <div key={s.statusId} onClick={() => handleSetStatus(s.statusId)} role="option" aria-selected={s.statusId === currentStatusId} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSetStatus(s.statusId); } }} style={{
                     padding: '6px 12px', cursor: 'pointer', fontSize: 11,
                     color: s.statusId === currentStatusId ? 'var(--primary)' : 'var(--text)',
                     fontWeight: s.statusId === currentStatusId ? 700 : 400,
@@ -354,7 +354,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
               </svg>
             </button>
             {formsMenuOpen && (
-              <div style={{
+              <div role="menu" style={{
                 position: 'absolute', top: '100%', left: 0, marginTop: 4,
                 background: 'var(--card)', border: '1px solid var(--neutral-200)',
                 borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
@@ -369,7 +369,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                   { key: 'amendment'      as const, label: 'Amendment (OM07-9)' },
                   { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)' },
                 ].map(item => (
-                  <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} style={{
+                  <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={{
                     padding: '7px 12px', cursor: 'pointer', fontSize: 11,
                     color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
                   }}
@@ -384,7 +384,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                   { key: 'return-verification'  as const, label: 'Return Verification (OM14-1)' },
                   { key: 'loaner'               as const, label: 'Loaner (OM17-1)' },
                 ].map(item => (
-                  <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} style={{
+                  <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={{
                     padding: '7px 12px', cursor: 'pointer', fontSize: 11,
                     color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
                   }}
@@ -415,7 +415,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
 
         {/* Tab bar */}
         <div style={{
-          background: '#fff', borderBottom: '2px solid var(--border)',
+          background: 'var(--card)', borderBottom: '2px solid var(--border)',
           display: 'flex', padding: '0 8px', flexShrink: 0, overflowX: 'auto',
         }}>
           {cockpitTabs.map(t => (
@@ -618,7 +618,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                 { key: 'amendment'      as const, label: 'Amendment (OM07-9)' },
                 { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)' },
               ].map(item => (
-                <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} style={{
+                <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={{
                   padding: '7px 12px', cursor: 'pointer', fontSize: 12,
                   color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
                 }}
@@ -633,7 +633,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                 { key: 'return-verification'  as const, label: 'Return Verification (OM14-1)' },
                 { key: 'loaner'               as const, label: 'Loaner (OM17-1)' },
               ].map(item => (
-                <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} style={{
+                <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={{
                   padding: '7px 12px', cursor: 'pointer', fontSize: 12,
                   color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
                 }}

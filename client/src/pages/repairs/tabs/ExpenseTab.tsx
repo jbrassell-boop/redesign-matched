@@ -45,9 +45,9 @@ export const ExpenseTab = ({ repairKey }: ExpenseTabProps) => {
     <div style={{ padding: 12, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
 
       {/* Expenses */}
-      <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
         <div style={{
-          background: 'var(--neutral-50, #f9fafb)', padding: '6px 10px',
+          background: 'var(--neutral-50, var(--bg))', padding: '6px 10px',
           fontSize: 9.5, fontWeight: 700, color: 'var(--navy)',
           textTransform: 'uppercase', letterSpacing: '.05em',
           borderBottom: '1px solid var(--border)',
@@ -69,9 +69,9 @@ export const ExpenseTab = ({ repairKey }: ExpenseTabProps) => {
       </div>
 
       {/* Revenue */}
-      <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
         <div style={{
-          background: 'var(--neutral-50, #f9fafb)', padding: '6px 10px',
+          background: 'var(--neutral-50, var(--bg))', padding: '6px 10px',
           fontSize: 9.5, fontWeight: 700, color: 'var(--navy)',
           textTransform: 'uppercase', letterSpacing: '.05em',
           borderBottom: '1px solid var(--border)',

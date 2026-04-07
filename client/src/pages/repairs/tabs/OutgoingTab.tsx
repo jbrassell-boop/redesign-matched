@@ -12,9 +12,9 @@ const F = ({ label, value }: { label: string; value?: string | null }) => (
   <div>
     <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 2 }}>{label}</div>
     <div style={{
-      height: 26, border: '1px solid #d1d5db', borderRadius: 3,
-      background: '#fff', padding: '0 7px', fontSize: 11,
-      color: value ? '#374151' : '#9ca3af', fontStyle: value ? 'normal' : 'italic',
+      height: 26, border: '1px solid var(--neutral-200)', borderRadius: 3,
+      background: 'var(--card)', padding: '0 7px', fontSize: 11,
+      color: value ? 'var(--label)' : 'var(--muted)', fontStyle: value ? 'normal' : 'italic',
       display: 'flex', alignItems: 'center',
     }}>
       {value || '—'}
@@ -23,9 +23,9 @@ const F = ({ label, value }: { label: string; value?: string | null }) => (
 );
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', marginBottom: 10 }}>
+  <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', marginBottom: 10 }}>
     <div style={{
-      background: 'var(--neutral-50, #f9fafb)', padding: '6px 10px',
+      background: 'var(--neutral-50, var(--bg))', padding: '6px 10px',
       fontSize: 9.5, fontWeight: 700, color: 'var(--navy)',
       textTransform: 'uppercase', letterSpacing: '.05em',
       borderBottom: '1px solid var(--border)',
@@ -44,10 +44,10 @@ const causeBadgeStyle = (cause: string): React.CSSProperties => {
 
 const fixBadgeStyle = (fix: string): React.CSSProperties => {
   const map: Record<string, React.CSSProperties> = {
-    W:  { background: '#F0FDF4', color: 'var(--success)', border: '1px solid #BBF7D0' },
+    W:  { background: 'var(--success-light)', color: 'var(--success)', border: '1px solid var(--success-border)' },
     NC: { background: '#FEF2F2', color: 'var(--danger)',  border: '1px solid #FECACA' },
     C:  { background: '#EFF6FF', color: 'var(--primary)', border: '1px solid #BFDBFE' },
-    A:  { background: '#F5F3FF', color: '#7C3AED',        border: '1px solid #DDD6FE' },
+    A:  { background: 'var(--purple-light)', color: 'var(--purple)',        border: '1px solid #DDD6FE' },
   };
   return map[fix?.toUpperCase()] ?? { background: 'var(--neutral-50)', color: 'var(--muted)', border: '1px solid var(--border)' };
 };
@@ -114,7 +114,7 @@ export const OutgoingTab = ({ repair, items }: OutgoingTabProps) => {
             onClick={() => message.info('Label printing requires local printer configuration — contact IT')}
             style={{
               height: 28, padding: '0 12px', fontSize: 11, fontWeight: 600,
-              background: 'var(--neutral-50, #f9fafb)', color: 'var(--navy)',
+              background: 'var(--neutral-50, var(--bg))', color: 'var(--navy)',
               border: '1px solid var(--border)', borderRadius: 4,
               cursor: 'pointer', fontFamily: 'inherit',
             }}

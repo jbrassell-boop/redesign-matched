@@ -18,10 +18,10 @@ export const ReturnVerificationForm = ({ repair, onClose }: Props) => {
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflow: 'auto', padding: '20px 0' }}>
-      <div className="print-form" style={{ width: '8.5in', background: '#fff', fontFamily: "'Inter', Arial, sans-serif", fontSize: 11, color: '#111' }}>
+      <div className="print-form" style={{ width: '8.5in', background: 'var(--card)', fontFamily: "'Inter', Arial, sans-serif", fontSize: 11, color: '#111' }}>
         {/* Print/Close */}
         <div className="no-print" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 0' }}>
-          <button onClick={() => window.print()} style={{ padding: '8px 20px', background: '#2E75B6', color: '#fff', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Print / Save PDF</button>
+          <button onClick={() => window.print()} style={{ padding: '8px 20px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Print / Save PDF</button>
           <button onClick={onClose} style={{ padding: '8px 20px', background: '#666', color: '#fff', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
         </div>
 
@@ -30,7 +30,7 @@ export const ReturnVerificationForm = ({ repair, onClose }: Props) => {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
             <img src="/logo-color.png" alt="TSI Logo" style={{ height: 44 }} />
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#1B3A5C' }}>Scope Return Verification</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Scope Return Verification</div>
               <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM14-1</div>
             </div>
           </div>
@@ -66,7 +66,7 @@ export const ReturnVerificationForm = ({ repair, onClose }: Props) => {
             </thead>
             <tbody>
               {Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i} style={i % 2 === 1 ? { background: '#F9FAFB' } : undefined}>
+                <tr key={i} style={i % 2 === 1 ? { background: 'var(--bg)' } : undefined}>
                   <td style={tdS}>&nbsp;</td>
                   <td style={{ ...tdS, textAlign: 'center' }}>&nbsp;</td>
                   <td style={{ ...tdS, textAlign: 'center' }}><span style={{ display: 'inline-block', width: 14, height: 14, border: '1px solid #999', borderRadius: 2 }} /></td>
@@ -77,7 +77,7 @@ export const ReturnVerificationForm = ({ repair, onClose }: Props) => {
           </table>
 
           {/* Disinfection Reminder */}
-          <div style={{ marginTop: 10, padding: '10px 14px', background: '#FEF9E7', border: '1.5px solid #F59E0B', borderRadius: 4 }}>
+          <div style={{ marginTop: 10, padding: '10px 14px', background: '#FEF9E7', border: '1.5px solid var(--warning)', borderRadius: 4 }}>
             <div style={{ fontSize: '9.5px', fontWeight: 800, textTransform: 'uppercase', color: '#92400E', letterSpacing: '.06em', marginBottom: 4 }}>Disinfection Reminder</div>
             <div style={{ fontSize: '10.5px', color: '#78350F', lineHeight: 1.5 }}>
               All equipment returned to Total Scope Inc. must be properly cleaned and high-level disinfected or sterilized prior to shipment. Equipment arriving without documentation of disinfection will be treated as contaminated. TSI reserves the right to charge a decontamination fee. Please include your facility's decontamination record with this shipment.
@@ -112,11 +112,11 @@ export const ReturnVerificationForm = ({ repair, onClose }: Props) => {
 
 /* ── Primitives ── */
 const fl: React.CSSProperties = { fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: '#555', letterSpacing: '.04em' };
-const thS: React.CSSProperties = { background: '#2E75B6', color: '#fff', fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', padding: '5px 8px', textAlign: 'left', letterSpacing: '.04em', borderRight: '1px solid rgba(255,255,255,.2)' };
+const thS: React.CSSProperties = { background: 'var(--primary)', color: '#fff', fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', padding: '5px 8px', textAlign: 'left', letterSpacing: '.04em', borderRight: '1px solid rgba(255,255,255,.2)' };
 const tdS: React.CSSProperties = { padding: '5px 8px', fontSize: '10.5px', borderBottom: '1px solid #ddd', verticalAlign: 'middle', borderRight: '1px solid #eee' };
 
 const Bar = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
-  <div style={{ background: '#2E75B6', color: '#fff', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', padding: '4px 10px', ...style }}>{children}</div>
+  <div style={{ background: 'var(--primary)', color: '#fff', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', padding: '4px 10px', ...style }}>{children}</div>
 );
 
 const Fld = ({ label, value, span2 }: { label: string; value?: string | null; span2?: boolean }) => (
@@ -128,7 +128,7 @@ const Fld = ({ label, value, span2 }: { label: string; value?: string | null; sp
 
 const AddrBlock = ({ title, name, addr, csz }: { title: string; name: string; addr: string; csz: string }) => (
   <div style={{ border: '1px solid #ddd', borderRadius: 4, padding: '8px 12px' }}>
-    <div style={{ fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: '#2E75B6', letterSpacing: '.06em', marginBottom: 6, borderBottom: '1px solid #eee', paddingBottom: 3 }}>{title}</div>
+    <div style={{ fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '.06em', marginBottom: 6, borderBottom: '1px solid #eee', paddingBottom: 3 }}>{title}</div>
     <div style={{ borderBottom: '1px solid #ccc', minHeight: 16, fontSize: 11, marginBottom: 4 }}>{name}</div>
     <div style={{ borderBottom: '1px solid #ccc', minHeight: 16, fontSize: 11, marginBottom: 4 }}>{addr}</div>
     <div style={{ borderBottom: '1px solid #ccc', minHeight: 16, fontSize: 11, marginBottom: 4 }}>{csz}</div>

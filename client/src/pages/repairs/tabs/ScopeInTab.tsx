@@ -17,8 +17,8 @@ const lblStyle: React.CSSProperties = {
   textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 2,
 };
 const inputStyle: React.CSSProperties = {
-  height: 26, border: '1px solid #d1d5db', borderRadius: 3,
-  background: '#fff', padding: '0 7px', fontSize: 11, color: '#374151',
+  height: 26, border: '1px solid var(--neutral-200)', borderRadius: 3,
+  background: 'var(--card)', padding: '0 7px', fontSize: 11, color: 'var(--label)',
   width: '100%', boxSizing: 'border-box', fontFamily: 'inherit',
 };
 /* ── Readonly field (same look as before) ─────────────── */
@@ -26,9 +26,9 @@ const F = ({ label, value }: { label: string; value?: string | number | null }) 
   <div>
     <div style={lblStyle}>{label}</div>
     <div style={{
-      height: 26, border: '1px solid #d1d5db', borderRadius: 3,
-      background: '#f9fafb', padding: '0 7px', fontSize: 11,
-      color: value != null && value !== '' ? '#6b7280' : '#9ca3af',
+      height: 26, border: '1px solid var(--neutral-200)', borderRadius: 3,
+      background: 'var(--bg)', padding: '0 7px', fontSize: 11,
+      color: value != null && value !== '' ? 'var(--muted)' : 'var(--muted)',
       fontStyle: value != null && value !== '' ? 'normal' : 'italic',
       display: 'flex', alignItems: 'center',
     }}>
@@ -54,7 +54,7 @@ const NF = ({ label, value, onChange, prefix }: {
   <div>
     <div style={lblStyle}>{label}</div>
     <div style={{ position: 'relative' }}>
-      {prefix && <span style={{ position: 'absolute', left: 7, top: 5, fontSize: 11, color: '#9ca3af', pointerEvents: 'none' }}>{prefix}</span>}
+      {prefix && <span style={{ position: 'absolute', left: 7, top: 5, fontSize: 11, color: 'var(--muted)', pointerEvents: 'none' }}>{prefix}</span>}
       <input
         type="number" step="any"
         style={{ ...inputStyle, paddingLeft: prefix ? 16 : 7 }}
@@ -83,9 +83,9 @@ const DF = ({ label, value, options, onChange }: {
 );
 
 const Section = ({ title, extra, children }: { title: string; extra?: React.ReactNode; children: React.ReactNode }) => (
-  <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', marginBottom: 10 }}>
+  <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', marginBottom: 10 }}>
     <div style={{
-      background: 'var(--neutral-50, #f9fafb)', padding: '6px 10px',
+      background: 'var(--neutral-50, var(--bg))', padding: '6px 10px',
       fontSize: 9.5, fontWeight: 700, color: 'var(--navy)',
       textTransform: 'uppercase', letterSpacing: '.05em',
       borderBottom: '1px solid var(--border)',
@@ -222,7 +222,7 @@ export const ScopeInTab = ({ repair }: ScopeInTabProps) => {
             { key: 'displayItemizedDesc',       label: 'Display itemized description' },
             { key: 'displayItemizedAmounts',    label: 'Display itemized amounts' },
           ].map(({ key, label }) => (
-            <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: '#374151', padding: '3px 0' }}>
+            <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--label)', padding: '3px 0' }}>
               <input type="checkbox" readOnly
                 checked={!!(repair as unknown as Record<string, unknown>)[key]}
               />

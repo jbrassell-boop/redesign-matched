@@ -9,7 +9,7 @@ interface Props {
 
 // ── Styles matching OM07-2 exactly ──
 const sectionBar: React.CSSProperties = {
-  background: '#2E75B6',
+  background: 'var(--primary)',
   color: '#fff',
   fontSize: 9,
   fontWeight: 700,
@@ -95,7 +95,7 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           onClick={() => window.print()}
           style={{
             height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
-            background: '#2E75B6', color: '#fff',
+            background: 'var(--primary)', color: '#fff',
             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >Print</button>
@@ -103,7 +103,7 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           onClick={onClose}
           style={{
             height: 32, padding: '0 14px', border: '1px solid #ccc', borderRadius: 5,
-            background: '#fff', color: '#555',
+            background: 'var(--card)', color: '#555',
             fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >Close</button>
@@ -115,7 +115,7 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
         style={{
           width: '8.5in',
           minHeight: '11in',
-          background: '#fff',
+          background: 'var(--card)',
           padding: '0.5in',
           display: 'flex',
           flexDirection: 'column',
@@ -129,11 +129,11 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
       >
         {/* ── Form Header ── */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
-          <div style={{ fontWeight: 800, fontSize: 16, color: '#1B3A5C' }}>
-            <span style={{ color: '#2E75B6' }}>T</span>otal <span style={{ color: '#2E75B6' }}>S</span>cope <span style={{ color: '#2E75B6' }}>I</span>nc.
+          <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--navy)' }}>
+            <span style={{ color: 'var(--primary)' }}>T</span>otal <span style={{ color: 'var(--primary)' }}>S</span>cope <span style={{ color: 'var(--primary)' }}>I</span>nc.
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#1B3A5C' }}>Requisition for Approval</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Requisition for Approval</div>
             <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM07-2 (12/2020)</div>
           </div>
         </div>
@@ -198,17 +198,17 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           <thead>
             <tr>
               <th style={{
-                background: '#2E75B6', color: '#fff', fontSize: 8.5, fontWeight: 700,
+                background: 'var(--primary)', color: '#fff', fontSize: 8.5, fontWeight: 700,
                 textTransform: 'uppercase', padding: '5px 8px', textAlign: 'left',
                 letterSpacing: '0.04em', width: '40%',
               }}>Problem / Item</th>
               <th style={{
-                background: '#2E75B6', color: '#fff', fontSize: 8.5, fontWeight: 700,
+                background: 'var(--primary)', color: '#fff', fontSize: 8.5, fontWeight: 700,
                 textTransform: 'uppercase', padding: '5px 8px', textAlign: 'left',
                 letterSpacing: '0.04em',
               }}>Description of Work</th>
               <th style={{
-                background: '#2E75B6', color: '#fff', fontSize: 8.5, fontWeight: 700,
+                background: 'var(--primary)', color: '#fff', fontSize: 8.5, fontWeight: 700,
                 textTransform: 'uppercase', padding: '5px 8px', textAlign: 'center',
                 letterSpacing: '0.04em', width: 60,
               }}>Approve<br /><span style={{ fontSize: 7, fontWeight: 400 }}>Y / N</span></th>
@@ -216,7 +216,7 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           </thead>
           <tbody>
             {displayRows.map((row, i) => (
-              <tr key={i} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+              <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
                 <td style={{ padding: '5px 8px', fontSize: 10.5, borderBottom: '1px solid #ddd', verticalAlign: 'middle', minHeight: 22 }}>
                   {row?.problem ?? ''}
                 </td>
@@ -250,7 +250,7 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
                 <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', color: '#555', fontWeight: 600, textAlign: 'right' }}>Tax</td>
                 <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', textAlign: 'right', fontWeight: 700, borderBottomColor: '#999' }}>$</td>
               </tr>
-              <tr style={{ fontSize: 12, fontWeight: 800, borderTop: '2px solid #2E75B6', background: '#F0F6FF' }}>
+              <tr style={{ fontSize: 12, fontWeight: 800, borderTop: '2px solid var(--primary)', background: '#F0F6FF' }}>
                 <td style={{ padding: '3px 8px', color: '#555', fontWeight: 600, textAlign: 'right' }}>Total</td>
                 <td style={{ padding: '3px 8px', textAlign: 'right', fontWeight: 800, fontSize: 12 }}>$</td>
               </tr>
@@ -261,7 +261,7 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
         {/* ── Disclaimer ── */}
         <div style={{
           marginTop: 10, fontSize: 8.5, color: '#555', lineHeight: 1.4,
-          padding: '6px 10px', background: '#F9FAFB', border: '1px solid #ddd', borderRadius: 3,
+          padding: '6px 10px', background: 'var(--bg)', border: '1px solid #ddd', borderRadius: 3,
         }}>
           By signing below, customer authorizes Total Scope Inc. (TSI) to proceed with the approved repair items listed above.
           Items marked "N" will not be repaired and will be returned as-is. TSI's standard Terms &amp; Conditions apply.

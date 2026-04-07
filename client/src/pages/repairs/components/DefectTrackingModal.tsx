@@ -40,7 +40,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
         </button>
       </div>
 
-      <div style={{ background: '#fff', fontFamily: 'Inter, Arial, sans-serif', fontSize: 11, color: '#111' }}>
+      <div style={{ background: 'var(--card)', fontFamily: 'Inter, Arial, sans-serif', fontSize: 11, color: '#111' }}>
 
         {/* Form header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -108,7 +108,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
         <div style={{
           border: '1px solid #ccc', borderRadius: 3, minHeight: 36,
           padding: '4px 8px', fontSize: 10.5, marginTop: 4,
-          color: defects.some(d => d.comment) ? '#374151' : '#9ca3af',
+          color: defects.some(d => d.comment) ? 'var(--label)' : 'var(--muted)',
           fontStyle: defects.some(d => d.comment) ? 'normal' : 'italic',
         }}>
           {defects.map(d => d.comment).filter(Boolean).join(' | ') || 'No additional notes'}

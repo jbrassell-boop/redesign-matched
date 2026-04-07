@@ -27,8 +27,8 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
     >
       {/* Action bar */}
       <div className="no-print" style={{ position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200 }}>
-        <button onClick={() => window.print()} style={{ height: 32, padding: '0 16px', border: 'none', borderRadius: 5, background: '#2E75B6', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Print</button>
-        <button onClick={onClose} style={{ height: 32, padding: '0 14px', border: '1px solid #ccc', borderRadius: 5, background: '#fff', color: '#555', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
+        <button onClick={() => window.print()} style={{ height: 32, padding: '0 16px', border: 'none', borderRadius: 5, background: 'var(--primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Print</button>
+        <button onClick={onClose} style={{ height: 32, padding: '0 14px', border: '1px solid #ccc', borderRadius: 5, background: 'var(--card)', color: '#555', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
       </div>
 
       <div className="print-form flex-col" style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
@@ -92,7 +92,7 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <span style={fl}>External Condition:</span>
               <Radio label="Clean" /><Radio label="Unclean" />
-              <span style={{ fontSize: 9, color: '#92400E', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 3, padding: '2px 7px', fontWeight: 600 }}>
+              <span style={{ fontSize: 9, color: '#92400E', background: 'var(--amber-subtle)', border: '1px solid var(--amber-border)', borderRadius: 3, padding: '2px 7px', fontWeight: 600 }}>
                 (if unclean, follow OM-22 SOP) — Cleaned By: <span style={underline100} />
               </span>
             </div>
@@ -150,7 +150,7 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
 
           {/* Mini header repeat */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ccc', paddingBottom: 4, marginBottom: 6 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#1B3A5C' }}>Total Scope, Inc.</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)' }}>Total Scope, Inc.</div>
             <div style={{ fontSize: 11, fontWeight: 700 }}>Flexible Endoscope Diagnostic Report — continued</div>
             <div style={{ fontSize: 10, color: '#666' }}>WO# {wo}</div>
           </div>
@@ -211,7 +211,7 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
 /* ── Shared primitives ── */
 
 const page: React.CSSProperties = {
-  width: '8.5in', minHeight: '11in', background: '#fff',
+  width: '8.5in', minHeight: '11in', background: 'var(--card)',
   padding: '0.5in', display: 'flex', flexDirection: 'column', gap: 5,
   fontFamily: "'Inter', Arial, sans-serif", fontSize: 11, color: '#111',
   boxSizing: 'border-box',
@@ -236,7 +236,7 @@ const SectionLabel = ({ children }: { children: React.ReactNode }) => (
 );
 
 const SubBar = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ background: '#F3F4F6', color: '#374151', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', padding: '3px 8px', marginTop: 4 }}>{children}</div>
+  <div style={{ background: 'var(--neutral-100)', color: 'var(--label)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', padding: '3px 8px', marginTop: 4 }}>{children}</div>
 );
 
 const Cbx = ({ label }: { label?: string }) => (
@@ -256,8 +256,8 @@ const Radio = ({ label }: { label?: string }) => (
 const PfRow = ({ children }: { children: React.ReactNode }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', borderBottom: '1px solid #f0f0f0', flexWrap: 'wrap', fontSize: 10.5 }}>
     <span style={{ display: 'inline-flex', gap: 1, flexShrink: 0 }}>
-      <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid #16A34A', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: '#16A34A' }}>P</span>
-      <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid #B71234', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: '#B71234' }}>F</span>
+      <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid var(--success)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--success)' }}>P</span>
+      <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid var(--danger)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--danger)' }}>F</span>
       <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid #aaa', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: '#666' }}>N/A</span>
     </span>
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>{children}</span>

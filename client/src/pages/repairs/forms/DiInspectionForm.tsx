@@ -11,10 +11,10 @@ export const DiInspectionForm = ({ repair, onClose }: Props) => {
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflow: 'auto', padding: '20px 0' }}>
-      <div className="print-form" style={{ width: '8.5in', background: '#fff', fontFamily: "'Inter', Arial, sans-serif", fontSize: 11, color: '#111' }}>
+      <div className="print-form" style={{ width: '8.5in', background: 'var(--card)', fontFamily: "'Inter', Arial, sans-serif", fontSize: 11, color: '#111' }}>
         {/* Print/Close */}
         <div className="no-print" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 0' }}>
-          <button onClick={() => window.print()} style={{ padding: '8px 20px', background: '#2E75B6', color: '#fff', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Print / Save PDF</button>
+          <button onClick={() => window.print()} style={{ padding: '8px 20px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Print / Save PDF</button>
           <button onClick={onClose} style={{ padding: '8px 20px', background: '#666', color: '#fff', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
         </div>
 
@@ -23,8 +23,8 @@ export const DiInspectionForm = ({ repair, onClose }: Props) => {
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
             <img src="/logo-color.png" alt="TSI Logo" style={{ height: 44 }} />
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 15, fontWeight: 800, color: '#1B3A5C' }}>D&amp;I Inspection Report</div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#2E75B6', marginTop: 1 }}>Camera System</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>D&amp;I Inspection Report</div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Camera System</div>
               <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM05-2</div>
             </div>
           </div>
@@ -57,7 +57,7 @@ export const DiInspectionForm = ({ repair, onClose }: Props) => {
           <CbRow>
             <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: '#555', letterSpacing: '.04em', marginRight: 4 }}>Received:</span>
             <Cb label="Clean" /><Cb label="Unclean" />
-            <span style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 3, padding: '4px 8px', fontSize: 9, color: '#92400E', fontWeight: 600, marginLeft: 8 }}>
+            <span style={{ background: 'var(--amber-subtle)', border: '1px solid var(--amber-border)', borderRadius: 3, padding: '4px 8px', fontSize: 9, color: '#92400E', fontWeight: 600, marginLeft: 8 }}>
               If Unclean — follow OM-22 decontamination protocol before proceeding
             </span>
           </CbRow>
@@ -99,7 +99,7 @@ export const DiInspectionForm = ({ repair, onClose }: Props) => {
 const fl: React.CSSProperties = { fontSize:'8.5px', fontWeight:700, textTransform:'uppercase', color:'#555', letterSpacing:'.04em' };
 
 const Bar = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ background:'#2E75B6', color:'#fff', fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', padding:'4px 10px' }}>{children}</div>
+  <div style={{ background:'var(--primary)', color:'#fff', fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', padding:'4px 10px' }}>{children}</div>
 );
 
 const Fld = ({ label, value, span2, h }: { label:string; value?:string|null; span2?:boolean; h?:number }) => (
@@ -123,7 +123,7 @@ const TextField = ({ h }: { h:number }) => (
   <div style={{ border:'1px solid #ccc', borderRadius:3, minHeight:h, padding:'3px 6px', marginTop:3, fontSize:'10.5px' }} />
 );
 
-const thStyle: React.CSSProperties = { background:'#2E75B6', color:'#fff', fontSize:'8.5px', fontWeight:700, textTransform:'uppercase', padding:'4px 8px', letterSpacing:'.04em', borderRight:'1px solid rgba(255,255,255,.2)' };
+const thStyle: React.CSSProperties = { background:'var(--primary)', color:'#fff', fontSize:'8.5px', fontWeight:700, textTransform:'uppercase', padding:'4px 8px', letterSpacing:'.04em', borderRight:'1px solid rgba(255,255,255,.2)' };
 
 const PfTable = ({ items }: { items:string[] }) => (
   <table style={{ width:'100%', borderCollapse:'collapse', marginTop:4 }}>
@@ -135,13 +135,13 @@ const PfTable = ({ items }: { items:string[] }) => (
     </tr></thead>
     <tbody>
       {items.map((item, i) => (
-        <tr key={item} style={i%2===1 ? { background:'#F9FAFB' } : undefined}>
+        <tr key={item} style={i%2===1 ? { background:'var(--bg)' } : undefined}>
           <td style={{ padding:'4px 8px', fontSize:'10.5px', borderBottom:'1px solid #ddd', borderRight:'1px solid #eee', verticalAlign:'middle' }}>{item}</td>
           <td style={{ padding:'4px 8px', textAlign:'center', borderBottom:'1px solid #ddd', borderRight:'1px solid #eee' }}>
-            <span style={{ display:'inline-block', width:26, height:16, border:'1px solid #16A34A', borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700, color:'#16A34A' }}>Y</span>
+            <span style={{ display:'inline-block', width:26, height:16, border:'1px solid var(--success)', borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700, color:'var(--success)' }}>Y</span>
           </td>
           <td style={{ padding:'4px 8px', textAlign:'center', borderBottom:'1px solid #ddd', borderRight:'1px solid #eee' }}>
-            <span style={{ display:'inline-block', width:26, height:16, border:'1px solid #B71234', borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700, color:'#B71234' }}>N</span>
+            <span style={{ display:'inline-block', width:26, height:16, border:'1px solid var(--danger)', borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700, color:'var(--danger)' }}>N</span>
           </td>
           <td style={{ padding:'4px 8px', textAlign:'center', borderBottom:'1px solid #ddd' }}>
             <span style={{ display:'inline-block', width:26, height:16, border:'1px solid #aaa', borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700, color:'#666' }}>N/A</span>

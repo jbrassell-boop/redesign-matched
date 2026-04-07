@@ -17,6 +17,7 @@ export const ClientsList = ({ clients, loading, selectedKey, search, onSearchCha
       <Input
         prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
         placeholder="Search clients..."
+        aria-label="Search clients"
         value={search}
         onChange={e => onSearchChange(e.target.value)}
         style={{ height: 30, fontSize: 12 }}

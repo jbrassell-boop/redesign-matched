@@ -113,6 +113,7 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
           placeholder="Search active loaners..."
+          aria-label="Search active loaners"
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{ height: 30, width: 260, fontSize: 12 }}
@@ -427,6 +428,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
           placeholder="Search requests..."
+          aria-label="Search loaner requests"
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{ height: 30, width: 220, fontSize: 12 }}
@@ -699,6 +701,7 @@ export const LoanersPage = () => {
       <Input
         prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
         placeholder="Search loaners..."
+        aria-label="Search loaners"
         value={search}
         onChange={e => { setSearch(e.target.value); setPage(1); }}
         style={{ height: 30, width: 220, fontSize: 12 }}

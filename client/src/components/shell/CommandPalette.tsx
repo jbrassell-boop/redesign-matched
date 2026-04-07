@@ -209,6 +209,7 @@ export const CommandPalette = () => {
   return (
     <div
       onClick={(e) => { if (e.target === e.currentTarget) setOpen(false); }}
+      role="presentation"
       style={{
         position: 'fixed', inset: 0,
         background: 'rgba(0, 0, 0, 0.45)',
@@ -260,7 +261,7 @@ export const CommandPalette = () => {
         </div>
 
         {/* Results */}
-        <div ref={resultsRef} style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
+        <div ref={resultsRef} role="listbox" style={{ flex: 1, overflowY: 'auto', padding: '4px 0' }}>
           {flat.length === 0 && query.length >= 2 && (
             <div style={{
               padding: '24px 16px', textAlign: 'center',
@@ -282,6 +283,10 @@ export const CommandPalette = () => {
                   data-selected={isSelected}
                   onClick={() => handleNavigate(item)}
                   onMouseEnter={() => setSelectedIdx(idx)}
+                  role="option"
+                  aria-selected={isSelected}
+                  tabIndex={-1}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleNavigate(item); } }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10,
                     padding: '8px 16px',

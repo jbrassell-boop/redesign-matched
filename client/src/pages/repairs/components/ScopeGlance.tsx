@@ -65,8 +65,8 @@ export const ScopeGlance = ({ repair, flags }: ScopeGlanceProps) => {
         )}
         {flags.map((f) => (
           <span key={f.flagKey} style={{
-            background: '#FEF3C7', color: '#92400E',
-            border: '1px solid #FDE68A',
+            background: 'var(--amber-light)', color: '#92400E',
+            border: '1px solid var(--amber-border)',
             padding: '2px 9px', borderRadius: 10,
             fontSize: 10, fontWeight: 700,
           }}>⚑ {f.flag}</span>

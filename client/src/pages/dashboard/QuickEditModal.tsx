@@ -114,6 +114,7 @@ export const QuickEditModal = ({ open, record, onClose, onSaved }: QuickEditModa
             onChange={setStatusId}
             options={statuses.map(s => ({ value: s.statusId, label: s.statusName }))}
             placeholder="Select status..."
+            aria-label="Status"
           />
         </div>
         <div>
@@ -129,6 +130,7 @@ export const QuickEditModal = ({ open, record, onClose, onSaved }: QuickEditModa
             placeholder="Assign technician..."
             showSearch
             optionFilterProp="label"
+            aria-label="Technician"
           />
         </div>
         <div>
@@ -136,6 +138,7 @@ export const QuickEditModal = ({ open, record, onClose, onSaved }: QuickEditModa
             Add Note
           </label>
           <Input.TextArea
+            aria-label="Add Note"
             rows={3}
             value={notes}
             onChange={e => setNotes(e.target.value)}

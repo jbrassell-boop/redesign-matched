@@ -589,6 +589,7 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                   onChange={(d) => d && setForm(f => ({ ...f, amendmentDate: d.format('YYYY-MM-DD') }))}
                   style={{ width: '100%' }}
                   size="small"
+                  aria-label="Amendment Date"
                 />
               </div>
               <div>
@@ -597,6 +598,7 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                   value={form.remainingMonths}
                   onChange={(v) => setForm(f => ({ ...f, remainingMonths: v ?? 0 }))}
                   min={0} style={{ width: '100%' }} size="small"
+                  aria-label="Remaining Months"
                 />
               </div>
               <div>
@@ -605,6 +607,7 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                   value={form.previousTotal}
                   onChange={(v) => setForm(f => ({ ...f, previousTotal: v ?? 0 }))}
                   min={0} prefix="$" style={{ width: '100%' }} size="small"
+                  aria-label="Previous Contract Total"
                 />
               </div>
               <div>
@@ -613,6 +616,7 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                   value={form.newTotal}
                   onChange={(v) => setForm(f => ({ ...f, newTotal: v ?? 0 }))}
                   min={0} prefix="$" style={{ width: '100%' }} size="small"
+                  aria-label="New Contract Total"
                 />
               </div>
               <div>
@@ -621,6 +625,7 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                   value={form.previousInvoiceAmount}
                   onChange={(v) => setForm(f => ({ ...f, previousInvoiceAmount: v ?? 0 }))}
                   min={0} prefix="$" style={{ width: '100%' }} size="small"
+                  aria-label="Previous Invoice Amount"
                 />
               </div>
               <div>
@@ -629,6 +634,7 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
                   value={form.newInvoiceAmount}
                   onChange={(v) => setForm(f => ({ ...f, newInvoiceAmount: v ?? 0 }))}
                   min={0} prefix="$" style={{ width: '100%' }} size="small"
+                  aria-label="New Invoice Amount"
                 />
               </div>
             </div>

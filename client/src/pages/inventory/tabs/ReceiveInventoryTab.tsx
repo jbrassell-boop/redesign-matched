@@ -100,7 +100,7 @@ export const ReceiveInventoryTab = () => {
                   padding: '9px 14px',
                   borderBottom: '1px solid var(--border)',
                   cursor: 'pointer',
-                  background: isSelected ? '#FEF3C7' : 'var(--card)',
+                  background: isSelected ? 'var(--amber-light)' : 'var(--card)',
                   borderLeft: isSelected ? '2px solid var(--amber)' : '2px solid transparent',
                   transition: 'background 0.1s',
                 }}

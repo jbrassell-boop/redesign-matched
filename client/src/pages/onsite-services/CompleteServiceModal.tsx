@@ -99,6 +99,7 @@ export const CompleteServiceModal = ({ open, visit, onClose, onUpdated }: Comple
             Notes (optional)
           </div>
           <Input.TextArea
+            aria-label="Notes"
             value={notes}
             onChange={e => setNotes(e.target.value)}
             rows={3}

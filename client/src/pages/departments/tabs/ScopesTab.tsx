@@ -117,7 +117,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
                 border: '1px solid var(--neutral-200)', borderRadius: 6,
                 cursor: 'pointer', transition: 'background 0.1s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-light, #dbeafe)'; }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-light)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'var(--card)'; }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -178,7 +178,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
               value={serial}
               onChange={e => setSerial(e.target.value)}
               placeholder="Enter serial number"
-              style={{ width: '100%', height: 30, border: '1px solid #d1d5db', borderRadius: 3, padding: '0 8px', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
+              style={{ width: '100%', height: 30, border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '0 8px', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
             />
           </div>
           <div>
@@ -188,14 +188,14 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
             <select
               value={typeKey ?? ''}
               onChange={e => setTypeKey(Number(e.target.value) || null)}
-              style={{ width: '100%', height: 30, border: '1px solid #d1d5db', borderRadius: 3, padding: '0 8px', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
+              style={{ width: '100%', height: 30, border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '0 8px', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
             >
               <option value="">— select scope type —</option>
               {scopeTypes.map(st => <option key={st.key} value={st.key}>{st.name}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
-            <button onClick={() => setAddOpen(false)} style={{ height: 30, padding: '0 14px', fontSize: 12, fontWeight: 600, background: '#f3f4f6', color: 'var(--navy)', border: '1px solid var(--border)', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={() => setAddOpen(false)} style={{ height: 30, padding: '0 14px', fontSize: 12, fontWeight: 600, background: 'var(--neutral-100)', color: 'var(--navy)', border: '1px solid var(--border)', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>
               Cancel
             </button>
             <button onClick={handleAdd} disabled={saving} style={{ height: 30, padding: '0 18px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>

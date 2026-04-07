@@ -42,7 +42,7 @@ export const NotesTab = ({ repairKey }: Props) => {
       {/* Add note bar */}
       <div style={{
         display: 'flex', gap: 8, alignItems: 'flex-end',
-        background: '#fff', border: '1px solid var(--border)', borderRadius: 6, padding: 10,
+        background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, padding: 10,
       }}>
         <textarea
           style={{
@@ -78,7 +78,7 @@ export const NotesTab = ({ repairKey }: Props) => {
         )}
         {notes.map(n => (
           <div key={n.noteKey} style={{
-            background: '#fff', border: '1px solid var(--border)', borderRadius: 6,
+            background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6,
             padding: '8px 12px',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>

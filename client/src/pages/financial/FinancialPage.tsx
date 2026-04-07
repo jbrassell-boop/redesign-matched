@@ -389,6 +389,7 @@ export const FinancialPage = () => {
                     <Input
                       prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
                       placeholder="Search invoices..."
+                      aria-label="Search invoices"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       style={{ width: detailOpen ? 160 : 260, height: 32, fontSize: 12 }}
@@ -399,6 +400,7 @@ export const FinancialPage = () => {
                         value={statusFilter}
                         onChange={setStatusFilter}
                         style={{ width: 150 }}
+                        aria-label="Filter by status"
                         options={[
                           { value: '', label: 'All Statuses' },
                           { value: 'current', label: 'Current' },
@@ -482,6 +484,7 @@ export const FinancialPage = () => {
                     value={dayjs(atRiskDateFrom)}
                     onChange={(d) => d && setAtRiskDateFrom(d.format('YYYY-MM-DD'))}
                     picker="month" style={{ width: 130 }} size="small"
+                    aria-label="At-risk from month"
                   />
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -490,6 +493,7 @@ export const FinancialPage = () => {
                     value={dayjs(atRiskDateTo)}
                     onChange={(d) => d && setAtRiskDateTo(d.format('YYYY-MM-DD'))}
                     picker="month" style={{ width: 130 }} size="small"
+                    aria-label="At-risk to month"
                   />
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -500,6 +504,7 @@ export const FinancialPage = () => {
                     options={[1, 3, 5, 10, 20].map(v => ({ value: v, label: v }))}
                     style={{ width: 70 }}
                     size="small"
+                    aria-label="Minimum repairs"
                   />
                 </div>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -513,6 +518,7 @@ export const FinancialPage = () => {
                     <div key={f.key} style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
                       <Switch
                         size="small"
+                        aria-label={`Include ${f.label}`}
                         checked={atRiskFilters[f.key]}
                         onChange={(v) => setAtRiskFilters(prev => ({ ...prev, [f.key]: v }))}
                       />
@@ -576,6 +582,7 @@ export const FinancialPage = () => {
                     value={dayjs(trendDateFrom)}
                     onChange={(d) => d && setTrendDateFrom(d.format('YYYY-MM-DD'))}
                     picker="month" style={{ width: 130 }} size="small"
+                    aria-label="Trending from month"
                   />
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -584,6 +591,7 @@ export const FinancialPage = () => {
                     value={dayjs(trendDateTo)}
                     onChange={(d) => d && setTrendDateTo(d.format('YYYY-MM-DD'))}
                     picker="month" style={{ width: 130 }} size="small"
+                    aria-label="Trending to month"
                   />
                 </div>
               </div>
@@ -665,7 +673,7 @@ function renderInvoiceRows(
               padding: detailOpen ? '10px 14px' : '10px 16px',
               borderBottom: '1px solid var(--neutral-100)',
               cursor: 'pointer',
-              background: isSelected ? 'var(--primary-light, #dbeafe)' : 'var(--card)',
+              background: isSelected ? 'var(--primary-light)' : 'var(--card)',
               borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
               transition: 'background 0.1s',
             }}

@@ -88,12 +88,12 @@
   white-space: nowrap;
 }
 
-.stat-chip__icon--navy    { background: #E8F0FE; }
+.stat-chip__icon--navy    { background: var(--primary-light); }
 .stat-chip__icon--blue    { background: #EFF6FF; }
-.stat-chip__icon--green   { background: #F0FDF4; }
+.stat-chip__icon--green   { background: var(--success-light); }
 .stat-chip__icon--red     { background: #FEF2F2; }
-.stat-chip__icon--amber   { background: #FFFBEB; }
-.stat-chip__icon--purple  { background: #F5F3FF; }
+.stat-chip__icon--amber   { background: var(--amber-subtle); }
+.stat-chip__icon--purple  { background: var(--purple-light); }
 .stat-chip__icon--muted   { background: var(--neutral-100); }
 
 .stat-chip__dot--navy     { background: var(--primary); }
@@ -101,7 +101,7 @@
 .stat-chip__dot--green    { background: var(--success); }
 .stat-chip__dot--red      { background: var(--danger); }
 .stat-chip__dot--amber    { background: var(--amber); }
-.stat-chip__dot--purple   { background: #7C3AED; }
+.stat-chip__dot--purple   { background: var(--purple); }
 .stat-chip__dot--muted    { background: var(--neutral-500); }
 
 .stat-chip__val--navy     { color: var(--primary); }
@@ -109,5 +109,5 @@
 .stat-chip__val--green    { color: var(--success); }
 .stat-chip__val--red      { color: var(--danger); }
 .stat-chip__val--amber    { color: var(--amber); }
-.stat-chip__val--purple   { color: #7C3AED; }
+.stat-chip__val--purple   { color: var(--purple); }
 .stat-chip__val--muted    { color: var(--neutral-500); }

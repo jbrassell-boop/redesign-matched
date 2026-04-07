@@ -115,7 +115,7 @@ export const UnifiedTable = ({
               id="dashboard-note-input"
               placeholder="Enter note..."
               rows={3}
-              style={{ width: '100%', marginTop: 8, padding: '6px 8px', fontSize: 12, border: '1px solid #d1d5db', borderRadius: 4, fontFamily: 'inherit', resize: 'vertical' }}
+              style={{ width: '100%', marginTop: 8, padding: '6px 8px', fontSize: 12, border: '1px solid var(--neutral-200)', borderRadius: 4, fontFamily: 'inherit', resize: 'vertical' }}
             />
           ),
           okText: 'Save Note',

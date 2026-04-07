@@ -128,7 +128,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
               <button
                 onClick={() => window.print()}
                 style={{
-                  background: '#fff', color: 'var(--muted)', border: '1px solid var(--border)',
+                  background: 'var(--card)', color: 'var(--muted)', border: '1px solid var(--border)',
                   borderRadius: 3, padding: '2px 7px', fontSize: 9, fontWeight: 600, cursor: 'pointer',
                 }}>
                 Print OM07-9
@@ -153,7 +153,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
               onClick={() => { setSelected(a); setShowForm(false); }}
               style={{
                 padding: '8px 12px', cursor: 'pointer',
-                background: selected?.amendKey === a.amendKey ? 'var(--primary-light)' : '#fff',
+                background: selected?.amendKey === a.amendKey ? 'var(--primary-light)' : 'var(--card)',
                 borderBottom: '1px solid var(--border)',
                 borderLeft: selected?.amendKey === a.amendKey ? '3px solid var(--primary)' : '3px solid transparent',
               }}>
@@ -264,7 +264,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
                 </div>
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
                   <button onClick={() => setShowForm(false)}
-                    style={{ padding: '5px 14px', borderRadius: 3, border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: 12 }}>
+                    style={{ padding: '5px 14px', borderRadius: 3, border: '1px solid var(--border)', background: 'var(--card)', cursor: 'pointer', fontSize: 12 }}>
                     Cancel
                   </button>
                   <button onClick={handleSave} disabled={saving}

@@ -69,7 +69,7 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
 
   return (
     <Modal open={open} onCancel={onClose} footer={null} width={760} destroyOnClose>
-      <div style={{ background: '#fff', fontFamily: 'Inter, Arial, sans-serif', fontSize: 11, color: '#111' }}>
+      <div style={{ background: 'var(--card)', fontFamily: 'Inter, Arial, sans-serif', fontSize: 11, color: '#111' }}>
 
         {/* Internal Use Only Banner */}
         <div style={{
@@ -114,7 +114,7 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
             </thead>
             <tbody>
               {slips.map((s, i) => (
-                <tr key={s.slipKey} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+                <tr key={s.slipKey} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
                   <td style={{ padding: '4px 8px', borderBottom: '1px solid #e8e8e8' }}>{s.date}</td>
                   <td style={{ padding: '4px 8px', borderBottom: '1px solid #e8e8e8' }}>{s.reason || '—'}</td>
                   <td style={{ padding: '4px 8px', borderBottom: '1px solid #e8e8e8' }}>{s.primaryTech || '—'}</td>
@@ -167,7 +167,7 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
                   borderRadius: 4, fontSize: 11, fontWeight: 700, cursor: 'pointer',
                 }}>{saving ? 'Creating...' : 'Create'}</button>
                 <button onClick={() => setShowNewForm(false)} style={{
-                  padding: '5px 14px', background: '#fff', color: 'var(--muted)', border: '1px solid var(--border)',
+                  padding: '5px 14px', background: 'var(--card)', color: 'var(--muted)', border: '1px solid var(--border)',
                   borderRadius: 4, fontSize: 11, cursor: 'pointer',
                 }}>Cancel</button>
               </div>

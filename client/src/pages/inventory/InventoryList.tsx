@@ -70,6 +70,7 @@ export const InventoryList = ({
       <Input
         prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 11 }} />}
         placeholder="Search inventory..."
+        aria-label="Search inventory"
         value={search}
         onChange={e => onSearchChange(e.target.value)}
         style={{ height: 26, fontSize: 11 }}

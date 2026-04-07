@@ -147,6 +147,7 @@ export const ValidationChecklist = ({ open, item, onClose, onValidated }: Valida
             Notes (optional)
           </div>
           <Input.TextArea
+            aria-label="Notes"
             value={notes}
             onChange={e => setNotes(e.target.value)}
             rows={3}

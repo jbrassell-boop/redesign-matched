@@ -46,7 +46,7 @@ const EditField = ({ label, value, field, onChange }: EditFieldProps) => (
 
 const ToggleField = ({ label, value }: { label: string; value: boolean }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
-    <Switch size="small" checked={value} disabled />
+    <Switch size="small" checked={value} disabled aria-label={label} />
     <span style={{ fontSize: 11, color: 'var(--text)' }}>{label}</span>
   </div>
 );

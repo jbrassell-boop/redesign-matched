@@ -29,6 +29,7 @@ const FlagRow = ({ label, sub, checked, onToggle }: FlagRowProps) => (
       checked={checked}
       onChange={onToggle}
       size="small"
+      aria-label={label}
       style={{ background: checked ? 'var(--navy)' : undefined }}
     />
   </div>

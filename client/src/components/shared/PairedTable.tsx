@@ -93,6 +93,9 @@ export function PairedTable<T extends Record<string, unknown>>({
                 }}
                 className={sortCol === col.key ? `sorted ${sortDir}` : ''}
                 onClick={() => handleSort(col)}
+                tabIndex={col.sortable ? 0 : undefined}
+                aria-sort={col.sortable && sortCol === col.key ? (sortDir === 'asc' ? 'ascending' : sortDir === 'desc' ? 'descending' : 'none') : undefined}
+                onKeyDown={col.sortable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort(col); } } : undefined}
               >
                 {col.title}
                 {col.sortable && (
@@ -170,6 +173,8 @@ function PairedRow<T extends Record<string, unknown>>({
       <tr
         className={mainCls}
         onClick={() => onRowClick?.(row)}
+        tabIndex={onRowClick ? 0 : undefined}
+        onKeyDown={onRowClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onRowClick(row); } } : undefined}
       >
         {columns.map(col => {
           const val = row[col.dataIndex];

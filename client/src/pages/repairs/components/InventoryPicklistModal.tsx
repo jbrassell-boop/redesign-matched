@@ -40,7 +40,7 @@ export const InventoryPicklistModal = ({ open, onClose, repair, items }: Invento
         </button>
       </div>
 
-      <div style={{ background: '#fff', fontFamily: 'Inter, Arial, sans-serif', fontSize: 11, color: '#111' }}>
+      <div style={{ background: 'var(--card)', fontFamily: 'Inter, Arial, sans-serif', fontSize: 11, color: '#111' }}>
 
         {/* Form header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -110,7 +110,7 @@ export const InventoryPicklistModal = ({ open, onClose, repair, items }: Invento
             </thead>
             <tbody>
               {items.map((item, i) => (
-                <tr key={item.key} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+                <tr key={item.key} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
                   <td style={{ padding: '4px 8px', borderBottom: '1px solid #e8e8e8', borderRight: '1px solid #eee' }}>
                     {item.inventoryItem || '—'}
                   </td>
@@ -154,7 +154,7 @@ export const InventoryPicklistModal = ({ open, onClose, repair, items }: Invento
         <div style={{
           marginTop: 12, border: '1px dashed #ccc', borderRadius: 3,
           padding: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          background: '#F9FAFB',
+          background: 'var(--bg)',
         }}>
           <div style={{
             width: 180, height: 44, background: '#eee', border: '1px solid #ccc',

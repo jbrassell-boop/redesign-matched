@@ -231,6 +231,7 @@ export const AcquisitionsPage = () => {
           <Input
             prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
             placeholder="Search serial, model, client..."
+            aria-label="Search acquisitions"
             value={searchVal}
             onChange={e => { onSearch(e.target.value); onPage(1); }}
             allowClear
@@ -298,6 +299,7 @@ export const AcquisitionsPage = () => {
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
           placeholder="Search serial, model, buyer..."
+          aria-label="Search sold acquisitions"
           value={soldSearch}
           onChange={e => { setSoldSearch(e.target.value); setSoldPage(1); }}
           allowClear

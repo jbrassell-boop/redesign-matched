@@ -18,6 +18,7 @@ export const SuppliersList = ({ suppliers, loading, selectedKey, search, onSearc
       <Input
         prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
         placeholder="Search suppliers..."
+        aria-label="Search suppliers"
         value={search}
         onChange={e => onSearchChange(e.target.value)}
         style={{ height: 30, fontSize: 12 }}

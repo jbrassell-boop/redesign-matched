@@ -28,7 +28,7 @@ export const WorkflowPipeline = ({ currentStatus }: Props) => {
     <div style={{
       display: 'flex', alignItems: 'center', gap: 0,
       padding: '6px 14px', borderBottom: '1px solid var(--neutral-200)',
-      background: '#fff', overflow: 'hidden',
+      background: 'var(--card)', overflow: 'hidden',
     }}>
       {STAGES.map((stage, idx) => {
         const isPast = idx < activeIdx;
@@ -40,9 +40,9 @@ export const WorkflowPipeline = ({ currentStatus }: Props) => {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               height: 26, padding: '0 10px', borderRadius: 13,
               fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap',
-              background: isActive ? 'var(--primary)' : isPast ? 'var(--primary-light, #dbeafe)' : 'var(--neutral-100, #f3f4f6)',
-              color: isActive ? '#fff' : isPast ? 'var(--primary)' : 'var(--muted, #9ca3af)',
-              border: isActive ? '2px solid var(--primary)' : isPast ? '1px solid var(--primary)' : '1px solid var(--neutral-200, #e5e7eb)',
+              background: isActive ? 'var(--primary)' : isPast ? 'var(--primary-light)' : 'var(--neutral-100, var(--neutral-100))',
+              color: isActive ? '#fff' : isPast ? 'var(--primary)' : 'var(--muted, var(--muted))',
+              border: isActive ? '2px solid var(--primary)' : isPast ? '1px solid var(--primary)' : '1px solid var(--neutral-200, var(--border))',
               transition: 'all .15s',
             }}>
               {isPast && <span style={{ marginRight: 3, fontSize: 11 }}>✓</span>}
@@ -51,7 +51,7 @@ export const WorkflowPipeline = ({ currentStatus }: Props) => {
             {idx < STAGES.length - 1 && (
               <div style={{
                 flex: 1, height: 2, minWidth: 8,
-                background: isPast ? 'var(--primary)' : 'var(--neutral-200, #e5e7eb)',
+                background: isPast ? 'var(--primary)' : 'var(--neutral-200, var(--border))',
               }} />
             )}
           </div>

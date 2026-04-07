@@ -9,8 +9,8 @@ const lbl: React.CSSProperties = {
   letterSpacing: '.03em', marginBottom: 2,
 };
 const fld: React.CSSProperties = {
-  height: 28, border: '1px solid #d1d5db', borderRadius: 3,
-  background: '#fff', padding: '0 7px', fontSize: 11, color: '#374151',
+  height: 28, border: '1px solid var(--neutral-200)', borderRadius: 3,
+  background: 'var(--card)', padding: '0 7px', fontSize: 11, color: 'var(--label)',
   width: '100%', fontFamily: 'inherit', outline: 'none',
 };
 const secHead: React.CSSProperties = {
@@ -349,7 +349,7 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
 
       {/* ── Footer ── */}
       <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-        <button onClick={handleClose} style={{ height: 30, padding: '0 16px', fontSize: 12, fontWeight: 600, background: '#f3f4f6', color: 'var(--navy)', border: '1px solid var(--border)', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>
+        <button onClick={handleClose} style={{ height: 30, padding: '0 16px', fontSize: 12, fontWeight: 600, background: 'var(--neutral-100)', color: 'var(--navy)', border: '1px solid var(--border)', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>
           Cancel
         </button>
         <button

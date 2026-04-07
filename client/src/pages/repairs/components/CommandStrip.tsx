@@ -19,7 +19,7 @@ export const CommandStrip = ({ repair }: CommandStripProps) => {
 
   return (
     <div style={{
-      background: '#fff',
+      background: 'var(--card)',
       borderBottom: '1px solid var(--border)',
       padding: '8px 12px',
       display: 'flex',

@@ -8,7 +8,7 @@ interface Props {
 
 // ── Styles matching OM10-2 exactly ──
 const sectionBar: React.CSSProperties = {
-  background: '#2E75B6',
+  background: 'var(--primary)',
   color: '#fff',
   fontSize: 9,
   fontWeight: 700,
@@ -34,7 +34,7 @@ const fv: React.CSSProperties = {
 };
 
 const pfTableTh: React.CSSProperties = {
-  background: '#2E75B6',
+  background: 'var(--primary)',
   color: '#fff',
   fontSize: 8.5,
   fontWeight: 700,
@@ -64,8 +64,8 @@ const pfBtnBase: React.CSSProperties = {
   margin: '0 1px',
 };
 
-const pfP: React.CSSProperties = { ...pfBtnBase, borderColor: '#16A34A', color: '#16A34A' };
-const pfF: React.CSSProperties = { ...pfBtnBase, borderColor: '#B71234', color: '#B71234' };
+const pfP: React.CSSProperties = { ...pfBtnBase, borderColor: 'var(--success)', color: 'var(--success)' };
+const pfF: React.CSSProperties = { ...pfBtnBase, borderColor: 'var(--danger)', color: 'var(--danger)' };
 const pfNA: React.CSSProperties = { ...pfBtnBase };
 
 const FUNCTIONAL_TESTS = [
@@ -147,7 +147,7 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
           onClick={() => window.print()}
           style={{
             height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
-            background: '#2E75B6', color: '#fff',
+            background: 'var(--primary)', color: '#fff',
             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >Print</button>
@@ -155,7 +155,7 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
           onClick={onClose}
           style={{
             height: 32, padding: '0 14px', border: '1px solid #ccc', borderRadius: 5,
-            background: '#fff', color: '#555',
+            background: 'var(--card)', color: '#555',
             fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >Close</button>
@@ -167,7 +167,7 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
         style={{
           width: '8.5in',
           minHeight: '11in',
-          background: '#fff',
+          background: 'var(--card)',
           padding: '0.5in',
           display: 'flex',
           flexDirection: 'column',
@@ -181,12 +181,12 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
       >
         {/* ── Form Header ── */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-          <div style={{ fontWeight: 800, fontSize: 16, color: '#1B3A5C' }}>
-            <span style={{ color: '#2E75B6' }}>T</span>otal <span style={{ color: '#2E75B6' }}>S</span>cope <span style={{ color: '#2E75B6' }}>I</span>nc.
+          <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--navy)' }}>
+            <span style={{ color: 'var(--primary)' }}>T</span>otal <span style={{ color: 'var(--primary)' }}>S</span>cope <span style={{ color: 'var(--primary)' }}>I</span>nc.
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: '#1B3A5C' }}>Final Inspection Report</div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#2E75B6', marginTop: 1 }}>Flexible Endoscope</div>
+            <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Final Inspection Report</div>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Flexible Endoscope</div>
             <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM10-2</div>
           </div>
         </div>
@@ -229,7 +229,7 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
           </thead>
           <tbody>
             {FUNCTIONAL_TESTS.map((test, i) => (
-              <tr key={i} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+              <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
                 <td style={pfTableTd}>{test}</td>
                 <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfP}>P</span></td>
                 <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfF}>F</span></td>
@@ -286,10 +286,10 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
 
         {/* ── Result Footer ── */}
         <div style={{
-          display: 'flex', gap: 0, border: '2px solid #2E75B6', borderRadius: 4,
+          display: 'flex', gap: 0, border: '2px solid var(--primary)', borderRadius: 4,
           overflow: 'hidden', marginTop: 10,
         }}>
-          <div style={{ flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, borderRight: '2px solid #2E75B6' }}>
+          <div style={{ flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, borderRight: '2px solid var(--primary)' }}>
             <div style={{ fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', color: '#555', letterSpacing: '0.05em' }}>Condition</div>
             <div style={{ display: 'flex', gap: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700 }}>

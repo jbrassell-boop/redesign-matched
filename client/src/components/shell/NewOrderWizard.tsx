@@ -26,7 +26,7 @@ const lbl: React.CSSProperties = {
 const fld: React.CSSProperties = {
   height: 28, border: '1px solid var(--neutral-200)', borderRadius: 4,
   padding: '0 8px', fontSize: 11, fontFamily: 'inherit', outline: 'none', width: '100%',
-  color: '#374151', background: '#fff',
+  color: 'var(--label)', background: 'var(--card)',
 };
 
 export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
@@ -344,7 +344,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                 {filteredClients.length === 0
                   ? <div style={{ gridColumn: '1/-1', padding: 20, textAlign: 'center', fontSize: 11, color: 'var(--muted)' }}>No clients found</div>
                   : filteredClients.map(c => (
-                    <div key={c.clientKey} onClick={() => handleSelectClient(c)} style={cardStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
+                    <div key={c.clientKey} onClick={() => handleSelectClient(c)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectClient(c); } }} style={cardStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>{c.name}</div>
                       <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>
                         {c.city}{c.state ? `, ${c.state}` : ''}
@@ -365,7 +365,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                 {filteredDepts.length === 0
                   ? <div style={{ gridColumn: '1/-1', padding: 20, textAlign: 'center', fontSize: 11, color: 'var(--muted)' }}>No departments found</div>
                   : filteredDepts.map(d => (
-                    <div key={d.departmentKey} onClick={() => handleSelectDept(d)} style={cardStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
+                    <div key={d.departmentKey} onClick={() => handleSelectDept(d)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectDept(d); } }} style={cardStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>{d.name}</div>
                     </div>
                   ))}
@@ -387,7 +387,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                   : filteredScopes.length === 0
                   ? <div style={{ gridColumn: '1/-1', padding: 16, textAlign: 'center', fontSize: 11, color: 'var(--muted)' }}>No scopes matching &quot;{scopeSearch}&quot;</div>
                   : filteredScopes.map(s => (
-                    <div key={s.scopeKey} onClick={() => handleSelectScope(s)} style={cardStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
+                    <div key={s.scopeKey} onClick={() => handleSelectScope(s)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectScope(s); } }} style={cardStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>SN# {s.serialNumber || '\u2014'}</div>
                       <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>
                         {s.model || '\u2014'}{s.manufacturer ? ` \u00b7 ${s.manufacturer}` : ''}{s.type ? ` \u00b7 ${TYPE_LABELS[s.type] || s.type}` : ''}
@@ -422,7 +422,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                 </div>
                 {/* Model grid */}
                 {newInstType && modelSearch && (
-                  <div style={{ maxHeight: 120, overflowY: 'auto', border: '1px solid var(--neutral-200)', borderRadius: 4, background: '#fff', marginTop: 6 }}>
+                  <div style={{ maxHeight: 120, overflowY: 'auto', border: '1px solid var(--neutral-200)', borderRadius: 4, background: 'var(--card)', marginTop: 6 }}>
                     {filteredModels.length === 0
                       ? <div style={{ padding: 8, fontSize: 10, color: 'var(--muted)', textAlign: 'center' }}>No models matching &quot;{modelSearch}&quot;</div>
                       : filteredModels.slice(0, 50).map(t => (

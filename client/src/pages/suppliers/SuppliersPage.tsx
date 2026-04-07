@@ -103,7 +103,7 @@ export const SuppliersPage = () => {
           width: 280,
           flexShrink: 0,
           borderRight: '1px solid var(--neutral-200)',
-          background: '#fff',
+          background: 'var(--card)',
           display: 'flex',
           flexDirection: 'column',
         }}>
@@ -141,7 +141,7 @@ export const SuppliersPage = () => {
         </div>
 
         {/* Right panel */}
-        <div style={{ flex: 1, overflow: 'auto', background: '#fff' }}>
+        <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
           <SupplierDetailPane detail={detail} loading={detailLoading} />
         </div>
       </div>
@@ -164,7 +164,7 @@ export const SuppliersPage = () => {
               value={newSupplierName}
               onChange={e => setNewSupplierName(e.target.value)}
               placeholder="Supplier name"
-              style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+              style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 60px', gap: 8 }}>
@@ -174,7 +174,7 @@ export const SuppliersPage = () => {
                 value={newSupplierCity}
                 onChange={e => setNewSupplierCity(e.target.value)}
                 placeholder="City"
-                style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+                style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
               />
             </div>
             <div>
@@ -184,7 +184,7 @@ export const SuppliersPage = () => {
                 onChange={e => setNewSupplierState(e.target.value)}
                 placeholder="ST"
                 maxLength={2}
-                style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box', textTransform: 'uppercase' }}
+                style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box', textTransform: 'uppercase' }}
               />
             </div>
           </div>
@@ -194,7 +194,7 @@ export const SuppliersPage = () => {
               value={newSupplierPhone}
               onChange={e => setNewSupplierPhone(e.target.value)}
               placeholder="(555) 555-5555"
-              style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+              style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
           </div>
         </div>

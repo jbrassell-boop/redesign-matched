@@ -304,10 +304,12 @@ export const ScopeModelPage = () => {
         style={{ width: 180, height: 30, fontSize: 11 }}
         options={manufacturers.map(m => ({ value: m.key, label: m.name }))}
         size="small"
+        aria-label="Filter by manufacturer"
       />
       <Input
         prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
         placeholder="Search model, description, manufacturer..."
+        aria-label="Search scope models"
         value={search}
         onChange={e => { setSearch(e.target.value); setPage(1); }}
         style={{ height: 30, width: 240, fontSize: 11, marginLeft: 'auto' }}
@@ -562,11 +564,11 @@ export const ScopeModelPage = () => {
                     onContextMenu={e => handleRowContextMenu(e, item)}
                     style={{
                       cursor: 'pointer',
-                      background: isSelected ? 'var(--primary-light)' : idx % 2 === 0 ? '#fff' : 'var(--neutral-50)',
+                      background: isSelected ? 'var(--primary-light)' : idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)',
                       borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
                     }}
                     onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                    onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? '#fff' : 'var(--neutral-50)'; }}
+                    onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}
                   >
                     <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{item.description || '\u2014'}</span></td>
                     <td style={tdStyle}><TypeBadge type={item.type} /></td>
@@ -641,7 +643,7 @@ export const ScopeModelPage = () => {
               value={newModelName}
               onChange={e => setNewModelName(e.target.value)}
               placeholder="e.g. GIF-H190"
-              style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+              style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
           </div>
           <div>
@@ -650,7 +652,7 @@ export const ScopeModelPage = () => {
               value={newModelMfg}
               onChange={e => setNewModelMfg(e.target.value)}
               placeholder="e.g. Olympus"
-              style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+              style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
           </div>
           <div>
@@ -658,7 +660,7 @@ export const ScopeModelPage = () => {
             <select
               value={newModelType}
               onChange={e => setNewModelType(e.target.value)}
-              style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit' }}
+              style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit' }}
             >
               <option value="F">Flexible</option>
               <option value="R">Rigid</option>

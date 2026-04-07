@@ -47,11 +47,11 @@ const causeBadge = (cause: string) => {
 
 const fixBadge = (fix: string) => {
   const styles: Record<string, { bg: string; color: string; border: string }> = {
-    W:  { bg: '#F0FDF4', color: 'var(--success)', border: '#BBF7D0' },
+    W:  { bg: 'var(--success-light)', color: 'var(--success)', border: 'var(--success-border)' },
     N:  { bg: '#FEF2F2', color: 'var(--danger)',  border: '#FECACA' },
     R:  { bg: '#FFF7ED', color: '#C2410C',        border: '#FED7AA' },
     C:  { bg: '#EFF6FF', color: 'var(--primary)', border: '#BFDBFE' },
-    A:  { bg: '#F5F3FF', color: '#7C3AED',        border: '#DDD6FE' },
+    A:  { bg: 'var(--purple-light)', color: 'var(--purple)',        border: '#DDD6FE' },
   };
   const s = styles[fix?.toUpperCase()] ?? { bg: 'var(--neutral-50)', color: 'var(--muted)', border: 'var(--border)' };
   return (
@@ -332,7 +332,7 @@ export const RepairItemsTable = ({
                   style={{
                     width: 72, height: 24, textAlign: 'right',
                     border: '1px solid var(--border)', borderRadius: 3,
-                    fontSize: 11, padding: '0 4px', background: '#fff',
+                    fontSize: 11, padding: '0 4px', background: 'var(--card)',
                     boxSizing: 'border-box' as const,
                   }}
                   type="number" min="0" step="0.01"
@@ -350,7 +350,7 @@ export const RepairItemsTable = ({
                   style={{
                     width: '100%', height: 24,
                     border: '1px solid var(--border)', borderRadius: 3,
-                    fontSize: 11, padding: '0 4px', background: '#fff',
+                    fontSize: 11, padding: '0 4px', background: 'var(--card)',
                     boxSizing: 'border-box' as const,
                   }}
                   placeholder="Comment…"
@@ -458,7 +458,7 @@ const RepairItemRow = ({ item, fmt, tdStyle, onDelete, onOpenAmendments, onPatch
       </td>
       <td style={tdStyle}>{item.tech || '—'}</td>
       {/* Comment — click to edit inline */}
-      <td style={{ ...tdStyle, color: item.comments ? '#374151' : 'var(--muted)', fontSize: 11 }}>
+      <td style={{ ...tdStyle, color: item.comments ? 'var(--label)' : 'var(--muted)', fontSize: 11 }}>
         {editingComment ? (
           <input
             autoFocus
@@ -470,7 +470,7 @@ const RepairItemRow = ({ item, fmt, tdStyle, onDelete, onOpenAmendments, onPatch
             onKeyDown={e => { if (e.key === 'Enter') { setEditingComment(false); onPatchComment(commentDraft); } }}
           />
         ) : (
-          <span style={{ cursor: 'pointer' }} onClick={() => { setCommentDraft(item.comments); setEditingComment(true); }}
+          <span style={{ cursor: 'pointer' }} onClick={() => { setCommentDraft(item.comments); setEditingComment(true); }} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCommentDraft(item.comments); setEditingComment(true); } }}
             title="Click to edit">
             {item.comments || '—'}
           </span>

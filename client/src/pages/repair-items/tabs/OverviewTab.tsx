@@ -49,6 +49,7 @@ export const OverviewTab = ({ draft, onChange }: OverviewTabProps) => (
           <div style={{ gridColumn: 'span 2' }}>
             <label style={labelStyle}>Description <span style={reqStyle}>*</span></label>
             <Input
+              aria-label="Description"
               value={draft.itemDescription ?? ''}
               onChange={e => onChange({ itemDescription: e.target.value })}
               style={{ fontSize: 12, height: 30 }}
@@ -57,6 +58,7 @@ export const OverviewTab = ({ draft, onChange }: OverviewTabProps) => (
           <div>
             <label style={labelStyle}>TSI Code</label>
             <Input
+              aria-label="TSI Code"
               value={draft.tsiCode ?? ''}
               onChange={e => onChange({ tsiCode: e.target.value || null })}
               style={{ fontSize: 12, height: 30 }}
@@ -65,6 +67,7 @@ export const OverviewTab = ({ draft, onChange }: OverviewTabProps) => (
           <div>
             <label style={labelStyle}>Product ID</label>
             <Input
+              aria-label="Product ID"
               value={draft.productId ?? ''}
               onChange={e => onChange({ productId: e.target.value || null })}
               style={{ fontSize: 12, height: 30 }}
@@ -86,6 +89,7 @@ export const OverviewTab = ({ draft, onChange }: OverviewTabProps) => (
               onChange={v => onChange({ rigidOrFlexible: v })}
               style={{ width: '100%', fontSize: 12 }}
               size="small"
+              aria-label="Type"
               options={[
                 { value: 'F', label: 'Flexible' },
                 { value: 'R', label: 'Rigid' },
@@ -99,6 +103,7 @@ export const OverviewTab = ({ draft, onChange }: OverviewTabProps) => (
               onChange={v => onChange({ partOrLabor: v })}
               style={{ width: '100%', fontSize: 12 }}
               size="small"
+              aria-label="Part / Labor"
               options={[
                 { value: 'L', label: 'Labor' },
                 { value: 'P', label: 'Part' },
@@ -108,6 +113,7 @@ export const OverviewTab = ({ draft, onChange }: OverviewTabProps) => (
           <div>
             <label style={labelStyle}>Problem ID (Legacy)</label>
             <Input
+              aria-label="Problem ID"
               value={draft.problemId ?? ''}
               onChange={e => onChange({ problemId: e.target.value || null })}
               style={{ fontSize: 12, height: 30 }}
@@ -117,6 +123,7 @@ export const OverviewTab = ({ draft, onChange }: OverviewTabProps) => (
           <div>
             <label style={labelStyle}>Turnaround (days)</label>
             <Input
+              aria-label="Turnaround (days)"
               type="number"
               min={0}
               value={draft.turnaroundTime ?? ''}

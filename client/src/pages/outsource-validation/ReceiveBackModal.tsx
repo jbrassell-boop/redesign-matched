@@ -70,6 +70,7 @@ export const ReceiveBackModal = ({ open, item, onClose, onReceived }: ReceiveBac
             Return Tracking #
           </div>
           <Input
+            aria-label="Return Tracking #"
             value={trackingReturn}
             onChange={e => setTrackingReturn(e.target.value)}
             placeholder="Optional return tracking number"
@@ -81,6 +82,7 @@ export const ReceiveBackModal = ({ open, item, onClose, onReceived }: ReceiveBac
             Notes (optional)
           </div>
           <Input.TextArea
+            aria-label="Notes"
             value={notes}
             onChange={e => setNotes(e.target.value)}
             rows={2}

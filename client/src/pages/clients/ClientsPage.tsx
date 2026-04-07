@@ -74,7 +74,7 @@ export const ClientsPage = () => {
               <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Clients</span>
               <span style={{
                 fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
-                background: 'var(--primary-light, #dbeafe)', color: 'var(--primary)',
+                background: 'var(--primary-light)', color: 'var(--primary)',
               }}>
                 {filtered.length}
               </span>
@@ -94,6 +94,7 @@ export const ClientsPage = () => {
           <Input
             prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
             placeholder="Search name, city, zip..."
+            aria-label="Search clients"
             value={search}
             onChange={e => setSearch(e.target.value)}
             allowClear
@@ -146,7 +147,7 @@ export const ClientsPage = () => {
                 padding: '10px 14px',
                 borderBottom: '1px solid var(--neutral-100)',
                 cursor: 'pointer',
-                background: c.clientKey === selectedKey ? 'var(--primary-light, #dbeafe)' : 'var(--card)',
+                background: c.clientKey === selectedKey ? 'var(--primary-light)' : 'var(--card)',
                 borderLeft: c.clientKey === selectedKey ? '3px solid var(--primary)' : '3px solid transparent',
                 transition: 'background 0.1s',
               }}

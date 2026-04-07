@@ -67,6 +67,7 @@ export const RepairItemsList = ({
       <Input
         prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
         placeholder="Search description or code..."
+        aria-label="Search repair items"
         value={search}
         onChange={e => onSearchChange(e.target.value)}
         style={{ height: 28, fontSize: 12 }}

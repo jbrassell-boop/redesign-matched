@@ -56,7 +56,7 @@ export const ContextMenu = ({ items, position, onClose }: ContextMenuProps) => {
         left,
         top,
         zIndex: 9999,
-        background: '#fff',
+        background: 'var(--card)',
         border: '1px solid var(--neutral-200)',
         borderRadius: 6,
         boxShadow: '0 4px 16px rgba(0,0,0,0.12)',

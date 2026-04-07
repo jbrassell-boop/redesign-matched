@@ -46,7 +46,7 @@ export const ContextSidebar = ({
             <div className="context-sidebar__field-value">{clientSummary?.salesRep || '—'}</div>
           </div>
           {onViewClient && (
-            <span className="context-sidebar__link" onClick={onViewClient}>
+            <span className="context-sidebar__link" onClick={onViewClient} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewClient?.(); } }}>
               View full client &rarr;
             </span>
           )}
@@ -88,7 +88,7 @@ export const ContextSidebar = ({
               </tbody>
             </table>
             {scopeHistory.length > 5 && onViewAllHistory && (
-              <span className="context-sidebar__link" onClick={onViewAllHistory} style={{ marginTop: 4, display: 'inline-block' }}>
+              <span className="context-sidebar__link" onClick={onViewAllHistory} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onViewAllHistory?.(); } }} style={{ marginTop: 4, display: 'inline-block' }}>
                 View all {scopeHistory.length} &rarr;
               </span>
             )}

@@ -221,7 +221,7 @@ export const InventoryPage = () => {
               value={poSupplier}
               onChange={e => setPoSupplier(e.target.value)}
               placeholder="Supplier name"
-              style={{ width: '100%', height: 32, border: '1px solid #d1d5db', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+              style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
           </div>
           <div>
@@ -231,7 +231,7 @@ export const InventoryPage = () => {
               onChange={e => setPoNotes(e.target.value)}
               placeholder="Optional notes for this purchase order..."
               rows={4}
-              style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: 4, padding: '6px 8px', fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
+              style={{ width: '100%', border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '6px 8px', fontSize: 12, fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box' }}
             />
           </div>
         </div>

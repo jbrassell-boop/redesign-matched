@@ -40,6 +40,7 @@ export const ContractsList = ({ contracts, loading, selectedKey, search, onSearc
       <Input
         prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
         placeholder="Search contracts, client, ID..."
+        aria-label="Search contracts"
         value={search}
         onChange={e => onSearchChange(e.target.value)}
         style={{ height: 30, fontSize: 12 }}

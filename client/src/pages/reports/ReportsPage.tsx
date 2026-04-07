@@ -159,6 +159,7 @@ export const ReportsPage = () => {
       <Input
         prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
         placeholder="Search reports..."
+        aria-label="Search reports"
         value={search}
         onChange={e => setSearch(e.target.value)}
         style={{ height: 30, width: 240, fontSize: 11 }}
