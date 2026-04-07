@@ -132,7 +132,7 @@ export const LoginPage = () => {
                 disabled={loading}
                 style={{
                   width: '100%', height: 44,
-                  background: loading ? 'rgba(15,23,42,0.6)' : 'linear-gradient(135deg, var(--login-gradient-dark) 0%, var(--navy) 100%)',
+                  background: loading ? 'rgba(var(--navy-dark-rgb), 0.6)' : 'linear-gradient(135deg, var(--login-gradient-dark) 0%, var(--navy) 100%)',
                   color: 'var(--card)', border: 'none',
                   borderRadius: 6,
                   fontSize: 13, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',

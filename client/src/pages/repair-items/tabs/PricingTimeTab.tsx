@@ -81,7 +81,7 @@ const numInput = (
     min={0}
     value={value ?? ''}
     onChange={e => onChange(e.target.value !== '' ? Number(e.target.value) : null)}
-    style={{ height: 24, fontSize: 11 }}
+    style={{ height: 36, fontSize: 11 }}
     aria-label={label}
   />
 );

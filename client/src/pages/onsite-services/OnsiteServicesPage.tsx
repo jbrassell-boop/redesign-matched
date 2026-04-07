@@ -344,6 +344,7 @@ export const OnsiteServicesPage = () => {
           display: 'flex', flexDirection: 'column',
           background: 'var(--card)',
           transition: 'width 0.2s ease',
+          willChange: 'width',
           overflow: 'hidden',
         }}>
           {/* List rows */}

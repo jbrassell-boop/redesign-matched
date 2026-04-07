@@ -84,6 +84,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
         padding: '0 24px',
         zIndex: 199,
         transition: 'left 0.2s ease',
+        willChange: 'left',
         boxSizing: 'border-box',
       }}>
         {/* Left: logo image */}

@@ -174,7 +174,7 @@ export const OutsourceValidationPage = () => {
     top: 0,
     zIndex: 2,
     whiteSpace: 'nowrap',
-    borderRight: '1px solid rgba(180,200,220,0.3)',
+    borderRight: '1px solid rgba(var(--border-light-rgb), 0.3)',
     borderBottom: '1px solid var(--neutral-200)',
     userSelect: 'none',
   };

@@ -86,7 +86,7 @@ const smSeparatorStyle: React.CSSProperties = { width: 1, height: 22, background
 const smFilterLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
 const smThStyle: React.CSSProperties = {
   background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px',
-  textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(180,200,220,0.3)',
+  textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--border-light-rgb), 0.3)',
   borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 10,
 };
 const smFooterStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' };
@@ -563,6 +563,7 @@ export const ScopeModelPage = () => {
         minWidth: 0,
         borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
         transition: 'width 0.2s ease',
+        willChange: 'width',
         overflow: 'hidden',
         background: 'var(--card)',
       }}>

@@ -133,7 +133,7 @@ const bomExpandTdCenterStyle: React.CSSProperties = { ...bomExpandTdStyle, textA
 const bomExpandTdRightStyle: React.CSSProperties = { ...bomExpandTdStyle, textAlign: 'right' };
 const bomExpandContainerStyle: React.CSSProperties = { padding: '8px 16px 12px 32px', background: 'var(--neutral-50)' };
 const bomExpandTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 11 };
-const expandBomBtnStyle: React.CSSProperties = { height: 24, padding: '0 10px', fontSize: 11, borderRadius: 4, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, background: 'var(--primary-light)', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 };
+const expandBomBtnStyle: React.CSSProperties = { height: 36, minWidth: 36, padding: '0 10px', fontSize: 11, borderRadius: 4, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, background: 'var(--primary-light)', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 };
 const spinnerCenterStyle: React.CSSProperties = { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' };
 const detailPaneStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' };
 const detailCloseRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
@@ -533,7 +533,7 @@ export const EndoCartsPage = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--muted)' }}>
                   Rows:
-                  <select value={pageSize} onChange={e => { setPageSize(e.target.value === 'All' ? 9999 : Number(e.target.value)); setPage(1); }} style={{ height: 26, border: '1px solid var(--border-dk)', borderRadius: 4, padding: '0 6px', fontSize: 11, fontFamily: 'inherit', cursor: 'pointer' }}>
+                  <select value={pageSize} onChange={e => { setPageSize(e.target.value === 'All' ? 9999 : Number(e.target.value)); setPage(1); }} style={{ height: 36, minWidth: 36, border: '1px solid var(--border-dk)', borderRadius: 4, padding: '0 6px', fontSize: 11, fontFamily: 'inherit', cursor: 'pointer' }}>
                     <option value={15}>15</option>
                     <option value={25}>25</option>
                     <option value={50}>50</option>

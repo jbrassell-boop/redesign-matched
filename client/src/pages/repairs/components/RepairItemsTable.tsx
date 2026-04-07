@@ -28,13 +28,13 @@ const ritTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'col
 const ritCauseRowStyle: React.CSSProperties = { display: 'flex', gap: 3, justifyContent: 'center' };
 const ritFixRowStyle: React.CSSProperties = { display: 'flex', gap: 2, justifyContent: 'center' };
 const ritAmountInputStyle: React.CSSProperties = {
-  width: 72, height: 24, textAlign: 'right',
+  width: 72, height: 36, textAlign: 'right',
   border: '1px solid var(--border)', borderRadius: 3,
   fontSize: 11, padding: '0 4px', background: 'var(--card)',
   boxSizing: 'border-box' as const,
 };
 const ritCommentInputStyle: React.CSSProperties = {
-  width: '100%', height: 24,
+  width: '100%', height: 36,
   border: '1px solid var(--border)', borderRadius: 3,
   fontSize: 11, padding: '0 4px', background: 'var(--card)',
   boxSizing: 'border-box' as const,

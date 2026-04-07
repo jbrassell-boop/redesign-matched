@@ -8,6 +8,9 @@
   --navy-rgb: 27, 58, 92;
   --success-rgb: 22, 163, 74;
   --muted-rgb: 107, 114, 128;
+  --navy-dark-rgb: 15, 23, 42;
+  --border-light-rgb: 180, 200, 220;
+  --red-500-rgb: 239, 68, 68;
   /* selection / status light backgrounds */
   --amber-light: #FEF3C7;
   --amber-border: #FDE68A;

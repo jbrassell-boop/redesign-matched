@@ -500,7 +500,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                 onClick={() => handleBulkAction('fulfill')}
                 disabled={bulkLoading || pendingSelected === 0}
                 style={{
-                  height: 26, padding: '0 10px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
+                  height: 36, minWidth: 36, padding: '0 10px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
                   border: '1px solid rgba(var(--success-rgb), 0.4)', borderRadius: 4, cursor: 'pointer',
                   background: 'rgba(var(--success-rgb), 0.1)', color: 'var(--success)',
                   opacity: pendingSelected === 0 ? 0.4 : 1,
@@ -512,7 +512,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                 onClick={() => handleBulkAction('decline')}
                 disabled={bulkLoading || pendingSelected === 0}
                 style={{
-                  height: 26, padding: '0 10px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
+                  height: 36, minWidth: 36, padding: '0 10px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
                   border: '1px solid rgba(var(--danger-rgb), 0.4)', borderRadius: 4, cursor: 'pointer',
                   background: 'rgba(var(--danger-rgb), 0.1)', color: 'var(--danger)',
                   opacity: pendingSelected === 0 ? 0.4 : 1,
@@ -523,7 +523,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
               <button
                 onClick={() => setSelectedKeys(new Set())}
                 style={{
-                  height: 26, padding: '0 8px', fontSize: 11, fontWeight: 500, fontFamily: 'inherit',
+                  height: 36, minWidth: 36, padding: '0 8px', fontSize: 11, fontWeight: 500, fontFamily: 'inherit',
                   border: '1px solid var(--border-dk)', borderRadius: 4, cursor: 'pointer',
                   background: 'var(--card)', color: 'var(--muted)',
                 }}

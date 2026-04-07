@@ -391,6 +391,7 @@ export const FinancialPage = () => {
             flexDirection: 'column',
             overflow: 'hidden',
             transition: 'width 0.2s ease',
+            willChange: 'width',
           }}>
             {/* Toolbar */}
             <div style={finToolbarStyle}>

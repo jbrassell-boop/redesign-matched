@@ -40,7 +40,7 @@ const ReportCard = ({ report, favorited, onToggleFav, paramOpen, onToggleParams,
         <button
           onClick={onToggleParams}
           style={{
-            height: 26, padding: '0 12px', border: 'none', borderRadius: 4, background: 'var(--navy)', color: 'var(--card)',
+            height: 36, minWidth: 36, padding: '0 12px', border: 'none', borderRadius: 4, background: 'var(--navy)', color: 'var(--card)',
             fontSize: 11, fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', marginLeft: 'auto', transition: 'background 0.1s',
           }}
         >

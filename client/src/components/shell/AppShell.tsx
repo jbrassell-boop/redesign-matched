@@ -30,6 +30,7 @@ export const AppShell = () => {
         overflow: 'hidden',
         marginLeft: sidebarWidth,
         transition: 'margin-left 0.2s ease',
+        willChange: 'margin-left',
       }}>
         <Topbar sidebarCollapsed={collapsed} />
         <main role="main" id="main-content" style={{ flex: 1, overflow: 'auto', background: 'var(--bg)', marginTop: 64 }}>

@@ -202,7 +202,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
                       aria-label="Item comment"
                       maxLength={80}
                       style={{
-                        flex: 1, height: 24, border: '1px solid var(--border)', borderRadius: 3,
+                        flex: 1, height: 36, border: '1px solid var(--border)', borderRadius: 3,
                         fontSize: 11, padding: '0 6px', outline: 'none',
                       }}
                     />

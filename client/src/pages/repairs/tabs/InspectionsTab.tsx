@@ -70,7 +70,7 @@ const PFButton = ({ value, target, onClick }: { value: string | undefined; targe
     <button
       onClick={onClick}
       style={{
-        width: 28, height: 22, border: '1px solid var(--neutral-200)', borderRadius: 3,
+        width: 36, height: 36, minWidth: 36, border: '1px solid var(--neutral-200)', borderRadius: 3,
         fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
         background: active ? (isPass ? 'var(--success)' : 'var(--danger)') : 'var(--card)',
         color: active ? 'var(--card)' : 'var(--muted)',

@@ -172,7 +172,7 @@ const NavItemButton = ({ label, icon, isActive, collapsed, onClick }: NavItemBut
   let borderLeft = '3px solid transparent';
 
   if (isActive) {
-    bg = 'rgba(46,117,182,0.15)';
+    bg = 'rgba(var(--primary-rgb), 0.15)';
     color = 'var(--primary-light)';
     borderLeft = '3px solid var(--primary)';
   } else if (hovered) {
@@ -244,6 +244,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
       overflow: 'hidden',
       zIndex: 200,
       transition: 'width 0.2s ease, min-width 0.2s ease',
+      willChange: 'width',
     }}>
       {/* Brand block */}
       <div style={{

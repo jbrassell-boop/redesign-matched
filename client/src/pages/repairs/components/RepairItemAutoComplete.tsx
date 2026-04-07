@@ -68,7 +68,7 @@ export const RepairItemAutoComplete = ({ repairKey, onSelect, inputRef }: Props)
         placeholder="Search repair items…"
         aria-label="Search repair items"
         style={{
-          width: '100%', height: 26,
+          width: '100%', height: 36,
           border: '1px solid var(--input-focus-border)', borderRadius: 3,
           fontSize: 11, padding: '0 6px', background: 'var(--card)',
           boxSizing: 'border-box',
