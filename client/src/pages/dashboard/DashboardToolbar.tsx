@@ -91,6 +91,7 @@ export const DashboardToolbar = ({ state, onChange, selectedCount, onExport }: D
           <select
             className="dash-toolbar__select"
             value={state.groupBy}
+            aria-label="Group by"
             onChange={e => onChange({ groupBy: e.target.value as GroupBy, page: 1 })}
           >
             {GROUPS.map(g => (

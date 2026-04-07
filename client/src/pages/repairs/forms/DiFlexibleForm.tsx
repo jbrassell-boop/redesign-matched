@@ -253,7 +253,7 @@ const pfBtn = (type: 'p' | 'f' | 'na') => ({
 // ── Extracted static styles ──
 const overlayStyle: React.CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 1100,
-  background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)',
+  background: 'rgba(0,0,0,0.5)',
   display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
   padding: '24px 16px', overflowY: 'auto',
 };

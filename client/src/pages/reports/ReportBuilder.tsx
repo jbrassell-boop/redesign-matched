@@ -233,7 +233,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <DateRangeRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Report Type</span>
-              <select style={selectStyle}>{REPORT_CARD_TYPES.map(t => <option key={t}>{t}</option>)}</select>
+              <select style={selectStyle} aria-label="Report type">{REPORT_CARD_TYPES.map(t => <option key={t}>{t}</option>)}</select>
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Options</span>
@@ -259,12 +259,12 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Min Invoices</span>
-              <input type="number" style={{ ...inputStyle, width: 80 }} defaultValue={1} min={1} />
+              <input type="number" style={{ ...inputStyle, width: 80 }} defaultValue={1} min={1} aria-label="Minimum invoices" />
               <span style={{ fontSize: 10, color: 'var(--muted)' }}>in past year</span>
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Summary By</span>
-              <select style={selectStyle}>{RISK_SUMMARY_BY.map(r => <option key={r}>{r}</option>)}</select>
+              <select style={selectStyle} aria-label="Summary by">{RISK_SUMMARY_BY.map(r => <option key={r}>{r}</option>)}</select>
             </div>
           </>
         );
@@ -297,7 +297,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Report Type</span>
-              <select style={selectStyle}>{LEADERBOARD_TYPES.map(t => <option key={t}>{t}</option>)}</select>
+              <select style={selectStyle} aria-label="Report type">{LEADERBOARD_TYPES.map(t => <option key={t}>{t}</option>)}</select>
             </div>
           </>
         );
@@ -328,7 +328,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <SalesRepRow />
             <div style={rowStyle}>
               <span style={labelStyle}>View</span>
-              <select style={selectStyle}><option>Summary</option><option>Detail</option></select>
+              <select style={selectStyle} aria-label="View"><option>Summary</option><option>Detail</option></select>
             </div>
           </>
         );
@@ -340,7 +340,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <SalesRepRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Sort By</span>
-              <select style={selectStyle}><option>Invoice Date</option><option>Client</option><option>Amount</option></select>
+              <select style={selectStyle} aria-label="Sort by"><option>Invoice Date</option><option>Client</option><option>Amount</option></select>
             </div>
           </>
         );
