@@ -917,6 +917,7 @@ export const LoanersPage = () => {
               minWidth: 0,
               borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
               transition: 'width 0.2s ease',
+              willChange: 'width',
               overflow: 'hidden',
             }}>
               {toolbar}

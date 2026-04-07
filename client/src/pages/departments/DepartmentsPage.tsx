@@ -71,6 +71,7 @@ export const DepartmentsPage = () => {
         display: 'flex', flexDirection: 'column',
         background: 'var(--card)',
         transition: 'width 0.2s ease',
+        willChange: 'width',
       }}>
         {/* Header */}
         <div style={{
