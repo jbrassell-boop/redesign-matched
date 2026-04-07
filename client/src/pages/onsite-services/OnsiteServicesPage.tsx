@@ -402,7 +402,7 @@ export const OnsiteServicesPage = () => {
                 disabled={page <= 1}
                 onClick={() => setPage(p => p - 1)}
                 style={{
-                  height: 26, minWidth: 26, padding: '0 6px',
+                  height: 36, minWidth: 36, padding: '0 6px',
                   border: '1px solid var(--border-dk)', borderRadius: 4,
                   background: 'var(--card)', fontSize: 11, color: 'var(--label)',
                   cursor: page <= 1 ? 'default' : 'pointer',
@@ -418,7 +418,7 @@ export const OnsiteServicesPage = () => {
                     key={pg}
                     onClick={() => setPage(pg)}
                     style={{
-                      height: 26, minWidth: 26, padding: '0 6px',
+                      height: 36, minWidth: 36, padding: '0 6px',
                       border: '1px solid var(--border-dk)', borderRadius: 4,
                       background: page === pg ? 'var(--navy)' : 'var(--card)',
                       color: page === pg ? 'var(--card)' : 'var(--label)',
@@ -434,7 +434,7 @@ export const OnsiteServicesPage = () => {
                 disabled={page >= totalPages}
                 onClick={() => setPage(p => p + 1)}
                 style={{
-                  height: 26, minWidth: 26, padding: '0 6px',
+                  height: 36, minWidth: 36, padding: '0 6px',
                   border: '1px solid var(--border-dk)', borderRadius: 4,
                   background: 'var(--card)', fontSize: 11, color: 'var(--label)',
                   cursor: page >= totalPages ? 'default' : 'pointer',

@@ -541,14 +541,14 @@ export const EndoCartsPage = () => {
                   </select>
                 </div>
                 <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-                  <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: page <= 1 ? 0.4 : 1 }}>&laquo;</button>
+                  <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: page <= 1 ? 0.4 : 1 }}>&laquo;</button>
                   {Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 5).map(p => (
                     <button key={p} onClick={() => setPage(p)} style={{
-                      height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
+                      height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
                       background: p === page ? 'var(--navy)' : 'var(--card)', color: p === page ? 'var(--card)' : 'var(--muted)', fontWeight: p === page ? 600 : 400,
                     }}>{p}</button>
                   ))}
-                  <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: page >= totalPages ? 0.4 : 1 }}>&raquo;</button>
+                  <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: page >= totalPages ? 0.4 : 1 }}>&raquo;</button>
                 </div>
               </div>
             </div>
