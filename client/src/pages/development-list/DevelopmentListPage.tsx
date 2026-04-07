@@ -27,6 +27,49 @@ const DETAIL_TABS: TabDef[] = [
   { key: 'activity', label: 'Activity' },
 ];
 
+// ── Extracted static styles ──
+const devPageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
+const devToolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const devToolbarLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
+const devFilterBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, padding: '6px 14px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' };
+const devSearchInputStyle: React.CSSProperties = { height: 28, border: '1.5px solid var(--border-dk)', borderRadius: 4, padding: '0 10px', fontSize: 12, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', outline: 'none', width: 200 };
+const devStatusLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' };
+const devSelectStyle: React.CSSProperties = { height: 28, border: '1.5px solid var(--border-dk)', borderRadius: 4, padding: '0 6px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', cursor: 'pointer', outline: 'none' };
+const devFlexSpacerStyle: React.CSSProperties = { flex: 1 };
+const devItemCountStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
+const devStatStripStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 0, background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, overflowX: 'auto' };
+const devStatChipStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px', borderRight: '1px solid var(--border)', fontSize: 11, whiteSpace: 'nowrap' };
+const devStatChipLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
+const devStatChipValueStyle: React.CSSProperties = { fontSize: 13, fontWeight: 800, color: 'var(--navy)' };
+const devSplitLayoutStyle: React.CSSProperties = { display: 'flex', flex: 1, overflow: 'hidden' };
+const devLeftPanelStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRight: '1px solid var(--border-dk)' };
+const devListHeaderStyle: React.CSSProperties = { background: 'var(--neutral-50)', padding: '5px 10px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--navy)', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 };
+const devListHeaderCountStyle: React.CSSProperties = { fontSize: 9, fontWeight: 500, color: 'var(--muted)', textTransform: 'none', letterSpacing: 0 };
+const devListScrollStyle: React.CSSProperties = { flex: 1, overflowY: 'auto' };
+const devSpinnerWrapStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: 40 };
+const devTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', minWidth: 600 };
+const devTheadStickyStyle: React.CSSProperties = { position: 'sticky', top: 0, zIndex: 2 };
+const devThStyle: React.CSSProperties = { background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 600, padding: '8px 12px', textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(180,200,220,0.3)', borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 10 };
+const devTdIdStyle: React.CSSProperties = { ...tdStyle, width: 42, textAlign: 'right', fontSize: 10, fontWeight: 700, color: 'var(--muted)' };
+const devTdTitleStyle: React.CSSProperties = { ...tdStyle, maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600, color: 'var(--navy)' };
+const devTdTargetStyle: React.CSSProperties = { ...tdStyle, whiteSpace: 'nowrap', fontSize: 11, color: 'var(--label)' };
+const devTdAssigneeStyle: React.CSSProperties = { ...tdStyle, fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis' };
+const devPaginationFooterStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 14px', borderTop: '1px solid var(--border)', flexShrink: 0 };
+const devPaginationCountStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)' };
+const devPaginationBtnsStyle: React.CSSProperties = { display: 'flex', gap: 4, alignItems: 'center' };
+const devPageBtnStyle: React.CSSProperties = { padding: '3px 8px', fontSize: 11, border: '1px solid var(--border)', borderRadius: 4, background: 'var(--card)', cursor: 'pointer', color: 'var(--text)' };
+const devPageInfoStyle: React.CSSProperties = { padding: '0 6px', fontSize: 11, color: 'var(--muted)' };
+const devRightPanelStyle: React.CSSProperties = { width: 310, flexShrink: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--card)' };
+const devEmptyDetailStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, color: 'var(--muted)', textAlign: 'center', gap: 8 };
+const devEmptyTextStyle: React.CSSProperties = { fontSize: 12, fontWeight: 500 };
+const devDetailWrapStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' };
+const devDetailHeaderStyle: React.CSSProperties = { background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', padding: '7px 10px', display: 'flex', alignItems: 'flex-start', gap: 6, flexShrink: 0 };
+const devDetailTitleStyle: React.CSSProperties = { flex: 1, fontSize: 12, fontWeight: 800, color: 'var(--navy)', lineHeight: 1.3, wordBreak: 'break-word' };
+const devDetailBodyStyle: React.CSSProperties = { flex: 1, overflowY: 'auto', padding: 10 };
+const devFieldGrid2Style: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 8px' };
+const devActivityEmptyStyle: React.CSSProperties = { textAlign: 'center', padding: 24, color: 'var(--muted)', fontSize: 11 };
+const devSvgOpacityStyle: React.CSSProperties = { opacity: 0.18 };
+
 export const DevelopmentListPage = () => {
   const [items, setItems] = useState<DevListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
