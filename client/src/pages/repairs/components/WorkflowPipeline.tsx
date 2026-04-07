@@ -3,14 +3,14 @@ interface Props {
 }
 
 const STAGES = [
-  { label: 'Received', matches: ['received', 'waiting on inspection'] },
-  { label: 'D&I', matches: ['d&i', 'damage', 'inspection', 'drying room', 'additional evaluation'] },
-  { label: 'Quoted', matches: ['quoted', 'waiting for approved'] },
-  { label: 'Approved', matches: ['approved'] },
-  { label: 'In Repair', matches: ['in repair', 'in progress', 'semi rigid', 'special rigid'] },
-  { label: 'QC', matches: ['qc', 'quality'] },
-  { label: 'Shipping', matches: ['ship', 'shipping', 'scheduled to ship'] },
-  { label: 'Invoiced', matches: ['invoiced', 'closed', 'complete'] },
+  { label: 'Received', matches: ['received', 'waiting on inspection'], title: 'Scope received and logged into system' },
+  { label: 'D&I', matches: ['d&i', 'damage', 'inspection', 'drying room', 'additional evaluation'], title: 'Disassembly & Inspection in progress' },
+  { label: 'Quoted', matches: ['quoted', 'waiting for approved'], title: 'Quote sent to customer, awaiting approval' },
+  { label: 'Approved', matches: ['approved'], title: 'Customer approved the repair quote' },
+  { label: 'In Repair', matches: ['in repair', 'in progress', 'semi rigid', 'special rigid'], title: 'Active repair work in progress' },
+  { label: 'QC', matches: ['qc', 'quality'], title: 'Quality Control inspection' },
+  { label: 'Shipping', matches: ['ship', 'shipping', 'scheduled to ship'], title: 'Scheduled for shipment' },
+  { label: 'Invoiced', matches: ['invoiced', 'closed', 'complete'], title: 'Invoice generated and sent' },
 ];
 
 const getStageIndex = (status: string): number => {
@@ -36,7 +36,7 @@ export const WorkflowPipeline = ({ currentStatus }: Props) => {
 
         return (
           <div key={stage.label} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-            <div style={{
+            <div title={stage.title} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               height: 26, padding: '0 10px', borderRadius: 13,
               fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap',

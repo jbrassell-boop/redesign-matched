@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { message } from 'antd';
 import type { RepairLineItem, RepairCatalogItem } from '../types';
 import { addRepairLineItem, deleteRepairLineItem, patchLineItemCauseComments, bulkApproveLineItems } from '../../../api/repairs';
@@ -28,6 +28,11 @@ const EMPTY_ADD: AddState = {
   selectedItem: null, fixType: 'C', cause: '', amount: 0, comment: '',
 };
 
+const CAUSE_TITLES: Record<string, string> = {
+  UA: 'User Abuse',
+  NW: 'Normal Wear',
+};
+
 const causeBadge = (cause: string) => {
   const styles: Record<string, { bg: string; color: string; border: string }> = {
     UA: { bg: 'var(--danger-light)', color: 'var(--danger)', border: 'var(--badge-red-border)' },
@@ -35,7 +40,7 @@ const causeBadge = (cause: string) => {
   };
   const s = styles[cause?.toUpperCase()] ?? { bg: 'var(--neutral-50)', color: 'var(--muted)', border: 'var(--border)' };
   return (
-    <span style={{
+    <span title={CAUSE_TITLES[cause?.toUpperCase()] ?? undefined} style={{
       display: 'inline-block', padding: '1px 6px', borderRadius: 10,
       fontSize: 10, fontWeight: 700,
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
@@ -43,6 +48,14 @@ const causeBadge = (cause: string) => {
       {cause || '—'}
     </span>
   );
+};
+
+const FIX_TITLES: Record<string, string> = {
+  R: 'Repair',
+  W: 'Warranty',
+  N: 'New',
+  C: 'Consumable',
+  A: 'Accessory',
 };
 
 const fixBadge = (fix: string) => {
@@ -55,7 +68,7 @@ const fixBadge = (fix: string) => {
   };
   const s = styles[fix?.toUpperCase()] ?? { bg: 'var(--neutral-50)', color: 'var(--muted)', border: 'var(--border)' };
   return (
-    <span style={{
+    <span title={FIX_TITLES[fix?.toUpperCase()] ?? undefined} style={{
       display: 'inline-block', padding: '1px 6px', borderRadius: 10,
       fontSize: 10, fontWeight: 700,
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
@@ -78,10 +91,25 @@ export const RepairItemsTable = ({
   const [pickerOpen, setPickerOpen] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
-  const warrantyTotal = items
+  // Undo-delete state: track items pending deletion
+  const [pendingDeleteKeys, setPendingDeleteKeys] = useState<Set<number>>(new Set());
+  const pendingDeletes = useRef<Map<number, { timeout: ReturnType<typeof setTimeout>; item: RepairLineItem }>>(new Map());
+
+  // Clean up pending timeouts on unmount
+  useEffect(() => {
+    const pending = pendingDeletes.current;
+    return () => {
+      pending.forEach(({ timeout }) => clearTimeout(timeout));
+    };
+  }, []);
+
+  // Filter out items that are pending deletion
+  const visibleItems = items.filter(i => !pendingDeleteKeys.has(i.tranKey));
+
+  const warrantyTotal = visibleItems
     .filter(i => i.fixType?.toUpperCase() === 'W')
     .reduce((sum, i) => sum + (i.baseAmount ?? i.amount ?? 0), 0);
-  const customerTotal = items
+  const customerTotal = visibleItems
     .filter(i => i.fixType?.toUpperCase() !== 'W')
     .reduce((sum, i) => sum + (i.amount ?? 0), 0);
   const grandTotal = warrantyTotal + customerTotal;
@@ -129,14 +157,57 @@ export const RepairItemsTable = ({
     }
   }, [addRow, repairKey, onItemsChanged]);
 
-  const handleDelete = async (tranKey: number) => {
-    try {
-      await deleteRepairLineItem(repairKey, tranKey);
-      onItemsChanged();
-    } catch {
-      message.error('Failed to remove item');
+  const undoDelete = useCallback((tranKey: number) => {
+    const pending = pendingDeletes.current.get(tranKey);
+    if (pending) {
+      clearTimeout(pending.timeout);
+      pendingDeletes.current.delete(tranKey);
     }
-  };
+    setPendingDeleteKeys(prev => {
+      const next = new Set(prev);
+      next.delete(tranKey);
+      return next;
+    });
+    message.destroy(`delete-${tranKey}`);
+    message.info('Item restored');
+  }, []);
+
+  const handleDelete = useCallback((item: RepairLineItem) => {
+    // Optimistically hide the item
+    setPendingDeleteKeys(prev => new Set(prev).add(item.tranKey));
+
+    // Set a 5-second timeout to actually call the delete API
+    const timeout = setTimeout(async () => {
+      pendingDeletes.current.delete(item.tranKey);
+      try {
+        await deleteRepairLineItem(repairKey, item.tranKey);
+        onItemsChanged();
+      } catch {
+        // Restore on failure
+        setPendingDeleteKeys(prev => {
+          const next = new Set(prev);
+          next.delete(item.tranKey);
+          return next;
+        });
+        message.error('Failed to delete item');
+      }
+    }, 5000);
+
+    pendingDeletes.current.set(item.tranKey, { timeout, item });
+
+    const tranKey = item.tranKey;
+    message.success({
+      content: React.createElement('span', null,
+        'Item removed. ',
+        React.createElement('a', {
+          onClick: () => undoDelete(tranKey),
+          style: { fontWeight: 600 },
+        }, 'Undo'),
+      ),
+      duration: 5,
+      key: `delete-${tranKey}`,
+    });
+  }, [repairKey, onItemsChanged, undoDelete]);
 
   const handlePatchCause = async (tranKey: number, cause: string) => {
     try {
@@ -171,12 +242,12 @@ export const RepairItemsTable = ({
   };
   const addTdStyle: React.CSSProperties = { ...tdStyle, background: 'var(--neutral-50)' };
 
-  const fixTypeButtons: { label: string; value: FixType }[] = [
-    { label: 'R', value: 'R' },
-    { label: 'W', value: 'W' },
-    { label: 'N', value: 'N' },
-    { label: 'C', value: 'C' },
-    { label: 'A', value: 'A' },
+  const fixTypeButtons: { label: string; value: FixType; title: string }[] = [
+    { label: 'R', value: 'R', title: 'Repair' },
+    { label: 'W', value: 'W', title: 'Warranty' },
+    { label: 'N', value: 'N', title: 'New' },
+    { label: 'C', value: 'C', title: 'Consumable' },
+    { label: 'A', value: 'A', title: 'Accessory' },
   ];
 
   return (
@@ -198,11 +269,11 @@ export const RepairItemsTable = ({
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-            {items.length} item{items.length !== 1 ? 's' : ''} ·{' '}
+            {visibleItems.length} item{visibleItems.length !== 1 ? 's' : ''} ·{' '}
             <span style={{ color: 'var(--success)' }}>{fmt(warrantyTotal)} warranty</span> ·{' '}
             <span style={{ color: 'var(--amber)' }}>{fmt(customerTotal)} customer</span>
           </span>
-          {items.length > 0 && (
+          {visibleItems.length > 0 && (
             <>
               <button
                 onClick={async () => {
@@ -257,7 +328,7 @@ export const RepairItemsTable = ({
               <th style={{ ...thStyle, minWidth: 200 }}>Repair Item</th>
               <th style={{ ...thStyle, minWidth: 70, textAlign: 'center' }}>Cause</th>
               <th style={{ ...thStyle, minWidth: 70, textAlign: 'center' }}>Fix Type</th>
-              <th style={{ ...thStyle, minWidth: 80, textAlign: 'center' }}>Approval</th>
+              <th style={{ ...thStyle, minWidth: 80, textAlign: 'center' }} title="Approval Status (Y=Yes, N=No, P=Pending)">Approval</th>
               <th style={{ ...thStyle, minWidth: 80, textAlign: 'right' }}>Amount</th>
               <th style={{ ...thStyle, minWidth: 54 }}>Tech</th>
               <th style={{ ...thStyle, minWidth: 160 }}>Comments</th>
@@ -265,13 +336,13 @@ export const RepairItemsTable = ({
             </tr>
           </thead>
           <tbody>
-            {items.map(item => (
+            {visibleItems.map(item => (
               <RepairItemRow
                 key={item.tranKey}
                 item={item}
                 fmt={fmt}
                 tdStyle={tdStyle}
-                onDelete={() => handleDelete(item.tranKey)}
+                onDelete={() => handleDelete(item)}
                 onOpenAmendments={() => onOpenAmendments(item.tranKey)}
                 onPatchCause={(cause) => handlePatchCause(item.tranKey, cause)}
                 onPatchComment={(comment) => handlePatchComment(item.tranKey, comment)}
@@ -294,7 +365,7 @@ export const RepairItemsTable = ({
               <td style={{ ...addTdStyle, textAlign: 'center' }}>
                 <div style={{ display: 'flex', gap: 3, justifyContent: 'center' }}>
                   {(['UA', 'NW'] as CauseType[]).map(c => (
-                    <button key={c} onClick={() => setAddRow(r => ({ ...r, cause: r.cause === c ? '' : c }))}
+                    <button key={c} title={c === 'UA' ? 'User Abuse' : 'Normal Wear'} onClick={() => setAddRow(r => ({ ...r, cause: r.cause === c ? '' : c }))}
                       style={{
                         padding: '1px 5px', fontSize: 10, fontWeight: 700,
                         borderRadius: 3, cursor: 'pointer',
@@ -310,8 +381,8 @@ export const RepairItemsTable = ({
               {/* Fix Type button group */}
               <td style={{ ...addTdStyle, textAlign: 'center' }}>
                 <div style={{ display: 'flex', gap: 2, justifyContent: 'center' }}>
-                  {fixTypeButtons.map(({ label, value }) => (
-                    <button key={value} onClick={() => handleFixType(value)}
+                  {fixTypeButtons.map(({ label, value, title }) => (
+                    <button key={value} title={title} onClick={() => handleFixType(value)}
                       style={{
                         padding: '1px 5px', fontSize: 10, fontWeight: 700,
                         borderRadius: 3, cursor: 'pointer',
