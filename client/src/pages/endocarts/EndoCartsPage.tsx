@@ -440,7 +440,7 @@ export const EndoCartsPage = () => {
       {activeTab === 'quotes' && (
         <div style={splitFlexStyle}>
           {/* Left panel — list */}
-          <div style={{
+          <aside aria-label="EndoCart quotes list" style={{
             display: 'flex', flexDirection: 'column',
             width: selectedKey ? 'calc(100% - 520px)' : '100%',
             minWidth: 0,
@@ -552,13 +552,13 @@ export const EndoCartsPage = () => {
                 </div>
               </div>
             </div>
-          </div>
+          </aside>
 
           {/* Right panel — quote detail */}
           {selectedKey && (
-            <div style={rightPanelStyle}>
+            <section aria-label="Quote details" style={rightPanelStyle}>
               {quoteDetailPane}
-            </div>
+            </section>
           )}
         </div>
       )}

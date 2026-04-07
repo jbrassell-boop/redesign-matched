@@ -218,9 +218,9 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={ACTIVE_COLS.length} style={{ textAlign: 'center', padding: 24 }}><Spin size="small" /></td></tr>
+              <tr><td colSpan={ACTIVE_COLS.length} style={loadingCellStyle}><Spin size="small" /></td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={ACTIVE_COLS.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No active loaners currently out</td></tr>
+              <tr><td colSpan={ACTIVE_COLS.length} style={emptyCellStyle}>No active loaners currently out</td></tr>
             ) : items.map((item, idx) => (
               <tr
                 key={item.loanerTranKey}
@@ -229,9 +229,9 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
                 onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}
               >
-                <td style={activeTdStyle}><span style={{ fontWeight: 600, color: 'var(--primary-dark)' }}>{item.workOrder || '\u2014'}</span></td>
+                <td style={activeTdStyle}><span style={woLinkStyle}>{item.workOrder || '\u2014'}</span></td>
                 <td style={activeTdStyle}>{item.scopeType || '\u2014'}</td>
-                <td style={activeTdStyle}><span style={{ fontFamily: 'monospace', fontSize: 11 }}>{item.serial || '\u2014'}</span></td>
+                <td style={activeTdStyle}><span style={serialMonoStyle}>{item.serial || '\u2014'}</span></td>
                 <td style={activeTdStyle}>{item.client || '\u2014'}</td>
                 <td style={activeTdStyle}>{item.dept || '\u2014'}</td>
                 <td style={activeTdStyle}><StatusBadge status={item.status} /></td>
@@ -292,9 +292,9 @@ const ScopeNeedsTab = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={SCOPE_NEEDS_COLS.length} style={{ textAlign: 'center', padding: 24 }}><Spin size="small" /></td></tr>
+              <tr><td colSpan={SCOPE_NEEDS_COLS.length} style={loadingCellStyle}><Spin size="small" /></td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={SCOPE_NEEDS_COLS.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No active loaner-requested repairs in progress</td></tr>
+              <tr><td colSpan={SCOPE_NEEDS_COLS.length} style={emptyCellStyle}>No active loaner-requested repairs in progress</td></tr>
             ) : items.map((item, idx) => (
               <tr
                 key={`${item.scopeType}-${item.deptName}-${idx}`}
@@ -302,7 +302,7 @@ const ScopeNeedsTab = () => {
                 onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}
               >
-                <td style={needsTdStyle}><span style={{ fontWeight: 600, color: 'var(--navy)' }}>{item.scopeType}</span></td>
+                <td style={needsTdStyle}><span style={scopeTypeNameStyle}>{item.scopeType}</span></td>
                 <td style={needsTdStyle}>{item.clientName || '\u2014'}</td>
                 <td style={needsTdStyle}>{item.deptName || '\u2014'}</td>
                 <td style={{ ...needsTdStyle, textAlign: 'center' }}>
@@ -558,9 +558,9 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={REQ_COLS.length} style={{ textAlign: 'center', padding: 24 }}><Spin size="small" /></td></tr>
+              <tr><td colSpan={REQ_COLS.length} style={loadingCellStyle}><Spin size="small" /></td></tr>
             ) : requests.length === 0 ? (
-              <tr><td colSpan={REQ_COLS.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No loaner requests match your filters</td></tr>
+              <tr><td colSpan={REQ_COLS.length} style={emptyCellStyle}>No loaner requests match your filters</td></tr>
             ) : requests.map((req, idx) => {
               const isSelected = selectedKeys.has(req.repairKey);
               return (
@@ -578,26 +578,21 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                       style={{ cursor: 'pointer' }}
                     />
                   </td>
-                  <td style={reqTdStyle}><span style={{ fontWeight: 600, color: 'var(--primary-dark)' }}>{req.workOrder || '\u2014'}</span></td>
+                  <td style={reqTdStyle}><span style={woLinkStyle}>{req.workOrder || '\u2014'}</span></td>
                   <td style={reqTdStyle}>{req.scopeType || '\u2014'}</td>
-                  <td style={reqTdStyle}><span style={{ fontFamily: 'monospace', fontSize: 11 }}>{req.serialNumber || '\u2014'}</span></td>
+                  <td style={reqTdStyle}><span style={serialMonoStyle}>{req.serialNumber || '\u2014'}</span></td>
                   <td style={reqTdStyle}>{req.client || '\u2014'}</td>
                   <td style={reqTdStyle}>{req.department || '\u2014'}</td>
                   <td style={reqTdStyle}>{fmtDate(req.dateRequested)}</td>
                   <td style={reqTdStyle}><StatusBadge status={req.status} /></td>
                   <td style={{ ...reqTdStyle, textAlign: 'center' }}>
                     {req.status === 'Pending' ? (
-                      <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                      <div style={actionCenterStyle}>
                         <button
                           onClick={() => handleAction(req.repairKey, 'fulfill')}
                           disabled={actionLoading === req.repairKey}
                           title="Fulfill"
-                          style={{
-                            width: 28, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer',
-                            background: 'rgba(var(--success-rgb), 0.1)', color: 'var(--success)',
-                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            transition: 'all 0.1s',
-                          }}
+                          style={fulfillBtnStyle}
                           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(var(--success-rgb), 0.2)'; }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(var(--success-rgb), 0.1)'; }}
                         >
@@ -607,12 +602,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                           onClick={() => handleAction(req.repairKey, 'decline')}
                           disabled={actionLoading === req.repairKey}
                           title="Decline"
-                          style={{
-                            width: 28, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer',
-                            background: 'rgba(var(--danger-rgb), 0.1)', color: 'var(--danger)',
-                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            transition: 'all 0.1s',
-                          }}
+                          style={declineBtnStyle}
                           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(var(--danger-rgb), 0.2)'; }}
                           onMouseLeave={e => { e.currentTarget.style.background = 'rgba(var(--danger-rgb), 0.1)'; }}
                         >
@@ -620,7 +610,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                         </button>
                       </div>
                     ) : (
-                      <span style={{ fontSize: 10, color: 'var(--muted)' }}>{req.status}</span>
+                      <span style={statusSmallStyle}>{req.status}</span>
                     )}
                   </td>
                 </tr>
@@ -803,9 +793,9 @@ export const LoanersPage = () => {
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={colCount} style={{ textAlign: 'center', padding: 24 }}><Spin size="small" /></td></tr>
+            <tr><td colSpan={colCount} style={loadingCellStyle}><Spin size="small" /></td></tr>
           ) : items.length === 0 ? (
-            <tr><td colSpan={colCount} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No loaner records match your filters</td></tr>
+            <tr><td colSpan={colCount} style={emptyCellStyle}>No loaner records match your filters</td></tr>
           ) : items.map((item, idx) => {
             const selected = bulk.isSelected(item.loanerTranKey);
             const isDetailSelected = item.loanerTranKey === selectedKey;
@@ -829,9 +819,9 @@ export const LoanersPage = () => {
                     style={{ cursor: 'pointer' }}
                   />
                 </td>
-                <td style={tdStyle}><span style={{ fontWeight: 600, color: 'var(--primary-dark)' }}>{item.workOrder || '\u2014'}</span></td>
+                <td style={tdStyle}><span style={woLinkStyle}>{item.workOrder || '\u2014'}</span></td>
                 <td style={tdStyle}>{item.scopeType || '\u2014'}</td>
-                <td style={tdStyle}><span style={{ fontFamily: 'monospace', fontSize: 11 }}>{item.serial || '\u2014'}</span></td>
+                <td style={tdStyle}><span style={serialMonoStyle}>{item.serial || '\u2014'}</span></td>
                 <td style={tdStyle}>{item.client || '\u2014'}</td>
                 <td style={tdStyle}>{item.dept || '\u2014'}</td>
                 <td style={tdStyle}><StatusBadge status={item.status} /></td>
@@ -893,7 +883,7 @@ export const LoanersPage = () => {
             </>
           }
         />
-        <div style={{ padding: '0 16px' }}>
+        <div style={loanerDetailFieldsStyle}>
           <FormGrid cols={2}>
             <Field label="Scope Type" value={detail.scopeType} />
             <Field label="Serial #" value={detail.serial} />
@@ -921,7 +911,7 @@ export const LoanersPage = () => {
           /* Split-pane layout for Task Loaners tab */
           <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
             {/* Left panel — list */}
-            <div style={{
+            <aside aria-label="Loaner list" style={{
               display: 'flex', flexDirection: 'column',
               width: selectedKey ? 'calc(100% - 400px)' : '100%',
               minWidth: 0,
@@ -932,20 +922,13 @@ export const LoanersPage = () => {
               {toolbar}
               {dataTable}
               {footer}
-            </div>
+            </aside>
 
             {/* Right panel — detail */}
             {selectedKey && (
-              <div style={{
-                width: 400,
-                minWidth: 400,
-                display: 'flex',
-                flexDirection: 'column',
-                overflow: 'hidden',
-                background: 'var(--card)',
-              }}>
+              <section aria-label="Loaner details" style={loanerDetailPanelStyle}>
                 {detailPane}
-              </div>
+              </section>
             )}
           </div>
         );

@@ -51,12 +51,12 @@ const StatChip = ({ label, value, iconBg, iconColor, valueColor, active, onClick
       outline: active ? '2.5px solid var(--navy)' : '2.5px solid transparent', outlineOffset: -2,
     }}
   >
-    <span style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: iconBg, color: iconColor }}>
+    <span style={{ ...smStatChipIconStyle, background: iconBg, color: iconColor }}>
       {icon}
     </span>
-    <span style={{ display: 'flex', flexDirection: 'column' }}>
+    <span style={smStatChipTextStyle}>
       <span style={{ fontSize: 18, fontWeight: 800, color: valueColor, lineHeight: 1.2 }}>{value}</span>
-      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={smStatChipLabelStyle}>{label}</span>
     </span>
   </div>
 );
@@ -98,6 +98,22 @@ const scopeInputStyle: React.CSSProperties = {
 };
 const smModalFieldLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 };
 const smModalInputStyle: React.CSSProperties = { width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' };
+const smStatChipIconStyle: React.CSSProperties = { width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const smStatChipTextStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column' };
+const smStatChipLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' };
+const smCenterSpinStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: 40 };
+const smDetailFlexCol: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' };
+const smCloseRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const smCloseBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' };
+const smAngGridStyle: React.CSSProperties = { marginTop: 12, background: 'var(--neutral-50)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' };
+const smAngHeaderStyle: React.CSSProperties = { padding: '6px 12px', fontSize: 10, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' };
+const smAngGrid4Col: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 0 };
+const smAngCellStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '6px 8px', borderRight: '1px solid var(--border)' };
+const smAngLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 800, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.04em' };
+const smNotesLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 };
+const smDetailPaneStyle: React.CSSProperties = { width: 560, minWidth: 560, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--card)' };
+const smPagBtnsStyle: React.CSSProperties = { display: 'flex', gap: 3, alignItems: 'center' };
+const smModalBodyStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8 };
 
 const SCOPE_MODEL_COLS = [
   { key: 'description', label: 'Model Name', width: '20%' },
@@ -400,9 +416,9 @@ export const ScopeModelPage = () => {
       </FormGrid>
 
       {/* Angulation Grid — editable */}
-      <div style={{ marginTop: 12, background: 'var(--neutral-50)', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
-        <div style={{ padding: '6px 12px', fontSize: 10, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>Angulation</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 0 }}>
+      <div style={smAngGridStyle}>
+        <div style={smAngHeaderStyle}>Angulation</div>
+        <div style={smAngGrid4Col}>
           {([
             { dir: 'Up', val: localDetail.angUp, field: 'angUp' as keyof PatchScopeModelPayload },
             { dir: 'Down', val: localDetail.angDown, field: 'angDown' as keyof PatchScopeModelPayload },
@@ -541,7 +557,7 @@ export const ScopeModelPage = () => {
   return (
     <div style={smPageContainerStyle}>
       {/* Left panel — stat strip + toolbar + table */}
-      <div style={{
+      <aside aria-label="Scope models list" style={{
         display: 'flex', flexDirection: 'column',
         width: selectedKey ? 'calc(100% - 560px)' : '100%',
         minWidth: 0,
@@ -618,11 +634,11 @@ export const ScopeModelPage = () => {
             </div>
           )}
         </div>
-      </div>
+      </aside>
 
       {/* Right panel — detail pane */}
       {selectedKey && (
-        <div style={{
+        <section aria-label="Scope model details" style={{
           width: 560,
           minWidth: 560,
           display: 'flex',
@@ -631,7 +647,7 @@ export const ScopeModelPage = () => {
           background: 'var(--card)',
         }}>
           {detailPaneBody}
-        </div>
+        </section>
       )}
 
       <ContextMenu
@@ -658,6 +674,7 @@ export const ScopeModelPage = () => {
               value={newModelName}
               onChange={e => setNewModelName(e.target.value)}
               placeholder="e.g. GIF-H190"
+              aria-label="Model name"
               style={smModalInputStyle}
             />
           </div>
@@ -667,6 +684,7 @@ export const ScopeModelPage = () => {
               value={newModelMfg}
               onChange={e => setNewModelMfg(e.target.value)}
               placeholder="e.g. Olympus"
+              aria-label="Manufacturer"
               style={smModalInputStyle}
             />
           </div>
@@ -675,6 +693,7 @@ export const ScopeModelPage = () => {
             <select
               value={newModelType}
               onChange={e => setNewModelType(e.target.value)}
+              aria-label="Scope type"
               style={smModalInputStyle}
             >
               <option value="F">Flexible</option>

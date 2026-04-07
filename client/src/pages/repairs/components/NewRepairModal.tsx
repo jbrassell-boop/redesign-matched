@@ -28,35 +28,38 @@ const grid2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 
 const grid3: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 10px' };
 
 const F = ({ label: lbl, children }: { label: string; children: React.ReactNode }) => (
-  <div>
-    <div style={label}>{lbl}</div>
+  <label style={{ display: 'block' }}>
+    <span style={label}>{lbl}</span>
     {children}
-  </div>
+  </label>
 );
 
-const Sel = ({ value, onChange, options, placeholder }: {
+const Sel = ({ value, onChange, options, placeholder, 'aria-label': ariaLabel }: {
   value: number | string | undefined;
   onChange: (v: string) => void;
   options: LookupOption[];
   placeholder?: string;
+  'aria-label'?: string;
 }) => (
-  <select value={value ?? ''} onChange={e => onChange(e.target.value)} style={field}>
+  <select value={value ?? ''} onChange={e => onChange(e.target.value)} aria-label={ariaLabel} style={field}>
     <option value="">{placeholder ?? '— select —'}</option>
     {options.map(o => <option key={o.key} value={o.key}>{o.name}</option>)}
   </select>
 );
 
-const Inp = ({ value, onChange, placeholder, type }: {
+const Inp = ({ value, onChange, placeholder, type, 'aria-label': ariaLabel }: {
   value: string | undefined;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
+  'aria-label'?: string;
 }) => (
   <input
     type={type ?? 'text'}
     value={value ?? ''}
     onChange={e => onChange(e.target.value)}
     placeholder={placeholder}
+    aria-label={ariaLabel}
     style={field}
   />
 );

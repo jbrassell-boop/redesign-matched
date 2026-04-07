@@ -182,7 +182,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <ClientRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Vendor</span>
-              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter vendor name..." />
+              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter vendor name..." aria-label="Vendor name filter" />
             </div>
           </>
         );
@@ -201,7 +201,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <DateRangeRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Lot Number</span>
-              <input type="text" style={{ ...inputStyle, width: 160 }} placeholder="Enter lot number..." />
+              <input type="text" style={{ ...inputStyle, width: 160 }} placeholder="Enter lot number..." aria-label="Lot number filter" />
             </div>
           </>
         );

@@ -214,7 +214,7 @@ export const ProductSalePage = () => {
       {/* Split pane */}
       <div style={splitPaneStyle}>
         {/* Left panel — list */}
-        <div style={{
+        <aside aria-label="Product sales list" style={{
           width: selectedKey ? 340 : '100%',
           minWidth: selectedKey ? 340 : undefined,
           borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
@@ -321,18 +321,18 @@ export const ProductSalePage = () => {
               </div>
             )}
           </div>
-        </div>
+        </aside>
 
         {/* Right panel — detail */}
         {selectedKey && (
-          <div style={rightPanelStyle}>
+          <section aria-label="Product sale details" style={rightPanelStyle}>
             <ProductSaleDetailPane
               detail={detail}
               loading={detailLoading}
               open={true}
               onClose={handleCloseDetail}
             />
-          </div>
+          </section>
         )}
       </div>
 

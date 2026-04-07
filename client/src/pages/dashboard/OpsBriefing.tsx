@@ -195,7 +195,7 @@ export const OpsBriefing = ({ stats }: Props) => {
 
       {/* Today's Priorities */}
       <Section title="Today's Priorities" accent="var(--amber)">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+        <div style={prioritiesGridStyle}>
           {urgent > 0 && (
             <Kpi label="Hot List" value={`${urgent}`} color="var(--danger)" sub="Immediate attention" />
           )}
@@ -211,43 +211,43 @@ export const OpsBriefing = ({ stats }: Props) => {
       </Section>
 
       {/* Production Plan */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div style={twoColGridStyle}>
         <Section title="In-House Production Plan">
-          <div style={{ padding: '12px 14px', fontSize: 12, color: 'var(--muted)', textAlign: 'center' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+          <div style={prodPlanPadStyle}>
+            <div style={prodGrid3Style}>
               <div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--navy)' }}>{open.toLocaleString()}</div>
-                <div style={{ fontSize: 9, textTransform: 'uppercase' }}>In House</div>
+                <div style={{ ...bigNumStyle, color: 'var(--navy)' }}>{open.toLocaleString()}</div>
+                <div style={smallLabelStyle}>In House</div>
               </div>
               <div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--primary)' }}>{pendingQC}</div>
-                <div style={{ fontSize: 9, textTransform: 'uppercase' }}>In QC</div>
+                <div style={{ ...bigNumStyle, color: 'var(--primary)' }}>{pendingQC}</div>
+                <div style={smallLabelStyle}>In QC</div>
               </div>
               <div>
-                <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--success)' }}>{pendingShip}</div>
-                <div style={{ fontSize: 9, textTransform: 'uppercase' }}>Ready to Ship</div>
+                <div style={{ ...bigNumStyle, color: 'var(--success)' }}>{pendingShip}</div>
+                <div style={smallLabelStyle}>Ready to Ship</div>
               </div>
             </div>
           </div>
         </Section>
         <Section title="Delay Tracking">
-          <div style={{ padding: '12px 14px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, textAlign: 'center' }}>
+          <div style={delayPadStyle}>
+            <div style={delayGrid4Style}>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--success)' }}>{kpi?.backlog1to7 ?? '—'}</div>
-                <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase' }}>1-7 Days</div>
+                <div style={{ ...delayNumStyle, color: 'var(--success)' }}>{kpi?.backlog1to7 ?? '—'}</div>
+                <div style={delayLabelStyle}>1-7 Days</div>
               </div>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--amber)' }}>{kpi?.backlog8to14 ?? '—'}</div>
-                <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase' }}>8-14 Days</div>
+                <div style={{ ...delayNumStyle, color: 'var(--amber)' }}>{kpi?.backlog8to14 ?? '—'}</div>
+                <div style={delayLabelStyle}>8-14 Days</div>
               </div>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--danger)' }}>{kpi?.backlog15to30 ?? '—'}</div>
-                <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase' }}>15-30 Days</div>
+                <div style={{ ...delayNumStyle, color: 'var(--danger)' }}>{kpi?.backlog15to30 ?? '—'}</div>
+                <div style={delayLabelStyle}>15-30 Days</div>
               </div>
               <div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: 'var(--danger)' }}>{kpi?.backlog30Plus ?? briefing?.overdue ?? 0}</div>
-                <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase' }}>30+ Days</div>
+                <div style={{ ...delayNumStyle, color: 'var(--danger)' }}>{kpi?.backlog30Plus ?? briefing?.overdue ?? 0}</div>
+                <div style={delayLabelStyle}>30+ Days</div>
               </div>
             </div>
           </div>

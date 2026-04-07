@@ -24,7 +24,7 @@ const g2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr
 const g3: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 10px' };
 
 const F = ({ label: l, children }: { label: string; children: React.ReactNode }) => (
-  <div><div style={lbl}>{l}</div>{children}</div>
+  <label style={{ display: 'block' }}><span style={lbl}>{l}</span>{children}</label>
 );
 
 const Inp = ({ value, onChange, placeholder, disabled }: { value: string | undefined; onChange: (v: string) => void; placeholder?: string; disabled?: boolean }) => (

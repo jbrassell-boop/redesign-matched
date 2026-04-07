@@ -166,6 +166,7 @@ export const SuppliersPage = () => {
               value={newSupplierName}
               onChange={e => setNewSupplierName(e.target.value)}
               placeholder="Supplier name"
+              aria-label="Supplier name"
               style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
           </div>
@@ -176,6 +177,7 @@ export const SuppliersPage = () => {
                 value={newSupplierCity}
                 onChange={e => setNewSupplierCity(e.target.value)}
                 placeholder="City"
+                aria-label="Supplier city"
                 style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
               />
             </div>
@@ -185,6 +187,7 @@ export const SuppliersPage = () => {
                 value={newSupplierState}
                 onChange={e => setNewSupplierState(e.target.value)}
                 placeholder="ST"
+                aria-label="Supplier state"
                 maxLength={2}
                 style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box', textTransform: 'uppercase' }}
               />
@@ -196,6 +199,7 @@ export const SuppliersPage = () => {
               value={newSupplierPhone}
               onChange={e => setNewSupplierPhone(e.target.value)}
               placeholder="(555) 555-5555"
+              aria-label="Supplier phone"
               style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
             />
           </div>
