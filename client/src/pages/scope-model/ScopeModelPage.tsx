@@ -294,7 +294,7 @@ export const ScopeModelPage = () => {
   const isActive = (tf: string, sf: string) => typeFilter === tf && statusFilter === sf;
 
   const statStrip = (
-    <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
+    <div style={smStatStripStyle}>
       <StatChip label="Total Models" value={stats?.total ?? 0} iconBg="rgba(var(--navy-rgb), 0.10)" iconColor="var(--navy)" valueColor="var(--navy)" active={isActive('', '')} onClick={() => chipFilter('', '')} icon={<IconTotal />} />
       <StatChip label="Active" value={stats?.activeCount ?? 0} iconBg="rgba(var(--success-rgb), 0.10)" iconColor="var(--success)" valueColor="var(--success)" active={isActive('', 'active')} onClick={() => chipFilter('', 'active')} icon={<IconActive />} />
       <StatChip label="Inactive" value={stats?.inactiveCount ?? 0} iconBg="rgba(var(--danger-rgb), 0.10)" iconColor="var(--danger)" valueColor="var(--danger)" active={isActive('', 'inactive')} onClick={() => chipFilter('', 'inactive')} icon={<IconInactive />} />
@@ -314,23 +314,23 @@ export const ScopeModelPage = () => {
   );
 
   const toolbar = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap', flexShrink: 0 }}>
-      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Type</span>
+    <div style={smToolbarStyle}>
+      <span style={smFilterLabelStyle}>Type</span>
       <div style={{ display: 'flex' }}>
         {[{ l: 'All', v: '' }, { l: 'Flexible', v: 'F' }, { l: 'Rigid', v: 'R' }, { l: 'Camera', v: 'C' }].map(({ l, v }) => (
           <SegBtn key={v} label={l} active={typeFilter === v} onClick={() => { setTypeFilter(v); setPage(1); }} />
         ))}
         <div style={{ width: 0, borderRight: '1px solid var(--border-dk)' }} />
       </div>
-      <div style={{ width: 1, height: 22, background: 'var(--border-dk)' }} />
-      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</span>
+      <div style={smSeparatorStyle} />
+      <span style={smFilterLabelStyle}>Status</span>
       <div style={{ display: 'flex' }}>
         {[{ l: 'All', v: '' }, { l: 'Active', v: 'active' }, { l: 'Inactive', v: 'inactive' }].map(({ l, v }) => (
           <SegBtn key={v} label={l} active={statusFilter === v} onClick={() => { setStatusFilter(v); setPage(1); }} />
         ))}
         <div style={{ width: 0, borderRight: '1px solid var(--border-dk)' }} />
       </div>
-      <div style={{ width: 1, height: 22, background: 'var(--border-dk)' }} />
+      <div style={smSeparatorStyle} />
       <Select
         placeholder="All Manufacturers"
         allowClear
@@ -553,13 +553,8 @@ export const ScopeModelPage = () => {
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: selectedKey ? 700 : 1040, tableLayout: 'fixed' }}>
             <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
               <tr>
-                {columns.map(col => (
-                  <th key={col.key} style={{
-                    background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 700, padding: '9px 10px',
-                    textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(180,200,220,0.3)',
-                    borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase',
-                    fontSize: 10, width: col.width,
-                  }}>
+                {SCOPE_MODEL_COLS.map(col => (
+                  <th key={col.key} style={{ ...smThStyle, width: col.width }}>
                     {col.label}
                   </th>
                 ))}

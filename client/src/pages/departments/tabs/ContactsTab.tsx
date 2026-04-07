@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { Spin } from 'antd';
 import { getDepartmentContacts } from '../../../api/departments';
 import type { DeptContact } from '../types';
@@ -10,13 +10,6 @@ interface ContactsTabProps {
 export const ContactsTab = ({ deptKey }: ContactsTabProps) => {
   const [contacts, setContacts] = useState<DeptContact[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const reload = useCallback(() => {
-    setLoading(true);
-    return getDepartmentContacts(deptKey)
-      .then(setContacts)
-      .finally(() => setLoading(false));
-  }, [deptKey]);
 
   useEffect(() => {
     let cancelled = false;
