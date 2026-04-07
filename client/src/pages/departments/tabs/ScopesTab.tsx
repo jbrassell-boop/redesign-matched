@@ -27,7 +27,11 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { reload(); }, [deptKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    let cancelled = false;
+    reload();
+    return () => { cancelled = true; };
+  }, [deptKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openAdd = () => {
     setSerial('');

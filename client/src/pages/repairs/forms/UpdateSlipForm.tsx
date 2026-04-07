@@ -50,7 +50,7 @@ export const UpdateSlipForm = ({ repair, onClose }: Props) => {
             {['Image', 'Lights', 'Buttons', 'Leaks', 'Angulation', 'Video Features'].map(label => (
               <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '.05em', padding: '3px 8px', background: 'var(--info-bg)', borderLeft: '3px solid var(--primary)' }}>{label}</div>
-                <div style={{ border: '1px solid #ccc', borderRadius: 3, minHeight: 52, padding: '4px 8px', fontSize: '10.5px' }} />
+                <div style={{ border: '1px solid var(--print-border)', borderRadius: 3, minHeight: 52, padding: '4px 8px', fontSize: '10.5px' }} />
               </div>
             ))}
           </div>

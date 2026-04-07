@@ -113,7 +113,7 @@ export const ExpenseTab = ({ repairKey }: ExpenseTabProps) => {
 
       {/* Visual margin card */}
       <div style={{
-        background: 'var(--navy)', color: '#fff',
+        background: 'var(--navy)', color: 'var(--card)',
         borderRadius: 6, padding: 16,
         display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
         gap: 4, minHeight: 200,
@@ -123,7 +123,7 @@ export const ExpenseTab = ({ repairKey }: ExpenseTabProps) => {
         </div>
         <div style={{
           fontSize: 42, fontWeight: 900, lineHeight: 1,
-          color: (fin.marginPct ?? 0) >= 0 ? '#4ade80' : '#f87171',
+          color: (fin.marginPct ?? 0) >= 0 ? 'var(--stat-green)' : 'var(--stat-red)',
         }}>
           {(fin.marginPct ?? 0).toFixed(1)}%
         </div>
@@ -132,7 +132,7 @@ export const ExpenseTab = ({ repairKey }: ExpenseTabProps) => {
           <div style={{ fontSize: 11, opacity: .7 }}>Expense: {fmt(fin.totalExpenses ?? 0)}</div>
           <div style={{ fontSize: 11, opacity: .7 }}>
             Profit: <span style={{
-              color: (fin.invoiceTotal ?? 0) - (fin.totalExpenses ?? 0) >= 0 ? '#4ade80' : '#f87171',
+              color: (fin.invoiceTotal ?? 0) - (fin.totalExpenses ?? 0) >= 0 ? 'var(--stat-green)' : 'var(--stat-red)',
               fontWeight: 700,
             }}>
               {fmt((fin.invoiceTotal ?? 0) - (fin.totalExpenses ?? 0))}

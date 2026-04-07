@@ -85,7 +85,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
   };
 
   const actionButtons = [
-    { label: 'Consumption',     style: { background: 'var(--primary)', color: '#fff' }, action: async () => {
+    { label: 'Consumption',     style: { background: 'var(--primary)', color: 'var(--card)' }, action: async () => {
       try { await bulkApproveLineItems(repair.repairKey, 'Y'); loadItems(); message.success('All items approved (consumption)'); }
       catch { message.error('Failed to approve items'); }
     } },
@@ -93,7 +93,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
       try { await bulkApproveLineItems(repair.repairKey, ''); loadItems(); message.success('All items unapproved'); }
       catch { message.error('Failed to unapprove items'); }
     } },
-    { label: 'Approved',        style: { background: 'var(--success)', color: '#fff' }, action: async () => {
+    { label: 'Approved',        style: { background: 'var(--success)', color: 'var(--card)' }, action: async () => {
       try { await bulkApproveLineItems(repair.repairKey, 'Y'); loadItems(); message.success('All items approved'); }
       catch { message.error('Failed to approve items'); }
     } },
@@ -101,7 +101,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
       getUpdateSlips(repair.repairKey).then(setSlipsData).catch(() => message.error('Failed to load update slips'));
       setSlipsModalOpen(true);
     } },
-    { label: 'Amend Repair',    style: { background: 'var(--amber)', color: '#1a1a1a' }, action: () => {
+    { label: 'Amend Repair',    style: { background: 'var(--amber)', color: 'var(--text-near-black)' }, action: () => {
       handleOpenAmendments();
     } },
     { label: 'Defect Tracking', style: { background: 'var(--card)', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: () => {
@@ -268,7 +268,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
               </div>
               {repair.notes && (
                 <div style={{
-                  background: '#f8faff', border: '1px solid #dce8f8',
+                  background: 'var(--info-section-bg)', border: '1px solid var(--info-section-border)',
                   borderRadius: 4, padding: '5px 7px',
                 }}>
                   <div style={{ fontSize: 8, fontWeight: 700, color: 'var(--navy)', marginBottom: 1 }}>Notes</div>
@@ -320,22 +320,22 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
               padding: '7px 12px',
               display: 'flex', gap: 10, alignItems: 'center',
             }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '.05em', flexShrink: 0 }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--badge-amber-text)', textTransform: 'uppercase', letterSpacing: '.05em', flexShrink: 0 }}>
                 Flags
               </div>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {repair.isUrgent && (
-                  <span style={{ background: 'var(--danger)', color: '#fff', padding: '2px 9px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>
+                  <span style={{ background: 'var(--danger)', color: 'var(--card)', padding: '2px 9px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>
                     ⚑ Rush
                   </span>
                 )}
                 {flags.map((f) => (
-                  <span key={f.flagKey} style={{ background: '#92400E', color: '#fff', padding: '2px 9px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>
+                  <span key={f.flagKey} style={{ background: 'var(--badge-amber-text)', color: 'var(--card)', padding: '2px 9px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>
                     ⚑ {f.flag}
                   </span>
                 ))}
               </div>
-              <div style={{ marginLeft: 'auto', fontSize: 10, color: '#92400E', fontStyle: 'italic' }}>
+              <div style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--badge-amber-text)', fontStyle: 'italic' }}>
                 Review before proceeding
               </div>
             </div>
@@ -411,7 +411,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
                   setTechSaving(false);
                 }
               }}
-              style={{ padding: '5px 14px', borderRadius: 4, border: 'none', background: 'var(--primary)', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+              style={{ padding: '5px 14px', borderRadius: 4, border: 'none', background: 'var(--primary)', color: 'var(--card)', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
               {techSaving ? 'Saving…' : 'Save'}
             </button>
           </div>

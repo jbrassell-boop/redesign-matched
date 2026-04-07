@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Spin } from 'antd';
+import { Spin, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { getScopeDetail, getDepartmentRepairs } from '../../api/departments';
 import type { ScopeDetail, DepartmentRepairItem } from './types';
@@ -23,7 +23,7 @@ export const ScopeDrawer = ({ scopeKey, deptKey, open, onClose }: ScopeDrawerPro
     setLoading(true);
     getScopeDetail(deptKey, scopeKey)
       .then(setScope)
-      .catch(() => setScope(null))
+      .catch(() => { message.error('Failed to load scope detail'); setScope(null); })
       .finally(() => setLoading(false));
   }, [scopeKey, deptKey, open]);
 
@@ -34,7 +34,7 @@ export const ScopeDrawer = ({ scopeKey, deptKey, open, onClose }: ScopeDrawerPro
         const filtered = res.items.filter(r => r.serialNumber === scope?.serialNumber);
         setRepairs(filtered.length > 0 ? filtered : res.items.slice(0, 10));
       })
-      .catch(() => setRepairs([]));
+      .catch(() => { message.error('Failed to load repair history'); setRepairs([]); });
   }, [scopeKey, deptKey, open, scope?.serialNumber]);
 
   const typeBadgeClass = scope?.type?.toLowerCase() === 'flexible'

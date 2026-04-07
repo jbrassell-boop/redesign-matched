@@ -20,7 +20,7 @@ const field: React.CSSProperties = {
   width: '100%', fontFamily: 'inherit', outline: 'none',
 };
 const sectionHead: React.CSSProperties = {
-  background: 'var(--navy)', color: '#fff', padding: '4px 10px',
+  background: 'var(--navy)', color: 'var(--card)', padding: '4px 10px',
   fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',
   borderRadius: 3, marginBottom: 6, marginTop: 12,
 };
@@ -208,7 +208,7 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
           disabled={lookingUp}
           style={{
             height: 28, padding: '0 14px', fontSize: 11, fontWeight: 700,
-            background: 'var(--primary)', color: '#fff', border: 'none',
+            background: 'var(--primary)', color: 'var(--card)', border: 'none',
             borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
           }}
         >
@@ -234,7 +234,7 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
 
       {/* Not found — new scope fields */}
       {scopeResult === 'not-found' && (
-        <div style={{ marginTop: 8, padding: '8px 10px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 4 }}>
+        <div style={{ marginTop: 8, padding: '8px 10px', background: 'var(--danger-light)', border: '1px solid var(--badge-red-border)', borderRadius: 4 }}>
           <div style={{ fontWeight: 700, color: 'var(--danger)', marginBottom: 8, fontSize: 11 }}>
             Serial not found — fill in scope details below
           </div>
@@ -385,7 +385,7 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          style={{ height: 30, padding: '0 20px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ height: 30, padding: '0 20px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: 'var(--card)', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           {submitting ? 'Creating…' : 'Create Repair'}
         </button>

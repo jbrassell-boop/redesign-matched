@@ -37,7 +37,7 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
         <div className="print-page" style={page}>
 
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8, borderBottom: '2px solid #111', paddingBottom: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8, borderBottom: '2px solid var(--print-text)', paddingBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <img src="/logo-color.png" alt="Total Scope Inc." loading="lazy" style={{ height: 44 }} />
               <div>
@@ -149,7 +149,7 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
         <div className="print-page" style={page}>
 
           {/* Mini header repeat */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #ccc', paddingBottom: 4, marginBottom: 6 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--print-border)', paddingBottom: 4, marginBottom: 6 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)' }}>Total Scope, Inc.</div>
             <div style={{ fontSize: 11, fontWeight: 700 }}>Flexible Endoscope Diagnostic Report — continued</div>
             <div style={{ fontSize: 10, color: 'var(--print-light)' }}>WO# {wo}</div>
@@ -223,10 +223,10 @@ const fl: React.CSSProperties = {
 };
 
 const fv: React.CSSProperties = {
-  borderBottom: '1px solid #999', minHeight: 17, fontSize: 11, padding: '1px 2px',
+  borderBottom: '1px solid var(--print-check-border)', minHeight: 17, fontSize: 11, padding: '1px 2px',
 };
 
-const underline40: React.CSSProperties = { display: 'inline-block', borderBottom: '1px solid #999', width: 40, height: 14, verticalAlign: 'bottom', margin: '0 2px' };
+const underline40: React.CSSProperties = { display: 'inline-block', borderBottom: '1px solid var(--print-check-border)', width: 40, height: 14, verticalAlign: 'bottom', margin: '0 2px' };
 const underline60: React.CSSProperties = { ...underline40, width: 60 };
 const underline80: React.CSSProperties = { ...underline40, width: 80 };
 const underline100: React.CSSProperties = { ...underline40, width: 100 };
@@ -241,20 +241,20 @@ const SubBar = ({ children }: { children: React.ReactNode }) => (
 
 const Cbx = ({ label }: { label?: string }) => (
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, marginRight: 6 }}>
-    <span style={{ width: 11, height: 11, border: '1px solid #888', borderRadius: 1, display: 'inline-block', flexShrink: 0 }} />
+    <span style={{ width: 11, height: 11, border: '1px solid var(--print-footer)', borderRadius: 1, display: 'inline-block', flexShrink: 0 }} />
     {label}
   </span>
 );
 
 const Radio = ({ label }: { label?: string }) => (
   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, marginRight: 6 }}>
-    <span style={{ width: 11, height: 11, border: '1px solid #888', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
+    <span style={{ width: 11, height: 11, border: '1px solid var(--print-footer)', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
     {label}
   </span>
 );
 
 const PfRow = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', borderBottom: '1px solid #f0f0f0', flexWrap: 'wrap', fontSize: 10.5 }}>
+  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', borderBottom: '1px solid var(--print-row-divider)', flexWrap: 'wrap', fontSize: 10.5 }}>
     <span style={{ display: 'inline-flex', gap: 1, flexShrink: 0 }}>
       <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid var(--success)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--success)' }}>P</span>
       <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid var(--danger)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--danger)' }}>F</span>

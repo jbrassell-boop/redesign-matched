@@ -10,16 +10,16 @@ interface DefectTrackingModalProps {
 }
 
 const sBar: CSSProperties = {
-  background: 'var(--primary)', color: '#fff',
+  background: 'var(--primary)', color: 'var(--card)',
   fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
   letterSpacing: '.06em', padding: '4px 10px', margin: '8px 0 0',
 };
 const fl: CSSProperties = {
   fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase',
-  color: '#555', letterSpacing: '.04em',
+  color: 'var(--print-muted)', letterSpacing: '.04em',
 };
 const fv: CSSProperties = {
-  borderBottom: '1px solid #999', minHeight: 18, fontSize: 11, padding: '1px 2px',
+  borderBottom: '1px solid var(--print-check-border)', minHeight: 18, fontSize: 11, padding: '1px 2px',
 };
 
 export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTrackingModalProps) => {
@@ -31,7 +31,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
         <button
           onClick={() => window.print()}
           style={{
-            padding: '7px 20px', background: 'var(--primary)', color: '#fff',
+            padding: '7px 20px', background: 'var(--primary)', color: 'var(--card)',
             border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
           }}
@@ -40,7 +40,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
         </button>
       </div>
 
-      <div style={{ background: 'var(--card)', fontFamily: 'Inter, Arial, sans-serif', fontSize: 11, color: '#111' }}>
+      <div style={{ background: 'var(--card)', fontFamily: 'Inter, Arial, sans-serif', fontSize: 11, color: 'var(--print-text)' }}>
 
         {/* Form header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -48,7 +48,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Defect Tracking</div>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Repair Quality Record</div>
-            <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM07-8</div>
+            <div style={{ fontSize: 10, color: 'var(--print-light)', marginTop: 2 }}>OM07-8</div>
           </div>
         </div>
 
@@ -78,7 +78,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
           ) : defects.map(d => (
             <div key={d.itemKey} style={{
               display: 'flex', alignItems: 'flex-start', gap: 8,
-              padding: '7px 0', borderBottom: '1px solid #f0f0f0',
+              padding: '7px 0', borderBottom: '1px solid var(--print-row-divider)',
             }}>
               {/* Filled checkbox — item IS checked because it was recorded */}
               <div style={{
@@ -88,13 +88,13 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
                 flexShrink: 0, marginTop: 1,
               }}>
                 <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
-                  <polyline points="2,6 5,9 10,3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <polyline points="2,6 5,9 10,3" stroke="var(--card)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 10.5, fontWeight: 600 }}>{d.item || 'Unknown defect item'}</div>
                 {d.comment && (
-                  <div style={{ borderBottom: '1px solid #ccc', minHeight: 16, fontSize: 10, color: '#555', marginTop: 4 }}>
+                  <div style={{ borderBottom: '1px solid var(--print-border)', minHeight: 16, fontSize: 10, color: 'var(--print-muted)', marginTop: 4 }}>
                     {d.comment}
                   </div>
                 )}
@@ -106,7 +106,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
         {/* Follow-Up Notes */}
         <div style={sBar}>Follow-Up Notes</div>
         <div style={{
-          border: '1px solid #ccc', borderRadius: 3, minHeight: 36,
+          border: '1px solid var(--print-border)', borderRadius: 3, minHeight: 36,
           padding: '4px 8px', fontSize: 10.5, marginTop: 4,
           color: defects.some(d => d.comment) ? 'var(--label)' : 'var(--muted)',
           fontStyle: defects.some(d => d.comment) ? 'normal' : 'italic',
@@ -126,14 +126,14 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
             { label: 'Date', maxWidth: 130 as number | undefined },
           ].map((s, i) => (
             <div key={i} style={{ flex: 1, maxWidth: s.maxWidth, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 28 }} />
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>{s.label}</div>
+              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 28 }} />
+              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>{s.label}</div>
             </div>
           ))}
         </div>
 
         {/* Form footer */}
-        <div style={{ marginTop: 16, paddingTop: 8, borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', fontSize: 8, color: '#888' }}>
+        <div style={{ marginTop: 16, paddingTop: 8, borderTop: '1px solid var(--print-border)', display: 'flex', justifyContent: 'space-between', fontSize: 8, color: 'var(--print-footer)' }}>
           <span>ISO 13485 Certified</span>
           <span>Total Scope Inc. | 17 Creek Pkwy, Upper Chichester PA 19061 | (610) 485-3838</span>
           <span>OM07-8</span>

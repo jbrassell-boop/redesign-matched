@@ -57,7 +57,11 @@ export const SubGroupsTab = ({ deptKey }: SubGroupsTabProps) => {
     }
   }, [deptKey]);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => {
+    let cancelled = false;
+    reload().then(() => { if (cancelled) return; });
+    return () => { cancelled = true; };
+  }, [reload]);
 
   const persist = async (next: DepartmentSubGroup[]) => {
     setSaving(true);

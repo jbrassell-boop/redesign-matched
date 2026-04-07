@@ -90,6 +90,35 @@ const ColHeader = ({ label, sortKey, currentSort, currentDir, onSort, style }: {
   </th>
 );
 
+// ── Extracted static styles (performance: avoid re-creating objects each render) ──
+const endoPageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
+const endoTabFlexStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 };
+const endoToolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' };
+const endoTableCardBg: React.CSSProperties = { flex: 1, overflow: 'auto', background: 'var(--card)' };
+const endoTableFixed: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' };
+const endoSeparatorStyle: React.CSSProperties = { width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 };
+const endoThBase: React.CSSProperties = { background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' };
+const endoFooterStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' };
+const bomThStyle: React.CSSProperties = { background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left', borderBottom: '1px solid var(--neutral-200)' };
+const bomThCenterStyle: React.CSSProperties = { ...bomThStyle, textAlign: 'center' };
+const bomThRightStyle: React.CSSProperties = { ...bomThStyle, textAlign: 'right' };
+const bomTdStyle: React.CSSProperties = { padding: '5px 8px', borderBottom: '1px solid var(--border)' };
+const bomTdCenterStyle: React.CSSProperties = { ...bomTdStyle, textAlign: 'center' };
+const bomTdRightStyle: React.CSSProperties = { ...bomTdStyle, textAlign: 'right' };
+
+const ENDO_TABS: TabDef[] = [
+  { key: 'quotes', label: 'Quotes' },
+  { key: 'catalog', label: 'Catalog' },
+  { key: 'models', label: 'Models' },
+  { key: 'scope-inventory', label: 'Scope Inventory' },
+  { key: 'service-history', label: 'Service History' },
+];
+
+const STATUS_SEGMENTS = [
+  { label: 'All', value: '' }, { label: 'Draft', value: 'Draft' }, { label: 'Quoted', value: 'Quoted' },
+  { label: 'Approved', value: 'Approved' }, { label: 'Billed', value: 'Billed' }, { label: 'Cancelled', value: 'Cancelled' },
+];
+
 /* ── Table Row Style ─────────────────────────────────────────── */
 const rowStyle = (idx: number, selected: boolean, detailSelected: boolean): React.CSSProperties => ({
   background: detailSelected ? 'var(--primary-light)' : selected ? 'var(--row-alt)' : idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)',
@@ -234,19 +263,7 @@ export const EndoCartsPage = () => {
     if (activeTab === 'service-history') { const t = setTimeout(() => loadServiceHistory(), serviceSearch ? 300 : 0); return () => clearTimeout(t); }
   }, [activeTab, loadServiceHistory, serviceSearch]);
 
-  /* ── Tab bar ─── */
-  const tabs: TabDef[] = [
-    { key: 'quotes', label: 'Quotes' },
-    { key: 'catalog', label: 'Catalog' },
-    { key: 'models', label: 'Models' },
-    { key: 'scope-inventory', label: 'Scope Inventory' },
-    { key: 'service-history', label: 'Service History' },
-  ];
-
-  const statusSegments = [
-    { label: 'All', value: '' }, { label: 'Draft', value: 'Draft' }, { label: 'Quoted', value: 'Quoted' },
-    { label: 'Approved', value: 'Approved' }, { label: 'Billed', value: 'Billed' }, { label: 'Cancelled', value: 'Cancelled' },
-  ];
+  /* ── Tab bar and status segments use module-level constants ─── */
 
   /* ── Quote detail pane content ─── */
   const quoteDetailPane = selectedQuote ? (
@@ -311,21 +328,21 @@ export const EndoCartsPage = () => {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                   <thead>
                     <tr>
-                      <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left', borderBottom: '1px solid var(--neutral-200)' }}>Part #</th>
-                      <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left', borderBottom: '1px solid var(--neutral-200)' }}>Description</th>
-                      <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'center', borderBottom: '1px solid var(--neutral-200)' }}>Qty</th>
-                      <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right', borderBottom: '1px solid var(--neutral-200)' }}>Unit Cost</th>
-                      <th style={{ background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--neutral-500)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'right', borderBottom: '1px solid var(--neutral-200)' }}>Line Total</th>
+                      <th style={bomThStyle}>Part #</th>
+                      <th style={bomThStyle}>Description</th>
+                      <th style={bomThCenterStyle}>Qty</th>
+                      <th style={bomThRightStyle}>Unit Cost</th>
+                      <th style={bomThRightStyle}>Line Total</th>
                     </tr>
                   </thead>
                   <tbody>
                     {selectedQuote.items.map((it, i) => (
                       <tr key={i}>
-                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{it.partNum}</td>
-                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)' }}>{it.desc}</td>
-                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>{it.qty}</td>
-                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', textAlign: 'right' }}>{fmtMoney(it.unitCost)}</td>
-                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--border)', textAlign: 'right' }}>{fmtMoney(it.unitCost * it.qty)}</td>
+                        <td style={bomTdStyle}>{it.partNum}</td>
+                        <td style={bomTdStyle}>{it.desc}</td>
+                        <td style={bomTdCenterStyle}>{it.qty}</td>
+                        <td style={bomTdRightStyle}>{fmtMoney(it.unitCost)}</td>
+                        <td style={bomTdRightStyle}>{fmtMoney(it.unitCost * it.qty)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -359,10 +376,10 @@ export const EndoCartsPage = () => {
   ) : null;
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div style={endoPageContainerStyle}>
 
       {/* ── Sub-Tab Bar ─── */}
-      <TabBar tabs={tabs} activeKey={activeTab} onChange={k => { setActiveTab(k as typeof activeTab); setSelectedKey(null); }} />
+      <TabBar tabs={ENDO_TABS} activeKey={activeTab} onChange={k => { setActiveTab(k as typeof activeTab); setSelectedKey(null); }} />
 
       {/* ════════════════════════════════════════════════════════ */}
       {/* QUOTES TAB — split-pane                                 */}
@@ -389,15 +406,15 @@ export const EndoCartsPage = () => {
             </div>
 
             {/* Toolbar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' }}>
+            <div style={endoToolbarStyle}>
               <button style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                 New Quote
               </button>
-              <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
+              <div style={endoSeparatorStyle} />
               <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>Status</span>
-              <SegmentedControl items={statusSegments} value={filters.status} onChange={v => { setFilters(f => ({ ...f, status: v })); setChipFilter(''); setPage(1); }} />
-              <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
+              <SegmentedControl items={STATUS_SEGMENTS} value={filters.status} onChange={v => { setFilters(f => ({ ...f, status: v })); setChipFilter(''); setPage(1); }} />
+              <div style={endoSeparatorStyle} />
               <select value={filters.rep} onChange={e => { setFilters(f => ({ ...f, rep: e.target.value })); setPage(1); }} style={{
                 height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit',
                 color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 130,
@@ -414,8 +431,8 @@ export const EndoCartsPage = () => {
             </div>
 
             {/* Data Table */}
-            <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+            <div style={endoTableCardBg}>
+              <table style={endoTableFixed}>
                 <thead>
                   <tr>
                     <ColHeader label="Quote #" sortKey="quoteNum" currentSort={sortCol} currentDir={sortDir} onSort={handleSort} style={{ width: 100 }} />
@@ -458,7 +475,7 @@ export const EndoCartsPage = () => {
             </div>
 
             {/* Table Footer */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' }}>
+            <div style={endoFooterStyle}>
               <span style={{ fontWeight: 500 }}>{filtered.length} record{filtered.length !== 1 ? 's' : ''}</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--muted)' }}>
@@ -504,13 +521,13 @@ export const EndoCartsPage = () => {
       {/* CATALOG TAB                                             */}
       {/* ════════════════════════════════════════════════════════ */}
       {activeTab === 'catalog' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={endoTabFlexStyle}>
+          <div style={endoToolbarStyle}>
             <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               Add Component
             </button>
-            <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
+            <div style={endoSeparatorStyle} />
             <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>Category</span>
             <select value={catCategory} onChange={e => setCatCategory(e.target.value)} style={{
               height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit',
@@ -526,16 +543,16 @@ export const EndoCartsPage = () => {
               }} />
             </div>
           </div>
-          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <div style={endoTableCardBg}>
+            <table style={endoTableFixed}>
               <thead>
                 <tr>
-                  <th style={{ width: 100, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Part #</th>
-                  <th style={{ background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Description</th>
-                  <th style={{ width: 90, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Category</th>
-                  <th style={{ width: 90, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'right', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Unit Cost</th>
-                  <th style={{ width: 70, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Stock</th>
-                  <th style={{ width: 80, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Reorder Pt</th>
+                  <th style={{ ...endoThBase, width: 100 }}>Part #</th>
+                  <th style={endoThBase}>Description</th>
+                  <th style={{ ...endoThBase, width: 90 }}>Category</th>
+                  <th style={{ ...endoThBase, width: 90, textAlign: 'right' }}>Unit Cost</th>
+                  <th style={{ ...endoThBase, width: 70, textAlign: 'center' }}>Stock</th>
+                  <th style={{ ...endoThBase, width: 80, textAlign: 'center' }}>Reorder Pt</th>
                 </tr>
               </thead>
               <tbody>
@@ -559,8 +576,8 @@ export const EndoCartsPage = () => {
       {/* MODELS TAB                                              */}
       {/* ════════════════════════════════════════════════════════ */}
       {activeTab === 'models' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={endoTabFlexStyle}>
+          <div style={endoToolbarStyle}>
             <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New Model
@@ -572,15 +589,15 @@ export const EndoCartsPage = () => {
               }} />
             </div>
           </div>
-          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <div style={endoTableCardBg}>
+            <table style={endoTableFixed}>
               <thead>
                 <tr>
-                  <th style={{ width: 160, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Model Name</th>
-                  <th style={{ background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Description</th>
-                  <th style={{ width: 90, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Components</th>
-                  <th style={{ width: 100, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'right', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Base Price</th>
-                  <th style={{ width: 80, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)' }}>Actions</th>
+                  <th style={{ ...endoThBase, width: 160 }}>Model Name</th>
+                  <th style={endoThBase}>Description</th>
+                  <th style={{ ...endoThBase, width: 90, textAlign: 'center' }}>Components</th>
+                  <th style={{ ...endoThBase, width: 100, textAlign: 'right' }}>Base Price</th>
+                  <th style={{ ...endoThBase, width: 80, textAlign: 'center' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -639,8 +656,8 @@ export const EndoCartsPage = () => {
       {/* SCOPE INVENTORY TAB                                      */}
       {/* ════════════════════════════════════════════════════════ */}
       {activeTab === 'scope-inventory' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={endoTabFlexStyle}>
+          <div style={endoToolbarStyle}>
             <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' }}>Type</span>
             <SegmentedControl
               items={[{ label: 'All', value: '' }, { label: 'Flexible', value: 'F' }, { label: 'Rigid', value: 'R' }]}
@@ -657,8 +674,8 @@ export const EndoCartsPage = () => {
           {scopeLoading ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin /></div>
           ) : (
-            <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+            <div style={endoTableCardBg}>
+              <table style={endoTableFixed}>
                 <thead>
                   <tr>
                     {[
@@ -666,11 +683,7 @@ export const EndoCartsPage = () => {
                       { label: 'Client', w: '18%' }, { label: 'Department', w: '14%' }, { label: 'Type', w: 60 },
                       { label: 'Status', w: 70 }, { label: 'Last Update', w: 95 },
                     ].map(col => (
-                      <th key={col.label} style={{
-                        width: col.w, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px',
-                        textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2,
-                        borderBottom: '1px solid var(--neutral-200)',
-                      }}>{col.label}</th>
+                      <th key={col.label} style={{ ...endoThBase, width: col.w }}>{col.label}</th>
                     ))}
                   </tr>
                 </thead>
@@ -702,7 +715,7 @@ export const EndoCartsPage = () => {
             </div>
           )}
           {/* Footer */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' }}>
+          <div style={endoFooterStyle}>
             <span style={{ fontWeight: 500 }}>{scopeTotal} scope{scopeTotal !== 1 ? 's' : ''}</span>
             <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
               <button disabled={scopePage <= 1} onClick={() => setScopePage(p => p - 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: scopePage <= 1 ? 0.4 : 1 }}>&laquo;</button>
@@ -717,8 +730,8 @@ export const EndoCartsPage = () => {
       {/* SERVICE HISTORY TAB                                      */}
       {/* ════════════════════════════════════════════════════════ */}
       {activeTab === 'service-history' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' }}>
+        <div style={endoTabFlexStyle}>
+          <div style={endoToolbarStyle}>
             <div style={{ position: 'relative', marginLeft: 'auto' }}>
               <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
               <input placeholder="Search WO#, serial#, client..." value={serviceSearch} onChange={e => { setServiceSearch(e.target.value); setServicePage(1); }} style={{
@@ -729,8 +742,8 @@ export const EndoCartsPage = () => {
           {serviceLoading ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Spin /></div>
           ) : (
-            <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+            <div style={endoTableCardBg}>
+              <table style={endoTableFixed}>
                 <thead>
                   <tr>
                     {[
@@ -738,11 +751,7 @@ export const EndoCartsPage = () => {
                       { label: 'Client', w: '18%' }, { label: 'Status', w: 90 }, { label: 'Date In', w: 90 },
                       { label: 'Date Out', w: 90 }, { label: 'Complaint', w: '20%' }, { label: 'Total', w: 90 },
                     ].map(col => (
-                      <th key={col.label} style={{
-                        width: col.w, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '9px 10px',
-                        textAlign: col.label === 'Total' ? 'right' : 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
-                        position: 'sticky', top: 0, zIndex: 2, borderBottom: '1px solid var(--neutral-200)',
-                      }}>{col.label}</th>
+                      <th key={col.label} style={{ ...endoThBase, width: col.w, textAlign: col.label === 'Total' ? 'right' : 'left' }}>{col.label}</th>
                     ))}
                   </tr>
                 </thead>
@@ -769,7 +778,7 @@ export const EndoCartsPage = () => {
             </div>
           )}
           {/* Footer */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' }}>
+          <div style={endoFooterStyle}>
             <span style={{ fontWeight: 500 }}>{serviceTotal} repair{serviceTotal !== 1 ? 's' : ''}</span>
             <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
               <button disabled={servicePage <= 1} onClick={() => setServicePage(p => p - 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: servicePage <= 1 ? 0.4 : 1 }}>&laquo;</button>

@@ -205,8 +205,10 @@ export const ScopeModelPage = () => {
   }, []);
 
   useEffect(() => {
-    getScopeModelStats().then(setStats).catch(() => { message.error('Failed to load scope model stats'); });
-    getManufacturers().then(setManufacturers).catch(() => { message.error('Failed to load manufacturers'); });
+    let cancelled = false;
+    getScopeModelStats().then(d => { if (!cancelled) setStats(d); }).catch(() => { if (!cancelled) message.error('Failed to load scope model stats'); });
+    getManufacturers().then(d => { if (!cancelled) setManufacturers(d); }).catch(() => { if (!cancelled) message.error('Failed to load manufacturers'); });
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {

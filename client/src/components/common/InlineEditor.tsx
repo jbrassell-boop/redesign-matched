@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, memo } from 'react';
 
 interface InlineEditorProps {
   value: string;
@@ -8,7 +8,7 @@ interface InlineEditorProps {
   maxLength?: number;
 }
 
-export const InlineEditor = ({
+export const InlineEditor = memo(({
   value,
   onSave,
   placeholder = 'Click to add note...',
@@ -140,4 +140,4 @@ export const InlineEditor = ({
       {hasValue ? value : placeholder}
     </span>
   );
-};
+});

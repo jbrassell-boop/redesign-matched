@@ -68,7 +68,7 @@ export const RepairItemAutoComplete = ({ repairKey, onSelect, inputRef }: Props)
         placeholder="Search repair items…"
         style={{
           width: '100%', height: 26,
-          border: '1px solid #93c5fd', borderRadius: 3,
+          border: '1px solid var(--input-focus-border)', borderRadius: 3,
           fontSize: 11, padding: '0 6px', background: 'var(--card)',
           boxSizing: 'border-box',
           outline: 'none',

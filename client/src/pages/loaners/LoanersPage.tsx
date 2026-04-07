@@ -51,6 +51,72 @@ const StatChip = ({ label, value, iconBg, iconColor, valueColor, active, onClick
 
 
 
+// ── Extracted static styles (performance: avoid re-creating objects each render) ──
+const loanerPageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
+const loanerStatStripStyle: React.CSSProperties = { display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' };
+const loanerToolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap', flexShrink: 0 };
+const loanerSubToolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' };
+const loanerSeparatorStyle: React.CSSProperties = { width: 1, height: 22, background: 'var(--border-dk)' };
+const loanerThStyle: React.CSSProperties = {
+  background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 600, padding: '8px 10px',
+  textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)',
+  borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 10,
+};
+const loanerCheckboxThStyle: React.CSSProperties = {
+  background: 'var(--neutral-50)', padding: '8px 6px', borderBottom: '1px solid var(--neutral-200)',
+  borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', width: 36, textAlign: 'center',
+};
+const loanerFooterStyle: React.CSSProperties = { background: 'var(--card)', borderTop: '1px solid var(--border)', padding: '6px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 };
+const loanerTabContentStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' };
+const loanerTabInnerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
+const loanerFilterLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' };
+
+const ACTIVE_COLS = [
+  { key: 'workOrder', label: 'Work Order', width: 130 },
+  { key: 'scopeType', label: 'Scope Type', width: 180 },
+  { key: 'serial', label: 'Serial #', width: 120 },
+  { key: 'client', label: 'Client', width: 160 },
+  { key: 'dept', label: 'Department', width: 140 },
+  { key: 'status', label: 'Status', width: 100 },
+  { key: 'dateOut', label: 'Date Out', width: 100 },
+  { key: 'daysOut', label: 'Days', width: 70 },
+  { key: 'trackingNumber', label: 'Tracking #', width: 130 },
+];
+
+const SCOPE_NEEDS_COLS = [
+  { key: 'scopeType', label: 'Scope Type', width: 200 },
+  { key: 'clientName', label: 'Client', width: 180 },
+  { key: 'deptName', label: 'Department', width: 160 },
+  { key: 'repairsInProgress', label: 'Repairs In Progress', width: 140, align: 'center' as const },
+  { key: 'avgTat', label: 'Avg TAT (days)', width: 120, align: 'center' as const },
+  { key: 'estimatedNeedDate', label: 'Est. Need Date', width: 120 },
+];
+
+const REQ_COLS = [
+  { key: 'select', label: '', width: 36 },
+  { key: 'workOrder', label: 'Work Order', width: 140 },
+  { key: 'scopeType', label: 'Scope Type', width: 180 },
+  { key: 'serialNumber', label: 'Serial #', width: 120 },
+  { key: 'client', label: 'Client', width: 160 },
+  { key: 'department', label: 'Department', width: 140 },
+  { key: 'dateRequested', label: 'Date Requested', width: 120 },
+  { key: 'status', label: 'Status', width: 100 },
+  { key: 'actions', label: 'Actions', width: 110 },
+];
+
+const MAIN_COLS = [
+  { key: 'workOrder', label: 'Work Order', width: 130 },
+  { key: 'scopeType', label: 'Scope Type', width: 180 },
+  { key: 'serial', label: 'Serial #', width: 120 },
+  { key: 'client', label: 'Client', width: 160 },
+  { key: 'dept', label: 'Department', width: 140 },
+  { key: 'status', label: 'Status', width: 100 },
+  { key: 'dateOut', label: 'Date Out', width: 100 },
+  { key: 'dateIn', label: 'Date In', width: 100 },
+  { key: 'daysOut', label: 'Days', width: 70 },
+  { key: 'trackingNumber', label: 'Tracking #', width: 130 },
+];
+
 /* ── SVG Icons ───────────────────────────────────────────────── */
 const IconTotal = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><rect x="2" y="2" width="12" height="12" rx="2" /><path d="M5 5h6M5 8h6M5 11h4" /></svg>;
 const IconOut = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><path d="M10 2l4 4-4 4" /><path d="M2 8h12" /></svg>;
@@ -98,21 +164,9 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
     return () => { cancelled = true; clearTimeout(timer); };
   }, [search, loadActive]);
 
-  const activeCols = [
-    { key: 'workOrder', label: 'Work Order', width: 130 },
-    { key: 'scopeType', label: 'Scope Type', width: 180 },
-    { key: 'serial', label: 'Serial #', width: 120 },
-    { key: 'client', label: 'Client', width: 160 },
-    { key: 'dept', label: 'Department', width: 140 },
-    { key: 'status', label: 'Status', width: 100 },
-    { key: 'dateOut', label: 'Date Out', width: 100 },
-    { key: 'daysOut', label: 'Days', width: 70 },
-    { key: 'trackingNumber', label: 'Tracking #', width: 130 },
-  ];
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' }}>
+    <div style={loanerTabInnerStyle}>
+      <div style={loanerSubToolbarStyle}>
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
           placeholder="Search active loaners..."
@@ -130,13 +184,8 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
           <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
             <tr>
-              {activeCols.map(col => (
-                <th key={col.key} style={{
-                  background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 600, padding: '8px 10px',
-                  textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)',
-                  borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase',
-                  fontSize: 10, width: col.width,
-                }}>
+              {ACTIVE_COLS.map(col => (
+                <th key={col.key} style={{ ...loanerThStyle, width: col.width }}>
                   {col.label}
                 </th>
               ))}
@@ -144,9 +193,9 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={activeCols.length} style={{ textAlign: 'center', padding: 24 }}><Spin size="small" /></td></tr>
+              <tr><td colSpan={ACTIVE_COLS.length} style={{ textAlign: 'center', padding: 24 }}><Spin size="small" /></td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={activeCols.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No active loaners currently out</td></tr>
+              <tr><td colSpan={ACTIVE_COLS.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No active loaners currently out</td></tr>
             ) : items.map((item, idx) => (
               <tr
                 key={item.loanerTranKey}
@@ -195,18 +244,9 @@ const ScopeNeedsTab = () => {
     return () => { cancelled = true; };
   }, []);
 
-  const cols = [
-    { key: 'scopeType', label: 'Scope Type', width: 200 },
-    { key: 'clientName', label: 'Client', width: 180 },
-    { key: 'deptName', label: 'Department', width: 160 },
-    { key: 'repairsInProgress', label: 'Repairs In Progress', width: 140, align: 'center' as const },
-    { key: 'avgTat', label: 'Avg TAT (days)', width: 120, align: 'center' as const },
-    { key: 'estimatedNeedDate', label: 'Est. Need Date', width: 120 },
-  ];
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' }}>
+    <div style={loanerTabInnerStyle}>
+      <div style={loanerSubToolbarStyle}>
         <span style={{ fontSize: 12, color: 'var(--muted)' }}>
           Scope types currently in repair with loaner requests — estimated need dates based on average turnaround time.
         </span>
@@ -218,14 +258,8 @@ const ScopeNeedsTab = () => {
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 920 }}>
           <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
             <tr>
-              {cols.map(col => (
-                <th key={col.key} style={{
-                  background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 600, padding: '8px 10px',
-                  textAlign: col.align || 'left', whiteSpace: 'nowrap',
-                  borderRight: '1px solid rgba(var(--primary-rgb), 0.15)',
-                  borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em',
-                  textTransform: 'uppercase', fontSize: 10, width: col.width,
-                }}>
+              {SCOPE_NEEDS_COLS.map(col => (
+                <th key={col.key} style={{ ...loanerThStyle, width: col.width, textAlign: col.align || 'left' }}>
                   {col.label}
                 </th>
               ))}
@@ -233,9 +267,9 @@ const ScopeNeedsTab = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={cols.length} style={{ textAlign: 'center', padding: 24 }}><Spin size="small" /></td></tr>
+              <tr><td colSpan={SCOPE_NEEDS_COLS.length} style={{ textAlign: 'center', padding: 24 }}><Spin size="small" /></td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={cols.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No active loaner-requested repairs in progress</td></tr>
+              <tr><td colSpan={SCOPE_NEEDS_COLS.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No active loaner-requested repairs in progress</td></tr>
             ) : items.map((item, idx) => (
               <tr
                 key={`${item.scopeType}-${item.deptName}-${idx}`}
@@ -397,23 +431,11 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
     return req?.status === 'Pending';
   }).length;
 
-  const reqCols = [
-    { key: 'select', label: '', width: 36 },
-    { key: 'workOrder', label: 'Work Order', width: 140 },
-    { key: 'scopeType', label: 'Scope Type', width: 180 },
-    { key: 'serialNumber', label: 'Serial #', width: 120 },
-    { key: 'client', label: 'Client', width: 160 },
-    { key: 'department', label: 'Department', width: 140 },
-    { key: 'dateRequested', label: 'Date Requested', width: 120 },
-    { key: 'status', label: 'Status', width: 100 },
-    { key: 'actions', label: 'Actions', width: 110 },
-  ];
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap' }}>
+    <div style={loanerTabInnerStyle}>
+      <div style={{ ...loanerSubToolbarStyle, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</span>
+          <span style={loanerFilterLabelStyle}>Status</span>
           <div style={{ display: 'flex', gap: 0 }}>
             {['All', 'Pending', 'Fulfilled', 'Declined'].map(s => (
               <button
@@ -432,7 +454,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
             <div style={{ width: 0, borderRight: '1px solid var(--border-dk)' }} />
           </div>
         </div>
-        <div style={{ width: 1, height: 22, background: 'var(--border-dk)' }} />
+        <div style={loanerSeparatorStyle} />
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
           placeholder="Search requests..."
@@ -494,10 +516,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
           <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
             <tr>
-              <th style={{
-                background: 'var(--neutral-50)', padding: '8px 6px', borderBottom: '1px solid var(--neutral-200)',
-                borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', width: 36, textAlign: 'center',
-              }}>
+              <th style={loanerCheckboxThStyle}>
                 <input
                   type="checkbox"
                   checked={requests.length > 0 && selectedKeys.size === requests.length}
@@ -505,13 +524,8 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                   style={{ cursor: 'pointer' }}
                 />
               </th>
-              {reqCols.slice(1).map(col => (
-                <th key={col.key} style={{
-                  background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 600, padding: '8px 10px',
-                  textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)',
-                  borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase',
-                  fontSize: 10, width: col.width,
-                }}>
+              {REQ_COLS.slice(1).map(col => (
+                <th key={col.key} style={{ ...loanerThStyle, width: col.width }}>
                   {col.label}
                 </th>
               ))}
@@ -519,9 +533,9 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={reqCols.length} style={{ textAlign: 'center', padding: 24 }}><Spin size="small" /></td></tr>
+              <tr><td colSpan={REQ_COLS.length} style={{ textAlign: 'center', padding: 24 }}><Spin size="small" /></td></tr>
             ) : requests.length === 0 ? (
-              <tr><td colSpan={reqCols.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No loaner requests match your filters</td></tr>
+              <tr><td colSpan={REQ_COLS.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No loaner requests match your filters</td></tr>
             ) : requests.map((req, idx) => {
               const isSelected = selectedKeys.has(req.repairKey);
               return (
@@ -682,7 +696,7 @@ export const LoanersPage = () => {
 
   /* ── Stat Strip ──────────────────────────────────────────── */
   const statStrip = (
-    <div style={{ display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' }}>
+    <div style={loanerStatStripStyle}>
       <StatChip label="Total" value={stats?.total ?? 0} iconBg="rgba(var(--navy-rgb), 0.10)" iconColor="var(--navy)" valueColor="var(--navy)" active={statusFilter === 'All'} onClick={() => handleChipClick('All')} icon={<IconTotal />} />
       <StatChip label="Out" value={stats?.out ?? 0} iconBg="rgba(var(--primary-rgb), 0.10)" iconColor="var(--primary)" valueColor="var(--primary)" active={statusFilter === 'Out'} onClick={() => handleChipClick('Out')} icon={<IconOut />} />
       <StatChip label="Overdue" value={stats?.overdue ?? 0} iconBg="rgba(var(--danger-rgb), 0.10)" iconColor="var(--danger)" valueColor="var(--danger)" active={statusFilter === 'Overdue'} onClick={() => handleChipClick('Overdue')} icon={<IconOverdue />} />
@@ -694,9 +708,9 @@ export const LoanersPage = () => {
 
   /* ── Toolbar ─────────────────────────────────────────────── */
   const toolbar = (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap', flexShrink: 0 }}>
+    <div style={loanerToolbarStyle}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</span>
+        <span style={loanerFilterLabelStyle}>Status</span>
         <div style={{ display: 'flex', gap: 0 }}>
           {['All', 'Out', 'Overdue', 'Returned', 'Declined'].map(s => (
             <button
@@ -715,7 +729,7 @@ export const LoanersPage = () => {
           <div style={{ width: 0, borderRight: '1px solid var(--border-dk)' }} />
         </div>
       </div>
-      <div style={{ width: 1, height: 22, background: 'var(--border-dk)' }} />
+      <div style={loanerSeparatorStyle} />
       <Input
         prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
         placeholder="Search loaners..."
@@ -739,21 +753,7 @@ export const LoanersPage = () => {
     </div>
   );
 
-  /* ── Table columns ───────────────────────────────────────── */
-  const columns = [
-    { key: 'workOrder', label: 'Work Order', width: 130 },
-    { key: 'scopeType', label: 'Scope Type', width: 180 },
-    { key: 'serial', label: 'Serial #', width: 120 },
-    { key: 'client', label: 'Client', width: 160 },
-    { key: 'dept', label: 'Department', width: 140 },
-    { key: 'status', label: 'Status', width: 100 },
-    { key: 'dateOut', label: 'Date Out', width: 100 },
-    { key: 'dateIn', label: 'Date In', width: 100 },
-    { key: 'daysOut', label: 'Days', width: 70 },
-    { key: 'trackingNumber', label: 'Tracking #', width: 130 },
-  ];
-
-  const colCount = columns.length + 1; // +1 for checkbox
+  const colCount = MAIN_COLS.length + 1; // +1 for checkbox
 
   /* ── Loaner list (left panel content for Task Loaners tab) ── */
   const dataTable = (
@@ -761,10 +761,7 @@ export const LoanersPage = () => {
       <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: selectedKey ? 800 : 1200 }}>
         <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
           <tr>
-            <th style={{
-              background: 'var(--neutral-50)', padding: '8px 6px', borderBottom: '1px solid var(--neutral-200)',
-              borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', width: 36, textAlign: 'center',
-            }}>
+            <th style={loanerCheckboxThStyle}>
               <input
                 type="checkbox"
                 checked={bulk.isAllSelected(items.map(i => i.loanerTranKey))}
@@ -772,13 +769,8 @@ export const LoanersPage = () => {
                 style={{ cursor: 'pointer' }}
               />
             </th>
-            {columns.map(col => (
-              <th key={col.key} style={{
-                background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 600, padding: '8px 10px',
-                textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)',
-                borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase',
-                fontSize: 10, width: col.width,
-              }}>
+            {MAIN_COLS.map(col => (
+              <th key={col.key} style={{ ...loanerThStyle, width: col.width }}>
                 {col.label}
               </th>
             ))}
@@ -832,7 +824,7 @@ export const LoanersPage = () => {
 
   /* ── Pagination Footer ───────────────────────────────────── */
   const footer = (
-    <div style={{ background: 'var(--card)', borderTop: '1px solid var(--border)', padding: '6px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+    <div style={loanerFooterStyle}>
       <div style={{ fontSize: 11, color: 'var(--muted)' }}>
         Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{totalCount}</strong>
       </div>
@@ -943,10 +935,10 @@ export const LoanersPage = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div style={loanerPageContainerStyle}>
       {statStrip}
       <TabBar tabs={PAGE_TABS} activeKey={activeTab} onChange={tab => { setActiveTab(tab); setSelectedKey(null); setDetail(null); }} />
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+      <div style={loanerTabContentStyle}>
         {renderTab()}
       </div>
     </div>

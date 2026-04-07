@@ -37,17 +37,17 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 );
 
 const causeBadgeStyle = (cause: string): React.CSSProperties => {
-  if (cause?.toUpperCase() === 'UA') return { background: '#FEF2F2', color: 'var(--danger)', border: '1px solid #FECACA' };
-  if (cause?.toUpperCase() === 'NW') return { background: '#FFF7ED', color: '#C2410C', border: '1px solid #FED7AA' };
+  if (cause?.toUpperCase() === 'UA') return { background: 'var(--danger-light)', color: 'var(--danger)', border: '1px solid var(--badge-red-border)' };
+  if (cause?.toUpperCase() === 'NW') return { background: 'var(--badge-orange-bg-lt)', color: 'var(--badge-orange-text-dk)', border: '1px solid var(--badge-orange-border-lt)' };
   return { background: 'var(--neutral-50)', color: 'var(--muted)', border: '1px solid var(--border)' };
 };
 
 const fixBadgeStyle = (fix: string): React.CSSProperties => {
   const map: Record<string, React.CSSProperties> = {
     W:  { background: 'var(--success-light)', color: 'var(--success)', border: '1px solid var(--success-border)' },
-    NC: { background: '#FEF2F2', color: 'var(--danger)',  border: '1px solid #FECACA' },
-    C:  { background: '#EFF6FF', color: 'var(--primary)', border: '1px solid #BFDBFE' },
-    A:  { background: 'var(--purple-light)', color: 'var(--purple)',        border: '1px solid #DDD6FE' },
+    NC: { background: 'var(--danger-light)', color: 'var(--danger)',  border: '1px solid var(--badge-red-border)' },
+    C:  { background: 'var(--info-bg)', color: 'var(--primary)', border: '1px solid var(--badge-blue-border)' },
+    A:  { background: 'var(--purple-light)', color: 'var(--purple)',        border: '1px solid var(--badge-purple-border-lt)' },
   };
   return map[fix?.toUpperCase()] ?? { background: 'var(--neutral-50)', color: 'var(--muted)', border: '1px solid var(--border)' };
 };
@@ -129,7 +129,7 @@ export const OutgoingTab = ({ repair, items }: OutgoingTabProps) => {
         <Section title="Invoice">
           {/* Invoice card */}
           <div style={{
-            background: 'var(--primary)', color: '#fff',
+            background: 'var(--primary)', color: 'var(--card)',
             borderRadius: 6, padding: 14, marginBottom: 10,
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
@@ -164,7 +164,7 @@ export const OutgoingTab = ({ repair, items }: OutgoingTabProps) => {
                   style={{
                     padding: '4px 10px', fontSize: 10, fontWeight: 700,
                     background: btn.danger ? 'rgba(var(--danger-rgb),.7)' : 'rgba(255,255,255,.15)',
-                    color: '#fff', border: '1px solid rgba(255,255,255,.3)',
+                    color: 'var(--card)', border: '1px solid rgba(255,255,255,.3)',
                     borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
@@ -178,7 +178,7 @@ export const OutgoingTab = ({ repair, items }: OutgoingTabProps) => {
           <div style={{ border: '1px solid var(--border)', borderRadius: 4, overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
               <thead>
-                <tr style={{ background: 'var(--navy)', color: '#fff' }}>
+                <tr style={{ background: 'var(--navy)', color: 'var(--card)' }}>
                   <th style={{ padding: '5px 8px', textAlign: 'left', fontWeight: 600, fontSize: 10 }}>Description</th>
                   <th style={{ padding: '5px 8px', textAlign: 'center', fontWeight: 600, fontSize: 10 }}>Cause</th>
                   <th style={{ padding: '5px 8px', textAlign: 'center', fontWeight: 600, fontSize: 10 }}>Fix</th>
@@ -207,11 +207,11 @@ export const OutgoingTab = ({ repair, items }: OutgoingTabProps) => {
               </tbody>
             </table>
             <div style={{
-              background: 'var(--navy)', color: '#fff', padding: '7px 10px',
+              background: 'var(--navy)', color: 'var(--card)', padding: '7px 10px',
               display: 'flex', justifyContent: 'flex-end', gap: 20, alignItems: 'center',
             }}>
-              <span style={{ fontSize: 11, opacity: .7 }}>Warranty: <span style={{ color: '#4ade80', fontWeight: 700 }}>{fmt(warrantyTotal)}</span></span>
-              <span style={{ fontSize: 11, opacity: .7 }}>Non-Warranty: <span style={{ color: '#fbbf24', fontWeight: 700 }}>{fmt(customerTotal)}</span></span>
+              <span style={{ fontSize: 11, opacity: .7 }}>Warranty: <span style={{ color: 'var(--stat-green)', fontWeight: 700 }}>{fmt(warrantyTotal)}</span></span>
+              <span style={{ fontSize: 11, opacity: .7 }}>Non-Warranty: <span style={{ color: 'var(--stat-amber-lt)', fontWeight: 700 }}>{fmt(customerTotal)}</span></span>
               <span style={{ fontSize: 13, fontWeight: 900 }}>Total: {fmt(warrantyTotal + customerTotal)}</span>
             </div>
           </div>

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import './DetailHeader.css';
 
 interface DetailHeaderProps {
@@ -10,7 +11,7 @@ interface DetailHeaderProps {
   headingLevel?: 'h1' | 'h2' | 'h3';
 }
 
-export const DetailHeader = ({ title, subtitle, badges, actions, meta, headingLevel: Tag = 'h1' }: DetailHeaderProps) => (
+export const DetailHeader = memo(({ title, subtitle, badges, actions, meta, headingLevel: Tag = 'h1' }: DetailHeaderProps) => (
   <div className="detail-header">
     <Tag className="detail-header__title">{title}</Tag>
     {subtitle && <span className="detail-header__subtitle">{subtitle}</span>}
@@ -18,4 +19,4 @@ export const DetailHeader = ({ title, subtitle, badges, actions, meta, headingLe
     {meta && <span className="detail-header__meta">{meta}</span>}
     {actions && <div className="detail-header__actions">{actions}</div>}
   </div>
-);
+));

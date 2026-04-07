@@ -47,7 +47,11 @@ export const InventoryPage = () => {
   }, [search, loadItems]);
 
   useEffect(() => {
-    getInventoryStats().then(setStats).catch(() => { message.error('Failed to load inventory stats'); });
+    let cancelled = false;
+    getInventoryStats()
+      .then(data => { if (!cancelled) setStats(data); })
+      .catch(() => { if (!cancelled) message.error('Failed to load inventory stats'); });
+    return () => { cancelled = true; };
   }, []);
 
   const handleSelect = useCallback(async (item: InventoryListItem) => {

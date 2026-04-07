@@ -210,9 +210,9 @@ const repairTableTh: React.CSSProperties = {
 
 const repairTableTd: React.CSSProperties = {
   padding: '4px 8px',
-  borderBottom: '1px solid #e8e8e8',
+  borderBottom: '1px solid var(--print-border-md)',
   verticalAlign: 'middle',
-  borderRight: '1px solid #eee',
+  borderRight: '1px solid var(--print-border-xlt)',
   fontSize: 10,
 };
 
@@ -230,9 +230,9 @@ const pfTableTh: React.CSSProperties = {
 
 const pfTableTd: React.CSSProperties = {
   padding: '3px 8px',
-  borderBottom: '1px solid #e8e8e8',
+  borderBottom: '1px solid var(--print-border-md)',
   verticalAlign: 'middle',
-  borderRight: '1px solid #eee',
+  borderRight: '1px solid var(--print-border-xlt)',
   fontSize: 10,
 };
 
@@ -240,7 +240,7 @@ const pfBtn = (type: 'p' | 'f' | 'na') => ({
   display: 'inline-block' as const,
   width: 24,
   height: 15,
-  border: type === 'p' ? '1px solid var(--success)' : type === 'f' ? '1px solid var(--danger)' : '1px solid #aaa',
+  border: type === 'p' ? '1px solid var(--success)' : type === 'f' ? '1px solid var(--danger)' : '1px solid var(--print-placeholder)',
   borderRadius: 2,
   textAlign: 'center' as const,
   lineHeight: '15px',
@@ -368,7 +368,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
             <tbody>
               {REPAIR_ITEMS.map((item, i) => (
                 <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
-                  <td style={{ ...repairTableTd, borderRight: '1px solid #eee' }}><span style={s.cbBox}></span></td>
+                  <td style={{ ...repairTableTd, borderRight: '1px solid var(--print-border-xlt)' }}><span style={s.cbBox}></span></td>
                   <td style={repairTableTd}>{item}</td>
                   <td style={{ ...repairTableTd, textAlign: 'center' }}><span style={s.costField}></span></td>
                   <td style={{ ...repairTableTd, textAlign: 'center', borderRight: 'none' }}><span style={s.cbBox}></span></td>
@@ -456,7 +456,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
             <tbody>
               {REPAIR_ITEMS.map((item, i) => (
                 <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
-                  <td style={{ ...repairTableTd, borderRight: '1px solid #eee' }}><span style={s.cbBox}></span></td>
+                  <td style={{ ...repairTableTd, borderRight: '1px solid var(--print-border-xlt)' }}><span style={s.cbBox}></span></td>
                   <td style={repairTableTd}>{item}</td>
                   <td style={{ ...repairTableTd, textAlign: 'center' }}><span style={s.costField}></span></td>
                   <td style={{ ...repairTableTd, borderRight: 'none' }}><span style={s.sigMini}></span></td>
@@ -568,7 +568,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           <div style={s.sectionBar}>QC Sign-Off</div>
           <div style={{
             display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px 10px',
-            padding: '8px 10px', border: '1px solid #ddd', borderRadius: 3,
+            padding: '8px 10px', border: '1px solid var(--print-border-lt)', borderRadius: 3,
             background: 'var(--bg)', marginTop: 6,
           }}>
             {/* Scope Usable */}

@@ -30,8 +30,8 @@ const EMPTY_ADD: AddState = {
 
 const causeBadge = (cause: string) => {
   const styles: Record<string, { bg: string; color: string; border: string }> = {
-    UA: { bg: '#FEF2F2', color: 'var(--danger)', border: '#FECACA' },
-    NW: { bg: '#FFF7ED', color: '#C2410C', border: '#FED7AA' },
+    UA: { bg: 'var(--danger-light)', color: 'var(--danger)', border: 'var(--badge-red-border)' },
+    NW: { bg: 'var(--badge-orange-bg-lt)', color: 'var(--badge-orange-text-dk)', border: 'var(--badge-orange-border-lt)' },
   };
   const s = styles[cause?.toUpperCase()] ?? { bg: 'var(--neutral-50)', color: 'var(--muted)', border: 'var(--border)' };
   return (
@@ -48,10 +48,10 @@ const causeBadge = (cause: string) => {
 const fixBadge = (fix: string) => {
   const styles: Record<string, { bg: string; color: string; border: string }> = {
     W:  { bg: 'var(--success-light)', color: 'var(--success)', border: 'var(--success-border)' },
-    N:  { bg: '#FEF2F2', color: 'var(--danger)',  border: '#FECACA' },
-    R:  { bg: '#FFF7ED', color: '#C2410C',        border: '#FED7AA' },
-    C:  { bg: '#EFF6FF', color: 'var(--primary)', border: '#BFDBFE' },
-    A:  { bg: 'var(--purple-light)', color: 'var(--purple)',        border: '#DDD6FE' },
+    N:  { bg: 'var(--danger-light)', color: 'var(--danger)',  border: 'var(--badge-red-border)' },
+    R:  { bg: 'var(--badge-orange-bg-lt)', color: 'var(--badge-orange-text-dk)',        border: 'var(--badge-orange-border-lt)' },
+    C:  { bg: 'var(--info-bg)', color: 'var(--primary)', border: 'var(--badge-blue-border)' },
+    A:  { bg: 'var(--purple-light)', color: 'var(--purple)',        border: 'var(--badge-purple-border-lt)' },
   };
   const s = styles[fix?.toUpperCase()] ?? { bg: 'var(--neutral-50)', color: 'var(--muted)', border: 'var(--border)' };
   return (
@@ -299,7 +299,7 @@ export const RepairItemsTable = ({
                         padding: '1px 5px', fontSize: 10, fontWeight: 700,
                         borderRadius: 3, cursor: 'pointer',
                         background: addRow.cause === c ? 'var(--danger)' : 'var(--neutral-50)',
-                        color: addRow.cause === c ? '#fff' : 'var(--muted)',
+                        color: addRow.cause === c ? 'var(--card)' : 'var(--muted)',
                         border: `1px solid ${addRow.cause === c ? 'var(--danger)' : 'var(--border)'}`,
                       }}>
                       {c}
@@ -316,7 +316,7 @@ export const RepairItemsTable = ({
                         padding: '1px 5px', fontSize: 10, fontWeight: 700,
                         borderRadius: 3, cursor: 'pointer',
                         background: addRow.fixType === value ? 'var(--primary)' : 'var(--neutral-50)',
-                        color: addRow.fixType === value ? '#fff' : 'var(--muted)',
+                        color: addRow.fixType === value ? 'var(--card)' : 'var(--muted)',
                         border: `1px solid ${addRow.fixType === value ? 'var(--primary)' : 'var(--border)'}`,
                       }}>
                       {label}
@@ -365,7 +365,7 @@ export const RepairItemsTable = ({
                 <button onClick={handleAdd} disabled={saving || !addRow.selectedItem}
                   style={{
                     background: addRow.selectedItem ? 'var(--primary)' : 'var(--neutral-200)',
-                    color: addRow.selectedItem ? '#fff' : 'var(--muted)',
+                    color: addRow.selectedItem ? 'var(--card)' : 'var(--muted)',
                     border: 'none', borderRadius: 3,
                     padding: '3px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
                   }}>
@@ -420,7 +420,7 @@ const RepairItemRow = ({ item, fmt, tdStyle, onDelete, onOpenAmendments, onPatch
 
   return (
     <tr style={{ cursor: 'default' }}
-      onMouseEnter={e => (e.currentTarget.style.background = '#f0f6ff')}
+      onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-hover-bg)')}
       onMouseLeave={e => (e.currentTarget.style.background = '')}>
       <td style={{ ...tdStyle, textAlign: 'center' }}>
         {approvalDot(item.approved)}

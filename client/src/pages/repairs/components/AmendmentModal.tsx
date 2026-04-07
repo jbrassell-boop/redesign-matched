@@ -136,7 +136,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
               <button
                 onClick={() => { setShowForm(true); setSelected(null); }}
                 style={{
-                  background: 'var(--primary)', color: '#fff', border: 'none',
+                  background: 'var(--primary)', color: 'var(--card)', border: 'none',
                   borderRadius: 3, padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
                 }}>
                 + New
@@ -268,7 +268,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
                     Cancel
                   </button>
                   <button onClick={handleSave} disabled={saving}
-                    style={{ padding: '5px 14px', borderRadius: 3, border: 'none', background: 'var(--primary)', color: '#fff', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                    style={{ padding: '5px 14px', borderRadius: 3, border: 'none', background: 'var(--primary)', color: 'var(--card)', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
                     {saving ? 'Saving…' : 'Save Amendment'}
                   </button>
                 </div>

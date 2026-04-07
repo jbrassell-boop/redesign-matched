@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
 import { exportCsv, exportExcel } from './exportUtils';
@@ -15,7 +15,7 @@ interface ExportButtonProps<T extends Record<string, unknown>> {
   sheetName?: string;
 }
 
-export function ExportButton<T extends Record<string, unknown>>({
+function ExportButtonInner<T extends Record<string, unknown>>({
   data,
   columns,
   filename,
@@ -74,3 +74,5 @@ export function ExportButton<T extends Record<string, unknown>>({
     </Dropdown>
   );
 }
+
+export const ExportButton = memo(ExportButtonInner) as typeof ExportButtonInner;

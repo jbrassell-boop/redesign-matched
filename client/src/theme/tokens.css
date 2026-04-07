@@ -138,12 +138,17 @@
   /* misc UI */
   --text-near-black: #1a1a1a;
   --print-border-md: #e8e8e8;
+  --print-cell-border: #e0e0e0;
+  --print-row-divider: #f0f0f0;
   --print-check-border: #999;
   --primary-hover-bg: #f0f6ff;
   --info-bg: #EFF6FF;
   --info-section-bg: #f8faff;
   --info-section-border: #dce8f8;
   --navy-dark: #1a365d;
+  --gradient-blue-start: #e8f0f8;
+  --gradient-blue-end: #d4e4f0;
+  --input-focus-border: #93c5fd;
 }
 
 * { box-sizing: border-box; }

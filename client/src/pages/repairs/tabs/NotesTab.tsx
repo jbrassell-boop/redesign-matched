@@ -60,7 +60,7 @@ export const NotesTab = ({ repairKey }: Props) => {
           style={{
             height: 32, padding: '0 16px', borderRadius: 4, border: 'none',
             background: text.trim() ? 'var(--primary)' : 'var(--neutral-200)',
-            color: text.trim() ? '#fff' : 'var(--muted)',
+            color: text.trim() ? 'var(--card)' : 'var(--muted)',
             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >

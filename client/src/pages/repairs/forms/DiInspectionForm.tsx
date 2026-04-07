@@ -105,13 +105,13 @@ const Bar = ({ children }: { children: React.ReactNode }) => (
 const Fld = ({ label, value, span2, h }: { label:string; value?:string|null; span2?:boolean; h?:number }) => (
   <div style={{ display:'flex', flexDirection:'column', gap:1, ...(span2 ? { gridColumn:'span 2' } : {}) }}>
     <span style={fl}>{label}</span>
-    <div style={{ borderBottom:'1px solid #999', minHeight: h ?? 17, fontSize:11, padding:'1px 2px' }}>{value || ''}</div>
+    <div style={{ borderBottom:'1px solid var(--print-check-border)', minHeight: h ?? 17, fontSize:11, padding:'1px 2px' }}>{value || ''}</div>
   </div>
 );
 
 const Cb = ({ label }: { label:string }) => (
   <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:'10.5px' }}>
-    <span style={{ width:12, height:12, border:'1px solid #999', borderRadius:2, display:'inline-block', flexShrink:0 }} />{label}
+    <span style={{ width:12, height:12, border:'1px solid var(--print-check-border)', borderRadius:2, display:'inline-block', flexShrink:0 }} />{label}
   </span>
 );
 
@@ -120,7 +120,7 @@ const CbRow = ({ children }: { children: React.ReactNode }) => (
 );
 
 const TextField = ({ h }: { h:number }) => (
-  <div style={{ border:'1px solid #ccc', borderRadius:3, minHeight:h, padding:'3px 6px', marginTop:3, fontSize:'10.5px' }} />
+  <div style={{ border:'1px solid var(--print-border)', borderRadius:3, minHeight:h, padding:'3px 6px', marginTop:3, fontSize:'10.5px' }} />
 );
 
 const thStyle: React.CSSProperties = { background:'var(--primary)', color:'var(--card)', fontSize:'8.5px', fontWeight:700, textTransform:'uppercase', padding:'4px 8px', letterSpacing:'.04em', borderRight:'1px solid rgba(255,255,255,.2)' };
@@ -136,14 +136,14 @@ const PfTable = ({ items }: { items:string[] }) => (
     <tbody>
       {items.map((item, i) => (
         <tr key={item} style={i%2===1 ? { background:'var(--bg)' } : undefined}>
-          <td style={{ padding:'4px 8px', fontSize:'10.5px', borderBottom:'1px solid #ddd', borderRight:'1px solid #eee', verticalAlign:'middle' }}>{item}</td>
-          <td style={{ padding:'4px 8px', textAlign:'center', borderBottom:'1px solid #ddd', borderRight:'1px solid #eee' }}>
+          <td style={{ padding:'4px 8px', fontSize:'10.5px', borderBottom:'1px solid var(--print-border-lt)', borderRight:'1px solid var(--print-border-xlt)', verticalAlign:'middle' }}>{item}</td>
+          <td style={{ padding:'4px 8px', textAlign:'center', borderBottom:'1px solid var(--print-border-lt)', borderRight:'1px solid var(--print-border-xlt)' }}>
             <span style={{ display:'inline-block', width:26, height:16, border:'1px solid var(--success)', borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700, color:'var(--success)' }}>Y</span>
           </td>
-          <td style={{ padding:'4px 8px', textAlign:'center', borderBottom:'1px solid #ddd', borderRight:'1px solid #eee' }}>
+          <td style={{ padding:'4px 8px', textAlign:'center', borderBottom:'1px solid var(--print-border-lt)', borderRight:'1px solid var(--print-border-xlt)' }}>
             <span style={{ display:'inline-block', width:26, height:16, border:'1px solid var(--danger)', borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700, color:'var(--danger)' }}>N</span>
           </td>
-          <td style={{ padding:'4px 8px', textAlign:'center', borderBottom:'1px solid #ddd' }}>
+          <td style={{ padding:'4px 8px', textAlign:'center', borderBottom:'1px solid var(--print-border-lt)' }}>
             <span style={{ display:'inline-block', width:26, height:16, border:'1px solid var(--print-placeholder)', borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700, color:'var(--print-light)' }}>N/A</span>
           </td>
         </tr>
@@ -154,7 +154,7 @@ const PfTable = ({ items }: { items:string[] }) => (
 
 const Sig = ({ label, narrow }: { label:string; narrow?:boolean }) => (
   <div style={{ flex: narrow ? undefined : 1, maxWidth: narrow ? 130 : undefined, display:'flex', flexDirection:'column', gap:2 }}>
-    <div style={{ borderBottom:'1px solid #999', minHeight:28 }} />
+    <div style={{ borderBottom:'1px solid var(--print-check-border)', minHeight:28 }} />
     <div style={{ fontSize:'8.5px', color:'var(--print-muted)', fontWeight:600, marginTop:2 }}>{label}</div>
   </div>
 );

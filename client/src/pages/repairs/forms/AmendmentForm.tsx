@@ -62,7 +62,7 @@ export const AmendmentForm = ({ repair, onClose }: Props) => {
 
           {/* Comment */}
           <Bar>Comment</Bar>
-          <div style={{ border: '1px solid #ccc', borderRadius: 3, minHeight: 52, padding: '4px 8px', fontSize: '10.5px', width: '100%', marginTop: 3 }} />
+          <div style={{ border: '1px solid var(--print-border)', borderRadius: 3, minHeight: 52, padding: '4px 8px', fontSize: '10.5px', width: '100%', marginTop: 3 }} />
 
           {/* Repair Items Now Needed */}
           <Bar>Repair Items Now Needed</Bar>
@@ -77,9 +77,9 @@ export const AmendmentForm = ({ repair, onClose }: Props) => {
             <tbody>
               {Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i} style={i % 2 === 1 ? { background: 'var(--bg)' } : undefined}>
-                  <td style={tdS}><div style={{ borderBottom: '1px solid #aaa', minWidth: 40, height: 18 }} /></td>
-                  <td style={tdS}><div style={{ borderBottom: '1px solid #aaa', minWidth: 40, height: 18 }} /></td>
-                  <td style={{ ...tdS, borderRight: 'none' }}><div style={{ borderBottom: '1px solid #aaa', minWidth: 40, height: 18 }} /></td>
+                  <td style={tdS}><div style={{ borderBottom: '1px solid var(--print-placeholder)', minWidth: 40, height: 18 }} /></td>
+                  <td style={tdS}><div style={{ borderBottom: '1px solid var(--print-placeholder)', minWidth: 40, height: 18 }} /></td>
+                  <td style={{ ...tdS, borderRight: 'none' }}><div style={{ borderBottom: '1px solid var(--print-placeholder)', minWidth: 40, height: 18 }} /></td>
                 </tr>
               ))}
             </tbody>
@@ -108,7 +108,7 @@ export const AmendmentForm = ({ repair, onClose }: Props) => {
 /* ── Primitives ── */
 const fl: React.CSSProperties = { fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--print-muted)', letterSpacing: '.04em' };
 const thS: React.CSSProperties = { background: 'var(--primary)', color: 'var(--card)', fontSize: 8, fontWeight: 700, textTransform: 'uppercase', padding: '5px 8px', textAlign: 'left', letterSpacing: '.03em', borderRight: '1px solid rgba(255,255,255,.2)' };
-const tdS: React.CSSProperties = { padding: '8px 8px', borderBottom: '1px solid #e0e0e0', verticalAlign: 'bottom', borderRight: '1px solid #eee' };
+const tdS: React.CSSProperties = { padding: '8px 8px', borderBottom: '1px solid var(--print-cell-border)', verticalAlign: 'bottom', borderRight: '1px solid var(--print-border-xlt)' };
 
 const Bar = ({ children }: { children: React.ReactNode }) => (
   <div style={{ background: 'var(--primary)', color: 'var(--card)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', padding: '4px 10px' }}>{children}</div>
@@ -123,7 +123,7 @@ const Fld = ({ label, value, span2 }: { label: string; value?: string | null; sp
 
 const CircleItem = ({ label, large }: { label: string; large?: boolean }) => (
   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: large ? 12 : '10.5px', fontWeight: large ? 700 : 500 }}>
-    <span style={{ width: 16, height: 16, border: '1.5px solid #999', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
+    <span style={{ width: 16, height: 16, border: '1.5px solid var(--print-check-border)', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
     {label}
   </div>
 );

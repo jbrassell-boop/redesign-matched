@@ -301,7 +301,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           {hasNext && (
             <button onClick={handleAdvance} style={{
               height: 26, padding: '0 12px', border: 'none', borderRadius: 4,
-              background: 'var(--primary)', color: '#fff',
+              background: 'var(--primary)', color: 'var(--card)',
               fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', gap: 4,
             }}>
@@ -442,7 +442,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                 fontSize: 9, fontWeight: 700, width: 16, height: 16, borderRadius: '50%',
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 background: activeTab === t.key ? 'var(--primary)' : 'var(--neutral-200)',
-                color: activeTab === t.key ? '#fff' : 'var(--muted)',
+                color: activeTab === t.key ? 'var(--card)' : 'var(--muted)',
               }}>{t.num}</span>
               {t.label}
             </div>

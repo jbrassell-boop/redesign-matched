@@ -114,7 +114,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
       }}>
         {/* Header */}
         <div style={{
-          padding: '12px 16px', background: 'var(--navy)', color: '#fff',
+          padding: '12px 16px', background: 'var(--navy)', color: 'var(--card)',
           display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
         }}>
           <input
@@ -125,7 +125,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
             style={{
               flex: 1, height: 32, border: '1px solid rgba(255,255,255,0.3)',
               borderRadius: 4, padding: '0 10px', fontSize: 12,
-              background: 'rgba(255,255,255,0.1)', color: '#fff',
+              background: 'rgba(255,255,255,0.1)', color: 'var(--card)',
               outline: 'none',
             }}
           />
@@ -134,7 +134,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
               <button key={t} onClick={() => setTypeFilter(t)} style={{
                 height: 28, padding: '0 10px', border: 'none', fontSize: 10, fontWeight: 600,
                 background: typeFilter === t ? 'rgba(255,255,255,0.2)' : 'transparent',
-                color: '#fff', cursor: 'pointer', fontFamily: 'inherit',
+                color: 'var(--card)', cursor: 'pointer', fontFamily: 'inherit',
               }}>
                 {t === 'all' ? 'All' : t}
               </button>
@@ -142,7 +142,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
           </div>
           <button onClick={onClose} style={{
             width: 28, height: 28, border: '1px solid rgba(255,255,255,0.3)',
-            borderRadius: 4, background: 'transparent', color: '#fff',
+            borderRadius: 4, background: 'transparent', color: 'var(--card)',
             fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>×</button>
         </div>
@@ -190,7 +190,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
                         padding: '2px 8px', fontSize: 10, fontWeight: 700, borderRadius: 3, cursor: 'pointer',
                         border: entry.fixType === ft ? '1px solid var(--primary)' : '1px solid var(--border)',
                         background: entry.fixType === ft ? 'var(--primary)' : 'var(--card)',
-                        color: entry.fixType === ft ? '#fff' : 'var(--muted)',
+                        color: entry.fixType === ft ? 'var(--card)' : 'var(--muted)',
                       }}>{ft}</button>
                     ))}
                     <input
@@ -228,7 +228,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
               }}>Clear</button>
               <button onClick={handleAddAll} disabled={adding} style={{
                 padding: '5px 14px', borderRadius: 4, border: 'none',
-                background: 'var(--success)', color: '#fff', fontSize: 12,
+                background: 'var(--success)', color: 'var(--card)', fontSize: 12,
                 fontWeight: 700, cursor: 'pointer',
               }}>{adding ? 'Adding...' : 'Add Items'}</button>
             </div>

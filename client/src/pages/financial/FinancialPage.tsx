@@ -75,6 +75,39 @@ const STAT_CHIPS: {
   { key: 'rev',     label: 'Revenue MTD',       dotColor: 'var(--success)',  valueColor: 'var(--success)'  },
 ];
 
+// ── Extracted static styles (performance: avoid re-creating objects each render) ──
+const finPageContainerStyle: React.CSSProperties = { height: 'calc(100vh - 64px)', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--bg)' };
+const execBannerStyle: React.CSSProperties = {
+  padding: '12px 20px',
+  background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%)',
+  borderBottom: '2px solid var(--primary)',
+};
+const execCardStyle: React.CSSProperties = {
+  background: 'var(--card)', borderRadius: 8,
+  padding: '14px 16px', flex: 1, minWidth: 140,
+  border: '1px solid var(--neutral-200)',
+  display: 'flex', flexDirection: 'column', gap: 2,
+};
+const execCardLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em' };
+const summaryStatCardStyle: React.CSSProperties = { flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' };
+const summaryStatLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' };
+const finFilterLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' };
+const finLoadingEmptyStyle: React.CSSProperties = { padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 };
+const finFilterBarStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 16px', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' };
+const finTableCardStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' };
+const finToolbarStyle: React.CSSProperties = { padding: '12px 16px', borderBottom: '1px solid var(--neutral-200)', background: 'var(--card)', flexShrink: 0 };
+const finPaginationFooterStyle: React.CSSProperties = { padding: '8px 16px', borderTop: '1px solid var(--neutral-200)', background: 'var(--card)', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' };
+const finPaymentRowStyle: React.CSSProperties = { padding: '10px 16px', borderBottom: '1px solid var(--neutral-100)', background: 'var(--card)' };
+
+const INVOICE_EXPORT_COLS = [
+  { key: 'invoiceNumber', label: 'Invoice #' },
+  { key: 'clientName', label: 'Client' },
+  { key: 'amount', label: 'Amount' },
+  { key: 'paymentTerms', label: 'Payment Terms' },
+  { key: 'issuedDate', label: 'Issued Date' },
+  { key: 'dueDate', label: 'Due Date' },
+];
+
 export const FinancialPage = () => {
   const [activeTab, setActiveTab] = useState<FinancialTab>('outstanding');
   const [search, setSearch] = useState('');
@@ -213,17 +246,6 @@ export const FinancialPage = () => {
 
   const showFilters = activeTab === 'outstanding' || activeTab === 'drafts' || activeTab === 'payments';
 
-  const INVOICE_EXPORT_COLS = [
-    { key: 'invoiceNumber', label: 'Invoice #' },
-    { key: 'clientName', label: 'Client' },
-    { key: 'amount', label: 'Amount' },
-    { key: 'paymentTerms', label: 'Payment Terms' },
-    { key: 'issuedDate', label: 'Issued Date' },
-    { key: 'dueDate', label: 'Due Date' },
-  ];
-
-
-
 
 
   const glColumns = [
@@ -233,11 +255,7 @@ export const FinancialPage = () => {
 
   // ─── Executive summary banner ───────────────────────────────────────────────
   const ExecBanner = () => (
-    <div style={{
-      padding: '12px 20px',
-      background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%)',
-      borderBottom: '2px solid var(--primary)',
-    }}>
+    <div style={execBannerStyle}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
           Financial Overview
@@ -248,53 +266,32 @@ export const FinancialPage = () => {
       </div>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {/* Outstanding A/R */}
-        <div style={{
-          background: 'var(--card)', borderRadius: 8,
-          padding: '14px 16px', flex: 1, minWidth: 140,
-          border: '1px solid var(--neutral-200)',
-          display: 'flex', flexDirection: 'column', gap: 2,
-        }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Outstanding A/R</div>
+        <div style={execCardStyle}>
+          <div style={execCardLabelStyle}>Outstanding A/R</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--navy)', lineHeight: 1.1 }}>
             {stats ? fmt$(stats.outstandingAR) : '\u2014'}
           </div>
         </div>
         {/* Revenue MTD */}
-        <div style={{
-          background: 'var(--card)', borderRadius: 8,
-          padding: '14px 16px', flex: 1, minWidth: 140,
-          border: '1px solid var(--neutral-200)',
-          display: 'flex', flexDirection: 'column', gap: 2,
-        }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Revenue MTD</div>
+        <div style={execCardStyle}>
+          <div style={execCardLabelStyle}>Revenue MTD</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--success)', lineHeight: 1.1 }}>
             {stats ? fmt$(stats.revenueMTD) : '\u2014'}
           </div>
         </div>
         {/* DSO */}
-        <div style={{
-          background: 'var(--card)', borderRadius: 8,
-          padding: '14px 16px', flex: 1, minWidth: 140,
-          border: '1px solid var(--neutral-200)',
-          display: 'flex', flexDirection: 'column', gap: 2,
-        }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Days Sales Outstanding</div>
+        <div style={execCardStyle}>
+          <div style={execCardLabelStyle}>Days Sales Outstanding</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--primary)', lineHeight: 1.1 }}>
             {stats ? stats.dso + 'd' : '\u2014'}
           </div>
           {stats && <div style={{ fontSize: 10, color: 'var(--muted)' }}>Avg {stats.avgDaysToPay}d to pay</div>}
         </div>
         {/* Overdue */}
-        <div style={{
-          background: 'var(--card)', borderRadius: 8,
-          padding: '14px 16px', flex: 1, minWidth: 140,
-          border: '1px solid var(--neutral-200)',
-          display: 'flex', flexDirection: 'column', gap: 2,
-          cursor: 'pointer',
-        }}
+        <div style={{ ...execCardStyle, cursor: 'pointer' }}
           onClick={() => handleTabChange('outstanding')}
         >
-          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>Overdue Invoices</div>
+          <div style={execCardLabelStyle}>Overdue Invoices</div>
           <div style={{ fontSize: 22, fontWeight: 900, color: 'var(--danger)', lineHeight: 1.1 }}>
             {stats ? stats.overdueCount : '\u2014'}
           </div>
@@ -357,7 +354,7 @@ export const FinancialPage = () => {
   const isListTab = activeTab === 'outstanding' || activeTab === 'drafts' || activeTab === 'payments' || activeTab === 'hold';
 
   return (
-    <div style={{ height: 'calc(100vh - 64px)', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+    <div style={finPageContainerStyle}>
       {/* Subnav tabs */}
       <TabBar tabs={TABS} activeKey={activeTab} onChange={handleTabChange} />
 
@@ -378,7 +375,7 @@ export const FinancialPage = () => {
             transition: 'width 0.2s ease',
           }}>
             {/* Toolbar */}
-            <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--neutral-200)', background: 'var(--card)', flexShrink: 0 }}>
+            <div style={finToolbarStyle}>
               {/* Stat strip — only in list tabs */}
               <StatStrip />
 
@@ -432,7 +429,7 @@ export const FinancialPage = () => {
 
             {/* Pagination for paginated tabs */}
             {(activeTab === 'outstanding' || activeTab === 'drafts') && invoiceTotal > pageSize && (
-              <div style={{ padding: '8px 16px', borderTop: '1px solid var(--neutral-200)', background: 'var(--card)', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' }}>
+              <div style={finPaginationFooterStyle}>
                 <span style={{ fontSize: 11, color: 'var(--muted)' }}>
                   {invoiceTotal.toLocaleString()} total invoices
                 </span>
@@ -477,9 +474,9 @@ export const FinancialPage = () => {
           {activeTab === 'atrisk' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* Filter bar */}
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 16px', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={finFilterBarStyle}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>From</span>
+                  <span style={finFilterLabelStyle}>From</span>
                   <DatePicker
                     value={dayjs(atRiskDateFrom)}
                     onChange={(d) => d && setAtRiskDateFrom(d.format('YYYY-MM-DD'))}
@@ -488,7 +485,7 @@ export const FinancialPage = () => {
                   />
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>To</span>
+                  <span style={finFilterLabelStyle}>To</span>
                   <DatePicker
                     value={dayjs(atRiskDateTo)}
                     onChange={(d) => d && setAtRiskDateTo(d.format('YYYY-MM-DD'))}
@@ -497,7 +494,7 @@ export const FinancialPage = () => {
                   />
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>Min Repairs</span>
+                  <span style={finFilterLabelStyle}>Min Repairs</span>
                   <Select
                     value={atRiskMinInvoices}
                     onChange={setAtRiskMinInvoices}
@@ -536,15 +533,15 @@ export const FinancialPage = () => {
                     { label: 'Total Expenses', value: '$' + atRiskItems.reduce((s, r) => s + r.totalExpenses, 0).toLocaleString('en-US', { maximumFractionDigits: 0 }), color: 'var(--warning)' },
                     { label: 'At Risk (< 40%)', value: atRiskItems.filter(r => r.marginPct < 40).length, color: 'var(--danger)' },
                   ].map(s => (
-                    <div key={s.label} style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                    <div key={s.label} style={summaryStatCardStyle}>
                       <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</div>
-                      <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{s.label}</div>
+                      <div style={summaryStatLabelStyle}>{s.label}</div>
                     </div>
                   ))}
                 </div>
               )}
               {/* Table */}
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+              <div style={finTableCardStyle}>
                 <Table<AtRiskItem>
                   dataSource={atRiskItems}
                   rowKey="departmentKey"
@@ -575,9 +572,9 @@ export const FinancialPage = () => {
           {activeTab === 'trending' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {/* Filter bar */}
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 16px', display: 'flex', gap: 16, alignItems: 'center' }}>
+              <div style={finFilterBarStyle}>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>From</span>
+                  <span style={finFilterLabelStyle}>From</span>
                   <DatePicker
                     value={dayjs(trendDateFrom)}
                     onChange={(d) => d && setTrendDateFrom(d.format('YYYY-MM-DD'))}
@@ -586,7 +583,7 @@ export const FinancialPage = () => {
                   />
                 </div>
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>To</span>
+                  <span style={finFilterLabelStyle}>To</span>
                   <DatePicker
                     value={dayjs(trendDateTo)}
                     onChange={(d) => d && setTrendDateTo(d.format('YYYY-MM-DD'))}
@@ -604,15 +601,15 @@ export const FinancialPage = () => {
                     { label: 'Total Repairs', value: trendingItems.reduce((s, t) => s + t.repairCount, 0), color: 'var(--primary)' },
                     { label: 'Avg Margin %', value: trendingItems.length > 0 ? Math.round(trendingItems.reduce((s, t) => s + Number(t.marginPct), 0) / trendingItems.length) + '%' : '\u2014', color: 'var(--warning)' },
                   ].map(s => (
-                    <div key={s.label} style={{ flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                    <div key={s.label} style={summaryStatCardStyle}>
                       <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</div>
-                      <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{s.label}</div>
+                      <div style={summaryStatLabelStyle}>{s.label}</div>
                     </div>
                   ))}
                 </div>
               )}
               {/* Table */}
-              <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' }}>
+              <div style={finTableCardStyle}>
                 <Table<TrendingItem>
                   dataSource={trendingItems}
                   rowKey="month"
@@ -654,10 +651,10 @@ function renderInvoiceRows(
   isDraft: boolean,
 ) {
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>;
+    return <div style={finLoadingEmptyStyle}>Loading...</div>;
   }
   if (invoices.length === 0) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No invoices found</div>;
+    return <div style={finLoadingEmptyStyle}>No invoices found</div>;
   }
   return (
     <>
@@ -729,10 +726,10 @@ function renderInvoiceRows(
 
 function renderPaymentRows(payments: InvoicePaymentItem[], loading: boolean) {
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>;
+    return <div style={finLoadingEmptyStyle}>Loading...</div>;
   }
   if (payments.length === 0) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No payments found</div>;
+    return <div style={finLoadingEmptyStyle}>No payments found</div>;
   }
   return (
     <>
@@ -740,9 +737,7 @@ function renderPaymentRows(payments: InvoicePaymentItem[], loading: boolean) {
         <div
           key={p.paymentId}
           style={{
-            padding: '10px 16px',
-            borderBottom: '1px solid var(--neutral-100)',
-            background: 'var(--card)',
+            ...finPaymentRowStyle,
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -763,10 +758,10 @@ function renderPaymentRows(payments: InvoicePaymentItem[], loading: boolean) {
 
 function renderHoldRows(holds: ClientOnHold[], loading: boolean) {
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>;
+    return <div style={finLoadingEmptyStyle}>Loading...</div>;
   }
   if (holds.length === 0) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No clients on hold</div>;
+    return <div style={finLoadingEmptyStyle}>No clients on hold</div>;
   }
   return (
     <>
@@ -774,9 +769,7 @@ function renderHoldRows(holds: ClientOnHold[], loading: boolean) {
         <div
           key={h.clientKey}
           style={{
-            padding: '10px 16px',
-            borderBottom: '1px solid var(--neutral-100)',
-            background: 'var(--card)',
+            ...finPaymentRowStyle,
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>

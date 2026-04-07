@@ -30,7 +30,7 @@ const moneyRender = (v: number | null) =>
 const hotBadge = (text: string, record: { isUrgent?: boolean }) =>
   createElement('span', null,
     record?.isUrgent
-      ? createElement('span', { style: { background: 'var(--danger)', color: '#fff', padding: '1px 5px', borderRadius: 8, fontSize: 9, fontWeight: 700, marginRight: 4 } }, 'HOT')
+      ? createElement('span', { style: { background: 'var(--danger)', color: 'var(--card)', padding: '1px 5px', borderRadius: 8, fontSize: 9, fontWeight: 700, marginRight: 4 } }, 'HOT')
       : null,
     text,
   );

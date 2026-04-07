@@ -69,7 +69,7 @@ export const OpsBriefing = ({ stats }: Props) => {
   useEffect(() => {
     Promise.all([
       getDashboardBriefing(),
-      apiClient.get('/dashboard/executive-kpi').then(r => r.data).catch(() => null),
+      apiClient.get('/dashboard/executive-kpi').then(r => r.data).catch(() => { message.error('Failed to load executive KPI data'); return null; }),
     ]).then(([b, k]) => {
       setBriefing(b);
       setKpi(k);
@@ -138,7 +138,7 @@ export const OpsBriefing = ({ stats }: Props) => {
                     padding: '6px 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
                     color: 'var(--muted)', letterSpacing: '.04em', textAlign: h === 'Type' ? 'left' : 'right',
                     borderBottom: '1px solid var(--neutral-200)',
-                    background: 'linear-gradient(180deg, #e8f0f8, #d4e4f0)',
+                    background: 'linear-gradient(180deg, var(--gradient-blue-start), var(--gradient-blue-end))',
                   }}>
                     {h}
                   </th>
