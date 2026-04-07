@@ -76,7 +76,9 @@ export const InstrumentsPage = () => {
   const [catalogDetailLoading, setCatalogDetailLoading] = useState(false);
 
   useEffect(() => {
-    getInstrumentStats().then(setStats).catch(() => { message.error('Failed to load instrument stats'); });
+    let cancelled = false;
+    getInstrumentStats().then(d => { if (!cancelled) setStats(d); }).catch(() => { if (!cancelled) message.error('Failed to load instrument stats'); });
+    return () => { cancelled = true; };
   }, []);
 
   const loadData = useCallback(async () => {

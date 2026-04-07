@@ -57,7 +57,9 @@ export const ProductSalePage = () => {
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    getProductSaleStats().then(setStats).catch(() => { message.error('Failed to load product sale stats'); });
+    let cancelled = false;
+    getProductSaleStats().then(d => { if (!cancelled) setStats(d); }).catch(() => { if (!cancelled) message.error('Failed to load product sale stats'); });
+    return () => { cancelled = true; };
   }, []);
 
   const loadData = useCallback(async () => {

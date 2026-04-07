@@ -27,8 +27,10 @@ export const QuoteModal = ({ open, onClose, onCreated }: QuoteModalProps) => {
 
   useEffect(() => {
     if (!open) return;
-    getClients({ pageSize: 500 }).then(r => setClients(r.clients));
-    apiClient.get<TechLookup[]>('/onsite-services/technicians').then(r => setTechnicians(r.data));
+    let cancelled = false;
+    getClients({ pageSize: 500 }).then(r => { if (!cancelled) setClients(r.clients); });
+    apiClient.get<TechLookup[]>('/onsite-services/technicians').then(r => { if (!cancelled) setTechnicians(r.data); });
+    return () => { cancelled = true; };
   }, [open]);
 
   const handleClientChange = async (clientKey: number) => {

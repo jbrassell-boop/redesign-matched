@@ -45,7 +45,9 @@ export const SuppliersPage = () => {
   const [newSupplierPhone, setNewSupplierPhone] = useState('');
 
   useEffect(() => {
-    getSupplierStats().then(setStats).catch(() => { message.error('Failed to load supplier stats'); });
+    let cancelled = false;
+    getSupplierStats().then(d => { if (!cancelled) setStats(d); }).catch(() => { if (!cancelled) message.error('Failed to load supplier stats'); });
+    return () => { cancelled = true; };
   }, []);
 
   const loadSuppliers = useCallback(async (s: string) => {

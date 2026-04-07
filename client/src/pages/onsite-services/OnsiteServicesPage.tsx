@@ -119,8 +119,10 @@ export const OnsiteServicesPage = () => {
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     setStatsLoading(true);
-    getOnsiteServiceStats().then(setStats).finally(() => setStatsLoading(false));
+    getOnsiteServiceStats().then(d => { if (!cancelled) setStats(d); }).finally(() => { if (!cancelled) setStatsLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   const loadData = useCallback(async (filters: OnsiteServiceFilters) => {

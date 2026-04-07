@@ -17,7 +17,9 @@ export const SendToVendorModal = ({ open, item, onClose, onSent }: SendToVendorM
 
   useEffect(() => {
     if (!open) return;
-    getOutsourceVendors().then(setVendors);
+    let cancelled = false;
+    getOutsourceVendors().then(d => { if (!cancelled) setVendors(d); });
+    return () => { cancelled = true; };
   }, [open]);
 
   if (!item) return null;

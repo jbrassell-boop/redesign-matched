@@ -14,9 +14,11 @@ export const ContractsExpiring = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     getWorkspaceData()
-      .then(d => setItems(d.contractsExpiring?.items ?? []))
-      .finally(() => setLoading(false));
+      .then(d => { if (!cancelled) setItems(d.contractsExpiring?.items ?? []); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) return <Skeleton active paragraph={{ rows: 3 }} />;

@@ -78,6 +78,71 @@ const BASE_TABS: TabDef[] = [
   { key: 'statuslog',    label: 'Status Log' },
 ];
 
+// ── Extracted static styles (performance: avoid re-creating objects each render) ──
+const repairCockpitContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' };
+const repairQuickActionBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const repairLegacyQuickActionBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderBottom: '1px solid var(--neutral-200)', background: 'var(--neutral-50)' };
+const repairDropdownMenuStyle: React.CSSProperties = {
+  position: 'absolute', top: '100%', left: 0, marginTop: 4,
+  background: 'var(--card)', border: '1px solid var(--neutral-200)',
+  borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+  minWidth: 220, maxHeight: 300, overflowY: 'auto', zIndex: 100,
+};
+const repairFormsDropdownStyle: React.CSSProperties = {
+  position: 'absolute', top: '100%', left: 0, marginTop: 4,
+  background: 'var(--card)', border: '1px solid var(--neutral-200)',
+  borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
+  minWidth: 240, zIndex: 100,
+};
+const repairFormsSectionHeaderStyle: React.CSSProperties = { padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' };
+const repairFormsSectionHeaderBorderTopStyle: React.CSSProperties = { ...repairFormsSectionHeaderStyle, borderTop: '1px solid var(--neutral-200)' };
+const repairMenuItemStyle: React.CSSProperties = { padding: '7px 12px', cursor: 'pointer', fontSize: 11, color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)' };
+const repairMenuItemStyle12: React.CSSProperties = { ...repairMenuItemStyle, fontSize: 12 };
+const repairDropdownBtnStyle: React.CSSProperties = {
+  height: 26, padding: '0 10px', border: '1px solid var(--neutral-200)',
+  borderRadius: 4, background: 'var(--card)', color: 'var(--muted)',
+  fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+  display: 'flex', alignItems: 'center', gap: 3,
+};
+const repairLegacyDropdownBtnStyle: React.CSSProperties = {
+  height: 28, padding: '0 10px', border: '1px solid var(--neutral-200)',
+  borderRadius: 5, background: 'var(--card)', color: 'var(--muted)',
+  fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
+  display: 'flex', alignItems: 'center', gap: 4,
+};
+const repairFieldLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 };
+const repairCockpitTabBarStyle: React.CSSProperties = { background: 'var(--card)', borderBottom: '2px solid var(--border)', display: 'flex', padding: '0 8px', flexShrink: 0, overflowX: 'auto' };
+
+const COCKPIT_TABS = [
+  { key: 'scope-in', label: 'Scope In', num: '1' },
+  { key: 'details',  label: 'Details',  num: '2' },
+  { key: 'outgoing', label: 'Outgoing', num: '3' },
+  { key: 'expense',  label: 'Expense',  num: '4' },
+  { key: 'inspections', label: 'Inspections', num: '5' },
+  { key: 'financials', label: 'Financials', num: '6' },
+  { key: 'scopehistory', label: 'History', num: '7' },
+  { key: 'statuslog', label: 'Status Log', num: '8' },
+  { key: 'comments',  label: 'Notes',      num: '9' },
+  { key: 'images',    label: 'Images',     num: '10' },
+  { key: 'documents', label: 'Documents',  num: '11' },
+] as const;
+
+const INTERNAL_FORMS = [
+  { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)' },
+  { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)' },
+  { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)' },
+  { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)' },
+  { key: 'amendment'      as const, label: 'Amendment (OM07-9)' },
+  { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)' },
+];
+
+const CUSTOMER_FORMS = [
+  { key: 'requisition'          as const, label: 'Requisition (OM07-2)' },
+  { key: 'final-inspection'     as const, label: 'Final Inspection (OM10-2)' },
+  { key: 'return-verification'  as const, label: 'Return Verification (OM14-1)' },
+  { key: 'loaner'               as const, label: 'Loaner (OM17-1)' },
+];
+
 export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged, cockpitMode, repairKey: repairKeyProp }: RepairDetailPaneProps) => {
   const params = useParams<{ repairKey: string }>();
   const isCockpit = cockpitMode || !!params.repairKey;
@@ -273,31 +338,14 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Repair not found</div>;
     }
 
-    const cockpitTabs = [
-      { key: 'scope-in', label: 'Scope In', num: '1' },
-      { key: 'details',  label: 'Details',  num: '2' },
-      { key: 'outgoing', label: 'Outgoing', num: '3' },
-      { key: 'expense',  label: 'Expense',  num: '4' },
-      { key: 'inspections', label: 'Inspections', num: '5' },
-      { key: 'financials', label: 'Financials', num: '6' },
-      { key: 'scopehistory', label: 'History', num: '7' },
-      { key: 'statuslog', label: 'Status Log', num: '8' },
-      { key: 'comments',  label: 'Notes',      num: '9' },
-      { key: 'images',    label: 'Images',     num: '10' },
-      { key: 'documents', label: 'Documents',  num: '11' },
-    ] as const;
-
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
+      <div style={repairCockpitContainerStyle}>
         <CommandStrip repair={fullRepair} />
         <WorkflowPipeline currentStatus={fullRepair.status} />
         <ScopeGlance repair={fullRepair} flags={flags} />
 
         {/* Quick action bar */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 6, padding: '5px 14px',
-          background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0,
-        }}>
+        <div style={repairQuickActionBarStyle}>
           {hasNext && (
             <button onClick={handleAdvance} style={{
               height: 26, padding: '0 12px', border: 'none', borderRadius: 4,
@@ -312,24 +360,14 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             </button>
           )}
           <div ref={statusMenuRef} style={{ position: 'relative' }}>
-            <button onClick={() => setStatusMenuOpen(!statusMenuOpen)} style={{
-              height: 26, padding: '0 10px', border: '1px solid var(--neutral-200)',
-              borderRadius: 4, background: 'var(--card)', color: 'var(--muted)',
-              fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 3,
-            }}>
+            <button onClick={() => setStatusMenuOpen(!statusMenuOpen)} style={repairDropdownBtnStyle}>
               Change Status
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
             {statusMenuOpen && (
-              <div role="listbox" style={{
-                position: 'absolute', top: '100%', left: 0, marginTop: 4,
-                background: 'var(--card)', border: '1px solid var(--neutral-200)',
-                borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                minWidth: 220, maxHeight: 300, overflowY: 'auto', zIndex: 100,
-              }}>
+              <div role="listbox" style={repairDropdownMenuStyle}>
                 {statuses.map(s => (
                   <div key={s.statusId} onClick={() => handleSetStatus(s.statusId)} role="option" aria-selected={s.statusId === currentStatusId} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSetStatus(s.statusId); } }} style={{
                     padding: '6px 12px', cursor: 'pointer', fontSize: 11,
@@ -347,52 +385,24 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           </div>
           {/* Forms dropdown — cockpit */}
           <div ref={formsMenuRef} style={{ position: 'relative' }}>
-            <button onClick={() => setFormsMenuOpen(!formsMenuOpen)} style={{
-              height: 26, padding: '0 10px', border: '1px solid var(--neutral-200)',
-              borderRadius: 4, background: 'var(--card)', color: 'var(--muted)',
-              fontSize: 10, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 3,
-            }}>
+            <button onClick={() => setFormsMenuOpen(!formsMenuOpen)} style={repairDropdownBtnStyle}>
               Forms
               <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
             {formsMenuOpen && (
-              <div role="menu" style={{
-                position: 'absolute', top: '100%', left: 0, marginTop: 4,
-                background: 'var(--card)', border: '1px solid var(--neutral-200)',
-                borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-                minWidth: 240, zIndex: 100,
-              }}>
-                <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' }}>Internal</div>
-                {[
-                  { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)' },
-                  { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)' },
-                  { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)' },
-                  { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)' },
-                  { key: 'amendment'      as const, label: 'Amendment (OM07-9)' },
-                  { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)' },
-                ].map(item => (
-                  <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={{
-                    padding: '7px 12px', cursor: 'pointer', fontSize: 11,
-                    color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
-                  }}
+              <div role="menu" style={repairFormsDropdownStyle}>
+                <div style={repairFormsSectionHeaderStyle}>Internal</div>
+                {INTERNAL_FORMS.map(item => (
+                  <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle}
                   onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = ''; }}
                   >{item.label}</div>
                 ))}
-                <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', borderTop: '1px solid var(--neutral-200)' }}>Customer-Facing</div>
-                {[
-                  { key: 'requisition'          as const, label: 'Requisition (OM07-2)' },
-                  { key: 'final-inspection'     as const, label: 'Final Inspection (OM10-2)' },
-                  { key: 'return-verification'  as const, label: 'Return Verification (OM14-1)' },
-                  { key: 'loaner'               as const, label: 'Loaner (OM17-1)' },
-                ].map(item => (
-                  <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={{
-                    padding: '7px 12px', cursor: 'pointer', fontSize: 11,
-                    color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
-                  }}
+                <div style={repairFormsSectionHeaderBorderTopStyle}>Customer-Facing</div>
+                {CUSTOMER_FORMS.map(item => (
+                  <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle}
                   onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = ''; }}
                   >{item.label}</div>
@@ -419,11 +429,8 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         {activeForm === 'loaner'             && <LoanerForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
 
         {/* Tab bar */}
-        <div style={{
-          background: 'var(--card)', borderBottom: '2px solid var(--border)',
-          display: 'flex', padding: '0 8px', flexShrink: 0, overflowX: 'auto',
-        }}>
-          {cockpitTabs.map(t => (
+        <div style={repairCockpitTabBarStyle}>
+          {COCKPIT_TABS.map(t => (
             <div
               key={t.key}
               onClick={() => setActiveTab(t.key)}
@@ -492,13 +499,13 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
 
       {detail.complaint && (
         <div style={{ marginTop: 4 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 }}>Complaint / Description</div>
+          <div style={repairFieldLabelStyle}>Complaint / Description</div>
           <div style={{ fontSize: 13, color: 'var(--text)', padding: '8px 10px', background: 'var(--neutral-50)', border: '1px solid var(--neutral-200)', borderRadius: 4, whiteSpace: 'pre-wrap' }}>{detail.complaint}</div>
         </div>
       )}
 
       <div style={{ marginTop: 8 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 }}>Notes</div>
+        <div style={repairFieldLabelStyle}>Notes</div>
         <InlineEditor
           value={detail.notes ?? ''}
           onSave={handleNoteSave}
@@ -526,10 +533,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       <AlertBanner alerts={alerts} onDismiss={dismissAlert} />
 
       {/* Quick Actions Bar */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px',
-        borderBottom: '1px solid var(--neutral-200)', background: 'var(--neutral-50)',
-      }}>
+      <div style={repairLegacyQuickActionBarStyle}>
         {hasNext && (
           <button
             onClick={handleAdvance}
@@ -551,12 +555,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         <div ref={statusMenuRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setStatusMenuOpen(!statusMenuOpen)}
-            style={{
-              height: 28, padding: '0 10px', border: '1px solid var(--neutral-200)',
-              borderRadius: 5, background: 'var(--card)', color: 'var(--muted)',
-              fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}
+            style={repairLegacyDropdownBtnStyle}
           >
             Change Status
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -564,12 +563,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             </svg>
           </button>
           {statusMenuOpen && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, marginTop: 4,
-              background: 'var(--card)', border: '1px solid var(--neutral-200)',
-              borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-              minWidth: 200, maxHeight: 300, overflowY: 'auto', zIndex: 100,
-            }}>
+            <div style={{ ...repairDropdownMenuStyle, minWidth: 200 }}>
               {statuses.map(s => (
                 <div
                   key={s.statusId}
@@ -595,12 +589,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         <div ref={formsMenuRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setFormsMenuOpen(!formsMenuOpen)}
-            style={{
-              height: 28, padding: '0 10px', border: '1px solid var(--neutral-200)',
-              borderRadius: 5, background: 'var(--card)', color: 'var(--muted)',
-              fontSize: 11, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-              display: 'flex', alignItems: 'center', gap: 4,
-            }}
+            style={repairLegacyDropdownBtnStyle}
           >
             Forms
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -608,40 +597,17 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             </svg>
           </button>
           {formsMenuOpen && (
-            <div style={{
-              position: 'absolute', top: '100%', left: 0, marginTop: 4,
-              background: 'var(--card)', border: '1px solid var(--neutral-200)',
-              borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-              minWidth: 240, zIndex: 100,
-            }}>
-              <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' }}>Internal</div>
-              {[
-                { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)' },
-                { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)' },
-                { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)' },
-                { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)' },
-                { key: 'amendment'      as const, label: 'Amendment (OM07-9)' },
-                { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)' },
-              ].map(item => (
-                <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={{
-                  padding: '7px 12px', cursor: 'pointer', fontSize: 12,
-                  color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
-                }}
+            <div style={repairFormsDropdownStyle}>
+              <div style={repairFormsSectionHeaderStyle}>Internal</div>
+              {INTERNAL_FORMS.map(item => (
+                <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle12}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = ''; }}
                 >{item.label}</div>
               ))}
-              <div style={{ padding: '4px 10px 2px', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', borderTop: '1px solid var(--neutral-200)' }}>Customer-Facing</div>
-              {[
-                { key: 'requisition'          as const, label: 'Requisition (OM07-2)' },
-                { key: 'final-inspection'     as const, label: 'Final Inspection (OM10-2)' },
-                { key: 'return-verification'  as const, label: 'Return Verification (OM14-1)' },
-                { key: 'loaner'               as const, label: 'Loaner (OM17-1)' },
-              ].map(item => (
-                <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={{
-                  padding: '7px 12px', cursor: 'pointer', fontSize: 12,
-                  color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)',
-                }}
+              <div style={repairFormsSectionHeaderBorderTopStyle}>Customer-Facing</div>
+              {CUSTOMER_FORMS.map(item => (
+                <div key={item.key} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle12}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = ''; }}
                 >{item.label}</div>

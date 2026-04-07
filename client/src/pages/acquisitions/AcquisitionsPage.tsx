@@ -165,7 +165,7 @@ export const AcquisitionsPage = () => {
     setDetail(null);
   };
 
-  useEffect(() => { getAcquisitionStats().then(setStats).catch(() => { message.error('Failed to load acquisition stats'); }); }, []);
+  useEffect(() => { let cancelled = false; getAcquisitionStats().then(d => { if (!cancelled) setStats(d); }).catch(() => { if (!cancelled) message.error('Failed to load acquisition stats'); }); return () => { cancelled = true; }; }, []);
 
   const loadInHouse = useCallback(async (s: string, p: number) => {
     setInHouseLoading(true);

@@ -11,15 +11,18 @@ export const OverdueAtRisk = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    let cancelled = false;
     getDashboardRepairs({ search: '', page: 1, pageSize: 50, statusFilter: 'all' })
       .then(r => {
+        if (cancelled) return;
         const overdue = r.repairs
           .filter(rep => rep.daysIn > 10)
           .sort((a, b) => b.daysIn - a.daysIn)
           .slice(0, 5);
         setItems(overdue);
       })
-      .finally(() => setLoading(false));
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) return <Skeleton active paragraph={{ rows: 3 }} />;

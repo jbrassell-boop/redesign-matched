@@ -534,7 +534,7 @@ export const ScopeModelPage = () => {
   ) : null;
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div style={smPageContainerStyle}>
       {/* Left panel — stat strip + toolbar + table */}
       <div style={{
         display: 'flex', flexDirection: 'column',
@@ -562,9 +562,9 @@ export const ScopeModelPage = () => {
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={columns.length} style={{ textAlign: 'center', padding: 30 }}><Spin size="small" /></td></tr>
+                <tr><td colSpan={SCOPE_MODEL_COLS.length} style={{ textAlign: 'center', padding: 30 }}><Spin size="small" /></td></tr>
               ) : items.length === 0 ? (
-                <tr><td colSpan={columns.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No scope models match your filters</td></tr>
+                <tr><td colSpan={SCOPE_MODEL_COLS.length} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 }}>No scope models match your filters</td></tr>
               ) : items.map((item, idx) => {
                 const isSelected = item.scopeTypeKey === selectedKey;
                 return (
@@ -597,7 +597,7 @@ export const ScopeModelPage = () => {
         </div>
 
         {/* Pagination footer */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' }}>
+        <div style={smFooterStyle}>
           <div>
             Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{totalCount}</strong> models
           </div>
@@ -648,29 +648,29 @@ export const ScopeModelPage = () => {
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8 }}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Model Name *</div>
+            <div style={smModalFieldLabelStyle}>Model Name *</div>
             <input
               value={newModelName}
               onChange={e => setNewModelName(e.target.value)}
               placeholder="e.g. GIF-H190"
-              style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+              style={smModalInputStyle}
             />
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Manufacturer</div>
+            <div style={smModalFieldLabelStyle}>Manufacturer</div>
             <input
               value={newModelMfg}
               onChange={e => setNewModelMfg(e.target.value)}
               placeholder="e.g. Olympus"
-              style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit', boxSizing: 'border-box' }}
+              style={smModalInputStyle}
             />
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Type</div>
+            <div style={smModalFieldLabelStyle}>Type</div>
             <select
               value={newModelType}
               onChange={e => setNewModelType(e.target.value)}
-              style={{ width: '100%', height: 32, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', fontSize: 12, fontFamily: 'inherit' }}
+              style={smModalInputStyle}
             >
               <option value="F">Flexible</option>
               <option value="R">Rigid</option>

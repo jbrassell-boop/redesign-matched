@@ -39,32 +39,32 @@ export const OnsiteServiceDetailDrawer = ({ open, serviceKey, onClose, onUpdated
     }
   }, []);
 
-  const loadTrays = useCallback(async (key: number) => {
+  // loadTrays removed — inlined into useEffect with cancellation cleanup
+
+  useEffect(() => {
+    if (!open || !serviceKey) return;
+    let cancelled = false;
+    setActiveTab('summary');
+    setDetail(null);
+    setTrays([]);
+    setLoading(true);
+    getOnsiteServiceDetail(serviceKey)
+      .then(d => { if (!cancelled) setDetail(d); })
+      .catch(() => { if (!cancelled) message.error('Failed to load visit details'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [open, serviceKey]);
+
+  useEffect(() => {
+    if (activeTab !== 'trays' || !serviceKey || trays.length > 0 || traysLoading) return;
+    let cancelled = false;
     setTraysLoading(true);
-    try {
-      const t = await getOnsiteServiceTrays(key);
-      setTrays(t);
-    } catch {
-      message.error('Failed to load trays');
-    } finally {
-      setTraysLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (open && serviceKey) {
-      setActiveTab('summary');
-      setDetail(null);
-      setTrays([]);
-      load(serviceKey);
-    }
-  }, [open, serviceKey, load]);
-
-  useEffect(() => {
-    if (activeTab === 'trays' && serviceKey && trays.length === 0 && !traysLoading) {
-      loadTrays(serviceKey);
-    }
-  }, [activeTab, serviceKey, trays.length, traysLoading, loadTrays]);
+    getOnsiteServiceTrays(serviceKey)
+      .then(t => { if (!cancelled) setTrays(t); })
+      .catch(() => { if (!cancelled) message.error('Failed to load trays'); })
+      .finally(() => { if (!cancelled) setTraysLoading(false); });
+    return () => { cancelled = true; };
+  }, [activeTab, serviceKey, trays.length, traysLoading]);
 
   const handleSubmitForInvoicing = async () => {
     if (!serviceKey) return;

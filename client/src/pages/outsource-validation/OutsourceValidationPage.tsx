@@ -99,8 +99,10 @@ export const OutsourceValidationPage = () => {
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
     setStatsLoading(true);
-    getOutsourceStats().then(setStats).finally(() => setStatsLoading(false));
+    getOutsourceStats().then(d => { if (!cancelled) setStats(d); }).finally(() => { if (!cancelled) setStatsLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   const loadData = useCallback(async (filters: OutsourceFilters) => {

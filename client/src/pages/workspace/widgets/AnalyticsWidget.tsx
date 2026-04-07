@@ -9,7 +9,9 @@ export const AnalyticsWidget = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getDashboardAnalytics().then(r => setStats(r.stats)).finally(() => setLoading(false));
+    let cancelled = false;
+    getDashboardAnalytics().then(r => { if (!cancelled) setStats(r.stats); }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   if (loading) return <Skeleton active paragraph={{ rows: 2 }} />;
