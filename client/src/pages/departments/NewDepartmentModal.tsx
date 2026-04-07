@@ -78,15 +78,18 @@ export const NewDepartmentModal = ({ open, onClose, onCreated, clientKey: preset
 
   useEffect(() => {
     if (!open) return;
+    let cancelled = false;
     setForm({ ...DEFAULTS, clientKey: presetClientKey ?? null });
     setNewScope(false);
     Promise.all([getClientsSimple(), getCarriers(), getScopeTypes()])
       .then(([c, car, st]) => {
+        if (cancelled) return;
         setClients(c);
         setCarriers(car);
         setScopeTypes(st);
       })
-      .catch(() => message.error('Failed to load form data'));
+      .catch(() => { if (!cancelled) message.error('Failed to load form data'); });
+    return () => { cancelled = true; };
   }, [open, presetClientKey]);
 
   const handleSubmit = async () => {

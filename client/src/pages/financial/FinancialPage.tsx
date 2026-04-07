@@ -457,7 +457,7 @@ export const FinancialPage = () => {
 
           {/* GL Accounts */}
           {activeTab === 'gl' && (
-            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 2px 16px rgba(var(--primary-rgb), 0.06)' }}>
+            <div style={{ ...finTableCardStyle, boxShadow: '0 2px 16px rgba(var(--primary-rgb), 0.06)' }}>
               <Table
                 dataSource={glAccounts}
                 columns={glColumns}
