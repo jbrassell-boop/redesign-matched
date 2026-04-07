@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Skeleton } from 'antd';
 import './StatStrip.css';
 
@@ -20,7 +21,9 @@ interface StatStripProps {
   onChipClick?: (id: string) => void;
 }
 
-export const StatStrip = ({ chips, loading, activeChip, onChipClick }: StatStripProps) => (
+const skeletonStyle = { width: 40, height: 16 } as const;
+
+export const StatStrip = memo(({ chips, loading, activeChip, onChipClick }: StatStripProps) => (
   <div className="stat-strip">
     {chips.map(chip => {
       const isActive = chip.id === activeChip;
@@ -44,7 +47,7 @@ export const StatStrip = ({ chips, loading, activeChip, onChipClick }: StatStrip
           </div>
           <div>
             {loading ? (
-              <Skeleton.Input size="small" active style={{ width: 40, height: 16 }} />
+              <Skeleton.Input size="small" active style={skeletonStyle} />
             ) : (
               <div className={`stat-chip__value stat-chip__val--${chip.color}`}>
                 {chip.value != null ? chip.value.toLocaleString() : '\u2014'}
@@ -56,4 +59,4 @@ export const StatStrip = ({ chips, loading, activeChip, onChipClick }: StatStrip
       );
     })}
   </div>
-);
+));

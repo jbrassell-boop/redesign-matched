@@ -28,7 +28,7 @@ export const LoanerForm = ({ repair, onClose }: Props) => {
         <div style={{ padding: '0.45in', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-            <img src="/logo-color.png" alt="TSI Logo" style={{ height: 42 }} />
+            <img src="/logo-color.png" alt="TSI Logo" loading="lazy" style={{ height: 42 }} />
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Loaner Agreement</div>
               <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM17-1</div>

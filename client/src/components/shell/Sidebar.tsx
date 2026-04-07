@@ -185,6 +185,7 @@ const NavItemButton = ({ label, icon, isActive, collapsed, onClick }: NavItemBut
       onClick={onClick}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      aria-current={isActive ? 'page' : undefined}
       title={collapsed ? label : undefined}
       style={{
         display: 'flex',
@@ -229,7 +230,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
   const location = useLocation();
 
   return (
-    <div style={{
+    <nav aria-label="Main navigation" style={{
       width: collapsed ? 56 : 240,
       minWidth: collapsed ? 56 : 240,
       background: 'var(--sidebar)',
@@ -381,6 +382,6 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
           © 2026 Total Scope, Inc.
         </div>
       )}
-    </div>
+    </nav>
   );
 };

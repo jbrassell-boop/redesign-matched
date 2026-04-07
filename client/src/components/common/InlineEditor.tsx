@@ -115,7 +115,10 @@ export const InlineEditor = ({
 
   return (
     <span
+      role="button"
+      tabIndex={0}
       onClick={() => setEditing(true)}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditing(true); } }}
       title={hasValue ? value : placeholder}
       style={{
         display: 'inline-block',

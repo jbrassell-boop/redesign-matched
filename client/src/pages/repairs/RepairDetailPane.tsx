@@ -102,25 +102,28 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   // Load cockpit data
   useEffect(() => {
     if (!isCockpit || !resolvedKey) return;
+    let cancelled = false;
     setCockpitLoading(true);
     Promise.all([
       getRepairFull(resolvedKey),
       getRepairStatuses(),
     ]).then(([repair, sts]) => {
+      if (cancelled) return;
       setFullRepair(repair);
       setStatuses(sts);
       // Load secondary data
       const promises: Promise<void>[] = [];
       if (repair.clientKey) {
         promises.push(
-          getClientFlags(repair.clientKey).then(setFlags).catch(() => { message.error('Failed to load client flags'); }),
+          getClientFlags(repair.clientKey).then(f => { if (!cancelled) setFlags(f); }).catch(() => { if (!cancelled) message.error('Failed to load client flags'); }),
         );
       }
       promises.push(
-        getRepairLineItems(resolvedKey).then(setLineItems).catch(() => { message.error('Failed to load repair line items'); }),
+        getRepairLineItems(resolvedKey).then(li => { if (!cancelled) setLineItems(li); }).catch(() => { if (!cancelled) message.error('Failed to load repair line items'); }),
       );
       return Promise.all(promises);
-    }).catch(() => { message.error('Failed to load repair data'); }).finally(() => setCockpitLoading(false));
+    }).catch(() => { if (!cancelled) message.error('Failed to load repair data'); }).finally(() => { if (!cancelled) setCockpitLoading(false); });
+    return () => { cancelled = true; };
   }, [isCockpit, resolvedKey]);
 
   const rk = isCockpit ? (fullRepair?.repairKey ?? 0) : (detail?.repairKey ?? 0);
@@ -153,7 +156,9 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   // Load statuses once (non-cockpit mode)
   useEffect(() => {
     if (!isCockpit) {
-      getRepairStatuses().then(setStatuses).catch(() => { message.error('Failed to load repair statuses'); });
+      let cancelled = false;
+      getRepairStatuses().then(s => { if (!cancelled) setStatuses(s); }).catch(() => { if (!cancelled) message.error('Failed to load repair statuses'); });
+      return () => { cancelled = true; };
     }
   }, [isCockpit]);
 

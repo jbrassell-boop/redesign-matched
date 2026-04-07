@@ -60,7 +60,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
 
   return (
     <>
-      <div style={{
+      <header style={{
         position: 'fixed',
         top: 0,
         left: sidebarWidth,
@@ -79,7 +79,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
       }}>
         {/* Left: logo image */}
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <img src="/logo-white.png" alt="Total Scope, Inc." style={{ height: 48 }} />
+          <img src="/logo-white.png" alt="Total Scope, Inc." loading="lazy" style={{ height: 48 }} />
         </div>
 
         {/* Right: controls */}
@@ -88,6 +88,8 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
           <div ref={menuRef} style={{ position: 'relative', marginRight: 12 }}>
             <button
               onClick={() => setMenuOpen(!menuOpen)}
+              aria-expanded={menuOpen}
+              aria-haspopup="menu"
               style={{
                 height: 30, padding: '0 12px', borderRadius: 6, border: 'none',
                 background: 'var(--success)', color: 'var(--card)',
@@ -144,7 +146,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
 
           {/* Service location */}
           <span style={{ whiteSpace: 'nowrap' }}>Service Location</span>
-          <select style={{
+          <select aria-label="Service location" style={{
             height: 28,
             padding: '0 8px',
             borderRadius: 5,
@@ -208,7 +210,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
             Sign Out
           </button>
         </div>
-      </div>
+      </header>
 
       {/* New Order Wizard Modal */}
       <NewOrderWizard

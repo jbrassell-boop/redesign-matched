@@ -83,7 +83,7 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-          <img src="/logo-color.png" alt="Total Scope Inc." style={{ height: 44 }} />
+          <img src="/logo-color.png" alt="Total Scope Inc." loading="lazy" style={{ height: 44 }} />
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Update Slip</div>
             <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM15-2</div>

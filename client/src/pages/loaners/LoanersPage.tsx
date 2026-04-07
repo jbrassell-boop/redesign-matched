@@ -80,19 +80,22 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  const loadActive = useCallback(async (s: string) => {
+  const loadActive = useCallback(async (s: string, cancelled: () => boolean) => {
     setLoading(true);
     try {
       const result = await getLoaners({ search: s, page: 1, pageSize: 200, statusFilter: 'Out' });
-      setItems(result.items);
+      if (!cancelled()) setItems(result.items);
+    } catch {
+      if (!cancelled()) message.error('Failed to load active loaners');
     } finally {
-      setLoading(false);
+      if (!cancelled()) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => loadActive(search), search ? 300 : 0);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    const timer = setTimeout(() => loadActive(search, () => cancelled), search ? 300 : 0);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [search, loadActive]);
 
   const activeCols = [
@@ -183,11 +186,13 @@ const ScopeNeedsTab = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     getLoanerScopeNeeds()
-      .then(setItems)
-      .catch(() => { message.error('Failed to load scope needs'); })
-      .finally(() => setLoading(false));
+      .then(data => { if (!cancelled) setItems(data); })
+      .catch(() => { if (!cancelled) message.error('Failed to load scope needs'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
   const cols = [
@@ -290,19 +295,22 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
 
-  const loadRequests = useCallback(async (s: string, sf: string) => {
+  const loadRequests = useCallback(async (s: string, sf: string, cancelled: () => boolean) => {
     setLoading(true);
     try {
       const data = await getLoanerRequests({ search: s || undefined, statusFilter: sf !== 'All' ? sf : undefined });
-      setRequests(data);
+      if (!cancelled()) setRequests(data);
+    } catch {
+      if (!cancelled()) message.error('Failed to load loaner requests');
     } finally {
-      setLoading(false);
+      if (!cancelled()) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => loadRequests(search, statusFilter), search ? 300 : 0);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    const timer = setTimeout(() => loadRequests(search, statusFilter, () => cancelled), search ? 300 : 0);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [search, statusFilter, loadRequests]);
 
   const fmtDate = (d: string | null) => {
@@ -323,7 +331,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
           if (action === 'fulfill') await fulfillLoanerRequest(repairKey);
           else await declineLoanerRequest(repairKey);
           message.success(`Request ${action === 'fulfill' ? 'fulfilled' : 'declined'}`);
-          await loadRequests(search, statusFilter);
+          await loadRequests(search, statusFilter, () => false);
           onRequestUpdated();
         } catch {
           message.error(`Failed to ${action} request`);
@@ -356,7 +364,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
           const result = await bulkUpdateLoanerRequests(pendingKeys, action);
           message.success(`${result.updated} request${result.updated !== 1 ? 's' : ''} ${label === 'fulfill' ? 'fulfilled' : 'declined'}`);
           setSelectedKeys(new Set());
-          await loadRequests(search, statusFilter);
+          await loadRequests(search, statusFilter, () => false);
           onRequestUpdated();
         } catch {
           message.error(`Failed to ${label} requests`);
@@ -621,28 +629,38 @@ export const LoanersPage = () => {
 
   const pageSize = 50;
 
-  const loadData = useCallback(async (s: string, sf: string, p: number) => {
+  const loadData = useCallback(async (s: string, sf: string, p: number, cancelled: () => boolean) => {
     setLoading(true);
     try {
       const result = await getLoaners({ search: s, page: p, pageSize, statusFilter: sf });
-      setItems(result.items);
-      setTotalCount(result.totalCount);
+      if (!cancelled()) {
+        setItems(result.items);
+        setTotalCount(result.totalCount);
+      }
+    } catch {
+      if (!cancelled()) message.error('Failed to load loaners');
     } finally {
-      setLoading(false);
+      if (!cancelled()) setLoading(false);
     }
   }, []);
 
-  const loadStats = useCallback(async () => {
-    try { setStats(await getLoanerStats()); } catch { /* stats are non-critical */ }
+  const loadStats = useCallback(async (cancelled: () => boolean) => {
+    try {
+      const data = await getLoanerStats();
+      if (!cancelled()) setStats(data);
+    } catch { /* stats are non-critical */ }
   }, []);
 
   useEffect(() => {
-    loadStats();
+    let cancelled = false;
+    loadStats(() => cancelled);
+    return () => { cancelled = true; };
   }, [loadStats]);
 
   useEffect(() => {
-    const timer = setTimeout(() => loadData(search, statusFilter, page), search ? 300 : 0);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    const timer = setTimeout(() => loadData(search, statusFilter, page, () => cancelled), search ? 300 : 0);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [search, statusFilter, page, loadData]);
 
   const handleChipClick = (sf: string) => {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Button } from 'antd';
+import { Input, Button, message } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { getClients } from '../../api/clients';
 import { ClientDetailPane } from './ClientDetailPane';
@@ -23,24 +23,27 @@ export const ClientsPage = () => {
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
   const [newModalOpen, setNewModalOpen] = useState(false);
 
-  const loadClients = useCallback(async (s: string, sf: string) => {
+  const loadClients = useCallback(async (s: string, sf: string, cancelled: () => boolean) => {
     setLoading(true);
     try {
       const result = await getClients({ search: s, pageSize: 500, statusFilter: sf === 'all' ? undefined : sf });
-      setClients(result.clients);
+      if (!cancelled()) setClients(result.clients);
+    } catch {
+      if (!cancelled()) message.error('Failed to load clients');
     } finally {
-      setLoading(false);
+      if (!cancelled()) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => loadClients(search, statusFilter), search ? 300 : 0);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    const timer = setTimeout(() => loadClients(search, statusFilter, () => cancelled), search ? 300 : 0);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [search, statusFilter, loadClients]);
 
   const handleClientDeleted = useCallback(() => {
     setSelectedKey(null);
-    loadClients(search, statusFilter);
+    loadClients(search, statusFilter, () => false);
   }, [search, statusFilter, loadClients]);
 
   const filtered = clients.filter(c => {
@@ -71,7 +74,7 @@ export const ClientsPage = () => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Clients</span>
+              <h1 style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', margin: 0 }}>Clients</h1>
               <span style={{
                 fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
                 background: 'var(--primary-light)', color: 'var(--primary)',
@@ -192,7 +195,7 @@ export const ClientsPage = () => {
       <NewClientModal
         open={newModalOpen}
         onClose={() => setNewModalOpen(false)}
-        onCreated={() => loadClients(search, statusFilter)}
+        onCreated={() => loadClients(search, statusFilter, () => false)}
       />
     </div>
   );

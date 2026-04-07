@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import './SplitLayout.css';
 
 interface SplitLayoutProps {
@@ -7,7 +7,7 @@ interface SplitLayoutProps {
   leftWidth?: number;
 }
 
-export const SplitLayout = ({ left, right, leftWidth = 280 }: SplitLayoutProps) => {
+export const SplitLayout = memo(({ left, right, leftWidth = 280 }: SplitLayoutProps) => {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
@@ -32,4 +32,4 @@ export const SplitLayout = ({ left, right, leftWidth = 280 }: SplitLayoutProps) 
       </div>
     </div>
   );
-};
+});

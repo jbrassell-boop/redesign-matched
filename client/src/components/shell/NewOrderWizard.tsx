@@ -92,7 +92,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
     setNewScopeTypeName('');
     setNewSerial('');
     setModelSearch('');
-    getWizardClients().then(setClients).catch(() => setClients([]));
+    getWizardClients().then(setClients).catch(() => { message.error('Failed to load clients'); setClients([]); });
     setTimeout(() => clientSearchRef.current?.focus(), 100);
   }, [open]);
 
@@ -116,7 +116,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
     setSelectedClient(client);
     setSelectedDept(null);
     setSelectedScope(null);
-    const depts = await getWizardDepartments(client.clientKey).catch(() => []);
+    const depts = await getWizardDepartments(client.clientKey).catch(() => { message.error('Failed to load departments'); return []; });
     setDepartments(depts);
     goStep(2);
   }, [goStep]);
@@ -124,7 +124,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
   const handleSelectDept = useCallback(async (dept: WizardDepartment) => {
     setSelectedDept(dept);
     setSelectedScope(null);
-    const sc = await getWizardScopes(dept.departmentKey).catch(() => []);
+    const sc = await getWizardScopes(dept.departmentKey).catch(() => { message.error('Failed to load scopes'); return []; });
     setScopes(sc);
     // Load instrument types for new scope form
     if (instTypes.length === 0) {
@@ -150,7 +150,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
     setNewScopeTypeName('');
     setModelSearch('');
     if (!typeCode) { setScopeTypes([]); return; }
-    const types = await getWizardScopeTypes(typeCode).catch(() => []);
+    const types = await getWizardScopeTypes(typeCode).catch(() => { message.error('Failed to load scope types'); return []; });
     setScopeTypes(types);
   }, []);
 

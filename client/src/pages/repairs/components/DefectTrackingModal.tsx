@@ -44,7 +44,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
 
         {/* Form header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-          <img src="/logo-color.png" alt="Total Scope Inc." style={{ height: 44 }} />
+          <img src="/logo-color.png" alt="Total Scope Inc." loading="lazy" style={{ height: 44 }} />
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Defect Tracking</div>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Repair Quality Record</div>

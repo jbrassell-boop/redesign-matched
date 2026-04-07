@@ -12,7 +12,7 @@
 }
 
 .modal-shell .ant-modal-title {
-  color: #fff !important;
+  color: var(--card) !important;
   font-size: 15px;
   font-weight: 600;
 }
@@ -24,7 +24,7 @@
 }
 
 .modal-shell .ant-modal-close:hover {
-  color: #fff;
+  color: var(--card);
   background: rgba(255, 255, 255, 0.15);
 }
 

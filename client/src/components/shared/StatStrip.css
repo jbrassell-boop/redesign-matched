@@ -38,11 +38,11 @@
 }
 
 .stat-chip--warn {
-  background: #FFFDF7;
+  background: var(--stat-warn-bg);
 }
 
 .stat-chip--alert {
-  background: #FEF9F9;
+  background: var(--stat-alert-bg);
 }
 
 .stat-chip--alert .stat-chip__value {
@@ -89,9 +89,9 @@
 }
 
 .stat-chip__icon--navy    { background: var(--primary-light); }
-.stat-chip__icon--blue    { background: #EFF6FF; }
+.stat-chip__icon--blue    { background: var(--stat-blue-bg); }
 .stat-chip__icon--green   { background: var(--success-light); }
-.stat-chip__icon--red     { background: #FEF2F2; }
+.stat-chip__icon--red     { background: var(--danger-light); }
 .stat-chip__icon--amber   { background: var(--amber-subtle); }
 .stat-chip__icon--purple  { background: var(--purple-light); }
 .stat-chip__icon--muted   { background: var(--neutral-100); }

@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import './StatusBadge.css';
 
 type BadgeVariant = 'blue' | 'green' | 'amber' | 'red' | 'gray' | 'purple' | 'cyan' | 'teal' | 'orange';
@@ -35,11 +36,11 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export const StatusBadge = ({ status, variant, className }: StatusBadgeProps) => {
+export const StatusBadge = memo(({ status, variant, className }: StatusBadgeProps) => {
   const resolved = variant ?? STATUS_MAP[(status ?? '').toLowerCase()] ?? 'gray';
   return (
     <span className={`status-badge status-badge--${resolved}${className ? ` ${className}` : ''}`}>
       {status}
     </span>
   );
-};
+});

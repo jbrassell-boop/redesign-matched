@@ -31,11 +31,12 @@ export const AppShell = () => {
         transition: 'margin-left 0.2s ease',
       }}>
         <Topbar sidebarCollapsed={collapsed} />
-        <div style={{ flex: 1, overflow: 'auto', background: 'var(--bg)', marginTop: 64 }}>
+        <main role="main" style={{ flex: 1, overflow: 'auto', background: 'var(--bg)', marginTop: 64 }}>
           <Outlet />
-        </div>
+        </main>
       </div>
       <CommandPalette />
+      <div aria-live="polite" id="status-announcer" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap' }} />
     </div>
   );
 };

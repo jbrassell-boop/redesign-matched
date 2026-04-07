@@ -39,7 +39,7 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8, borderBottom: '2px solid #111', paddingBottom: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <img src="/logo-color.png" alt="Total Scope Inc." style={{ height: 44 }} />
+              <img src="/logo-color.png" alt="Total Scope Inc." loading="lazy" style={{ height: 44 }} />
               <div>
                 <div style={{ fontSize: 9, color: '#444' }}>17 Creek Parkway | Upper Chichester, PA 19061</div>
                 <div style={{ fontSize: 9, color: '#444' }}>Phone: (610) 485-3838 | Fax: (610) 485-0404</div>

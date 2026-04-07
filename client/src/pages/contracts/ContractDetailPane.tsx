@@ -125,8 +125,10 @@ const ScopesTab = ({ contractKey }: { contractKey: number }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    getContractScopes(contractKey).then(setScopes).catch(() => { message.error('Failed to load contract scopes'); }).finally(() => setLoading(false));
+    getContractScopes(contractKey).then(s => { if (!cancelled) setScopes(s); }).catch(() => { if (!cancelled) message.error('Failed to load contract scopes'); }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [contractKey]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
@@ -193,8 +195,10 @@ const RepairsTab = ({ contractKey }: { contractKey: number }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    getContractRepairs(contractKey).then(setRepairs).catch(() => { message.error('Failed to load contract repairs'); }).finally(() => setLoading(false));
+    getContractRepairs(contractKey).then(r => { if (!cancelled) setRepairs(r); }).catch(() => { if (!cancelled) message.error('Failed to load contract repairs'); }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [contractKey]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
@@ -248,8 +252,10 @@ const InvoicesTab = ({ contractKey, detail }: { contractKey: number; detail: Con
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    getContractInvoices(contractKey).then(setInvoices).catch(() => { message.error('Failed to load contract invoices'); }).finally(() => setLoading(false));
+    getContractInvoices(contractKey).then(inv => { if (!cancelled) setInvoices(inv); }).catch(() => { if (!cancelled) message.error('Failed to load contract invoices'); }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [contractKey]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
@@ -320,8 +326,10 @@ const NotesTab = ({ contractKey }: { contractKey: number }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    getContractNotes(contractKey).then(setNotes).catch(() => { message.error('Failed to load contract notes'); }).finally(() => setLoading(false));
+    getContractNotes(contractKey).then(n => { if (!cancelled) setNotes(n); }).catch(() => { if (!cancelled) message.error('Failed to load contract notes'); }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [contractKey]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
@@ -365,8 +373,10 @@ const DocumentsTab = ({ contractKey }: { contractKey: number }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    getContractDocuments(contractKey).then(setDocs).catch(() => { message.error('Failed to load contract documents'); }).finally(() => setLoading(false));
+    getContractDocuments(contractKey).then(d => { if (!cancelled) setDocs(d); }).catch(() => { if (!cancelled) message.error('Failed to load contract documents'); }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [contractKey]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
@@ -426,8 +436,10 @@ const HealthIndicator = ({ contractKey }: { contractKey: number }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    getContractHealth(contractKey).then(setHealth).catch(() => { message.error('Failed to load contract health'); }).finally(() => setLoading(false));
+    getContractHealth(contractKey).then(h => { if (!cancelled) setHealth(h); }).catch(() => { if (!cancelled) message.error('Failed to load contract health'); }).finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [contractKey]);
 
   if (loading) return null;
@@ -473,11 +485,13 @@ const DepartmentsTab = ({ contractKey }: { contractKey: number }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     getContractDepartments(contractKey)
-      .then(setDepts)
-      .catch(() => message.error('Failed to load departments'))
-      .finally(() => setLoading(false));
+      .then(d => { if (!cancelled) setDepts(d); })
+      .catch(() => { if (!cancelled) message.error('Failed to load departments'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [contractKey]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
@@ -546,7 +560,15 @@ const AmendmentsTab = ({ contractKey, detail }: { contractKey: number; detail: C
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { reload(); }, [contractKey]);
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getContractAmendments(contractKey)
+      .then(a => { if (!cancelled) setAmendments(a); })
+      .catch(() => { if (!cancelled) message.error('Failed to load amendments'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [contractKey]);
 
   const handleCreate = async () => {
     setSaving(true);
@@ -773,11 +795,13 @@ const AffiliatesTab = ({ contractKey }: { contractKey: number }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     getContractAffiliates(contractKey)
-      .then(setAffiliates)
-      .catch(() => message.error('Failed to load affiliates'))
-      .finally(() => setLoading(false));
+      .then(a => { if (!cancelled) setAffiliates(a); })
+      .catch(() => { if (!cancelled) message.error('Failed to load affiliates'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [contractKey]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;

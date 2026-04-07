@@ -18,6 +18,32 @@
   --purple: #7C3AED;
   --purple-light: #F5F3FF;
   --purple-rgb: 124, 58, 237;
+
+  /* status badge palette */
+  --badge-blue-border: #BFDBFE;
+  --badge-green-text: #166534;
+  --badge-amber-text: #92400E;
+  --badge-red-bg: #FEE2E2;
+  --badge-red-text: #991B1B;
+  --badge-red-border: #FECACA;
+  --badge-purple-bg: #EDE9FE;
+  --badge-purple-border: #C4B5FD;
+  --badge-cyan-bg: #E0F2FE;
+  --badge-cyan-text: #0369A1;
+  --badge-cyan-border: #7DD3FC;
+  --badge-teal-bg: #ECFDF5;
+  --badge-teal-text: #065F46;
+  --badge-teal-border: #A7F3D0;
+  --badge-orange-bg: #FFF3E0;
+  --badge-orange-text: #E65100;
+  --badge-orange-border: #FFCC80;
+
+  /* stat-strip tinted backgrounds */
+  --stat-warn-bg: #FFFDF7;
+  --stat-alert-bg: #FEF9F9;
+  --stat-blue-bg: #EFF6FF;
+  --danger-light: #FEF2F2;
+
   --danger: #B71234;
   --red: #B71234;
   --success: #16A34A;

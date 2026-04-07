@@ -162,34 +162,42 @@ export const QualityPage = () => {
 
   // Load stats once
   useEffect(() => {
+    let cancelled = false;
     setStatsLoading(true);
     getQualityStats()
-      .then(setStats)
-      .finally(() => setStatsLoading(false));
+      .then(s => { if (!cancelled) setStats(s); })
+      .catch(() => { if (!cancelled) message.error('Failed to load quality stats'); })
+      .finally(() => { if (!cancelled) setStatsLoading(false); });
+    return () => { cancelled = true; };
   }, []);
 
-  const loadInspections = useCallback(async (filters: QualityFilters) => {
+  const loadInspections = useCallback(async (filters: QualityFilters, cancelled: () => boolean) => {
     setLoading(true);
     try {
       const result = await getQualityInspections(filters);
-      setInspections(result.inspections);
-      setTotalCount(result.totalCount);
+      if (!cancelled()) {
+        setInspections(result.inspections);
+        setTotalCount(result.totalCount);
+      }
+    } catch {
+      if (!cancelled()) message.error('Failed to load inspections');
     } finally {
-      setLoading(false);
+      if (!cancelled()) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
     const delay = search ? 300 : 0;
     searchTimeout.current = setTimeout(() => {
-      loadInspections({ search, dateFrom, dateTo, resultFilter, page, pageSize: PAGE_SIZE });
+      loadInspections({ search, dateFrom, dateTo, resultFilter, page, pageSize: PAGE_SIZE }, () => cancelled);
     }, delay);
-    return () => { if (searchTimeout.current) clearTimeout(searchTimeout.current); };
+    return () => { cancelled = true; if (searchTimeout.current) clearTimeout(searchTimeout.current); };
   }, [search, dateFrom, dateTo, resultFilter, page, loadInspections]);
 
   // NCR data loading
-  const loadNcr = useCallback(async () => {
+  const loadNcr = useCallback(async (cancelled: () => boolean) => {
     setNcrLoading(true);
     try {
       const result = await getQualityNcr({
@@ -198,19 +206,26 @@ export const QualityPage = () => {
         page: ncrPage,
         pageSize: PAGE_SIZE,
       });
-      setNcrItems(result.items);
-      setNcrTotal(result.totalCount);
+      if (!cancelled()) {
+        setNcrItems(result.items);
+        setNcrTotal(result.totalCount);
+      }
+    } catch {
+      if (!cancelled()) message.error('Failed to load non-conformances');
     } finally {
-      setNcrLoading(false);
+      if (!cancelled()) setNcrLoading(false);
     }
   }, [ncrSearch, ncrStatusFilter, ncrPage]);
 
   useEffect(() => {
-    if (activeTab === 'Non-Conformances') loadNcr();
+    if (activeTab !== 'Non-Conformances') return;
+    let cancelled = false;
+    loadNcr(() => cancelled);
+    return () => { cancelled = true; };
   }, [activeTab, loadNcr]);
 
   // Rework data loading
-  const loadRework = useCallback(async () => {
+  const loadRework = useCallback(async (cancelled: () => boolean) => {
     setReworkLoading(true);
     try {
       const result = await getQualityRework({
@@ -219,15 +234,22 @@ export const QualityPage = () => {
         page: reworkPage,
         pageSize: PAGE_SIZE,
       });
-      setReworkItems(result.items);
-      setReworkTotal(result.totalCount);
+      if (!cancelled()) {
+        setReworkItems(result.items);
+        setReworkTotal(result.totalCount);
+      }
+    } catch {
+      if (!cancelled()) message.error('Failed to load rework items');
     } finally {
-      setReworkLoading(false);
+      if (!cancelled()) setReworkLoading(false);
     }
   }, [reworkSearch, reworkStatusFilter, reworkPage]);
 
   useEffect(() => {
-    if (activeTab === 'Rework Tracking') loadRework();
+    if (activeTab !== 'Rework Tracking') return;
+    let cancelled = false;
+    loadRework(() => cancelled);
+    return () => { cancelled = true; };
   }, [activeTab, loadRework]);
 
   const ncrTotalPages = Math.max(1, Math.ceil(ncrTotal / PAGE_SIZE));

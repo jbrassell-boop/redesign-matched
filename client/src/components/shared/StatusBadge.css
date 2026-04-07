@@ -18,28 +18,28 @@
 .status-badge--blue {
   background: var(--primary-light);
   color: var(--primary);
-  border: 1px solid #BFDBFE;
+  border: 1px solid var(--badge-blue-border);
 }
 
 /* Green: approved, complete, active, yes, sent */
 .status-badge--green {
   background: var(--success-light);
-  color: #166534;
+  color: var(--badge-green-text);
   border: 1px solid var(--success-border);
 }
 
 /* Amber: pending, expiring, in-progress, warning */
 .status-badge--amber {
   background: var(--amber-light);
-  color: #92400E;
+  color: var(--badge-amber-text);
   border: 1px solid var(--amber-border);
 }
 
 /* Red: overdue, expired, hold, locked, delete, no */
 .status-badge--red {
-  background: #FEE2E2;
-  color: #991B1B;
-  border: 1px solid #FECACA;
+  background: var(--badge-red-bg);
+  color: var(--badge-red-text);
+  border: 1px solid var(--badge-red-border);
 }
 
 /* Gray: closed, neutral, draft */
@@ -51,28 +51,28 @@
 
 /* Purple: admin, shipped */
 .status-badge--purple {
-  background: #EDE9FE;
+  background: var(--badge-purple-bg);
   color: var(--purple);
-  border: 1px solid #C4B5FD;
+  border: 1px solid var(--badge-purple-border);
 }
 
 /* Cyan: tech, flexible, client */
 .status-badge--cyan {
-  background: #E0F2FE;
-  color: #0369A1;
-  border: 1px solid #7DD3FC;
+  background: var(--badge-cyan-bg);
+  color: var(--badge-cyan-text);
+  border: 1px solid var(--badge-cyan-border);
 }
 
 /* Teal: accounting */
 .status-badge--teal {
-  background: #ECFDF5;
-  color: #065F46;
-  border: 1px solid #A7F3D0;
+  background: var(--badge-teal-bg);
+  color: var(--badge-teal-text);
+  border: 1px solid var(--badge-teal-border);
 }
 
 /* Orange: repair, scope */
 .status-badge--orange {
-  background: #FFF3E0;
-  color: #E65100;
-  border: 1px solid #FFCC80;
+  background: var(--badge-orange-bg);
+  color: var(--badge-orange-text);
+  border: 1px solid var(--badge-orange-border);
 }

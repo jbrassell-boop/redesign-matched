@@ -10,7 +10,7 @@ interface DetailHeaderProps {
 
 export const DetailHeader = ({ title, subtitle, badges, actions, meta }: DetailHeaderProps) => (
   <div className="detail-header">
-    <span className="detail-header__title">{title}</span>
+    <h1 className="detail-header__title">{title}</h1>
     {subtitle && <span className="detail-header__subtitle">{subtitle}</span>}
     {badges}
     {meta && <span className="detail-header__meta">{meta}</span>}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Button } from 'antd';
+import { Input, Button, message } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { getDepartments } from '../../api/departments';
 import { DepartmentDetailPane } from './DepartmentDetailPane';
@@ -21,19 +21,22 @@ export const DepartmentsPage = () => {
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
   const [newModalOpen, setNewModalOpen] = useState(false);
 
-  const loadDepartments = useCallback(async (s: string) => {
+  const loadDepartments = useCallback(async (s: string, cancelled: () => boolean) => {
     setLoading(true);
     try {
       const result = await getDepartments({ search: s, pageSize: 500 });
-      setDepartments(result.departments);
+      if (!cancelled()) setDepartments(result.departments);
+    } catch {
+      if (!cancelled()) message.error('Failed to load departments');
     } finally {
-      setLoading(false);
+      if (!cancelled()) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => loadDepartments(search), search ? 300 : 0);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    const timer = setTimeout(() => loadDepartments(search, () => cancelled), search ? 300 : 0);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [search, loadDepartments]);
 
   const filtered = departments.filter(d => {
@@ -64,7 +67,7 @@ export const DepartmentsPage = () => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Departments</span>
+              <h1 style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', margin: 0 }}>Departments</h1>
               <span style={{
                 fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
                 background: 'var(--primary-light)', color: 'var(--primary)',
@@ -174,7 +177,7 @@ export const DepartmentsPage = () => {
       <NewDepartmentModal
         open={newModalOpen}
         onClose={() => setNewModalOpen(false)}
-        onCreated={() => loadDepartments(search)}
+        onCreated={() => loadDepartments(search, () => false)}
       />
     </div>
   );

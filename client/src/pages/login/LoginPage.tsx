@@ -49,7 +49,7 @@ export const LoginPage = () => {
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, position: 'relative', zIndex: 1 }}>
         {/* Company identity above card */}
         <div style={{ textAlign: 'center' }}>
-          <img src="/logo-white.png" alt="Total Scope, Inc." style={{ height: 64, marginBottom: 12, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} />
+          <img src="/logo-white.png" alt="Total Scope, Inc." loading="lazy" style={{ height: 64, marginBottom: 12, filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} />
           <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 12, marginTop: 4, letterSpacing: '2px', textTransform: 'uppercase', fontWeight: 600 }}>
             Medical Device Repair Management
           </p>
@@ -65,15 +65,15 @@ export const LoginPage = () => {
         }}>
           {/* Card body */}
           <div style={{ padding: '32px 32px 24px' }}>
-            <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', marginBottom: 4 }}>
+            <h1 style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', marginBottom: 4, margin: 0 }}>
               Sign In
-            </div>
+            </h1>
             <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 24 }}>
               WinScope Operations Portal
             </div>
 
             {error && (
-              <div style={{
+              <div role="alert" style={{
                 background: '#FEF2F2',
                 border: '1px solid #FECACA',
                 borderRadius: 6,
@@ -88,11 +88,12 @@ export const LoginPage = () => {
 
             <form onSubmit={onSubmit} autoComplete="off">
               <div style={{ marginBottom: 16 }}>
-                <label style={{
+                <label htmlFor="login-username" style={{
                   display: 'block', fontSize: 11, fontWeight: 700,
                   color: 'var(--navy)', marginBottom: 6,
                 }}>Username</label>
                 <input
+                  id="login-username"
                   type="text"
                   value={form.username}
                   onChange={e => setForm(f => ({ ...f, username: e.target.value }))}
@@ -110,11 +111,12 @@ export const LoginPage = () => {
               </div>
 
               <div style={{ marginBottom: 24 }}>
-                <label style={{
+                <label htmlFor="login-password" style={{
                   display: 'block', fontSize: 11, fontWeight: 700,
                   color: 'var(--navy)', marginBottom: 6,
                 }}>Password</label>
                 <input
+                  id="login-password"
                   type="password"
                   value={form.password}
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}

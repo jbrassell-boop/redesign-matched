@@ -21,7 +21,7 @@ export const AmendmentForm = ({ repair, onClose }: Props) => {
         <div style={{ padding: '0.5in', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-            <img src="/logo-color.png" alt="TSI Logo" style={{ height: 44 }} />
+            <img src="/logo-color.png" alt="TSI Logo" loading="lazy" style={{ height: 44 }} />
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Amendment to Repair</div>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Repair Scope Change Document</div>

@@ -21,6 +21,7 @@ export const AutosaveIndicator = ({ status }: AutosaveIndicatorProps) => {
 
   return (
     <span
+      aria-live="polite"
       style={{
         display: 'inline-flex',
         alignItems: 'center',

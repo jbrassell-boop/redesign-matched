@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import './TabBar.css';
 
 export interface TabDef {
@@ -13,7 +14,7 @@ interface TabBarProps {
   className?: string;
 }
 
-export const TabBar = ({ tabs, activeKey, onChange, className }: TabBarProps) => (
+export const TabBar = memo(({ tabs, activeKey, onChange, className }: TabBarProps) => (
   <div className={`tab-bar${className ? ` ${className}` : ''}`}>
     {tabs.map(tab => (
       <button
@@ -29,4 +30,4 @@ export const TabBar = ({ tabs, activeKey, onChange, className }: TabBarProps) =>
       </button>
     ))}
   </div>
-);
+));

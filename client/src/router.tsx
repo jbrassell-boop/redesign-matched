@@ -1,35 +1,45 @@
+import { lazy, Suspense } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
+import { Spin } from 'antd';
 import { AppShell } from './components/shell/AppShell';
 import { RouteGuard } from './components/common/RouteGuard';
-import { LoginPage } from './pages/login/LoginPage';
-import { ClientsPage } from './pages/clients/ClientsPage';
-import { ContractsPage } from './pages/contracts/ContractsPage';
-import { DashboardPage } from './pages/dashboard/DashboardPage';
-import { DepartmentsPage } from './pages/departments/DepartmentsPage';
-import { InventoryPage } from './pages/inventory/InventoryPage';
-import { RepairsPage } from './pages/repairs/RepairsPage';
-import { QualityPage } from './pages/quality/QualityPage';
-import { LoanersPage } from './pages/loaners/LoanersPage';
-import { SuppliersPage } from './pages/suppliers/SuppliersPage';
-import { FinancialPage } from './pages/financial/FinancialPage';
-import { OnsiteServicesPage } from './pages/onsite-services/OnsiteServicesPage';
-import { ScopeModelPage } from './pages/scope-model/ScopeModelPage';
-import { InstrumentsPage } from './pages/instruments/InstrumentsPage';
-import { OutsourceValidationPage } from './pages/outsource-validation/OutsourceValidationPage';
-import { AcquisitionsPage } from './pages/acquisitions/AcquisitionsPage';
-import { ProductSalePage } from './pages/product-sale/ProductSalePage';
-import { ReportsPage } from './pages/reports/ReportsPage';
-import { WorkspacePage } from './pages/workspace/WorkspacePage';
-import { AdministrationPage } from './pages/administration/AdministrationPage';
-import { DevelopmentListPage } from './pages/development-list/DevelopmentListPage';
-import { EndoCartsPage } from './pages/endocarts/EndoCartsPage';
-import { ReceivingPage } from './pages/receiving/ReceivingPage';
-import { RepairItemsPage } from './pages/repair-items/RepairItemsPage';
+
+// Lazy-loaded pages (all use named exports)
+const LoginPage = lazy(() => import('./pages/login/LoginPage').then(m => ({ default: m.LoginPage })));
+const ClientsPage = lazy(() => import('./pages/clients/ClientsPage').then(m => ({ default: m.ClientsPage })));
+const ContractsPage = lazy(() => import('./pages/contracts/ContractsPage').then(m => ({ default: m.ContractsPage })));
+const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })));
+const DepartmentsPage = lazy(() => import('./pages/departments/DepartmentsPage').then(m => ({ default: m.DepartmentsPage })));
+const InventoryPage = lazy(() => import('./pages/inventory/InventoryPage').then(m => ({ default: m.InventoryPage })));
+const RepairsPage = lazy(() => import('./pages/repairs/RepairsPage').then(m => ({ default: m.RepairsPage })));
+const QualityPage = lazy(() => import('./pages/quality/QualityPage').then(m => ({ default: m.QualityPage })));
+const LoanersPage = lazy(() => import('./pages/loaners/LoanersPage').then(m => ({ default: m.LoanersPage })));
+const SuppliersPage = lazy(() => import('./pages/suppliers/SuppliersPage').then(m => ({ default: m.SuppliersPage })));
+const FinancialPage = lazy(() => import('./pages/financial/FinancialPage').then(m => ({ default: m.FinancialPage })));
+const OnsiteServicesPage = lazy(() => import('./pages/onsite-services/OnsiteServicesPage').then(m => ({ default: m.OnsiteServicesPage })));
+const ScopeModelPage = lazy(() => import('./pages/scope-model/ScopeModelPage').then(m => ({ default: m.ScopeModelPage })));
+const InstrumentsPage = lazy(() => import('./pages/instruments/InstrumentsPage').then(m => ({ default: m.InstrumentsPage })));
+const OutsourceValidationPage = lazy(() => import('./pages/outsource-validation/OutsourceValidationPage').then(m => ({ default: m.OutsourceValidationPage })));
+const AcquisitionsPage = lazy(() => import('./pages/acquisitions/AcquisitionsPage').then(m => ({ default: m.AcquisitionsPage })));
+const ProductSalePage = lazy(() => import('./pages/product-sale/ProductSalePage').then(m => ({ default: m.ProductSalePage })));
+const ReportsPage = lazy(() => import('./pages/reports/ReportsPage').then(m => ({ default: m.ReportsPage })));
+const WorkspacePage = lazy(() => import('./pages/workspace/WorkspacePage').then(m => ({ default: m.WorkspacePage })));
+const AdministrationPage = lazy(() => import('./pages/administration/AdministrationPage').then(m => ({ default: m.AdministrationPage })));
+const DevelopmentListPage = lazy(() => import('./pages/development-list/DevelopmentListPage').then(m => ({ default: m.DevelopmentListPage })));
+const EndoCartsPage = lazy(() => import('./pages/endocarts/EndoCartsPage').then(m => ({ default: m.EndoCartsPage })));
+const ReceivingPage = lazy(() => import('./pages/receiving/ReceivingPage').then(m => ({ default: m.ReceivingPage })));
+const RepairItemsPage = lazy(() => import('./pages/repair-items/RepairItemsPage').then(m => ({ default: m.RepairItemsPage })));
+
+const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '2rem' }}><Spin size="large" /></div>}>
+    {children}
+  </Suspense>
+);
 
 export const router = createBrowserRouter([
   {
     path: '/login',
-    element: <LoginPage />,
+    element: <SuspenseWrapper><LoginPage /></SuspenseWrapper>,
   },
   {
     element: <RouteGuard />,
@@ -37,31 +47,31 @@ export const router = createBrowserRouter([
       {
         element: <AppShell />,
         children: [
-          { path: '/', element: <DashboardPage /> },
-          { path: '/clients', element: <ClientsPage /> },
-          { path: '/contracts', element: <ContractsPage /> },
-          { path: '/dashboard', element: <DashboardPage /> },
-          { path: '/departments', element: <DepartmentsPage /> },
-          { path: '/inventory', element: <InventoryPage /> },
-          { path: '/quality', element: <QualityPage /> },
-          { path: '/repairs', element: <RepairsPage /> },
-          { path: '/repairs/:repairKey', element: <RepairsPage /> },
-          { path: '/loaners', element: <LoanersPage /> },
-          { path: '/suppliers', element: <SuppliersPage /> },
-          { path: '/financial', element: <FinancialPage /> },
-          { path: '/onsite-services', element: <OnsiteServicesPage /> },
-          { path: '/scope-model', element: <ScopeModelPage /> },
-          { path: '/instruments', element: <InstrumentsPage /> },
-          { path: '/outsource-validation', element: <OutsourceValidationPage /> },
-          { path: '/acquisitions', element: <AcquisitionsPage /> },
-          { path: '/product-sale', element: <ProductSalePage /> },
-          { path: '/reports', element: <ReportsPage /> },
-          { path: '/workspace', element: <WorkspacePage /> },
-          { path: '/administration', element: <AdministrationPage /> },
-          { path: '/development-list', element: <DevelopmentListPage /> },
-          { path: '/endocarts', element: <EndoCartsPage /> },
-          { path: '/receiving', element: <ReceivingPage /> },
-          { path: '/repair-items', element: <RepairItemsPage /> },
+          { path: '/', element: <SuspenseWrapper><DashboardPage /></SuspenseWrapper> },
+          { path: '/clients', element: <SuspenseWrapper><ClientsPage /></SuspenseWrapper> },
+          { path: '/contracts', element: <SuspenseWrapper><ContractsPage /></SuspenseWrapper> },
+          { path: '/dashboard', element: <SuspenseWrapper><DashboardPage /></SuspenseWrapper> },
+          { path: '/departments', element: <SuspenseWrapper><DepartmentsPage /></SuspenseWrapper> },
+          { path: '/inventory', element: <SuspenseWrapper><InventoryPage /></SuspenseWrapper> },
+          { path: '/quality', element: <SuspenseWrapper><QualityPage /></SuspenseWrapper> },
+          { path: '/repairs', element: <SuspenseWrapper><RepairsPage /></SuspenseWrapper> },
+          { path: '/repairs/:repairKey', element: <SuspenseWrapper><RepairsPage /></SuspenseWrapper> },
+          { path: '/loaners', element: <SuspenseWrapper><LoanersPage /></SuspenseWrapper> },
+          { path: '/suppliers', element: <SuspenseWrapper><SuppliersPage /></SuspenseWrapper> },
+          { path: '/financial', element: <SuspenseWrapper><FinancialPage /></SuspenseWrapper> },
+          { path: '/onsite-services', element: <SuspenseWrapper><OnsiteServicesPage /></SuspenseWrapper> },
+          { path: '/scope-model', element: <SuspenseWrapper><ScopeModelPage /></SuspenseWrapper> },
+          { path: '/instruments', element: <SuspenseWrapper><InstrumentsPage /></SuspenseWrapper> },
+          { path: '/outsource-validation', element: <SuspenseWrapper><OutsourceValidationPage /></SuspenseWrapper> },
+          { path: '/acquisitions', element: <SuspenseWrapper><AcquisitionsPage /></SuspenseWrapper> },
+          { path: '/product-sale', element: <SuspenseWrapper><ProductSalePage /></SuspenseWrapper> },
+          { path: '/reports', element: <SuspenseWrapper><ReportsPage /></SuspenseWrapper> },
+          { path: '/workspace', element: <SuspenseWrapper><WorkspacePage /></SuspenseWrapper> },
+          { path: '/administration', element: <SuspenseWrapper><AdministrationPage /></SuspenseWrapper> },
+          { path: '/development-list', element: <SuspenseWrapper><DevelopmentListPage /></SuspenseWrapper> },
+          { path: '/endocarts', element: <SuspenseWrapper><EndoCartsPage /></SuspenseWrapper> },
+          { path: '/receiving', element: <SuspenseWrapper><ReceivingPage /></SuspenseWrapper> },
+          { path: '/repair-items', element: <SuspenseWrapper><RepairItemsPage /></SuspenseWrapper> },
         ],
       },
     ],

@@ -83,7 +83,7 @@ const RepairsListView = () => {
         display: 'flex', alignItems: 'center', gap: 12,
         flexShrink: 0,
       }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>Repairs</span>
+        <h1 style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)', margin: 0 }}>Repairs</h1>
         <span style={{ fontSize: 11, color: 'var(--muted)' }}>{repairs.length} records</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
           <ExportButton data={repairs as unknown as Record<string, unknown>[]} columns={REPAIR_EXPORT_COLS} filename="repairs-export" sheetName="Repairs" />
