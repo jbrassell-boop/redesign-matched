@@ -685,7 +685,7 @@ export function AdministrationPage() {
   ] : [];
 
   return (
-    <div style={adminPageContainerStyle}>
+    <section aria-label="Administration" style={adminPageContainerStyle}>
       {/* Stat Strip */}
       <StatStrip chips={statChips} loading={!stats} />
 
@@ -891,6 +891,6 @@ export function AdministrationPage() {
           </div>
         </div>
       </Modal>
-    </div>
+    </section>
   );
 }

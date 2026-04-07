@@ -64,7 +64,7 @@ export const DepartmentsPage = () => {
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
       {/* Left Panel — Department List */}
-      <div style={{
+      <aside aria-label="Department list" style={{
         width: selectedKey ? 340 : '100%',
         minWidth: selectedKey ? 340 : undefined,
         borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
@@ -81,7 +81,7 @@ export const DepartmentsPage = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <h1 style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', margin: 0 }}>Departments</h1>
-              <span style={{
+              <span aria-live="polite" style={{
                 fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
                 background: 'var(--primary-light)', color: 'var(--primary)',
               }}>
@@ -193,13 +193,13 @@ export const DepartmentsPage = () => {
             </FixedSizeList>
           )}
         </div>
-      </div>
+      </aside>
 
       {/* Right Panel — Detail */}
       {selectedKey && (
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <section aria-label="Department details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <DepartmentDetailPane deptKey={selectedKey} />
-        </div>
+        </section>
       )}
 
       <NewDepartmentModal

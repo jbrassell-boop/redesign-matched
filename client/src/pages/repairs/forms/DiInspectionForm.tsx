@@ -117,26 +117,42 @@ export const DiInspectionForm = ({ repair, onClose }: Props) => {
 
 /* ── Shared primitives — pixel-match the HTML CSS ── */
 const fl: React.CSSProperties = { fontSize:'8.5px', fontWeight:700, textTransform:'uppercase', color:'var(--print-muted)', letterSpacing:'.04em' };
+const barStyle: React.CSSProperties = { background:'var(--primary)', color:'var(--card)', fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', padding:'4px 10px' };
+const fldValueStyle: React.CSSProperties = { borderBottom:'1px solid var(--print-check-border)', fontSize:11, padding:'1px 2px' };
+const cbStyle: React.CSSProperties = { display:'flex', alignItems:'center', gap:5, fontSize:'10.5px' };
+const cbBoxStyle: React.CSSProperties = { width:12, height:12, border:'1px solid var(--print-check-border)', borderRadius:2, display:'inline-block', flexShrink:0 };
+const cbRowStyle: React.CSSProperties = { display:'flex', gap:14, alignItems:'center', padding:'5px 0', flexWrap:'wrap' };
+const pfTableStyle: React.CSSProperties = { width:'100%', borderCollapse:'collapse', marginTop:4 };
+const pfTdStyle: React.CSSProperties = { padding:'4px 8px', fontSize:'10.5px', borderBottom:'1px solid var(--print-border-lt)', borderRight:'1px solid var(--print-border-xlt)', verticalAlign:'middle' };
+const pfTdCenterStyle: React.CSSProperties = { padding:'4px 8px', textAlign:'center', borderBottom:'1px solid var(--print-border-lt)', borderRight:'1px solid var(--print-border-xlt)' };
+const pfTdCenterLastStyle: React.CSSProperties = { padding:'4px 8px', textAlign:'center', borderBottom:'1px solid var(--print-border-lt)' };
+const pfBadgeBaseStyle: React.CSSProperties = { display:'inline-block', width:26, height:16, borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700 };
+const pfBadgeYStyle: React.CSSProperties = { ...pfBadgeBaseStyle, border:'1px solid var(--success)', color:'var(--success)' };
+const pfBadgeNStyle: React.CSSProperties = { ...pfBadgeBaseStyle, border:'1px solid var(--danger)', color:'var(--danger)' };
+const pfBadgeNaStyle: React.CSSProperties = { ...pfBadgeBaseStyle, border:'1px solid var(--print-placeholder)', color:'var(--print-light)' };
+const sigLineStyle: React.CSSProperties = { borderBottom:'1px solid var(--print-check-border)', minHeight:28 };
+const sigLabelStyle: React.CSSProperties = { fontSize:'8.5px', color:'var(--print-muted)', fontWeight:600, marginTop:2 };
+const altRowStyle: React.CSSProperties = { background:'var(--bg)' };
 
 const Bar = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ background:'var(--primary)', color:'var(--card)', fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', padding:'4px 10px' }}>{children}</div>
+  <div style={barStyle}>{children}</div>
 );
 
 const Fld = ({ label, value, span2, h }: { label:string; value?:string|null; span2?:boolean; h?:number }) => (
   <div style={{ display:'flex', flexDirection:'column', gap:1, ...(span2 ? { gridColumn:'span 2' } : {}) }}>
     <span style={fl}>{label}</span>
-    <div style={{ borderBottom:'1px solid var(--print-check-border)', minHeight: h ?? 17, fontSize:11, padding:'1px 2px' }}>{value || ''}</div>
+    <div style={{ ...fldValueStyle, minHeight: h ?? 17 }}>{value || ''}</div>
   </div>
 );
 
 const Cb = ({ label }: { label:string }) => (
-  <span style={{ display:'flex', alignItems:'center', gap:5, fontSize:'10.5px' }}>
-    <span style={{ width:12, height:12, border:'1px solid var(--print-check-border)', borderRadius:2, display:'inline-block', flexShrink:0 }} />{label}
+  <span style={cbStyle}>
+    <span style={cbBoxStyle} />{label}
   </span>
 );
 
 const CbRow = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ display:'flex', gap:14, alignItems:'center', padding:'5px 0', flexWrap:'wrap' }}>{children}</div>
+  <div style={cbRowStyle}>{children}</div>
 );
 
 const TextField = ({ h }: { h:number }) => (
@@ -146,7 +162,7 @@ const TextField = ({ h }: { h:number }) => (
 const thStyle: React.CSSProperties = { background:'var(--primary)', color:'var(--card)', fontSize:'8.5px', fontWeight:700, textTransform:'uppercase', padding:'4px 8px', letterSpacing:'.04em', borderRight:'1px solid rgba(255,255,255,.2)' };
 
 const PfTable = ({ items }: { items:string[] }) => (
-  <table style={{ width:'100%', borderCollapse:'collapse', marginTop:4 }}>
+  <table style={pfTableStyle}>
     <thead><tr>
       <th style={{ ...thStyle, textAlign:'left' }}>Test Item</th>
       <th style={{ ...thStyle, textAlign:'center', width:44 }}>Y</th>
@@ -155,16 +171,16 @@ const PfTable = ({ items }: { items:string[] }) => (
     </tr></thead>
     <tbody>
       {items.map((item, i) => (
-        <tr key={item} style={i%2===1 ? { background:'var(--bg)' } : undefined}>
-          <td style={{ padding:'4px 8px', fontSize:'10.5px', borderBottom:'1px solid var(--print-border-lt)', borderRight:'1px solid var(--print-border-xlt)', verticalAlign:'middle' }}>{item}</td>
-          <td style={{ padding:'4px 8px', textAlign:'center', borderBottom:'1px solid var(--print-border-lt)', borderRight:'1px solid var(--print-border-xlt)' }}>
-            <span style={{ display:'inline-block', width:26, height:16, border:'1px solid var(--success)', borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700, color:'var(--success)' }}>Y</span>
+        <tr key={item} style={i%2===1 ? altRowStyle : undefined}>
+          <td style={pfTdStyle}>{item}</td>
+          <td style={pfTdCenterStyle}>
+            <span style={pfBadgeYStyle}>Y</span>
           </td>
-          <td style={{ padding:'4px 8px', textAlign:'center', borderBottom:'1px solid var(--print-border-lt)', borderRight:'1px solid var(--print-border-xlt)' }}>
-            <span style={{ display:'inline-block', width:26, height:16, border:'1px solid var(--danger)', borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700, color:'var(--danger)' }}>N</span>
+          <td style={pfTdCenterStyle}>
+            <span style={pfBadgeNStyle}>N</span>
           </td>
-          <td style={{ padding:'4px 8px', textAlign:'center', borderBottom:'1px solid var(--print-border-lt)' }}>
-            <span style={{ display:'inline-block', width:26, height:16, border:'1px solid var(--print-placeholder)', borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700, color:'var(--print-light)' }}>N/A</span>
+          <td style={pfTdCenterLastStyle}>
+            <span style={pfBadgeNaStyle}>N/A</span>
           </td>
         </tr>
       ))}
@@ -174,7 +190,7 @@ const PfTable = ({ items }: { items:string[] }) => (
 
 const Sig = ({ label, narrow }: { label:string; narrow?:boolean }) => (
   <div style={{ flex: narrow ? undefined : 1, maxWidth: narrow ? 130 : undefined, display:'flex', flexDirection:'column', gap:2 }}>
-    <div style={{ borderBottom:'1px solid var(--print-check-border)', minHeight:28 }} />
-    <div style={{ fontSize:'8.5px', color:'var(--print-muted)', fontWeight:600, marginTop:2 }}>{label}</div>
+    <div style={sigLineStyle} />
+    <div style={sigLabelStyle}>{label}</div>
   </div>
 );

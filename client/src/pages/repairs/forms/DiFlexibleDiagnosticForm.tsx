@@ -1,6 +1,61 @@
 import './print.css';
 import type { RepairFull } from '../types';
 
+// ── Extracted static styles ──
+const flexOverlayStyle: React.CSSProperties = {
+  position: 'fixed', inset: 0, zIndex: 1100,
+  background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)',
+  display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+  padding: '24px 16px', overflowY: 'auto',
+};
+const flexActionBarStyle: React.CSSProperties = { position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200 };
+const flexPrintBtnStyle: React.CSSProperties = { height: 32, padding: '0 16px', border: 'none', borderRadius: 5, background: 'var(--primary)', color: 'var(--card)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' };
+const flexCloseBtnStyle: React.CSSProperties = { height: 32, padding: '0 14px', border: '1px solid var(--print-border)', borderRadius: 5, background: 'var(--card)', color: 'var(--print-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
+const flexFormWrapStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 0 };
+const flexHeaderRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8, borderBottom: '2px solid var(--print-text)', paddingBottom: 6 };
+const flexLogoGroupStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10 };
+const flexLogoImgStyle: React.CSSProperties = { height: 44 };
+const flexAddressLineStyle: React.CSSProperties = { fontSize: 9, color: 'var(--print-subtle)' };
+const flexHeaderRightStyle: React.CSSProperties = { textAlign: 'right' };
+const flexHeaderTitleStyle: React.CSSProperties = { fontSize: 14, fontWeight: 800, color: 'var(--print-text)' };
+const flexFormNumStyle: React.CSSProperties = { fontSize: 10, color: 'var(--print-muted)', marginTop: 2 };
+const flexIsoLineStyle: React.CSSProperties = { fontSize: 9, color: 'var(--print-subtext)', marginTop: 1 };
+const flexGenInfoGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px 16px', padding: '5px 0 3px' };
+const flexColGap1Style: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1 };
+const flexRadioRowStyle: React.CSSProperties = { display: 'flex', gap: 12, paddingTop: 3 };
+const flexAccessoriesWrapStyle: React.CSSProperties = { marginTop: 4 };
+const flexAccessoriesLabelStyle: React.CSSProperties = { fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--print-muted)', letterSpacing: '.04em', marginRight: 8 };
+const flexAccessoriesListStyle: React.CSSProperties = { display: 'inline-flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', fontSize: '10.5px' };
+const flexAccessoryItemStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 4 };
+const flexConditionSectionStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 4, padding: '3px 0' };
+const flexConditionRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' };
+const flexUncleanBadgeStyle: React.CSSProperties = { fontSize: 9, color: 'var(--badge-amber-text)', background: 'var(--amber-subtle)', border: '1px solid var(--amber-border)', borderRadius: 3, padding: '2px 7px', fontWeight: 600 };
+const flexModelConfirmRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6 };
+const flexYesLabelStyle: React.CSSProperties = { fontSize: 10 };
+const flexScopeConditionWrapStyle: React.CSSProperties = { margin: '8px 0 4px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' };
+const flexScopeCondOptionStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 5, fontSize: 10.5 };
+const flexRepairAssessBoxStyle: React.CSSProperties = { border: '1px solid var(--print-border)', borderRadius: 3, minHeight: 60, padding: '4px 8px', fontSize: 10.5, color: 'var(--print-placeholder)', marginTop: 3 };
+const flexPage2HeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--print-border)', paddingBottom: 4, marginBottom: 6 };
+const flexPage2TitleStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--navy)' };
+const flexPage2SubtitleStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700 };
+const flexPage2WoStyle: React.CSSProperties = { fontSize: 10, color: 'var(--print-light)' };
+const flexSectionLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--print-text)', marginTop: 5, marginBottom: 2, borderBottom: '1px solid var(--print-border-lt)', paddingBottom: 2 };
+const flexSubBarStyle: React.CSSProperties = { background: 'var(--neutral-100)', color: 'var(--label)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', padding: '3px 8px', marginTop: 4 };
+const flexCbxStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, marginRight: 6 };
+const flexCbxBoxStyle: React.CSSProperties = { width: 11, height: 11, border: '1px solid var(--print-footer)', borderRadius: 1, display: 'inline-block', flexShrink: 0 };
+const flexRadioStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, marginRight: 6 };
+const flexRadioCircleStyle: React.CSSProperties = { width: 11, height: 11, border: '1px solid var(--print-footer)', borderRadius: '50%', display: 'inline-block', flexShrink: 0 };
+const flexPfRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', borderBottom: '1px solid var(--print-row-divider)', flexWrap: 'wrap', fontSize: 10.5 };
+const flexPfBtnGroupStyle: React.CSSProperties = { display: 'inline-flex', gap: 1, flexShrink: 0 };
+const flexPassBtnStyle: React.CSSProperties = { display: 'inline-block', width: 22, height: 14, border: '1px solid var(--success)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--success)' };
+const flexFailBtnStyle: React.CSSProperties = { display: 'inline-block', width: 22, height: 14, border: '1px solid var(--danger)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--danger)' };
+const flexNaBtnStyle: React.CSSProperties = { display: 'inline-block', width: 22, height: 14, border: '1px solid var(--print-placeholder)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--print-light)' };
+const flexPfChildrenWrapStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' };
+const flexFldBaseStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1 };
+const flexFormFooterStyle: React.CSSProperties = { marginTop: 'auto', paddingTop: 8, borderTop: '1px solid var(--print-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: 'var(--print-footer)' };
+const flexAngulationHintStyle: React.CSSProperties = { fontSize: 9, color: 'var(--print-light)', marginLeft: 6 };
+const flexNotesCardStyle: React.CSSProperties = { fontSize: 12, color: 'var(--text)', lineHeight: 1.6, whiteSpace: 'pre-wrap' };
+
 interface Props {
   repair: RepairFull;
   onClose: () => void;
@@ -18,86 +73,81 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
   return (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1100,
-        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)',
-        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-        padding: '24px 16px', overflowY: 'auto',
-      }}
+      style={flexOverlayStyle}
     >
       {/* Action bar */}
-      <div className="no-print" style={{ position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200 }}>
-        <button onClick={() => window.print()} style={{ height: 32, padding: '0 16px', border: 'none', borderRadius: 5, background: 'var(--primary)', color: 'var(--card)', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Print</button>
-        <button onClick={onClose} style={{ height: 32, padding: '0 14px', border: '1px solid var(--print-border)', borderRadius: 5, background: 'var(--card)', color: 'var(--print-muted)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
+      <div className="no-print" style={flexActionBarStyle}>
+        <button onClick={() => window.print()} style={flexPrintBtnStyle}>Print</button>
+        <button onClick={onClose} style={flexCloseBtnStyle}>Close</button>
       </div>
 
-      <div className="print-form flex-col" style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      <div className="print-form flex-col" style={flexFormWrapStyle}>
 
         {/* ══ PAGE 1 ══ */}
         <div className="print-page" style={page}>
 
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8, borderBottom: '2px solid var(--print-text)', paddingBottom: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <img src="/logo-color.png" alt="Total Scope Inc." loading="lazy" style={{ height: 44 }} />
+          <div style={flexHeaderRowStyle}>
+            <div style={flexLogoGroupStyle}>
+              <img src="/logo-color.png" alt="Total Scope Inc." loading="lazy" style={flexLogoImgStyle} />
               <div>
-                <div style={{ fontSize: 9, color: 'var(--print-subtle)' }}>17 Creek Parkway | Upper Chichester, PA 19061</div>
-                <div style={{ fontSize: 9, color: 'var(--print-subtle)' }}>Phone: (610) 485-3838 | Fax: (610) 485-0404</div>
+                <div style={flexAddressLineStyle}>17 Creek Parkway | Upper Chichester, PA 19061</div>
+                <div style={flexAddressLineStyle}>Phone: (610) 485-3838 | Fax: (610) 485-0404</div>
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--print-text)' }}>Flexible Endoscope Diagnostic Report</div>
-              <div style={{ fontSize: 10, color: 'var(--print-muted)', marginTop: 2 }}>Form #: OM05-1</div>
-              <div style={{ fontSize: 9, color: 'var(--print-subtext)', marginTop: 1 }}>An ISO 13485:2016 Certified Company</div>
+            <div style={flexHeaderRightStyle}>
+              <div style={flexHeaderTitleStyle}>Flexible Endoscope Diagnostic Report</div>
+              <div style={flexFormNumStyle}>Form #: OM05-1</div>
+              <div style={flexIsoLineStyle}>An ISO 13485:2016 Certified Company</div>
             </div>
           </div>
 
           {/* Section 1: General Information */}
           <SectionLabel>1. General Information</SectionLabel>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px 16px', padding: '5px 0 3px' }}>
+          <div style={flexGenInfoGridStyle}>
             <Fld label="Customer" value={client} span2 />
             <Fld label="Work Order #" value={wo} />
             <Fld label="Inspected By" value="" />
             <Fld label="Date" value={today} />
             <Fld label="Scope Model" value={model} />
             <Fld label="Rack #" value={rack} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={flexColGap1Style}>
               <span style={fl}>Customer Type</span>
-              <div style={{ display: 'flex', gap: 12, paddingTop: 3 }}>
+              <div style={flexRadioRowStyle}>
                 <Radio label="FFS" /><Radio label="CAP" />
               </div>
             </div>
             <Fld label="Serial #" value={serial} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={flexColGap1Style}>
               <span style={fl}>Package Type</span>
-              <div style={{ display: 'flex', gap: 12, paddingTop: 3 }}>
+              <div style={flexRadioRowStyle}>
                 <Radio label="F" /><Radio label="P" /><Radio label="S" />
               </div>
             </div>
           </div>
 
           {/* Accessories */}
-          <div style={{ marginTop: 4 }}>
-            <span style={{ ...fl, marginRight: 8 }}>Accessories Received:</span>
-            <span style={{ display: 'inline-flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', fontSize: '10.5px' }}>
+          <div style={flexAccessoriesWrapStyle}>
+            <span style={flexAccessoriesLabelStyle}>Accessories Received:</span>
+            <span style={flexAccessoriesListStyle}>
               {['None','ETO Cap','A/W Button','Suction Button','Water Cap','Biopsy Valve','Light Post Adapter'].map(a => (
-                <span key={a} style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Cbx />{a}</span>
+                <span key={a} style={flexAccessoryItemStyle}><Cbx />{a}</span>
               ))}
             </span>
           </div>
 
           {/* Section 2 */}
           <SectionLabel>2. Item Condition Upon Receipt</SectionLabel>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '3px 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={flexConditionSectionStyle}>
+            <div style={flexConditionRowStyle}>
               <span style={fl}>External Condition:</span>
               <Radio label="Clean" /><Radio label="Unclean" />
-              <span style={{ fontSize: 9, color: 'var(--badge-amber-text)', background: 'var(--amber-subtle)', border: '1px solid var(--amber-border)', borderRadius: 3, padding: '2px 7px', fontWeight: 600 }}>
+              <span style={flexUncleanBadgeStyle}>
                 (if unclean, follow OM-22 SOP) — Cleaned By: <span style={underline100} />
               </span>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={fl}>Model &amp; SN# Confirmed:</span><Cbx /><span style={{ fontSize: 10 }}>Yes</span>
+            <div style={flexModelConfirmRowStyle}>
+              <span style={fl}>Model &amp; SN# Confirmed:</span><Cbx /><span style={flexYesLabelStyle}>Yes</span>
             </div>
             <div>
               <span style={fl}>Customer Perceived Problem:</span>
@@ -115,7 +165,7 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
 
           {/* 3B */}
           <SubBar>3B. Angulation System</SubBar>
-          <PfRow>Angulation Specs U: <span style={underline40} /> D: <span style={underline40} /> R: <span style={underline40} /> L: <span style={underline40} /> <span style={{ fontSize: 9, color: 'var(--print-light)', marginLeft: 6 }}>(Factory: U180/D180/R160/L160)</span></PfRow>
+          <PfRow>Angulation Specs U: <span style={underline40} /> D: <span style={underline40} /> R: <span style={underline40} /> L: <span style={underline40} /> <span style={flexAngulationHintStyle}>(Factory: U180/D180/R160/L160)</span></PfRow>
           <PfRow>Angulation System {['Play','Stiff/Grinding','Broken Cable','Slip Stopper','Orientation Off','Broken Bracket'].map(d=><Cbx key={d} label={d} />)}</PfRow>
           <PfRow>Angulation Knobs {['Moving Together','Not Locking'].map(d=><Cbx key={d} label={d} />)} Leaking — Location: <span style={underline60} /></PfRow>
           <PfRow>Angulation Lock {['Too Tight','Too Loose','Brake Not Functioning','Missing'].map(d=><Cbx key={d} label={d} />)}</PfRow>
@@ -149,10 +199,10 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
         <div className="print-page" style={page}>
 
           {/* Mini header repeat */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--print-border)', paddingBottom: 4, marginBottom: 6 }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)' }}>Total Scope, Inc.</div>
-            <div style={{ fontSize: 11, fontWeight: 700 }}>Flexible Endoscope Diagnostic Report — continued</div>
-            <div style={{ fontSize: 10, color: 'var(--print-light)' }}>WO# {wo}</div>
+          <div style={flexPage2HeaderStyle}>
+            <div style={flexPage2TitleStyle}>Total Scope, Inc.</div>
+            <div style={flexPage2SubtitleStyle}>Flexible Endoscope Diagnostic Report — continued</div>
+            <div style={flexPage2WoStyle}>WO# {wo}</div>
           </div>
 
           {/* 3F */}
@@ -189,16 +239,16 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
           <PfRow>Photos Taken <Radio label="Yes" /> <Radio label="No" /></PfRow>
 
           {/* Scope Condition */}
-          <div style={{ margin: '8px 0 4px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <div style={flexScopeConditionWrapStyle}>
             <span style={{ ...fl, marginRight: 4 }}>Scope Condition (select one):</span>
             {['Not Patient Safe','Functional Issue','Cosmetic Only','No Issues Found'].map(c=>(
-              <span key={c} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10.5 }}><Radio />{c}</span>
+              <span key={c} style={flexScopeCondOptionStyle}><Radio />{c}</span>
             ))}
           </div>
 
           {/* Section 5 */}
           <SectionLabel>5. Repair Assessment</SectionLabel>
-          <div style={{ border: '1px solid var(--print-border)', borderRadius: 3, minHeight: 60, padding: '4px 8px', fontSize: 10.5, color: 'var(--print-placeholder)', marginTop: 3 }}>Tech notes...</div>
+          <div style={flexRepairAssessBoxStyle}>Tech notes...</div>
 
           <FormFooter page="Form #: OM05-1 — Revision Pending (01/2026)" />
         </div>
@@ -232,47 +282,47 @@ const underline80: React.CSSProperties = { ...underline40, width: 80 };
 const underline100: React.CSSProperties = { ...underline40, width: 100 };
 
 const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--print-text)', marginTop: 5, marginBottom: 2, borderBottom: '1px solid var(--print-border-lt)', paddingBottom: 2 }}>{children}</div>
+  <div style={flexSectionLabelStyle}>{children}</div>
 );
 
 const SubBar = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ background: 'var(--neutral-100)', color: 'var(--label)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.04em', padding: '3px 8px', marginTop: 4 }}>{children}</div>
+  <div style={flexSubBarStyle}>{children}</div>
 );
 
 const Cbx = ({ label }: { label?: string }) => (
-  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, marginRight: 6 }}>
-    <span style={{ width: 11, height: 11, border: '1px solid var(--print-footer)', borderRadius: 1, display: 'inline-block', flexShrink: 0 }} />
+  <span style={flexCbxStyle}>
+    <span style={flexCbxBoxStyle} />
     {label}
   </span>
 );
 
 const Radio = ({ label }: { label?: string }) => (
-  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, marginRight: 6 }}>
-    <span style={{ width: 11, height: 11, border: '1px solid var(--print-footer)', borderRadius: '50%', display: 'inline-block', flexShrink: 0 }} />
+  <span style={flexRadioStyle}>
+    <span style={flexRadioCircleStyle} />
     {label}
   </span>
 );
 
 const PfRow = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', borderBottom: '1px solid var(--print-row-divider)', flexWrap: 'wrap', fontSize: 10.5 }}>
-    <span style={{ display: 'inline-flex', gap: 1, flexShrink: 0 }}>
-      <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid var(--success)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--success)' }}>P</span>
-      <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid var(--danger)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--danger)' }}>F</span>
-      <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid var(--print-placeholder)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--print-light)' }}>N/A</span>
+  <div style={flexPfRowStyle}>
+    <span style={flexPfBtnGroupStyle}>
+      <span style={flexPassBtnStyle}>P</span>
+      <span style={flexFailBtnStyle}>F</span>
+      <span style={flexNaBtnStyle}>N/A</span>
     </span>
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>{children}</span>
+    <span style={flexPfChildrenWrapStyle}>{children}</span>
   </div>
 );
 
 const Fld = ({ label, value, span2 }: { label: string; value?: string | null; span2?: boolean }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 1, ...(span2 ? { gridColumn: 'span 2' } : {}) }}>
+  <div style={{ ...flexFldBaseStyle, ...(span2 ? { gridColumn: 'span 2' } : {}) }}>
     <span style={fl}>{label}</span>
     <div style={fv}>{value || ''}</div>
   </div>
 );
 
 const FormFooter = ({ page: pageLabel }: { page: string }) => (
-  <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid var(--print-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: 'var(--print-footer)' }}>
+  <div style={flexFormFooterStyle}>
     <span>ISO 13485 Certified</span>
     <span>Total Scope, Inc. &nbsp;|&nbsp; 17 Creek Pkwy, Upper Chichester PA 19061 &nbsp;|&nbsp; (610) 485-1616</span>
     <span>{pageLabel}</span>

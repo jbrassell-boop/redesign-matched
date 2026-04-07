@@ -540,7 +540,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           {/* Header */}
           <div style={s.formHeader}>
             <LogoBlock />
-            <div style={{ textAlign: 'right' }}>
+            <div style={textAlignRightStyle}>
               <div style={s.formTitle}>Blank Inspection Report</div>
               <div style={s.formSubtitle}>Flexible Endoscope — Final Inspection</div>
               <div style={s.formNumber}>OM07-3 &nbsp;|&nbsp; Page 3 of 3</div>
@@ -548,16 +548,16 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           </div>
 
           {/* Mini header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 12px', padding: '4px 0 6px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div style={miniHeaderGridStyle}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Work Order #</span>
               <div style={s.fv}>{woNum}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Serial #</span>
               <div style={s.fv}>{serialNum}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Date</span>
               <div style={s.fv}>{today}</div>
             </div>
@@ -565,7 +565,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
 
           {/* 24-Point Checklist */}
           <div style={s.sectionBar}>Final Inspection Checklist — 24-Point</div>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 10 }}>
+          <table style={repairTableStyle}>
             <thead>
               <tr>
                 <th style={{ ...pfTableTh, width: '46%' }}>Item</th>
@@ -579,15 +579,15 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
               {PF_CATEGORIES.map(cat => (
                 <>
                   <tr key={`cat-${cat.cat}`} style={{ background: 'var(--primary-light)' }}>
-                    <td colSpan={5} style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.04em', padding: '3px 8px' }}>{cat.cat}</td>
+                    <td colSpan={5} style={pfCatRowStyle}>{cat.cat}</td>
                   </tr>
                   {cat.items.map((item, ii) => (
                     <tr key={`${cat.cat}-${ii}`} style={{ background: ii % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
                       <td style={pfTableTd}>{item}</td>
-                      <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfBtn('p')}>Y</span></td>
-                      <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfBtn('f')}>N</span></td>
-                      <td style={{ ...pfTableTd, textAlign: 'center' }}><span style={pfBtn('na')}>N/A</span></td>
-                      <td style={{ ...pfTableTd, borderRight: 'none' }}></td>
+                      <td style={pfTableTdCenter}><span style={pfBtn('p')}>Y</span></td>
+                      <td style={pfTableTdCenter}><span style={pfBtn('f')}>N</span></td>
+                      <td style={pfTableTdCenter}><span style={pfBtn('na')}>N/A</span></td>
+                      <td style={pfTableTdNoBorder}></td>
                     </tr>
                   ))}
                 </>
@@ -597,9 +597,9 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
 
           {/* Scope Includes */}
           <div style={s.sectionBar}>Scope Includes</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px 12px', padding: '5px 0' }}>
+          <div style={accessoriesGridStyle}>
             {ACCESSORIES.map((acc, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 10 }}>
+              <div key={i} style={accessoryItemStyle}>
                 <span style={s.cbBox}></span> {acc}
               </div>
             ))}
@@ -607,65 +607,61 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
 
           {/* QC Sign-Off */}
           <div style={s.sectionBar}>QC Sign-Off</div>
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px 10px',
-            padding: '8px 10px', border: '1px solid var(--print-border-lt)', borderRadius: 3,
-            background: 'var(--bg)', marginTop: 6,
-          }}>
+          <div style={qcGridStyle}>
             {/* Scope Usable */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>Scope Usable</span>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> Y</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> N</span>
+              <div style={qcYnRowStyle}>
+                <span style={qcYnItemStyle}><span style={s.cbBox}></span> Y</span>
+                <span style={qcYnItemStyle}><span style={s.cbBox}></span> N</span>
               </div>
             </div>
             {/* Rework Required */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>Rework Required</span>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> Y</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> N</span>
+              <div style={qcYnRowStyle}>
+                <span style={qcYnItemStyle}><span style={s.cbBox}></span> Y</span>
+                <span style={qcYnItemStyle}><span style={s.cbBox}></span> N</span>
               </div>
             </div>
             {/* Alcohol Wipe */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>Alcohol Wipe</span>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}><span style={s.cbBox}></span> Done</span>
+              <div style={qcYnRowStyle}>
+                <span style={qcYnItemStyle}><span style={s.cbBox}></span> Done</span>
               </div>
             </div>
             {/* Responsible Tech */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>Responsible Tech</span>
-              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 18, marginTop: 2 }}></div>
+              <div style={qcFieldLineStyle}></div>
             </div>
             {/* QC Initials */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>QC Initials</span>
-              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 18, marginTop: 2 }}></div>
+              <div style={qcFieldLineStyle}></div>
             </div>
             {/* Test Equipment — span 2 */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, gridColumn: 'span 2' }}>
+            <div style={qcFieldSpan2Style}>
               <span style={s.fl}>Test Equipment Used</span>
-              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 18, marginTop: 2 }}></div>
+              <div style={qcFieldLineStyle}></div>
             </div>
             {/* Commercial QC */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>Commercial QC</span>
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+              <div style={qcYnRowStyle}>
+                <span style={qcYnItemStyle}>
                   <span style={{ ...pfBtn('p'), width: 20, height: 13, lineHeight: '13px', fontSize: 8 }}>P</span>
                 </span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 }}>
+                <span style={qcYnItemStyle}>
                   <span style={{ ...pfBtn('f'), width: 20, height: 13, lineHeight: '13px', fontSize: 8 }}>F</span>
                 </span>
               </div>
             </div>
             {/* Inspected By */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={qcFieldColStyle}>
               <span style={s.fl}>Inspected By</span>
-              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 18, marginTop: 2 }}></div>
+              <div style={qcFieldLineStyle}></div>
             </div>
           </div>
 

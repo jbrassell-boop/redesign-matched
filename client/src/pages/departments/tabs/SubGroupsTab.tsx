@@ -132,6 +132,7 @@ export const SubGroupsTab = ({ deptKey }: SubGroupsTabProps) => {
         <div style={{ padding: '6px 8px', borderBottom: '1px solid var(--border)' }}>
           <input
             placeholder="Search sub groups..."
+            aria-label="Search available sub groups"
             value={search}
             onChange={e => setSearch(e.target.value)}
             style={{

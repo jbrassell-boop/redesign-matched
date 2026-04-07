@@ -57,9 +57,9 @@ export const FinancialDetailPane = ({ detail, loading, open, onClose }: Props) =
         flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 15, fontWeight: 800, color: 'var(--card)' }}>
+          <h2 style={{ fontSize: 15, fontWeight: 800, color: 'var(--card)', margin: 0 }}>
             {detail ? `Invoice ${detail.invoiceNumber}` : 'Invoice Detail'}
-          </span>
+          </h2>
           {detail && <StatusBadge status={detail.status} />}
         </div>
         <button

@@ -40,7 +40,11 @@ export const StatStrip = memo(({ chips, loading, activeChip, onChipClick }: Stat
           key={chip.id}
           className={cls}
           title={chip.tooltip}
+          role={onChipClick ? 'button' : undefined}
+          tabIndex={onChipClick ? 0 : undefined}
           onClick={() => onChipClick?.(isActive ? 'all' : chip.id)}
+          onKeyDown={onChipClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onChipClick(isActive ? 'all' : chip.id); } } : undefined}
+          aria-pressed={onChipClick ? isActive : undefined}
         >
           <div className={`stat-chip__icon stat-chip__icon--${chip.color}`}>
             <div className={`stat-chip__icon-dot stat-chip__dot--${chip.color}`} />

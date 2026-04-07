@@ -348,6 +348,9 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
 
         {/* Condensed header: summary line + collapsible details */}
         <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--border)', padding: '5px 14px', flexShrink: 0 }}>
+          <h1 style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>
+            Repair {fullRepair.wo}
+          </h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'var(--navy)', fontWeight: 600 }}>
             <span>{fullRepair.client}</span>
             <span style={{ color: 'var(--muted)' }}>&mdash;</span>
@@ -475,7 +478,11 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                 <div style={{ width: 1, height: 20, background: 'var(--neutral-200)', margin: '0 8px', alignSelf: 'center' }} />
               )}
               <div
+                role="tab"
+                tabIndex={0}
+                aria-selected={activeTab === t.key}
                 onClick={() => setActiveTab(t.key)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab(t.key); } }}
                 style={{
                   padding: '10px 16px',
                   fontSize: 13, fontWeight: 600,
@@ -553,6 +560,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <DetailHeader
+        headingLevel="h2"
         title={detail.wo}
         badges={
           <>

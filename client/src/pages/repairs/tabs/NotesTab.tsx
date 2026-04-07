@@ -50,6 +50,7 @@ export const NotesTab = ({ repairKey }: Props) => {
             padding: '6px 8px', fontSize: 12, resize: 'vertical', fontFamily: 'inherit',
           }}
           placeholder="Add a note…"
+          aria-label="Add a repair note"
           value={text}
           onChange={e => setText(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAdd(); } }}

@@ -4,6 +4,36 @@ import type { RepairInspections } from '../types';
 import { getRepairInspections, updateRepairInspections } from '../../../api/repairs';
 import { SectionCard } from '../../../components/shared';
 
+// ── Extracted static styles ──
+const loadingMsgStyle: React.CSSProperties = { padding: 20, color: 'var(--muted)', fontSize: 12 };
+const tabContainerStyle: React.CSSProperties = { padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'auto' };
+const topGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 };
+const diContentStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 8 };
+const diButtonRowStyle: React.CSSProperties = { display: 'flex', gap: 12 };
+const fieldLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', fontWeight: 600 };
+const pfButtonRowStyle: React.CSSProperties = { display: 'flex', gap: 4, marginTop: 2 };
+const angLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', fontWeight: 600, marginBottom: 4, display: 'block' };
+const angTableStyle: React.CSSProperties = { fontSize: 11, borderCollapse: 'collapse', width: '100%' };
+const angThStyle: React.CSSProperties = { textAlign: 'center', fontSize: 9, color: 'var(--muted)', padding: '2px 4px' };
+const angThLeftStyle: React.CSSProperties = { textAlign: 'left', fontSize: 9, color: 'var(--muted)', padding: '2px 4px' };
+const angTdStyle: React.CSSProperties = { padding: '2px 4px', fontWeight: 500 };
+const angTdCenterStyle: React.CSSProperties = { padding: '2px 4px', textAlign: 'center' };
+const angInputStyle: React.CSSProperties = { width: 50, fontSize: 11, textAlign: 'center', border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '1px 3px', fontFamily: 'inherit' };
+const fiberGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 };
+const fiberLabelStyle: React.CSSProperties = { fontSize: 9, color: 'var(--muted)' };
+const fiberInputStyle: React.CSSProperties = { width: '100%', fontSize: 11, border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '2px 4px', fontFamily: 'inherit' };
+const postRepairMsgStyle: React.CSSProperties = { color: 'var(--muted)', fontSize: 12, textAlign: 'center', padding: 16 };
+const pfActionsRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
+const pfCountStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', fontWeight: 600 };
+const markAllPassBtnStyle: React.CSSProperties = { fontSize: 10, padding: '2px 8px', border: '1px solid var(--success)', borderRadius: 4, background: 'var(--card)', color: 'var(--success)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' };
+const clearAllBtnStyle: React.CSSProperties = { fontSize: 10, padding: '2px 8px', border: '1px solid var(--neutral-200)', borderRadius: 4, background: 'var(--card)', color: 'var(--muted)', cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' };
+const pfGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px 16px' };
+const pfFieldRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
+const pfFieldLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--text)' };
+const pfFieldBtnRowStyle: React.CSSProperties = { display: 'flex', gap: 2 };
+const saveRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', padding: '0 0 8px' };
+const saveBtnBaseStyle: React.CSSProperties = { height: 30, padding: '0 20px', border: 'none', borderRadius: 5, background: 'var(--primary)', color: 'var(--card)', fontSize: 12, fontWeight: 600, fontFamily: 'inherit' };
+
 interface InspectionsTabProps {
   repairKey: number;
 }
@@ -108,8 +138,8 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
     }
   }, [data, repairKey]);
 
-  if (loading) return <div style={{ padding: 20, color: 'var(--muted)', fontSize: 12 }}>Loading inspections...</div>;
-  if (!data) return <div style={{ padding: 20, color: 'var(--muted)', fontSize: 12 }}>No inspection data</div>;
+  if (loading) return <div style={loadingMsgStyle}>Loading inspections...</div>;
+  if (!data) return <div style={loadingMsgStyle}>No inspection data</div>;
 
   const passCount = PF_FIELDS.filter(f => data[f.key] === 'P').length;
   const totalPF = PF_FIELDS.length;
@@ -118,22 +148,22 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
     `${prefix}${dir}` as keyof RepairInspections;
 
   return (
-    <div style={{ padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 12, overflow: 'auto' }}>
+    <div style={tabContainerStyle}>
       {/* Top row: Angulation + D&I */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+      <div style={topGridStyle}>
         <SectionCard title="Incoming D&I">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', gap: 12 }}>
+          <div style={diContentStyle}>
+            <div style={diButtonRowStyle}>
               <div>
-                <span style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>Scope Repairable</span>
-                <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
+                <span style={fieldLabelStyle}>Scope Repairable</span>
+                <div style={pfButtonRowStyle}>
                   <PFButton value={data.scopeRepairable ?? ''} target="P" onClick={() => update('scopeRepairable', data.scopeRepairable === 'Y' ? '' : 'Y')} />
                   <PFButton value={data.scopeRepairable === 'N' ? 'F' : ''} target="F" onClick={() => update('scopeRepairable', data.scopeRepairable === 'N' ? '' : 'N')} />
                 </div>
               </div>
               <div>
-                <span style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600 }}>Scope Usable</span>
-                <div style={{ display: 'flex', gap: 4, marginTop: 2 }}>
+                <span style={fieldLabelStyle}>Scope Usable</span>
+                <div style={pfButtonRowStyle}>
                   <PFButton value={data.scopeUsable ?? ''} target="P" onClick={() => update('scopeUsable', data.scopeUsable === 'Y' ? '' : 'Y')} />
                   <PFButton value={data.scopeUsable === 'N' ? 'F' : ''} target="F" onClick={() => update('scopeUsable', data.scopeUsable === 'N' ? '' : 'N')} />
                 </div>
@@ -142,31 +172,31 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
 
             {/* Angulation grid */}
             <div>
-              <span style={{ fontSize: 10, color: 'var(--muted)', fontWeight: 600, marginBottom: 4, display: 'block' }}>Angulation</span>
-              <table style={{ fontSize: 11, borderCollapse: 'collapse', width: '100%' }}>
+              <span style={angLabelStyle}>Angulation</span>
+              <table style={angTableStyle}>
                 <thead>
                   <tr>
-                    <th style={{ textAlign: 'left', fontSize: 9, color: 'var(--muted)', padding: '2px 4px' }}></th>
-                    <th style={{ textAlign: 'center', fontSize: 9, color: 'var(--muted)', padding: '2px 4px' }}>In</th>
-                    <th style={{ textAlign: 'center', fontSize: 9, color: 'var(--muted)', padding: '2px 4px' }}>Out</th>
+                    <th style={angThLeftStyle}></th>
+                    <th style={angThStyle}>In</th>
+                    <th style={angThStyle}>Out</th>
                   </tr>
                 </thead>
                 <tbody>
                   {ANG_DIRS.map(dir => (
                     <tr key={dir}>
-                      <td style={{ padding: '2px 4px', fontWeight: 500 }}>{dir}</td>
-                      <td style={{ padding: '2px 4px', textAlign: 'center' }}>
+                      <td style={angTdStyle}>{dir}</td>
+                      <td style={angTdCenterStyle}>
                         <input
                           value={data[angKey('angIn', dir)] ?? ''}
                           onChange={e => update(angKey('angIn', dir), e.target.value)}
-                          style={{ width: 50, fontSize: 11, textAlign: 'center', border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '1px 3px', fontFamily: 'inherit' }}
+                          style={angInputStyle}
                         />
                       </td>
-                      <td style={{ padding: '2px 4px', textAlign: 'center' }}>
+                      <td style={angTdCenterStyle}>
                         <input
                           value={data[angKey('angOut', dir)] ?? ''}
                           onChange={e => update(angKey('angOut', dir), e.target.value)}
-                          style={{ width: 50, fontSize: 11, textAlign: 'center', border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '1px 3px', fontFamily: 'inherit' }}
+                          style={angInputStyle}
                         />
                       </td>
                     </tr>
@@ -176,33 +206,33 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
             </div>
 
             {/* Fiber */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+            <div style={fiberGridStyle}>
               <div>
-                <span style={{ fontSize: 9, color: 'var(--muted)' }}>Broken Fibers In</span>
+                <span style={fiberLabelStyle}>Broken Fibers In</span>
                 <input value={data.brokenFibersIn ?? ''} onChange={e => update('brokenFibersIn', e.target.value)}
-                  style={{ width: '100%', fontSize: 11, border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '2px 4px', fontFamily: 'inherit' }} />
+                  style={fiberInputStyle} />
               </div>
               <div>
-                <span style={{ fontSize: 9, color: 'var(--muted)' }}>Broken Fibers Out</span>
+                <span style={fiberLabelStyle}>Broken Fibers Out</span>
                 <input value={data.brokenFibersOut ?? ''} onChange={e => update('brokenFibersOut', e.target.value)}
-                  style={{ width: '100%', fontSize: 11, border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '2px 4px', fontFamily: 'inherit' }} />
+                  style={fiberInputStyle} />
               </div>
               <div>
-                <span style={{ fontSize: 9, color: 'var(--muted)' }}>Fiber Angle</span>
+                <span style={fiberLabelStyle}>Fiber Angle</span>
                 <input value={data.fiberAngle ?? ''} onChange={e => update('fiberAngle', e.target.value)}
-                  style={{ width: '100%', fontSize: 11, border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '2px 4px', fontFamily: 'inherit' }} />
+                  style={fiberInputStyle} />
               </div>
               <div>
-                <span style={{ fontSize: 9, color: 'var(--muted)' }}>Light Transmission</span>
+                <span style={fiberLabelStyle}>Light Transmission</span>
                 <input value={data.fiberLightTrans ?? ''} onChange={e => update('fiberLightTrans', e.target.value)}
-                  style={{ width: '100%', fontSize: 11, border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '2px 4px', fontFamily: 'inherit' }} />
+                  style={fiberInputStyle} />
               </div>
             </div>
           </div>
         </SectionCard>
 
         <SectionCard title="Post-Repair Verification">
-          <div style={{ color: 'var(--muted)', fontSize: 12, textAlign: 'center', padding: 16 }}>
+          <div style={postRepairMsgStyle}>
             Post-repair values are captured in the angulation grid (Out columns) and P/F grid below.
           </div>
         </SectionCard>
@@ -212,26 +242,20 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
       <SectionCard
         title="Pass / Fail Checkpoints"
         actions={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>
+          <div style={pfActionsRowStyle}>
+            <span style={pfCountStyle}>
               {passCount}/{totalPF} Pass
             </span>
-            <button onClick={handleMarkAllPass} style={{
-              fontSize: 10, padding: '2px 8px', border: '1px solid var(--success)', borderRadius: 4,
-              background: 'var(--card)', color: 'var(--success)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit',
-            }}>Mark All Pass</button>
-            <button onClick={handleClearAll} style={{
-              fontSize: 10, padding: '2px 8px', border: '1px solid var(--neutral-200)', borderRadius: 4,
-              background: 'var(--card)', color: 'var(--muted)', cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit',
-            }}>Clear All</button>
+            <button onClick={handleMarkAllPass} style={markAllPassBtnStyle}>Mark All Pass</button>
+            <button onClick={handleClearAll} style={clearAllBtnStyle}>Clear All</button>
           </div>
         }
       >
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px 16px' }}>
+        <div style={pfGridStyle}>
           {PF_FIELDS.map(f => (
-            <div key={f.key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 11, color: 'var(--text)' }}>{f.label}</span>
-              <div style={{ display: 'flex', gap: 2 }}>
+            <div key={f.key} style={pfFieldRowStyle}>
+              <span style={pfFieldLabelStyle}>{f.label}</span>
+              <div style={pfFieldBtnRowStyle}>
                 <PFButton value={data[f.key]} target="P" onClick={() => togglePF(f.key, 'P')} />
                 <PFButton value={data[f.key]} target="F" onClick={() => togglePF(f.key, 'F')} />
               </div>
@@ -241,14 +265,13 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
       </SectionCard>
 
       {/* Save button */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0 0 8px' }}>
+      <div style={saveRowStyle}>
         <button
           onClick={handleSave}
           disabled={saving}
           style={{
-            height: 30, padding: '0 20px', border: 'none', borderRadius: 5,
-            background: 'var(--primary)', color: 'var(--card)',
-            fontSize: 12, fontWeight: 600, cursor: saving ? 'wait' : 'pointer', fontFamily: 'inherit',
+            ...saveBtnBaseStyle,
+            cursor: saving ? 'wait' : 'pointer',
           }}
         >
           {saving ? 'Saving...' : 'Save Inspections'}

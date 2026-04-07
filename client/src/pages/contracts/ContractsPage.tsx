@@ -60,7 +60,7 @@ export const ContractsPage = () => {
   return (
     <div style={{ display: 'flex', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
       {/* Left list panel */}
-      <div style={{
+      <aside aria-label="Contract list" style={{
         width: collapsed ? 0 : 320,
         flexShrink: 0,
         borderRight: collapsed ? 'none' : '1px solid var(--neutral-200)',
@@ -82,7 +82,7 @@ export const ContractsPage = () => {
                 Contracts
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: 10, color: 'var(--muted)' }}>{contracts.length} records</span>
+                <span style={{ fontSize: 10, color: 'var(--muted)' }} aria-live="polite">{contracts.length} records</span>
                 <ExportButton data={contracts as unknown as Record<string, unknown>[]} columns={CONTRACT_EXPORT_COLS} filename="contracts-export" sheetName="Contracts" />
                 <button
                   onClick={() => setCollapsed(true)}
@@ -107,10 +107,10 @@ export const ContractsPage = () => {
             />
           </>
         )}
-      </div>
+      </aside>
 
       {/* Right detail panel */}
-      <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)', position: 'relative' }}>
+      <section aria-label="Contract details" style={{ flex: 1, overflow: 'auto', background: 'var(--card)', position: 'relative' }}>
         {collapsed && (
           <button
             onClick={() => setCollapsed(false)}
@@ -127,7 +127,7 @@ export const ContractsPage = () => {
           </button>
         )}
         <ContractDetailPane detail={detail} loading={detailLoading} stats={stats} />
-      </div>
+      </section>
     </div>
   );
 };

@@ -43,9 +43,9 @@ const RISK_SUMMARY_BY = ['Department', 'Client', 'Sales Rep'];
 const DateRangeRow = () => (
   <div style={rowStyle}>
     <span style={labelStyle}>Date Range</span>
-    <input type="date" style={{ ...inputStyle, width: 130 }} />
+    <input type="date" aria-label="Report start date" style={{ ...inputStyle, width: 130 }} />
     <span style={{ fontSize: 10, color: 'var(--muted)' }}>to</span>
-    <input type="date" style={{ ...inputStyle, width: 130 }} />
+    <input type="date" aria-label="Report end date" style={{ ...inputStyle, width: 130 }} />
   </div>
 );
 
@@ -275,15 +275,15 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <DateRangeRow />
             <div style={rowStyle}>
               <span style={labelStyle}>Repair Detail</span>
-              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Filter by repair detail..." />
+              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Filter by repair detail..." aria-label="Filter by repair detail" />
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Client</span>
-              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter client name..." />
+              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter client name..." aria-label="Client name filter" />
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Department</span>
-              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter department..." />
+              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter department..." aria-label="Department filter" />
             </div>
           </>
         );
@@ -293,7 +293,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
           <>
             <div style={rowStyle}>
               <span style={labelStyle}>Month</span>
-              <input type="month" style={{ ...inputStyle, width: 160 }} />
+              <input type="month" aria-label="Leaderboard month" style={{ ...inputStyle, width: 160 }} />
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Report Type</span>
@@ -307,7 +307,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
           <>
             <div style={rowStyle}>
               <span style={labelStyle}>Month</span>
-              <input type="month" style={{ ...inputStyle, width: 160 }} />
+              <input type="month" aria-label="Sales rep report month" style={{ ...inputStyle, width: 160 }} />
             </div>
             <SalesRepRow />
           </>

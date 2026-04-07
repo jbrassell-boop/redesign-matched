@@ -66,6 +66,7 @@ export const RepairItemAutoComplete = ({ repairKey, onSelect, inputRef }: Props)
         onKeyDown={handleKey}
         onFocus={() => query && setOpen(true)}
         placeholder="Search repair items…"
+        aria-label="Search repair items"
         style={{
           width: '100%', height: 26,
           border: '1px solid var(--input-focus-border)', borderRadius: 3,

@@ -113,6 +113,7 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
               value={clientSearch}
               onChange={e => setClientSearch(e.target.value)}
               placeholder="Search customer..."
+              aria-label="Search customer"
               style={inputStyle}
             />
             <div style={{

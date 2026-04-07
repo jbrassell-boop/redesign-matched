@@ -32,6 +32,10 @@ interface StatChipProps {
 const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon, active, onClick, clickable = true }: StatChipProps) => (
   <div
     onClick={clickable ? onClick : undefined}
+    role={clickable ? 'button' : undefined}
+    tabIndex={clickable ? 0 : undefined}
+    onKeyDown={clickable && onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
+    aria-pressed={clickable ? active : undefined}
     style={{
       flex: 1,
       display: 'flex',
@@ -48,22 +52,12 @@ const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon, active, o
     onMouseEnter={e => { if (clickable && !active) (e.currentTarget as HTMLDivElement).style.background = 'var(--bg)'; }}
     onMouseLeave={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = ''; }}
   >
-    <div style={{
-      width: 32,
-      height: 32,
-      borderRadius: 6,
-      background: iconBg,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-      color: iconColor,
-    }}>
+    <div style={{ ...iconBgBaseStyle, background: iconBg, color: iconColor }}>
       {icon}
     </div>
     <div>
-      <div style={{ fontSize: 16, fontWeight: 800, color: valueColor, lineHeight: 1.2 }}>{value}</div>
-      <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</div>
+      <div style={{ ...statValueStyle, color: valueColor }}>{value}</div>
+      <div style={statLabelStyle}>{label}</div>
     </div>
   </div>
 );
@@ -143,6 +137,19 @@ const footerBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'cent
 const paginationWrapStyle: React.CSSProperties = { display: 'flex', gap: 3, alignItems: 'center' };
 const navyBoldStyle: React.CSSProperties = { fontWeight: 700, color: 'var(--navy)' };
 const newBtnStyle: React.CSSProperties = { height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 };
+const woLinkStyle: React.CSSProperties = { fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' };
+const fontWeight500Style: React.CSSProperties = { fontWeight: 500 };
+const pageBtnBaseStyle: React.CSSProperties = { height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', fontFamily: 'inherit' };
+const reportCardBaseStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--neutral-200)', borderRadius: 'var(--radius-lg)', padding: 18, cursor: 'pointer', transition: 'box-shadow 0.15s' };
+const reportIconWrapStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 };
+const reportIconBoxStyle: React.CSSProperties = { width: 32, height: 32, borderRadius: 6, background: 'rgba(var(--navy-rgb), 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--navy)' };
+const reportTitleStyle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: 'var(--text)' };
+const reportDescStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 };
+const reportGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 };
+const reportsTabContentStyle: React.CSSProperties = { flex: 1, overflow: 'auto', padding: 16 };
+const iconBgBaseStyle: React.CSSProperties = { width: 32, height: 32, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 };
+const statValueStyle: React.CSSProperties = { fontSize: 16, fontWeight: 800, lineHeight: 1.2 };
+const statLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
 
 const QC_COLS = [
   { label: 'WO#', width: 90 },
@@ -350,7 +357,7 @@ export const QualityPage = () => {
   });
 
   return (
-    <div style={pageContainerStyle}>
+    <section aria-label="Quality" style={pageContainerStyle}>
 
       {/* ── Stat Strip ── */}
       <div style={statStripStyle}>
@@ -431,15 +438,10 @@ export const QualityPage = () => {
           {/* Toolbar */}
           <div style={toolbarStyle}>
             {/* Result segmented control */}
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
+            <span style={filterLabelStyle}>
               Result
             </span>
-            <div style={{
-              display: 'inline-flex',
-              border: '1px solid var(--border-dk)',
-              borderRadius: 'var(--radius-md)',
-              overflow: 'hidden',
-            }}>
+            <div style={segmentedWrapStyle}>
               {(['all', 'Pass', 'Conditional', 'Fail'] as const).map((v, i) => (
                 <button
                   key={v}
@@ -463,39 +465,15 @@ export const QualityPage = () => {
               value={dateFrom}
               onChange={e => { setDateFrom(e.target.value); setPage(1); }}
               title="From date"
-              style={{
-                height: 30,
-                border: '1.5px solid var(--border-dk)',
-                borderRadius: 6,
-                padding: '0 8px',
-                fontSize: 11,
-                fontFamily: 'inherit',
-                color: 'var(--text)',
-                background: 'var(--card)',
-                outline: 'none',
-                cursor: 'pointer',
-                width: 120,
-              }}
+              style={dateInputStyle}
             />
-            <span style={{ fontSize: 10, color: 'var(--muted)' }}>to</span>
+            <span style={dateToLabelStyle}>to</span>
             <input
               type="date"
               value={dateTo}
               onChange={e => { setDateTo(e.target.value); setPage(1); }}
               title="To date"
-              style={{
-                height: 30,
-                border: '1.5px solid var(--border-dk)',
-                borderRadius: 6,
-                padding: '0 8px',
-                fontSize: 11,
-                fontFamily: 'inherit',
-                color: 'var(--text)',
-                background: 'var(--card)',
-                outline: 'none',
-                cursor: 'pointer',
-                width: 120,
-              }}
+              style={dateInputStyle}
             />
 
             {/* Search — right aligned */}
@@ -504,18 +482,8 @@ export const QualityPage = () => {
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1); }}
               placeholder="Search WO#, Serial#, Client..."
-              style={{
-                marginLeft: 'auto',
-                height: 30,
-                width: 220,
-                border: '1.5px solid var(--border-dk)',
-                borderRadius: 6,
-                padding: '0 10px 0 30px',
-                fontSize: 11,
-                fontFamily: 'inherit',
-                outline: 'none',
-                background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
-              }}
+              aria-label="Search QC inspections"
+              style={searchInputStyle}
             />
 
             {/* Export */}
@@ -566,7 +534,7 @@ export const QualityPage = () => {
                       onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
                     >
                       <td style={tdCellStyle}>
-                        <span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>
+                        <span style={woLinkStyle}>
                           {item.workOrderNumber}
                         </span>
                       </td>
@@ -603,23 +571,15 @@ export const QualityPage = () => {
 
           {/* Table Footer */}
           <div style={footerBarStyle}>
-            <span style={{ fontWeight: 500 }}>{totalCount.toLocaleString()} records</span>
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+            <span style={fontWeight500Style}>{totalCount.toLocaleString()} records</span>
+            <div style={paginationWrapStyle}>
               <button
                 disabled={page <= 1}
                 onClick={() => setPage(p => p - 1)}
                 style={{
-                  height: 26,
-                  minWidth: 26,
-                  padding: '0 6px',
-                  border: '1px solid var(--border-dk)',
-                  borderRadius: 4,
-                  background: 'var(--card)',
-                  fontSize: 11,
-                  color: 'var(--label)',
+                  ...pageBtnBaseStyle,
                   cursor: page <= 1 ? 'default' : 'pointer',
                   opacity: page <= 1 ? 0.4 : 1,
-                  fontFamily: 'inherit',
                 }}
               >
                 ‹
@@ -631,17 +591,11 @@ export const QualityPage = () => {
                     key={pg}
                     onClick={() => setPage(pg)}
                     style={{
-                      height: 26,
-                      minWidth: 26,
-                      padding: '0 6px',
-                      border: '1px solid var(--border-dk)',
-                      borderRadius: 4,
+                      ...pageBtnBaseStyle,
                       background: page === pg ? 'var(--navy)' : 'var(--card)',
                       color: page === pg ? 'var(--card)' : 'var(--label)',
-                      fontSize: 11,
                       fontWeight: page === pg ? 600 : 400,
                       cursor: 'pointer',
-                      fontFamily: 'inherit',
                     }}
                   >
                     {pg}
@@ -695,6 +649,7 @@ export const QualityPage = () => {
             </div>
             <input type="text" value={ncrSearch} onChange={e => { setNcrSearch(e.target.value); setNcrPage(1); }}
               placeholder="Search NCR#, WO#, description..."
+              aria-label="Search non-conformance reports"
               style={{
                 marginLeft: 'auto', height: 30, width: 240, border: '1.5px solid var(--border-dk)', borderRadius: 6,
                 padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
@@ -800,7 +755,7 @@ export const QualityPage = () => {
                 <button key={v} style={{ ...segBtnStyle(i === 0), borderRight: i < 4 ? '1px solid var(--border-dk)' : 'none' }}>{v}</button>
               ))}
             </div>
-            <input type="text" placeholder="Search CAPA#, NCR ref, description..." readOnly
+            <input type="text" placeholder="Search CAPA#, NCR ref, description..." aria-label="Search CAPA records" readOnly
               style={{
                 marginLeft: 'auto', height: 30, width: 260, border: '1.5px solid var(--border-dk)', borderRadius: 6,
                 padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
@@ -847,6 +802,7 @@ export const QualityPage = () => {
             </div>
             <input type="text" value={reworkSearch} onChange={e => { setReworkSearch(e.target.value); setReworkPage(1); }}
               placeholder="Search RW#, WO#, Serial#..."
+              aria-label="Search rework records"
               style={{
                 marginLeft: 'auto', height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6,
                 padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
@@ -1040,6 +996,6 @@ export const QualityPage = () => {
         </div>
       )}
 
-    </div>
+    </section>
   );
 };

@@ -88,7 +88,7 @@ export const ClientsPage = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <h1 style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', margin: 0 }}>Clients</h1>
-              <span style={{
+              <span aria-live="polite" style={{
                 fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
                 background: 'var(--primary-light)', color: 'var(--primary)',
               }}>
@@ -204,13 +204,13 @@ export const ClientsPage = () => {
             </FixedSizeList>
           )}
         </div>
-      </div>
+      </aside>
 
       {/* Right Panel — Detail */}
       {selectedKey && (
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <section aria-label="Client details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <ClientDetailPane clientKey={selectedKey} onClientDeleted={handleClientDeleted} />
-        </div>
+        </section>
       )}
 
       {/* Empty state when nothing selected */}

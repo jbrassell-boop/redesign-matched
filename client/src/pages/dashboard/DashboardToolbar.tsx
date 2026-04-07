@@ -109,6 +109,7 @@ export const DashboardToolbar = ({ state, onChange, selectedCount, onExport }: D
         className="dash-toolbar__search"
         type="text"
         placeholder="Search WO, client, serial..."
+        aria-label="Search work orders by WO number, client, or serial"
         value={state.search}
         onChange={e => onChange({ search: e.target.value, page: 1 })}
       />

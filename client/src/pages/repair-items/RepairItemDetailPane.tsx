@@ -166,9 +166,9 @@ export const RepairItemDetailPane = ({ itemKey, onItemDeleted, onItemSaved }: Re
         padding: '8px 14px',
         flexShrink: 0,
       }}>
-        <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--navy)', lineHeight: 1.2 }}>
+        <h2 style={{ fontSize: 14, fontWeight: 800, color: 'var(--navy)', lineHeight: 1.2, margin: 0 }}>
           {detail.itemDescription}
-        </div>
+        </h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
           <span style={{
             background: 'var(--bg)',

@@ -238,6 +238,7 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <DetailHeader
+        headingLevel="h2"
         title={localDetail.name}
         subtitle={localDetail.shipCity ? `${localDetail.shipCity}, ${localDetail.shipState}` : undefined}
         badges={

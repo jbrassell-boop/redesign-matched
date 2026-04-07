@@ -80,6 +80,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
         <input
           placeholder="Search model, serial..."
+          aria-label="Search scopes by model or serial number"
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{
@@ -182,6 +183,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
               value={serial}
               onChange={e => setSerial(e.target.value)}
               placeholder="Enter serial number"
+              aria-label="Scope serial number"
               style={{ width: '100%', height: 30, border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '0 8px', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
             />
           </div>

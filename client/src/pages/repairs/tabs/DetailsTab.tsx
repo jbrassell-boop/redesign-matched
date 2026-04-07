@@ -35,6 +35,84 @@ const sectionHd: React.CSSProperties = {
   borderTop: '1px solid var(--border)',
 };
 
+// ── Extracted static styles ──
+const detailsContainerStyle: React.CSSProperties = { padding: 12, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto' };
+const dtActionBarStyle: React.CSSProperties = {
+  background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6,
+  padding: '7px 10px', display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center',
+};
+const dtActionsLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginRight: 4 };
+const dtActionBtnBaseStyle: React.CSSProperties = {
+  height: 28, padding: '0 10px', borderRadius: 4,
+  fontSize: 11, fontWeight: 600, cursor: 'pointer',
+  fontFamily: 'inherit', border: 'none',
+};
+const dtMainGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '340px 1fr', gap: 12, alignItems: 'start' };
+const dtLeftSidebarStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 8 };
+const dtCardStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' };
+const dtSectionHdFlexStyle: React.CSSProperties = { ...sectionHd, display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
+const dtFormPadStyle: React.CSSProperties = { padding: '8px 12px' };
+const dtTwoColGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px', marginBottom: 8 };
+const dtTextareaStyle: React.CSSProperties = {
+  minHeight: 64, width: '100%', border: '1px solid var(--neutral-200)', borderRadius: 3,
+  background: 'var(--card)', padding: '6px 7px', fontSize: 11, color: 'var(--label)', lineHeight: 1.4,
+  resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box',
+};
+const dtAngBtnGroupStyle: React.CSSProperties = { display: 'flex', gap: 3 };
+const dtAngSmallBtnStyle: React.CSSProperties = {
+  height: 20, padding: '0 7px', fontSize: 9, fontWeight: 600,
+  background: 'var(--card)', color: 'var(--navy)', border: '1px solid var(--border)',
+  borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit',
+};
+const dtThreeColGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5, marginBottom: 6 };
+const dtEmptyFieldStyle: React.CSSProperties = { color: 'var(--muted)', fontStyle: 'italic', fontSize: 10 };
+const dtCommentPlaceholderStyle: React.CSSProperties = {
+  minHeight: 44, border: '1px solid var(--neutral-200)', borderRadius: 3,
+  background: 'var(--card)', padding: '6px 7px', fontSize: 10,
+  color: 'var(--muted)', fontStyle: 'italic', marginBottom: 8,
+};
+const dtNotesBoxStyle: React.CSSProperties = {
+  background: 'var(--info-section-bg)', border: '1px solid var(--info-section-border)',
+  borderRadius: 4, padding: '5px 7px',
+};
+const dtNotesLabelStyle: React.CSSProperties = { fontSize: 8, fontWeight: 700, color: 'var(--navy)', marginBottom: 1 };
+const dtNotesTextStyle: React.CSSProperties = { fontSize: 10, color: 'var(--label)' };
+const dtRightColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 8 };
+const dtComplaintBannerStyle: React.CSSProperties = {
+  background: 'var(--card)',
+  border: '1px solid var(--border)',
+  borderLeft: '4px solid var(--primary)',
+  borderRadius: '0 6px 6px 0',
+  padding: '8px 12px',
+};
+const dtComplaintRowStyle: React.CSSProperties = { display: 'flex', gap: 14, alignItems: 'flex-start' };
+const dtComplaintLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 };
+const dtComplaintTextStyle: React.CSSProperties = { fontSize: 12, color: 'var(--label)', lineHeight: 1.5 };
+const dtComplaintEmptyStyle: React.CSSProperties = { color: 'var(--muted)', fontStyle: 'italic' };
+const dtSideFieldLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' };
+const dtSideFieldValueStyle: React.CSSProperties = { fontSize: 11, color: 'var(--label)', fontWeight: 600 };
+const dtFlagsBannerStyle: React.CSSProperties = {
+  background: 'var(--amber-light)',
+  border: '1px solid var(--amber-border)',
+  borderLeft: '4px solid var(--amber)',
+  borderRadius: '0 6px 6px 0',
+  padding: '7px 12px',
+  display: 'flex', gap: 10, alignItems: 'center',
+};
+const dtFlagsLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--badge-amber-text)', textTransform: 'uppercase', letterSpacing: '.05em', flexShrink: 0 };
+const dtFlagsRowStyle: React.CSSProperties = { display: 'flex', gap: 6, flexWrap: 'wrap' };
+const dtRushBadgeStyle: React.CSSProperties = { background: 'var(--danger)', color: 'var(--card)', padding: '2px 9px', borderRadius: 10, fontSize: 10, fontWeight: 700 };
+const dtFlagBadgeStyle: React.CSSProperties = { background: 'var(--badge-amber-text)', color: 'var(--card)', padding: '2px 9px', borderRadius: 10, fontSize: 10, fontWeight: 700 };
+const dtFlagsReviewStyle: React.CSSProperties = { marginLeft: 'auto', fontSize: 10, color: 'var(--badge-amber-text)', fontStyle: 'italic' };
+const dtTechModalTitleStyle: React.CSSProperties = { fontSize: 14, fontWeight: 700, color: 'var(--navy)' };
+const dtTechModalBodyStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12, padding: '8px 0' };
+const dtTechFieldLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 };
+const dtTechSelectStyle: React.CSSProperties = { width: '100%', height: 32, border: '1px solid var(--border)', borderRadius: 4, fontSize: 12, padding: '0 8px' };
+const dtTechBtnRowStyle: React.CSSProperties = { display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 };
+const dtCancelBtnStyle: React.CSSProperties = { padding: '5px 14px', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--card)', cursor: 'pointer', fontSize: 12 };
+const dtSaveBtnStyle: React.CSSProperties = { padding: '5px 14px', borderRadius: 4, border: 'none', background: 'var(--primary)', color: 'var(--card)', cursor: 'pointer', fontSize: 12, fontWeight: 700 };
+const dtOutsourceGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px' };
+
 export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
   const [items, setItems] = useState<RepairLineItem[]>([]);
   const [amendOpen, setAmendOpen] = useState(false);
@@ -121,14 +199,11 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
   ];
 
   return (
-    <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8, overflow: 'auto' }}>
+    <div style={detailsContainerStyle}>
 
       {/* Action bar */}
-      <div style={{
-        background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6,
-        padding: '7px 10px', display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center',
-      }}>
-        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginRight: 4 }}>
+      <div style={dtActionBarStyle}>
+        <span style={dtActionsLabelStyle}>
           Actions
         </span>
         {actionButtons.map(btn => (
@@ -136,9 +211,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
             key={btn.label}
             onClick={() => (btn as any).action ? (btn as any).action() : message.warning('Action not configured')}
             style={{
-              height: 28, padding: '0 10px', borderRadius: 4,
-              fontSize: 11, fontWeight: 600, cursor: 'pointer',
-              fontFamily: 'inherit', border: 'none',
+              ...dtActionBtnBaseStyle,
               ...btn.style,
             }}
           >
@@ -148,19 +221,19 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
       </div>
 
       {/* Main 2-col */}
-      <div style={{ display: 'grid', gridTemplateColumns: '340px 1fr', gap: 12, alignItems: 'start' }}>
+      <div style={dtMainGridStyle}>
 
         {/* LEFT sidebar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={dtLeftSidebarStyle}>
 
           {/* Complaint form — editable */}
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
-            <div style={{ ...sectionHd, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={dtCardStyle}>
+            <div style={dtSectionHdFlexStyle}>
               <span>Customer Complaint</span>
               <AutosaveIndicator status={detailsStatus} />
             </div>
-            <div style={{ padding: '8px 12px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px', marginBottom: 8 }}>
+            <div style={dtFormPadStyle}>
+              <div style={dtTwoColGridStyle}>
                 <div>
                   <div style={lblStyle}>Repair Reason</div>
                   <select
@@ -185,59 +258,52 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
                 </div>
               </div>
               <textarea
-                style={{
-                  minHeight: 64, width: '100%', border: '1px solid var(--neutral-200)', borderRadius: 3,
-                  background: 'var(--card)', padding: '6px 7px', fontSize: 11, color: 'var(--label)', lineHeight: 1.4,
-                  resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box',
-                }}
+                style={dtTextareaStyle}
                 value={complaint}
                 onChange={e => { setComplaint(e.target.value); detailsChange('complaint', e.target.value || undefined); }}
                 placeholder="No complaint recorded"
+                aria-label="Customer complaint"
               />
             </div>
           </div>
 
           {/* Angulation IN */}
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
-            <div style={{ ...sectionHd, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={dtCardStyle}>
+            <div style={dtSectionHdFlexStyle}>
               <span>Angulation IN</span>
-              <div style={{ display: 'flex', gap: 3 }}>
+              <div style={dtAngBtnGroupStyle}>
                 {(['Reset', 'Override'] as const).map(lbl => (
                   <button key={lbl}
                     onClick={() => message.info(`${lbl} angulation — use Inspections tab`)}
-                    style={{
-                      height: 20, padding: '0 7px', fontSize: 9, fontWeight: 600,
-                      background: 'var(--card)', color: 'var(--navy)', border: '1px solid var(--border)',
-                      borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit',
-                    }}>
+                    style={dtAngSmallBtnStyle}>
                     {lbl}
                   </button>
                 ))}
               </div>
             </div>
-            <div style={{ padding: '8px 12px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5, marginBottom: 6 }}>
+            <div style={dtFormPadStyle}>
+              <div style={dtThreeColGridStyle}>
                 {(['UP', 'DOWN', 'RIGHT', 'LEFT', 'Epoxy', 'Size'] as const).map(lbl => (
                   <div key={lbl}>
                     <div style={lblStyle}>{lbl}</div>
                     <div style={fieldStyle}>
-                      <span style={{ color: 'var(--muted)', fontStyle: 'italic', fontSize: 10 }}>—</span>
+                      <span style={dtEmptyFieldStyle}>—</span>
                     </div>
                   </div>
                 ))}
               </div>
               <div>
                 <div style={lblStyle}>Max Charge</div>
-                <div style={fieldStyle}><span style={{ color: 'var(--muted)', fontStyle: 'italic', fontSize: 10 }}>—</span></div>
+                <div style={fieldStyle}><span style={dtEmptyFieldStyle}>—</span></div>
               </div>
             </div>
           </div>
 
           {/* Outsource */}
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+          <div style={dtCardStyle}>
             <div style={sectionHd}>Outsource</div>
-            <div style={{ padding: '8px 12px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px' }}>
+            <div style={dtFormPadStyle}>
+              <div style={dtOutsourceGridStyle}>
                 {[
                   { label: 'Vendor', value: repair.outsourceVendor },
                   { label: 'Cost',   value: repair.outsourceCost != null ? `$${repair.outsourceCost}` : null },
@@ -256,23 +322,16 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
           </div>
 
           {/* Comments */}
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+          <div style={dtCardStyle}>
             <div style={sectionHd}>Comments</div>
-            <div style={{ padding: '8px 12px' }}>
-              <div style={{
-                minHeight: 44, border: '1px solid var(--neutral-200)', borderRadius: 3,
-                background: 'var(--card)', padding: '6px 7px', fontSize: 10,
-                color: 'var(--muted)', fontStyle: 'italic', marginBottom: 8,
-              }}>
+            <div style={dtFormPadStyle}>
+              <div style={dtCommentPlaceholderStyle}>
                 Add a comment…
               </div>
               {repair.notes && (
-                <div style={{
-                  background: 'var(--info-section-bg)', border: '1px solid var(--info-section-border)',
-                  borderRadius: 4, padding: '5px 7px',
-                }}>
-                  <div style={{ fontSize: 8, fontWeight: 700, color: 'var(--navy)', marginBottom: 1 }}>Notes</div>
-                  <div style={{ fontSize: 10, color: 'var(--label)' }}>{repair.notes}</div>
+                <div style={dtNotesBoxStyle}>
+                  <div style={dtNotesLabelStyle}>Notes</div>
+                  <div style={dtNotesTextStyle}>{repair.notes}</div>
                 </div>
               )}
             </div>
@@ -280,62 +339,49 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
         </div>
 
         {/* RIGHT: complaint banner + flags + items table */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={dtRightColStyle}>
 
           {/* Complaint banner */}
-          <div style={{
-            background: 'var(--card)',
-            border: '1px solid var(--border)',
-            borderLeft: '4px solid var(--primary)',
-            borderRadius: '0 6px 6px 0',
-            padding: '8px 12px',
-          }}>
-            <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+          <div style={dtComplaintBannerStyle}>
+            <div style={dtComplaintRowStyle}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 }}>
+                <div style={dtComplaintLabelStyle}>
                   Customer Complaint
                 </div>
-                <div style={{ fontSize: 12, color: 'var(--label)', lineHeight: 1.5 }}>
-                  {repair.complaint || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>No complaint recorded</span>}
+                <div style={dtComplaintTextStyle}>
+                  {repair.complaint || <span style={dtComplaintEmptyStyle}>No complaint recorded</span>}
                 </div>
               </div>
               <div style={{ flexShrink: 0 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>Reason</div>
-                <div style={{ fontSize: 11, color: 'var(--label)', fontWeight: 600 }}>{repair.repairReason || '—'}</div>
+                <div style={dtSideFieldLabelStyle}>Reason</div>
+                <div style={dtSideFieldValueStyle}>{repair.repairReason || '—'}</div>
               </div>
               <div style={{ flexShrink: 0 }}>
-                <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' }}>PS Level</div>
-                <div style={{ fontSize: 11, color: 'var(--label)', fontWeight: 600 }}>{repair.psLevel || '—'}</div>
+                <div style={dtSideFieldLabelStyle}>PS Level</div>
+                <div style={dtSideFieldValueStyle}>{repair.psLevel || '—'}</div>
               </div>
             </div>
           </div>
 
           {/* Flags banner — only if flags exist or repair is urgent */}
           {(repair.isUrgent || flags.length > 0) && (
-            <div style={{
-              background: 'var(--amber-light)',
-              border: '1px solid var(--amber-border)',
-              borderLeft: '4px solid var(--amber)',
-              borderRadius: '0 6px 6px 0',
-              padding: '7px 12px',
-              display: 'flex', gap: 10, alignItems: 'center',
-            }}>
-              <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--badge-amber-text)', textTransform: 'uppercase', letterSpacing: '.05em', flexShrink: 0 }}>
+            <div style={dtFlagsBannerStyle}>
+              <div style={dtFlagsLabelStyle}>
                 Flags
               </div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <div style={dtFlagsRowStyle}>
                 {repair.isUrgent && (
-                  <span style={{ background: 'var(--danger)', color: 'var(--card)', padding: '2px 9px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>
+                  <span style={dtRushBadgeStyle}>
                     ⚑ Rush
                   </span>
                 )}
                 {flags.map((f) => (
-                  <span key={f.flagKey} style={{ background: 'var(--badge-amber-text)', color: 'var(--card)', padding: '2px 9px', borderRadius: 10, fontSize: 10, fontWeight: 700 }}>
+                  <span key={f.flagKey} style={dtFlagBadgeStyle}>
                     ⚑ {f.flag}
                   </span>
                 ))}
               </div>
-              <div style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--badge-amber-text)', fontStyle: 'italic' }}>
+              <div style={dtFlagsReviewStyle}>
                 Review before proceeding
               </div>
             </div>
@@ -364,15 +410,15 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
       <Modal
         open={techModalOpen}
         onCancel={() => setTechModalOpen(false)}
-        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>Update Technicians</span>}
+        title={<span style={dtTechModalTitleStyle}>Update Technicians</span>}
         footer={null}
         width={400}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '8px 0' }}>
+        <div style={dtTechModalBodyStyle}>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Primary Technician *</div>
+            <div style={dtTechFieldLabelStyle}>Primary Technician *</div>
             <select
-              style={{ width: '100%', height: 32, border: '1px solid var(--border)', borderRadius: 4, fontSize: 12, padding: '0 8px' }}
+              style={dtTechSelectStyle}
               value={selectedTech}
               onChange={e => setSelectedTech(Number(e.target.value))}
             >
@@ -381,9 +427,9 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
             </select>
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 }}>Secondary Technician</div>
+            <div style={dtTechFieldLabelStyle}>Secondary Technician</div>
             <select
-              style={{ width: '100%', height: 32, border: '1px solid var(--border)', borderRadius: 4, fontSize: 12, padding: '0 8px' }}
+              style={dtTechSelectStyle}
               value={selectedTech2 ?? ''}
               onChange={e => setSelectedTech2(e.target.value ? Number(e.target.value) : null)}
             >
@@ -391,9 +437,9 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
               {techList.map(t => <option key={t.techKey} value={t.techKey}>{t.techName}</option>)}
             </select>
           </div>
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 }}>
+          <div style={dtTechBtnRowStyle}>
             <button onClick={() => setTechModalOpen(false)}
-              style={{ padding: '5px 14px', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--card)', cursor: 'pointer', fontSize: 12 }}>
+              style={dtCancelBtnStyle}>
               Cancel
             </button>
             <button
@@ -411,7 +457,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
                   setTechSaving(false);
                 }
               }}
-              style={{ padding: '5px 14px', borderRadius: 4, border: 'none', background: 'var(--primary)', color: 'var(--card)', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+              style={dtSaveBtnStyle}>
               {techSaving ? 'Saving…' : 'Save'}
             </button>
           </div>

@@ -185,6 +185,31 @@ div[role="menuitem"]:focus-visible {
   background: var(--neutral-50);
 }
 
+/* ── Global focus-visible styles ── */
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible,
+select:focus-visible,
+[role="tab"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+.ant-input:focus-visible,
+.ant-select-selector:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 0;
+}
+
+/* Ensure table rows with click handlers show focus */
+tr[tabindex]:focus-visible,
+[role="row"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
 /* ── DENSITY TOGGLE — compact mode ── */
 [data-density="compact"] .tab-bar__item { padding: 6px 14px; font-size: var(--text-xs); }
 [data-density="compact"] .ant-table-cell { padding: 6px 10px !important; font-size: 11px; }

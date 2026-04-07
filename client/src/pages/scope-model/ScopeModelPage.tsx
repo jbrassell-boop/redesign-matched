@@ -40,6 +40,10 @@ interface StatChipProps {
 const StatChip = ({ label, value, iconBg, iconColor, valueColor, active, onClick, icon }: StatChipProps) => (
   <div
     onClick={onClick}
+    role="button"
+    tabIndex={0}
+    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
+    aria-pressed={active}
     style={{
       flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
       borderRadius: 8, transition: 'background 0.12s, outline-color 0.12s',
@@ -462,6 +466,7 @@ export const ScopeModelPage = () => {
         </button>
       </div>
       <DetailHeader
+        headingLevel="h2"
         title={localDetail.description}
         badges={
           <>

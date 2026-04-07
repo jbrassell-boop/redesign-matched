@@ -12,7 +12,7 @@ interface ClientToolbarProps {
 
 export const ClientToolbar = ({ client, autosaveStatus, onToggleActive, onDelete }: ClientToolbarProps) => (
   <div className="client-toolbar">
-    <span className="client-toolbar__name">{client.name}</span>
+    <h2 className="client-toolbar__name">{client.name}</h2>
     <span className="client-toolbar__id">#{client.clientKey}</span>
 
     <span style={{

@@ -520,7 +520,7 @@ const HealthIndicator = ({ contractKey }: { contractKey: number }) => {
   return (
     <Panel>
       <PanelHead><span>Contract Health</span></PanelHead>
-      <div style={{ padding: '12px 14px', textAlign: 'center' }}>
+      <div style={healthCenterStyle}>
         <div style={{ fontSize: 28, fontWeight: 900, color: gradeColor }}>{health.margin}%</div>
         <div style={{
           display: 'inline-block', padding: '2px 12px', borderRadius: 12,
@@ -534,12 +534,12 @@ const HealthIndicator = ({ contractKey }: { contractKey: number }) => {
             { label: 'Consumption', value: fmtMoneyDecimal(health.consumption), pct: health.percentConsumed, color: 'var(--warning)' },
             { label: 'Time Elapsed', value: `${health.percentTimeElapsed}%`, pct: health.percentTimeElapsed, color: 'var(--primary)' },
           ].map(f => (
-            <div key={f.label} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-              <span style={{ width: 90, flexShrink: 0, fontSize: 11, fontWeight: 600, color: 'var(--muted)' }}>{f.label}</span>
-              <div style={{ flex: 1, height: 6, background: 'var(--neutral-200)', borderRadius: 3, overflow: 'hidden' }}>
+            <div key={f.label} style={healthRowStyle}>
+              <span style={healthLabelStyle}>{f.label}</span>
+              <div style={healthBarBgStyle}>
                 <div style={{ width: `${Math.min(f.pct, 100)}%`, height: '100%', background: f.color, borderRadius: 3 }} />
               </div>
-              <span style={{ width: 70, textAlign: 'right', fontSize: 11, fontWeight: 700, color: 'var(--text)' }}>{f.value}</span>
+              <span style={healthValueStyle}>{f.value}</span>
             </div>
           ))}
         </div>
@@ -925,14 +925,14 @@ const AddressTab = ({ detail }: { detail: ContractDetail }) => (
           {detail.billEmail && <Field label="Email" value={detail.billEmail} />}
         </FormGrid>
         {!detail.billName && !detail.billAddress && (
-          <div style={{ color: 'var(--muted)', fontSize: 12, fontStyle: 'italic' }}>No billing address on file.</div>
+          <div style={noBillAddressStyle}>No billing address on file.</div>
         )}
       </div>
     </Panel>
     <Panel>
       <PanelHead><span>Ship To</span></PanelHead>
       <div style={panelBodyStyle}>
-        <div style={{ color: 'var(--muted)', fontSize: 12, fontStyle: 'italic' }}>
+        <div style={noShipAddressStyle}>
           No separate shipping address configured. Shipments default to the billing address above.
         </div>
       </div>
@@ -947,17 +947,17 @@ const ExpenseTrendingTab = ({ contractKey }: { contractKey: number }) => {
     <div style={tabPaddingStyle}>
       <Panel>
         <PanelHead><span>Expense Trending</span></PanelHead>
-        <div style={{ padding: '48px 24px', textAlign: 'center', color: 'var(--muted)' }}>
+        <div style={expensePlaceholderStyle}>
           <div style={{ marginBottom: 12 }}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
-              style={{ width: 40, height: 40, margin: '0 auto', display: 'block', color: 'var(--neutral-300)' }}>
+              style={expenseIconStyle}>
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
             </svg>
           </div>
-          <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--navy)', marginBottom: 6 }}>
+          <div style={expenseTitleStyle}>
             Expense trending data will appear here
           </div>
-          <div style={{ fontSize: 12, lineHeight: 1.6, maxWidth: 300, margin: '0 auto' }}>
+          <div style={expenseDescStyle}>
             Monthly expense analysis and cost trending for this contract will be shown
             once the reporting endpoint is available.
           </div>
@@ -990,14 +990,10 @@ const ContractReportCardTab = ({ detail }: { detail: ContractDetail }) => {
       <Panel>
         <PanelHead><span>Performance Summary</span></PanelHead>
         <div style={panelBodyStyle}>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={reportMetricContainerStyle}>
             {metrics.map(m => (
-              <div key={m.label} style={{
-                flex: '1 1 140px', padding: '12px 14px',
-                border: '1px solid var(--neutral-200)', borderRadius: 8,
-                background: 'var(--card)', textAlign: 'center',
-              }}>
-                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.04em', marginBottom: 4 }}>
+              <div key={m.label} style={reportMetricCardStyle}>
+                <div style={reportMetricLabelStyle}>
                   {m.label}
                 </div>
                 <div style={{ fontSize: 20, fontWeight: 900, color: m.color, lineHeight: 1.1 }}>
@@ -1064,7 +1060,7 @@ interface CEditFieldProps {
 
 const CEditField = ({ label, value, field, onChange }: CEditFieldProps) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '3px 0' }}>
-    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em' }}>{label}</span>
+    <span style={formLabelStyle}>{label}</span>
     <input
       value={value ?? ''}
       onChange={e => onChange(field, e.target.value)}
@@ -1103,9 +1099,9 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
     autosaveHandleChange(field, value);
   }, [autosaveHandleChange]);
 
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
+  if (loading) return <div style={loadingCenterStyle}><Spin /></div>;
   if (!localDetail) return (
-    <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
+    <div style={emptySelectStyle}>
       Select a contract to view details
     </div>
   );
@@ -1220,32 +1216,23 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={detailContainerStyle}>
       <DetailHeader
+        headingLevel="h2"
         title={d.name || '(Unnamed)'}
         subtitle={d.contractNumber || undefined}
         badges={<><StatusBadge status={d.status} /><AutosaveIndicator status={autosaveStatus} /></>}
         actions={
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5,
-              height: 32, padding: '0 12px', fontSize: 12, fontWeight: 500,
-              background: 'var(--card)', border: '1px solid var(--neutral-200)',
-              borderRadius: 6, cursor: 'pointer', color: 'var(--text)',
-            }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}>
+          <div style={headerActionsStyle}>
+            <button style={actionBtnStyle}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={actionBtnIconStyle}>
                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
               </svg>
               Edit
             </button>
-            <button style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5,
-              height: 32, padding: '0 12px', fontSize: 12, fontWeight: 500,
-              background: 'var(--card)', border: '1px solid var(--neutral-200)',
-              borderRadius: 6, cursor: 'pointer', color: 'var(--text)',
-            }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}>
+            <button style={actionBtnStyle}>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={actionBtnIconStyle}>
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
                 <line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
@@ -1257,10 +1244,7 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
       />
 
       {/* KPI Stat Strip */}
-      <div style={{
-        display: 'flex', background: 'var(--card)',
-        borderBottom: '1px solid var(--neutral-200)', flexShrink: 0,
-      }}>
+      <div style={statStripContainerStyle}>
         <StatChip
           label="Total Contracts"
           value={stats?.total ?? '—'}

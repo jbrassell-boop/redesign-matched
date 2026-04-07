@@ -68,6 +68,10 @@ const CategorySection = ({ category, reports, collapsed, onToggle, favorites, on
   <div style={{ background: 'var(--card)', border: '1.5px solid var(--border-dk)', borderRadius: 8, overflow: 'hidden' }}>
     <div
       onClick={onToggle}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); } }}
+      aria-expanded={!collapsed}
       style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--neutral-50)', cursor: 'pointer', userSelect: 'none', borderBottom: collapsed ? 'none' : '1px solid var(--border)', transition: 'background 0.1s' }}
     >
       <span style={{ fontSize: 10, color: 'var(--muted)', transition: 'transform 0.2s', transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)', display: 'inline-block' }}>{'\u25B6'}</span>
@@ -177,14 +181,14 @@ export const ReportsPage = () => {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
         Show Favorites Only
       </button>
-      <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>
+      <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }} aria-live="polite" aria-atomic="true">
         Showing <strong style={{ color: 'var(--text)' }}>{filtered.length}</strong> of {REPORTS.length} reports
       </div>
     </div>
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <section aria-label="Reports" style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
       <StatStrip chips={chips} />
       {toolbar}
       <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 16, background: 'var(--bg)' }}>
@@ -210,6 +214,6 @@ export const ReportsPage = () => {
           <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No reports match your search</div>
         )}
       </div>
-    </div>
+    </section>
   );
 };

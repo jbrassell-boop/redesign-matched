@@ -92,6 +92,7 @@ export const DevelopmentListPage = () => {
         <input
           type="text"
           placeholder="Search items..."
+          aria-label="Search development list items"
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1); }}
           style={{

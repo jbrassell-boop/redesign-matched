@@ -293,6 +293,7 @@ export const OnsiteServicesPage = () => {
           value={dateFrom}
           onChange={e => { setDateFrom(e.target.value); setPage(1); }}
           title="From date"
+          aria-label="Filter from date"
           style={{
             height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px',
             fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)',
@@ -305,6 +306,7 @@ export const OnsiteServicesPage = () => {
           value={dateTo}
           onChange={e => { setDateTo(e.target.value); setPage(1); }}
           title="To date"
+          aria-label="Filter to date"
           style={{
             height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px',
             fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)',
@@ -317,6 +319,7 @@ export const OnsiteServicesPage = () => {
           value={search}
           onChange={e => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search invoice, client, dept..."
+          aria-label="Search onsite services"
           style={{
             marginLeft: 'auto', height: 30, width: 220,
             border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px',

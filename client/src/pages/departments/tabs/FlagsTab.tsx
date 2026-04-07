@@ -92,8 +92,8 @@ export const FlagsTab = ({ deptKey }: FlagsTabProps) => {
           <tbody>
             {editRow?.isNew && (
               <tr style={{ borderBottom: '1px solid var(--neutral-200)', background: 'rgba(var(--primary-rgb), 0.04)' }}>
-                <td style={tdStyle}><input style={inlineInput} placeholder="Flag Type" value={editRow.flagType} onChange={e => setEditRow({ ...editRow, flagType: e.target.value })} /></td>
-                <td style={tdStyle}><input style={inlineInput} placeholder="Flag text" value={editRow.flag} onChange={e => setEditRow({ ...editRow, flag: e.target.value })} /></td>
+                <td style={tdStyle}><input style={inlineInput} placeholder="Flag Type" aria-label="Flag type" value={editRow.flagType} onChange={e => setEditRow({ ...editRow, flagType: e.target.value })} /></td>
+                <td style={tdStyle}><input style={inlineInput} placeholder="Flag text" aria-label="Flag text" value={editRow.flag} onChange={e => setEditRow({ ...editRow, flag: e.target.value })} /></td>
                 <td style={tdStyle}>
                   <input type="checkbox" checked={editRow.visibleOnDI} onChange={e => setEditRow({ ...editRow, visibleOnDI: e.target.checked })} />
                 </td>

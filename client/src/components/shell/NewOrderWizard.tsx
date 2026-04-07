@@ -339,7 +339,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
           {step === 1 && (
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, padding: '14px 18px', gap: 8 }}>
               <input ref={clientSearchRef} value={clientSearch} onChange={e => setClientSearch(e.target.value)}
-                placeholder="Search by name, city, state, zip, or ID..." style={{ ...fld, height: 32, flexShrink: 0 }} />
+                placeholder="Search by name, city, state, zip, or ID..." aria-label="Search clients" style={{ ...fld, height: 32, flexShrink: 0 }} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, overflowY: 'auto', flex: 1 }}>
                 {filteredClients.length === 0
                   ? <div style={{ gridColumn: '1/-1', padding: 20, textAlign: 'center', fontSize: 11, color: 'var(--muted)' }}>No clients found</div>
@@ -360,7 +360,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, padding: '14px 18px', gap: 8 }}>
               <Chip label="Client" value={selectedClient.name} extra={`${selectedClient.city}${selectedClient.state ? `, ${selectedClient.state}` : ''}`} onChangeStep={1} />
               <input ref={deptSearchRef} value={deptSearch} onChange={e => setDeptSearch(e.target.value)}
-                placeholder="Search departments..." style={{ ...fld, height: 32, flexShrink: 0 }} />
+                placeholder="Search departments..." aria-label="Search departments" style={{ ...fld, height: 32, flexShrink: 0 }} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, overflowY: 'auto', flex: 1 }}>
                 {filteredDepts.length === 0
                   ? <div style={{ gridColumn: '1/-1', padding: 20, textAlign: 'center', fontSize: 11, color: 'var(--muted)' }}>No departments found</div>
@@ -378,7 +378,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, padding: '14px 18px', gap: 8 }}>
               <Chip label="Client / Department" value={`${selectedClient.name} / ${selectedDept.name}`} onChangeStep={2} />
               <input ref={scopeSearchRef} value={scopeSearch} onChange={e => setScopeSearch(e.target.value)}
-                placeholder="Search by serial number or model..." style={{ ...fld, height: 32, flexShrink: 0 }} />
+                placeholder="Search by serial number or model..." aria-label="Search scopes" style={{ ...fld, height: 32, flexShrink: 0 }} />
 
               {/* Existing scopes grid */}
               <div style={{ overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, alignContent: 'start' }}>
@@ -417,6 +417,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                     <div style={lbl}>Search Model * {scopeTypes.length > 0 && `(${scopeTypes.length})`}</div>
                     <input value={modelSearch} onChange={e => { setModelSearch(e.target.value); setNewScopeTypeKey(null); setNewScopeTypeName(''); }}
                       placeholder={newInstType ? `Type to search ${scopeTypes.length} models...` : 'Select type first...'}
+                      aria-label="Search scope model"
                       disabled={!newInstType} style={fld} />
                   </div>
                 </div>
@@ -447,7 +448,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                 <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'flex-end' }}>
                   <div style={{ flex: 1 }}>
                     <div style={lbl}>Serial Number *</div>
-                    <input value={newSerial} onChange={e => setNewSerial(e.target.value)} placeholder="e.g. 2801442" style={fld} />
+                    <input value={newSerial} onChange={e => setNewSerial(e.target.value)} placeholder="e.g. 2801442" aria-label="Scope serial number" style={fld} />
                   </div>
                   <button onClick={handleAddScope} style={{
                     height: 28, padding: '0 16px', background: 'var(--success)', color: 'var(--card)',
@@ -478,6 +479,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                 <div style={lbl}>Customer Complaint *</div>
                 <textarea value={complaint} onChange={e => setComplaint(e.target.value)} rows={3}
                   placeholder="What did the customer report? (e.g., Leaking at base, No image, Angulation stiff...)"
+                  aria-label="Customer complaint"
                   style={{ ...fld, height: 'auto', padding: '6px 8px', resize: 'vertical' }} />
               </div>
 
@@ -485,11 +487,11 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                 <div>
                   <div style={lbl}>PO Number</div>
-                  <input value={po} onChange={e => setPo(e.target.value)} placeholder="If provided" style={fld} />
+                  <input value={po} onChange={e => setPo(e.target.value)} placeholder="If provided" aria-label="PO number" style={fld} />
                 </div>
                 <div>
                   <div style={lbl}>Rack Position</div>
-                  <input value={rack} onChange={e => setRack(e.target.value)} placeholder="Auto-assigned if blank" style={fld} />
+                  <input value={rack} onChange={e => setRack(e.target.value)} placeholder="Auto-assigned if blank" aria-label="Rack position" style={fld} />
                 </div>
               </div>
 

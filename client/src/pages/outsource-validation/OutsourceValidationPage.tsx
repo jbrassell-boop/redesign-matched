@@ -227,13 +227,16 @@ export const OutsourceValidationPage = () => {
 
         <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>From</span>
         <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1); }}
+          aria-label="Filter from date"
           style={{ height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 120 }} />
         <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>To</span>
         <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1); }}
+          aria-label="Filter to date"
           style={{ height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 120 }} />
 
         <input type="text" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search WO#, serial, client, vendor..."
+          aria-label="Search outsource validations"
           style={{
             marginLeft: 'auto', height: 30, width: 220, border: '1.5px solid var(--border-dk)',
             borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',

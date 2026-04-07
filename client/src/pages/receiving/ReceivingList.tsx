@@ -26,6 +26,7 @@ export const ReceivingList = ({ arrivals, loading, selectedKey, search, onSearch
         value={search}
         onChange={e => onSearchChange(e.target.value)}
         placeholder="Search by customer, WO#, serial..."
+        aria-label="Search receiving by customer, work order, or serial number"
         style={{
           width: '100%', height: 30, border: '1px solid var(--neutral-200)',
           borderRadius: 5, padding: '0 10px', fontSize: 12,

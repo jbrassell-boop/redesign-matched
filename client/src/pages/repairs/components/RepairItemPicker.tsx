@@ -122,6 +122,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search repair items..."
+            aria-label="Search repair items catalog"
             style={{
               flex: 1, height: 32, border: '1px solid rgba(255,255,255,0.3)',
               borderRadius: 4, padding: '0 10px', fontSize: 12,
@@ -198,6 +199,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
                       onChange={e => updateComment(item.itemKey, e.target.value)}
                       onClick={e => e.stopPropagation()}
                       placeholder="Comment..."
+                      aria-label="Item comment"
                       maxLength={80}
                       style={{
                         flex: 1, height: 24, border: '1px solid var(--border)', borderRadius: 3,

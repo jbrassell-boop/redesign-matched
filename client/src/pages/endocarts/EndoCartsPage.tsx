@@ -37,6 +37,10 @@ const StatChip = ({ label, value, iconBg, iconColor, valueColor, icon, active, o
 }) => (
   <div
     onClick={onClick}
+    role={onClick ? 'button' : undefined}
+    tabIndex={onClick ? 0 : undefined}
+    onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
+    aria-pressed={onClick ? active : undefined}
     style={{
       flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', cursor: onClick ? 'pointer' : 'default',
       borderRight: '1px solid var(--border)', transition: 'background 0.12s',
@@ -105,6 +109,54 @@ const bomThRightStyle: React.CSSProperties = { ...bomThStyle, textAlign: 'right'
 const bomTdStyle: React.CSSProperties = { padding: '5px 8px', borderBottom: '1px solid var(--border)' };
 const bomTdCenterStyle: React.CSSProperties = { ...bomTdStyle, textAlign: 'center' };
 const bomTdRightStyle: React.CSSProperties = { ...bomTdStyle, textAlign: 'right' };
+const cellStyleCenter: React.CSSProperties = { ...cellStyle, textAlign: 'center' };
+const cellStyleRightBold: React.CSSProperties = { ...cellStyle, textAlign: 'right', fontWeight: 700 };
+const cellStyleNavyBold: React.CSSProperties = { ...cellStyle, fontWeight: 700, color: 'var(--navy)' };
+const cellStyleRightWeight600: React.CSSProperties = { ...cellStyle, textAlign: 'right', fontWeight: 600 };
+const navyBtnStyle: React.CSSProperties = { height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 };
+const navyBtnDisabledStyle: React.CSSProperties = { ...navyBtnStyle, cursor: 'not-allowed', opacity: 0.5 };
+const plusIconStyle: React.CSSProperties = { width: 12, height: 12 };
+const filterLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' };
+const selectStyle: React.CSSProperties = { height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 130 };
+const searchWrapStyle: React.CSSProperties = { position: 'relative', marginLeft: 'auto' };
+const searchIconWrapStyle: React.CSSProperties = { position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' };
+const searchInputStyle: React.CSSProperties = { height: 30, width: 200, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)' };
+const searchInputWideStyle: React.CSSProperties = { ...searchInputStyle, width: 220 };
+const pagerBtnStyle: React.CSSProperties = { height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' };
+const pagerRowSelectStyle: React.CSSProperties = { height: 26, border: '1px solid var(--border-dk)', borderRadius: 4, padding: '0 6px', fontSize: 11, fontFamily: 'inherit', cursor: 'pointer' };
+const noRecordsStyle: React.CSSProperties = { textAlign: 'center', padding: 30, color: 'var(--muted)' };
+const bomExpandThStyle: React.CSSProperties = { background: 'var(--primary-light)', padding: '4px 8px', fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', textAlign: 'left' };
+const bomExpandThCenterStyle: React.CSSProperties = { ...bomExpandThStyle, textAlign: 'center' };
+const bomExpandThRightStyle: React.CSSProperties = { ...bomExpandThStyle, textAlign: 'right' };
+const bomExpandTdStyle: React.CSSProperties = { padding: '4px 8px', borderBottom: '1px solid var(--border)' };
+const bomExpandTdCenterStyle: React.CSSProperties = { ...bomExpandTdStyle, textAlign: 'center' };
+const bomExpandTdRightStyle: React.CSSProperties = { ...bomExpandTdStyle, textAlign: 'right' };
+const bomExpandContainerStyle: React.CSSProperties = { padding: '8px 16px 12px 32px', background: 'var(--neutral-50)' };
+const bomExpandTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 11 };
+const expandBomBtnStyle: React.CSSProperties = { height: 24, padding: '0 10px', fontSize: 11, borderRadius: 4, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, background: 'var(--primary-light)', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 };
+const spinnerCenterStyle: React.CSSProperties = { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const detailPaneStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' };
+const detailCloseRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const detailCloseBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' };
+const detailScrollStyle: React.CSSProperties = { flex: 1, overflow: 'auto' };
+const overviewPaneStyle: React.CSSProperties = { padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 };
+const docEmptyStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', color: 'var(--muted)', textAlign: 'center', gap: 8 };
+const docIconStyle: React.CSSProperties = { width: 40, height: 40 };
+const detailFooterStyle: React.CSSProperties = { padding: '10px 18px', borderTop: '1.5px solid var(--border-dk)', background: 'var(--neutral-50)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 };
+const notesTextStyle: React.CSSProperties = { fontSize: 12, color: 'var(--text)', lineHeight: 1.5 };
+const bomTableWrapStyle: React.CSSProperties = { margin: '-10px -12px', padding: 0 };
+const bomTableInnerStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 11 };
+const bomFooterRowStyle: React.CSSProperties = { fontWeight: 700, background: 'var(--neutral-50)' };
+const bomFooterTdStyle: React.CSSProperties = { padding: '5px 8px', textAlign: 'right' };
+const statStripBarStyle: React.CSSProperties = { display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--border)', flexShrink: 0, overflowX: 'auto' };
+const splitFlexStyle: React.CSSProperties = { display: 'flex', flex: 1, overflow: 'hidden' };
+const pagerContainerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12 };
+const pagerRowsStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--muted)' };
+const pagerBtnsStyle: React.CSSProperties = { display: 'flex', gap: 3, alignItems: 'center' };
+const rightPanelStyle: React.CSSProperties = { width: 520, minWidth: 520, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--card)' };
+const pagerSpanStyle: React.CSSProperties = { fontSize: 11, padding: '0 8px' };
+const detailFooterTextStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
+const docEmptyTitleStyle: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--muted)' };
 
 const ENDO_TABS: TabDef[] = [
   { key: 'quotes', label: 'Quotes' },
@@ -267,17 +319,18 @@ export const EndoCartsPage = () => {
 
   /* ── Quote detail pane content ─── */
   const quoteDetailPane = selectedQuote ? (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+    <div style={detailPaneStyle}>
       {/* Close row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
+      <div style={detailCloseRowStyle}>
         <button
           onClick={() => setSelectedKey(null)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' }}
+          style={detailCloseBtnStyle}
         >
           &times;
         </button>
       </div>
       <DetailHeader
+        headingLevel="h2"
         title={selectedQuote.quoteNum}
         subtitle={selectedQuote.clientName}
         badges={<StatusBadge status={selectedQuote.status} />}
@@ -292,10 +345,10 @@ export const EndoCartsPage = () => {
         onChange={setDrawerTab}
       />
 
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      <div style={detailScrollStyle}>
         {/* Overview pane */}
         {drawerTab === 'overview' && (
-          <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={overviewPaneStyle}>
             <SectionCard title="Quote Info">
               <FormGrid cols={2}>
                 <Field label="Quote #" value={selectedQuote.quoteNum} />
@@ -315,17 +368,17 @@ export const EndoCartsPage = () => {
               </FormGrid>
             </SectionCard>
             <SectionCard title="Notes">
-              <span style={{ fontSize: 12, color: 'var(--text)', lineHeight: 1.5 }}>{selectedQuote.notes || '\u2014'}</span>
+              <span style={notesTextStyle}>{selectedQuote.notes || '\u2014'}</span>
             </SectionCard>
           </div>
         )}
 
         {/* BOM pane */}
         {drawerTab === 'bom' && (
-          <div style={{ padding: '14px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={overviewPaneStyle}>
             <SectionCard title="Bill of Materials">
-              <div style={{ margin: '-10px -12px', padding: 0 }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+              <div style={bomTableWrapStyle}>
+                <table style={bomTableInnerStyle}>
                   <thead>
                     <tr>
                       <th style={bomThStyle}>Part #</th>
@@ -347,9 +400,9 @@ export const EndoCartsPage = () => {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr style={{ fontWeight: 700, background: 'var(--neutral-50)' }}>
-                      <td colSpan={4} style={{ padding: '5px 8px', textAlign: 'right' }}>Subtotal</td>
-                      <td style={{ padding: '5px 8px', textAlign: 'right' }}>{fmtMoney(selectedQuote.total)}</td>
+                    <tr style={bomFooterRowStyle}>
+                      <td colSpan={4} style={bomFooterTdStyle}>Subtotal</td>
+                      <td style={bomFooterTdStyle}>{fmtMoney(selectedQuote.total)}</td>
                     </tr>
                   </tfoot>
                 </table>
@@ -360,17 +413,17 @@ export const EndoCartsPage = () => {
 
         {/* Documents pane */}
         {drawerTab === 'docs' && (
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 20px', color: 'var(--muted)', textAlign: 'center', gap: 8 }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--border-dk)" strokeWidth="1.5" style={{ width: 40, height: 40 }}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14,2 14,8 20,8" /></svg>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--muted)' }}>No documents attached</div>
+          <div style={docEmptyStyle}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--border-dk)" strokeWidth="1.5" style={docIconStyle}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14,2 14,8 20,8" /></svg>
+            <div style={docEmptyTitleStyle}>No documents attached</div>
             <div style={{ fontSize: 11 }}>Quotes, specs, and supporting documents will appear here.</div>
           </div>
         )}
       </div>
 
       {/* Detail footer */}
-      <div style={{ padding: '10px 18px', borderTop: '1.5px solid var(--border-dk)', background: 'var(--neutral-50)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
-        <span style={{ fontSize: 11, color: 'var(--muted)' }}>Quote detail</span>
+      <div style={detailFooterStyle}>
+        <span style={detailFooterTextStyle}>Quote detail</span>
       </div>
     </div>
   ) : null;
@@ -385,7 +438,7 @@ export const EndoCartsPage = () => {
       {/* QUOTES TAB — split-pane                                 */}
       {/* ════════════════════════════════════════════════════════ */}
       {activeTab === 'quotes' && (
-        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <div style={splitFlexStyle}>
           {/* Left panel — list */}
           <div style={{
             display: 'flex', flexDirection: 'column',
@@ -396,7 +449,7 @@ export const EndoCartsPage = () => {
             overflow: 'hidden',
           }}>
             {/* Stat Strip */}
-            <div style={{ display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--border)', flexShrink: 0, overflowX: 'auto' }}>
+            <div style={statStripBarStyle}>
               <StatChip label="Total Quotes" value={stats.total} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconFile />} active={chipFilter === ''} onClick={() => { setChipFilter(''); setPage(1); }} />
               <StatChip label="Draft" value={stats.draft} iconBg="rgba(var(--amber-rgb), 0.13)" iconColor="var(--warning)" valueColor="var(--warning)" icon={<IconPen />} active={chipFilter === 'Draft'} onClick={() => { setChipFilter(f => f === 'Draft' ? '' : 'Draft'); setPage(1); }} />
               <StatChip label="Quoted" value={stats.quoted} iconBg="rgba(var(--primary-rgb), 0.12)" iconColor="var(--primary)" valueColor="var(--primary)" icon={<IconChat />} active={chipFilter === 'Quoted'} onClick={() => { setChipFilter(f => f === 'Quoted' ? '' : 'Quoted'); setPage(1); }} />
@@ -424,7 +477,7 @@ export const EndoCartsPage = () => {
               </select>
               <div style={{ position: 'relative', marginLeft: 'auto' }}>
                 <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
-                <input placeholder="Search quote#, client, model..." value={filters.search} onChange={e => { setFilters(f => ({ ...f, search: e.target.value })); setPage(1); }} style={{
+                <input placeholder="Search quote#, client, model..." aria-label="Search EndoCart quotes" value={filters.search} onChange={e => { setFilters(f => ({ ...f, search: e.target.value })); setPage(1); }} style={{
                   height: 30, width: 200, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
                 }} />
               </div>
@@ -449,7 +502,7 @@ export const EndoCartsPage = () => {
                 </thead>
                 <tbody>
                   {displayQuotes.length === 0 ? (
-                    <tr><td colSpan={10} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)' }}>No records match current filters.</td></tr>
+                    <tr><td colSpan={10} style={noRecordsStyle}>No records match current filters.</td></tr>
                   ) : displayQuotes.map((q, idx) => (
                     <tr
                       key={q.lQuoteKey}
@@ -462,8 +515,8 @@ export const EndoCartsPage = () => {
                       <td style={cellStyle}>{q.clientName}</td>
                       <td style={cellStyle}>{q.deptName}</td>
                       <td style={cellStyle}>{q.cartModel}</td>
-                      <td style={{ ...cellStyle, textAlign: 'center' }}>{q.itemCount}</td>
-                      <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 700 }}>{fmtMoney(q.total)}</td>
+                      <td style={cellStyleCenter}>{q.itemCount}</td>
+                      <td style={cellStyleRightBold}>{fmtMoney(q.total)}</td>
                       <td style={cellStyle}><StatusBadge status={q.status} /></td>
                       <td style={cellStyle}>{fmtDate(q.dateCreated)}</td>
                       <td style={cellStyle}>{fmtDate(q.dateQuoted)}</td>
@@ -503,14 +556,7 @@ export const EndoCartsPage = () => {
 
           {/* Right panel — quote detail */}
           {selectedKey && (
-            <div style={{
-              width: 520,
-              minWidth: 520,
-              display: 'flex',
-              flexDirection: 'column',
-              overflow: 'hidden',
-              background: 'var(--card)',
-            }}>
+            <div style={rightPanelStyle}>
               {quoteDetailPane}
             </div>
           )}
@@ -538,7 +584,7 @@ export const EndoCartsPage = () => {
             </select>
             <div style={{ position: 'relative', marginLeft: 'auto' }}>
               <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
-              <input placeholder="Search parts..." value={catSearch} onChange={e => setCatSearch(e.target.value)} style={{
+              <input placeholder="Search parts..." aria-label="Search EndoCart parts catalog" value={catSearch} onChange={e => setCatSearch(e.target.value)} style={{
                 height: 30, width: 200, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
               }} />
             </div>
@@ -558,12 +604,12 @@ export const EndoCartsPage = () => {
               <tbody>
                 {filteredCatalog.map((p, idx) => (
                   <tr key={p.partNum} style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)' }}>
-                    <td style={{ ...cellStyle, fontWeight: 700, color: 'var(--navy)' }}>{p.partNum}</td>
+                    <td style={cellStyleNavyBold}>{p.partNum}</td>
                     <td style={cellStyle}>{p.desc}</td>
                     <td style={cellStyle}><Badge text={p.category} style={CAT_BADGE[p.category]} /></td>
-                    <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 600 }}>{fmtMoney(p.unitCost)}</td>
-                    <td style={{ ...cellStyle, textAlign: 'center', color: p.stock <= p.reorderPt ? 'var(--danger)' : undefined, fontWeight: p.stock <= p.reorderPt ? 700 : 400 }}>{p.stock}</td>
-                    <td style={{ ...cellStyle, textAlign: 'center' }}>{p.reorderPt}</td>
+                    <td style={cellStyleRightWeight600}>{fmtMoney(p.unitCost)}</td>
+                    <td style={{ ...cellStyleCenter, color: p.stock <= p.reorderPt ? 'var(--danger)' : undefined, fontWeight: p.stock <= p.reorderPt ? 700 : 400 }}>{p.stock}</td>
+                    <td style={cellStyleCenter}>{p.reorderPt}</td>
                   </tr>
                 ))}
               </tbody>
@@ -584,7 +630,7 @@ export const EndoCartsPage = () => {
             </button>
             <div style={{ position: 'relative', marginLeft: 'auto' }}>
               <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
-              <input placeholder="Search models..." value={modelSearch} onChange={e => setModelSearch(e.target.value)} style={{
+              <input placeholder="Search models..." aria-label="Search EndoCart models" value={modelSearch} onChange={e => setModelSearch(e.target.value)} style={{
                 height: 30, width: 200, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
               }} />
             </div>
@@ -604,12 +650,12 @@ export const EndoCartsPage = () => {
                 {filteredModels.map((m, idx) => (
                   <>
                     <tr key={m.lModelKey} style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)', cursor: 'pointer' }} onClick={() => setExpandedModel(k => k === m.lModelKey ? null : m.lModelKey)}>
-                      <td style={{ ...cellStyle, fontWeight: 700, color: 'var(--navy)' }}>{m.modelName}</td>
+                      <td style={cellStyleNavyBold}>{m.modelName}</td>
                       <td style={cellStyle}>{m.desc}</td>
-                      <td style={{ ...cellStyle, textAlign: 'center' }}>{m.componentCount}</td>
-                      <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 700 }}>{fmtMoney(m.basePrice)}</td>
-                      <td style={{ ...cellStyle, textAlign: 'center' }}>
-                        <button onClick={e => { e.stopPropagation(); setExpandedModel(k => k === m.lModelKey ? null : m.lModelKey); }} style={{ height: 24, padding: '0 10px', fontSize: 11, borderRadius: 4, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, background: 'var(--primary-light)', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                      <td style={cellStyleCenter}>{m.componentCount}</td>
+                      <td style={cellStyleRightBold}>{fmtMoney(m.basePrice)}</td>
+                      <td style={cellStyleCenter}>
+                        <button onClick={e => { e.stopPropagation(); setExpandedModel(k => k === m.lModelKey ? null : m.lModelKey); }} style={expandBomBtnStyle}>
                           <IconExpand open={expandedModel === m.lModelKey} /> BOM
                         </button>
                       </td>
@@ -617,25 +663,25 @@ export const EndoCartsPage = () => {
                     {expandedModel === m.lModelKey && (
                       <tr key={`bom-${m.lModelKey}`}>
                         <td colSpan={5} style={{ padding: 0, borderBottom: '1px solid var(--border)' }}>
-                          <div style={{ padding: '8px 16px 12px 32px', background: 'var(--neutral-50)' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                          <div style={bomExpandContainerStyle}>
+                            <table style={bomExpandTableStyle}>
                               <thead>
                                 <tr>
-                                  <th style={{ background: 'var(--primary-light)', padding: '4px 8px', fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', textAlign: 'left' }}>Part #</th>
-                                  <th style={{ background: 'var(--primary-light)', padding: '4px 8px', fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', textAlign: 'left' }}>Description</th>
-                                  <th style={{ background: 'var(--primary-light)', padding: '4px 8px', fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', textAlign: 'center' }}>Qty</th>
-                                  <th style={{ background: 'var(--primary-light)', padding: '4px 8px', fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', textAlign: 'right' }}>Unit Cost</th>
-                                  <th style={{ background: 'var(--primary-light)', padding: '4px 8px', fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', textAlign: 'right' }}>Line Total</th>
+                                  <th style={bomExpandThStyle}>Part #</th>
+                                  <th style={bomExpandThStyle}>Description</th>
+                                  <th style={bomExpandThCenterStyle}>Qty</th>
+                                  <th style={bomExpandThRightStyle}>Unit Cost</th>
+                                  <th style={bomExpandThRightStyle}>Line Total</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {m.components.map((c, ci) => (
                                   <tr key={ci}>
-                                    <td style={{ padding: '4px 8px', borderBottom: '1px solid var(--border)' }}>{c.partNum}</td>
-                                    <td style={{ padding: '4px 8px', borderBottom: '1px solid var(--border)' }}>{c.desc}</td>
-                                    <td style={{ padding: '4px 8px', borderBottom: '1px solid var(--border)', textAlign: 'center' }}>{c.qty}</td>
-                                    <td style={{ padding: '4px 8px', borderBottom: '1px solid var(--border)', textAlign: 'right' }}>{fmtMoney(c.unitCost)}</td>
-                                    <td style={{ padding: '4px 8px', borderBottom: '1px solid var(--border)', textAlign: 'right' }}>{fmtMoney(c.unitCost * c.qty)}</td>
+                                    <td style={bomExpandTdStyle}>{c.partNum}</td>
+                                    <td style={bomExpandTdStyle}>{c.desc}</td>
+                                    <td style={bomExpandTdCenterStyle}>{c.qty}</td>
+                                    <td style={bomExpandTdRightStyle}>{fmtMoney(c.unitCost)}</td>
+                                    <td style={bomExpandTdRightStyle}>{fmtMoney(c.unitCost * c.qty)}</td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -666,7 +712,7 @@ export const EndoCartsPage = () => {
             />
             <div style={{ position: 'relative', marginLeft: 'auto' }}>
               <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
-              <input placeholder="Search serial#, type, client..." value={scopeSearch} onChange={e => { setScopeSearch(e.target.value); setScopePage(1); }} style={{
+              <input placeholder="Search serial#, type, client..." aria-label="Search EndoCart scopes" value={scopeSearch} onChange={e => { setScopeSearch(e.target.value); setScopePage(1); }} style={{
                 height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
               }} />
             </div>
@@ -689,10 +735,10 @@ export const EndoCartsPage = () => {
                 </thead>
                 <tbody>
                   {scopeItems.length === 0 ? (
-                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)' }}>No scopes found.</td></tr>
+                    <tr><td colSpan={8} style={noRecordsStyle}>No scopes found.</td></tr>
                   ) : scopeItems.map((s, idx) => (
                     <tr key={s.scopeKey} style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)' }}>
-                      <td style={{ ...cellStyle, fontWeight: 700, color: 'var(--navy)' }}>{s.serialNumber || '\u2014'}</td>
+                      <td style={cellStyleNavyBold}>{s.serialNumber || '\u2014'}</td>
                       <td style={cellStyle}>{s.scopeType}</td>
                       <td style={cellStyle}>{s.manufacturer}</td>
                       <td style={cellStyle}>{s.clientName}</td>
@@ -717,10 +763,10 @@ export const EndoCartsPage = () => {
           {/* Footer */}
           <div style={endoFooterStyle}>
             <span style={{ fontWeight: 500 }}>{scopeTotal} scope{scopeTotal !== 1 ? 's' : ''}</span>
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-              <button disabled={scopePage <= 1} onClick={() => setScopePage(p => p - 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: scopePage <= 1 ? 0.4 : 1 }}>&laquo;</button>
-              <span style={{ fontSize: 11, padding: '0 8px' }}>Page {scopePage}</span>
-              <button disabled={scopePage * 50 >= scopeTotal} onClick={() => setScopePage(p => p + 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: scopePage * 50 >= scopeTotal ? 0.4 : 1 }}>&raquo;</button>
+            <div style={pagerBtnsStyle}>
+              <button disabled={scopePage <= 1} onClick={() => setScopePage(p => p - 1)} style={{ ...pagerBtnStyle, opacity: scopePage <= 1 ? 0.4 : 1 }}>&laquo;</button>
+              <span style={pagerSpanStyle}>Page {scopePage}</span>
+              <button disabled={scopePage * 50 >= scopeTotal} onClick={() => setScopePage(p => p + 1)} style={{ ...pagerBtnStyle, opacity: scopePage * 50 >= scopeTotal ? 0.4 : 1 }}>&raquo;</button>
             </div>
           </div>
         </div>
@@ -734,7 +780,7 @@ export const EndoCartsPage = () => {
           <div style={endoToolbarStyle}>
             <div style={{ position: 'relative', marginLeft: 'auto' }}>
               <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }}><IconSearch /></span>
-              <input placeholder="Search WO#, serial#, client..." value={serviceSearch} onChange={e => { setServiceSearch(e.target.value); setServicePage(1); }} style={{
+              <input placeholder="Search WO#, serial#, client..." aria-label="Search EndoCart service history" value={serviceSearch} onChange={e => { setServiceSearch(e.target.value); setServicePage(1); }} style={{
                 height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)',
               }} />
             </div>
@@ -757,10 +803,10 @@ export const EndoCartsPage = () => {
                 </thead>
                 <tbody>
                   {serviceItems.length === 0 ? (
-                    <tr><td colSpan={9} style={{ textAlign: 'center', padding: 30, color: 'var(--muted)' }}>No repair history found.</td></tr>
+                    <tr><td colSpan={9} style={noRecordsStyle}>No repair history found.</td></tr>
                   ) : serviceItems.map((r, idx) => (
                     <tr key={r.repairKey} style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)' }}>
-                      <td style={{ ...cellStyle, fontWeight: 700, color: 'var(--navy)' }}>{r.workOrderNumber || '\u2014'}</td>
+                      <td style={cellStyleNavyBold}>{r.workOrderNumber || '\u2014'}</td>
                       <td style={cellStyle}>{r.serialNumber || '\u2014'}</td>
                       <td style={cellStyle}>{r.scopeType}</td>
                       <td style={cellStyle}>{r.clientName}</td>
@@ -770,7 +816,7 @@ export const EndoCartsPage = () => {
                       <td style={cellStyle}>{r.dateIn || '\u2014'}</td>
                       <td style={cellStyle}>{r.dateOut || '\u2014'}</td>
                       <td style={{ ...cellStyle, whiteSpace: 'normal', lineHeight: 1.3 }}>{r.complaint || '\u2014'}</td>
-                      <td style={{ ...cellStyle, textAlign: 'right', fontWeight: 700 }}>{fmtMoney(r.totalCost)}</td>
+                      <td style={cellStyleRightBold}>{fmtMoney(r.totalCost)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -780,10 +826,10 @@ export const EndoCartsPage = () => {
           {/* Footer */}
           <div style={endoFooterStyle}>
             <span style={{ fontWeight: 500 }}>{serviceTotal} repair{serviceTotal !== 1 ? 's' : ''}</span>
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-              <button disabled={servicePage <= 1} onClick={() => setServicePage(p => p - 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: servicePage <= 1 ? 0.4 : 1 }}>&laquo;</button>
-              <span style={{ fontSize: 11, padding: '0 8px' }}>Page {servicePage}</span>
-              <button disabled={servicePage * 50 >= serviceTotal} onClick={() => setServicePage(p => p + 1)} style={{ height: 26, minWidth: 26, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit', opacity: servicePage * 50 >= serviceTotal ? 0.4 : 1 }}>&raquo;</button>
+            <div style={pagerBtnsStyle}>
+              <button disabled={servicePage <= 1} onClick={() => setServicePage(p => p - 1)} style={{ ...pagerBtnStyle, opacity: servicePage <= 1 ? 0.4 : 1 }}>&laquo;</button>
+              <span style={pagerSpanStyle}>Page {servicePage}</span>
+              <button disabled={servicePage * 50 >= serviceTotal} onClick={() => setServicePage(p => p + 1)} style={{ ...pagerBtnStyle, opacity: servicePage * 50 >= serviceTotal ? 0.4 : 1 }}>&raquo;</button>
             </div>
           </div>
         </div>

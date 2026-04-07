@@ -200,6 +200,7 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
             onChange={e => setSnInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleLookup()}
             placeholder="Enter serial number and press Search"
+            aria-label="Instrument serial number lookup"
             style={field}
           />
         </div>

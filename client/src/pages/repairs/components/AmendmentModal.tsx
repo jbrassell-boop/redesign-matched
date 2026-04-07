@@ -252,6 +252,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
                     <div style={labelStyle}>New Amount (optional)</div>
                     <input style={inputStyle} type="number" min="0" step="0.01"
                       placeholder="No change"
+                      aria-label="New amendment amount"
                       value={newAmount}
                       onChange={e => setNewAmount(e.target.value)} />
                   </div>
@@ -259,6 +260,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
                 <div>
                   <div style={labelStyle}>Comment</div>
                   <input style={inputStyle} maxLength={80} placeholder="Optional…"
+                    aria-label="Amendment comment"
                     value={comment}
                     onChange={e => setComment(e.target.value)} />
                 </div>
