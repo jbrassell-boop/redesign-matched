@@ -27,7 +27,7 @@ const CAT_BADGE: Record<string, { bg: string; border: string; color: string }> =
 };
 
 const Badge = ({ text, style }: { text: string; style: { bg: string; border: string; color: string } }) => (
-  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', background: style.bg, border: `1px solid ${style.border}`, color: style.color }}>{text}</span>
+  <span style={{ ...badgeInnerStyle, background: style.bg, border: `1px solid ${style.border}`, color: style.color }}>{text}</span>
 );
 
 /* ── Stat Chip ───────────────────────────────────────────────── */
@@ -48,27 +48,27 @@ const StatChip = ({ label, value, iconBg, iconColor, valueColor, icon, active, o
       outline: active ? '2.5px solid var(--navy)' : 'none', outlineOffset: active ? -2 : 0,
     }}
   >
-    <span style={{ width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', background: iconBg, color: iconColor, fontSize: 13, flexShrink: 0 }}>{icon}</span>
-    <span style={{ display: 'flex', flexDirection: 'column' }}>
+    <span style={{ ...statChipIconBoxStyle, background: iconBg, color: iconColor }}>{icon}</span>
+    <span style={statChipTextColStyle}>
       <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: -0.3, lineHeight: 1.1, color: valueColor }}>{value}</span>
-      <span style={{ fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.2, whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={statChipLabelStyle}>{label}</span>
     </span>
   </div>
 );
 
 /* ── SVG Icons ───────────────────────────────────────────────── */
-const IconFile = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><rect x="2" y="2" width="12" height="12" rx="2" /><path d="M5 5h6M5 8h6M5 11h4" /></svg>;
-const IconPen = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><path d="M11 2.5a1.5 1.5 0 0 1 2.12 0l.38.38a1.5 1.5 0 0 1 0 2.12L6 12.5 2.5 13.5 3.5 10z" /></svg>;
-const IconChat = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><path d="M14 3H2v8h5l3 3v-3h4z" /></svg>;
-const IconCheck = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><circle cx="8" cy="8" r="5.5" /><polyline points="5.5 8 7 10 10.5 6" /></svg>;
-const IconDollar = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><line x1="8" y1="1.5" x2="8" y2="14.5" /><path d="M11 4.5H6.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H5" /></svg>;
-const IconTrend = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><polyline points="14 4 9 9 6 6 2 12" /><polyline points="10 4 14 4 14 8" /></svg>;
-const IconSearch = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>;
+const IconFile = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><rect x="2" y="2" width="12" height="12" rx="2" /><path d="M5 5h6M5 8h6M5 11h4" /></svg>;
+const IconPen = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><path d="M11 2.5a1.5 1.5 0 0 1 2.12 0l.38.38a1.5 1.5 0 0 1 0 2.12L6 12.5 2.5 13.5 3.5 10z" /></svg>;
+const IconChat = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><path d="M14 3H2v8h5l3 3v-3h4z" /></svg>;
+const IconCheck = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><circle cx="8" cy="8" r="5.5" /><polyline points="5.5 8 7 10 10.5 6" /></svg>;
+const IconDollar = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><line x1="8" y1="1.5" x2="8" y2="14.5" /><path d="M11 4.5H6.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H5" /></svg>;
+const IconTrend = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><polyline points="14 4 9 9 6 6 2 12" /><polyline points="10 4 14 4 14 8" /></svg>;
+const IconSearch = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={icon13Style}><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>;
 const IconExpand = ({ open }: { open: boolean }) => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 12, height: 12, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}><polyline points="6 4 10 8 6 12" /></svg>;
 
 /* ── Segmented Control ───────────────────────────────────────── */
 const SegmentedControl = ({ items, value, onChange }: { items: { label: string; value: string }[]; value: string; onChange: (v: string) => void }) => (
-  <div style={{ display: 'inline-flex', border: '1.5px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden' }}>
+  <div style={segmentedContainerStyle}>
     {items.map(it => (
       <button key={it.value} onClick={() => onChange(it.value)} style={{
         height: 28, padding: '0 12px', border: 'none', fontSize: 11, fontWeight: it.value === value ? 700 : 500, fontFamily: 'inherit', cursor: 'pointer',
@@ -157,6 +157,25 @@ const rightPanelStyle: React.CSSProperties = { width: 520, minWidth: 520, displa
 const pagerSpanStyle: React.CSSProperties = { fontSize: 11, padding: '0 8px' };
 const detailFooterTextStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
 const docEmptyTitleStyle: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--muted)' };
+const docSubtextStyle: React.CSSProperties = { fontSize: 11 };
+const icon14Style: React.CSSProperties = { width: 14, height: 14 };
+const icon13Style: React.CSSProperties = { width: 13, height: 13 };
+const icon12Style: React.CSSProperties = { width: 12, height: 12 };
+const footerRecordCountStyle: React.CSSProperties = { fontWeight: 500 };
+const footerPagerRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12 };
+const footerRowsCountStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--muted)' };
+const segmentedContainerStyle: React.CSSProperties = { display: 'inline-flex', border: '1.5px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden' };
+const sortArrowStyle: React.CSSProperties = { fontSize: 9, marginLeft: 3 };
+const quoteNumCellStyle: React.CSSProperties = { fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' };
+const cellStyleComplaintWrap: React.CSSProperties = { ...cellStyle, whiteSpace: 'normal', lineHeight: 1.3 };
+const bomExpandTdBorderStyle: React.CSSProperties = { padding: 0, borderBottom: '1px solid var(--border)' };
+const badgeInnerStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' };
+const statChipIconBoxStyle: React.CSSProperties = { width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 };
+const statChipTextColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column' };
+const statChipLabelStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.2, whiteSpace: 'nowrap' };
+const sectionCardOuterStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden', flexShrink: 0 };
+const sectionCardHeadStyle: React.CSSProperties = { background: 'var(--neutral-50)', padding: '6px 12px', fontSize: 10, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' };
+const sectionCardBodyStyle: React.CSSProperties = { padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 };
 
 const ENDO_TABS: TabDef[] = [
   { key: 'quotes', label: 'Quotes' },
@@ -181,9 +200,9 @@ const cellStyle: React.CSSProperties = { padding: '7px 10px', fontSize: 12, bord
 
 /* ── Section Card (for detail pane) ─────────────────────────── */
 const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <div style={{ background: 'var(--card)', border: '1px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden', flexShrink: 0 }}>
-    <div style={{ background: 'var(--neutral-50)', padding: '6px 12px', fontSize: 10, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' }}>{title}</div>
-    <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>{children}</div>
+  <div style={sectionCardOuterStyle}>
+    <div style={sectionCardHeadStyle}>{title}</div>
+    <div style={sectionCardBodyStyle}>{children}</div>
   </div>
 );
 
@@ -462,7 +481,7 @@ export const EndoCartsPage = () => {
             {/* Toolbar */}
             <div style={endoToolbarStyle}>
               <button style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                 New Quote
               </button>
               <div style={endoSeparatorStyle} />
@@ -571,7 +590,7 @@ export const EndoCartsPage = () => {
         <div style={endoTabFlexStyle}>
           <div style={endoToolbarStyle}>
             <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               Add Component
             </button>
             <div style={endoSeparatorStyle} />
@@ -626,7 +645,7 @@ export const EndoCartsPage = () => {
         <div style={endoTabFlexStyle}>
           <div style={endoToolbarStyle}>
             <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New Model
             </button>
             <div style={{ position: 'relative', marginLeft: 'auto' }}>
