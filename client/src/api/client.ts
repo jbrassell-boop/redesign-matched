@@ -9,6 +9,7 @@ export const removeToken = (): void => localStorage.removeItem(TOKEN_KEY);
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',
   headers: { 'Content-Type': 'application/json' },
+  timeout: 30000,
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -24,7 +25,13 @@ apiClient.interceptors.response.use(
       removeToken();
       window.location.href = '/login';
     }
-    return Promise.reject(error);
+    const msg = error.response?.data?.error
+      || error.response?.data?.message
+      || error.response?.data?.detail
+      || (typeof error.response?.data === 'string' ? error.response.data : null)
+      || error.message
+      || 'An unexpected error occurred';
+    return Promise.reject(new Error(msg));
   }
 );
 

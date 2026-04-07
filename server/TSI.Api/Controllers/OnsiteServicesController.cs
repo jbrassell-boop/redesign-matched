@@ -80,10 +80,9 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
                 ));
             }
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            // If stored procedure doesn't exist or columns differ, return empty
-            return Ok(new OnsiteServiceListResponse(Array.Empty<OnsiteServiceListItem>(), 0));
+            return StatusCode(500, new { error = "Database error", detail = ex.Message });
         }
 
         var totalCount = items.Count;
@@ -131,9 +130,9 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
                 }
             }
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            // SP may not exist — return zeros
+            return StatusCode(500, new { error = "Database error", detail = ex.Message });
         }
 
         return Ok(new OnsiteServiceStats(total, submitted, invoiced, draft, voidCount, totalValue));
@@ -213,10 +212,9 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
             var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
             return Ok(new { onsiteServiceKey = newKey, invoiceNum });
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            // Table may not exist — return success with a generated key
-            return Ok(new { onsiteServiceKey = 0, invoiceNum });
+            return StatusCode(500, new { error = "Database error", detail = ex.Message });
         }
     }
 
@@ -245,9 +243,9 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
             var rows = await cmd.ExecuteNonQueryAsync();
             return Ok(new { updated = rows > 0 });
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            return Ok(new { updated = false });
+            return StatusCode(500, new { error = "Database error", detail = ex.Message });
         }
     }
 
@@ -371,9 +369,9 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
             var rows = await cmd.ExecuteNonQueryAsync();
             return Ok(new { submitted = rows > 0 });
         }
-        catch (SqlException)
+        catch (SqlException ex)
         {
-            return Ok(new { submitted = false });
+            return StatusCode(500, new { error = "Database error", detail = ex.Message });
         }
     }
 

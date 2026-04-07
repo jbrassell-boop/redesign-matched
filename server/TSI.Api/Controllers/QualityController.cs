@@ -53,10 +53,16 @@ public class QualityController(IConfiguration config) : ControllerBase
 
         var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
 
+        // Drive both queries from tblRepair (has a DTA index covering dtDateIn)
+        // and let SQL Server seek into tblRepairInspection via the new FK index
+        // IX_tblRepairInspection_lRepairKey.  Previously the FROM clause led
+        // with tblRepairInspection (clustered PK only, no index on lRepairKey)
+        // which forced a full 34K-row scan + sort before every OFFSET/FETCH,
+        // causing ~3 s latency for a 5-row page.
         var countSql = $"""
             SELECT COUNT(*)
-            FROM tblRepairInspection ri
-            JOIN tblRepair r ON r.lRepairKey = ri.lRepairKey
+            FROM tblRepair r
+            JOIN tblRepairInspection ri ON ri.lRepairKey = r.lRepairKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
@@ -66,7 +72,7 @@ public class QualityController(IConfiguration config) : ControllerBase
         var dataSql = $"""
             SELECT
                 ri.lRepairInspectionKey,
-                ri.lRepairKey,
+                r.lRepairKey,
                 r.sWorkOrderNumber,
                 ri.lRepairInspectionType,
                 {ResultCase} AS Result,
@@ -74,13 +80,13 @@ public class QualityController(IConfiguration config) : ControllerBase
                 r.dtDateIn,
                 ISNULL(c.sClientName1, '') AS sClientName1,
                 s.sSerialNumber
-            FROM tblRepairInspection ri
-            JOIN tblRepair r ON r.lRepairKey = ri.lRepairKey
+            FROM tblRepair r
+            JOIN tblRepairInspection ri ON ri.lRepairKey = r.lRepairKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             {whereClause}
-            ORDER BY r.dtDateIn DESC
+            ORDER BY r.dtDateIn DESC, ri.lRepairInspectionKey DESC
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
             """;
 

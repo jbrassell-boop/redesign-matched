@@ -155,22 +155,15 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
         var items = new List<ContractExpiringItem>();
-        try
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
         {
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                var expDate = reader["dtContractEnd"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(reader["dtContractEnd"]);
-                items.Add(new ContractExpiringItem(
-                    Client: reader["sClientName1"]?.ToString() ?? "",
-                    ExpirationDate: expDate?.ToString("MM/dd/yyyy") ?? "",
-                    DaysUntil: reader["DaysUntil"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DaysUntil"])
-                ));
-            }
-        }
-        catch (SqlException)
-        {
-            // tblContract may not have dtContractEnd — return empty
+            var expDate = reader["dtContractEnd"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(reader["dtContractEnd"]);
+            items.Add(new ContractExpiringItem(
+                Client: reader["sClientName1"]?.ToString() ?? "",
+                ExpirationDate: expDate?.ToString("MM/dd/yyyy") ?? "",
+                DaysUntil: reader["DaysUntil"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DaysUntil"])
+            ));
         }
         return new ContractsWidget(items);
     }
