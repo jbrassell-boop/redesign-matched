@@ -16,7 +16,7 @@ const fldDisabled: React.CSSProperties = {
   ...fld, background: 'var(--bg)', color: 'var(--muted)', cursor: 'not-allowed',
 };
 const secHead: React.CSSProperties = {
-  background: 'var(--navy)', color: '#fff', padding: '4px 10px',
+  background: 'var(--navy)', color: 'var(--card)', padding: '4px 10px',
   fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',
   borderRadius: 3, marginBottom: 6, marginTop: 12,
 };
@@ -263,7 +263,7 @@ export const NewDepartmentModal = ({ open, onClose, onCreated, clientKey: preset
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          style={{ height: 30, padding: '0 20px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}
+          style={{ height: 30, padding: '0 20px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: 'var(--card)', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}
         >
           {submitting ? 'Creating…' : 'Create Department'}
         </button>

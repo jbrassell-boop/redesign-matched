@@ -1,14 +1,30 @@
 import type { ThemeConfig } from 'antd';
 
+/**
+ * Shared color constants for the Ant Design theme.
+ * These MUST stay in sync with the CSS variables defined in tokens.css.
+ */
+const COLORS = {
+  primary: '#2E75B6',
+  error: '#B71234',
+  success: '#16A34A',
+  warning: '#F59E0B',
+  bgBase: '#F9FAFB',
+  textBase: '#111827',
+  border: '#E5E7EB',
+  sidebar: '#1E293B',
+  primaryLight: '#E8F0FE',
+} as const;
+
 const tsiTheme: ThemeConfig = {
   token: {
-    colorPrimary: '#2E75B6',
-    colorError: '#B71234',
-    colorSuccess: '#16A34A',
-    colorWarning: '#F59E0B',
-    colorBgBase: '#F9FAFB',
-    colorTextBase: '#111827',
-    colorBorder: '#E5E7EB',
+    colorPrimary: COLORS.primary,
+    colorError: COLORS.error,
+    colorSuccess: COLORS.success,
+    colorWarning: COLORS.warning,
+    colorBgBase: COLORS.bgBase,
+    colorTextBase: COLORS.textBase,
+    colorBorder: COLORS.border,
     fontFamily: "'Inter', sans-serif",
     fontSize: 13,          // Match TSI --text-base / --text-sm
     borderRadius: 6,
@@ -25,13 +41,13 @@ const tsiTheme: ThemeConfig = {
   },
   components: {
     Layout: {
-      siderBg: '#1E293B',
-      headerBg: '#1E293B',
+      siderBg: COLORS.sidebar,
+      headerBg: COLORS.sidebar,
       headerHeight: 64,
     },
     Menu: {
-      darkItemBg: '#1E293B',
-      darkSubMenuItemBg: '#1E293B',
+      darkItemBg: COLORS.sidebar,
+      darkSubMenuItemBg: COLORS.sidebar,
       darkItemSelectedBg: 'rgba(46, 117, 182, 0.15)',
       darkItemSelectedColor: '#fff',
       darkItemColor: 'rgba(255,255,255,0.7)',
@@ -39,8 +55,8 @@ const tsiTheme: ThemeConfig = {
       itemHeight: 34,
     },
     Table: {
-      headerBg: '#F9FAFB',
-      rowHoverBg: '#E8F0FE',
+      headerBg: COLORS.bgBase,
+      rowHoverBg: COLORS.primaryLight,
       fontSize: 13,
       cellPaddingBlock: 6,
       cellPaddingInline: 12,

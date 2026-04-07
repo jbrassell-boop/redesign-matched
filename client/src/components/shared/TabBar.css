@@ -57,3 +57,24 @@
   pointer-events: none;
   vertical-align: middle;
 }
+
+/* Tablet: scrollable tabs with smaller padding */
+@media (max-width: 768px) {
+  .tab-bar {
+    padding: 0 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab-bar__item {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Mobile: even more compact tabs */
+@media (max-width: 480px) {
+  .tab-bar__item {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+}

@@ -18,7 +18,7 @@ const InlineHeader = ({ title, badge, onClose }: { title: React.ReactNode; badge
     display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
   }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <span style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>{title}</span>
+      <span style={{ fontWeight: 700, color: 'var(--card)', fontSize: 14 }}>{title}</span>
       {badge}
     </div>
     <button

@@ -33,16 +33,25 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
     ? username.slice(0, 2).toUpperCase()
     : 'U';
 
-  // Close menu on outside click
+  // Close menu on outside click or Escape key
   useEffect(() => {
     if (!menuOpen) return;
-    const handler = (e: MouseEvent) => {
+    const handleClick = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
       }
     };
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', handleClick);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('click', handleClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [menuOpen]);
 
   const openWizard = (orderType: string, title: string) => {
@@ -105,16 +114,21 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
             </button>
 
             {menuOpen && (
-              <div style={{
+              <div role="menu" style={{
                 position: 'absolute', top: '100%', right: 0, marginTop: 4,
                 background: 'var(--card)', border: '1px solid var(--neutral-200)',
                 borderRadius: 8, boxShadow: '0 8px 24px rgba(var(--primary-rgb), 0.18)',
                 minWidth: 220, zIndex: 9999, overflow: 'hidden',
               }}>
-                {menuItems.map((item) => (
+                {menuItems.map((item) => {
+                  const handleAction = () => { setMenuOpen(false); item.type === 'receiving' ? navigate('/receiving') : openWizard(item.type, `New ${item.label}`); };
+                  return (
                   <div
                     key={item.type}
-                    onClick={() => { setMenuOpen(false); item.type === 'receiving' ? navigate('/receiving') : openWizard(item.type, `New ${item.label}`); }}
+                    role="menuitem"
+                    tabIndex={0}
+                    onClick={handleAction}
+                    onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAction(); } }}
                     style={{
                       padding: '10px 14px', cursor: 'pointer',
                       display: 'flex', alignItems: 'center', gap: 10,
@@ -137,7 +151,8 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
                       <div style={{ fontSize: 10, color: 'var(--muted)' }}>{item.desc}</div>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

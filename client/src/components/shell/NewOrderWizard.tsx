@@ -450,7 +450,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                     <input value={newSerial} onChange={e => setNewSerial(e.target.value)} placeholder="e.g. 2801442" style={fld} />
                   </div>
                   <button onClick={handleAddScope} style={{
-                    height: 28, padding: '0 16px', background: 'var(--success)', color: '#fff',
+                    height: 28, padding: '0 16px', background: 'var(--success)', color: 'var(--card)',
                     border: 'none', borderRadius: 4, fontSize: 11, fontWeight: 700,
                     cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
                     display: 'flex', alignItems: 'center', gap: 4,

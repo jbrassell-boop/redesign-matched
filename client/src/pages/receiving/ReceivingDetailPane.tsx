@@ -39,14 +39,14 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
     setTrackingIn('');
     setNotes('');
     setClientSearch('');
-    const c = await getWizardClients().catch(() => []);
+    const c = await getWizardClients().catch(() => { message.error('Failed to load clients'); return []; });
     setClients(c);
   }, []);
 
   const handleSelectClient = useCallback(async (client: WizardClient) => {
     setSelectedClient(client);
     setSelectedDept(null);
-    const depts = await getWizardDepartments(client.clientKey).catch(() => []);
+    const depts = await getWizardDepartments(client.clientKey).catch(() => { message.error('Failed to load departments'); return []; });
     setDepartments(depts);
   }, []);
 

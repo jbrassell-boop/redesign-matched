@@ -104,8 +104,8 @@ export const OpsBriefing = ({ stats }: Props) => {
     <div style={{ padding: 16, overflow: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 14 }}>
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, var(--navy) 0%, #1a365d 100%)',
-        borderRadius: 8, padding: '16px 20px', color: '#fff',
+        background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%)',
+        borderRadius: 8, padding: '16px 20px', color: 'var(--card)',
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       }}>
         <div>
@@ -119,7 +119,7 @@ export const OpsBriefing = ({ stats }: Props) => {
           </div>
           {urgent > 0 && (
             <div style={{ textAlign: 'center', background: 'rgba(239,68,68,.2)', padding: '8px 16px', borderRadius: 6 }}>
-              <div style={{ fontSize: 28, fontWeight: 900, color: '#fca5a5' }}>{urgent}</div>
+              <div style={{ fontSize: 28, fontWeight: 900, color: 'var(--danger-text-lt)' }}>{urgent}</div>
               <div style={{ fontSize: 9, opacity: .7, textTransform: 'uppercase' }}>Urgent</div>
             </div>
           )}

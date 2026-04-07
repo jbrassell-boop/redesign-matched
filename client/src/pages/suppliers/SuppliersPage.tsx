@@ -121,7 +121,7 @@ export const SuppliersPage = () => {
                 onClick={() => { setNewSupplierName(''); setNewSupplierCity(''); setNewSupplierState(''); setNewSupplierPhone(''); setNewSupplierOpen(true); }}
                 style={{
                   height: 26, padding: '0 10px', fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
-                  background: 'var(--navy)', color: '#fff', border: 'none', borderRadius: 5, cursor: 'pointer',
+                  background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 5, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 3,
                 }}
               >

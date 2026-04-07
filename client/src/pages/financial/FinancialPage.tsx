@@ -235,7 +235,7 @@ export const FinancialPage = () => {
   const ExecBanner = () => (
     <div style={{
       padding: '12px 20px',
-      background: 'linear-gradient(135deg, var(--navy) 0%, #1a365d 100%)',
+      background: 'linear-gradient(135deg, var(--navy) 0%, var(--navy-dark) 100%)',
       borderBottom: '2px solid var(--primary)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>

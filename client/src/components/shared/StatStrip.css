@@ -111,3 +111,43 @@
 .stat-chip__val--amber    { color: var(--amber); }
 .stat-chip__val--purple   { color: var(--purple); }
 .stat-chip__val--muted    { color: var(--neutral-500); }
+
+/* Tablet: wrap stat chips */
+@media (max-width: 768px) {
+  .stat-strip {
+    flex-wrap: wrap;
+  }
+
+  .stat-chip {
+    padding: 6px 10px;
+    min-width: 90px;
+    flex: 1 0 auto;
+  }
+
+  .stat-chip__value {
+    font-size: 14px;
+  }
+
+  .stat-chip__label {
+    font-size: 10px;
+  }
+}
+
+/* Mobile: compact stat chips */
+@media (max-width: 480px) {
+  .stat-chip {
+    padding: 5px 8px;
+    min-width: 80px;
+    gap: 6px;
+  }
+
+  .stat-chip__icon {
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+  }
+
+  .stat-chip__value {
+    font-size: 13px;
+  }
+}

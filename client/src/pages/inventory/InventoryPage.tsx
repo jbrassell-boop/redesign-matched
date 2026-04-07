@@ -177,7 +177,7 @@ export const InventoryPage = () => {
                 onClick={() => { setPoSupplier(''); setPoNotes(''); setDraftPOOpen(true); }}
                 style={{
                   height: 24, padding: '0 8px', fontSize: 10, fontWeight: 700, fontFamily: 'inherit',
-                  background: 'var(--navy)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer',
+                  background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 4, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 3,
                 }}
               >

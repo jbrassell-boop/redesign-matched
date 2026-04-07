@@ -177,7 +177,7 @@ const NavItemButton = ({ label, icon, isActive, collapsed, onClick }: NavItemBut
     borderLeft = '3px solid var(--primary)';
   } else if (hovered) {
     bg = 'var(--sidebar-lt)';
-    color = '#fff';
+    color = 'var(--card)';
   }
 
   return (
@@ -268,7 +268,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
             justifyContent: 'center',
             flexShrink: 0,
           }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" width="18" height="18">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--card)" strokeWidth="2" width="18" height="18">
               <circle cx="12" cy="12" r="10"/>
               <path d="M12 6v6l4 2"/>
             </svg>
@@ -279,7 +279,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
         {!collapsed && (
           <div style={{ flex: 1, overflow: 'hidden' }}>
             <div style={{
-              color: '#fff',
+              color: 'var(--card)',
               fontWeight: 700,
               fontSize: 13,
               lineHeight: 1.2,

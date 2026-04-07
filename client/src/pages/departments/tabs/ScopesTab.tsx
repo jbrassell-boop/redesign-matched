@@ -92,7 +92,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
           onClick={openAdd}
           style={{
             height: 28, padding: '0 12px', fontSize: 11, fontWeight: 700,
-            background: 'var(--navy)', color: '#fff', border: 'none',
+            background: 'var(--navy)', color: 'var(--card)', border: 'none',
             borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit',
             display: 'flex', alignItems: 'center', gap: 4,
           }}
@@ -198,7 +198,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
             <button onClick={() => setAddOpen(false)} style={{ height: 30, padding: '0 14px', fontSize: 12, fontWeight: 600, background: 'var(--neutral-100)', color: 'var(--navy)', border: '1px solid var(--border)', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>
               Cancel
             </button>
-            <button onClick={handleAdd} disabled={saving} style={{ height: 30, padding: '0 18px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>
+            <button onClick={handleAdd} disabled={saving} style={{ height: 30, padding: '0 18px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: 'var(--card)', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>
               {saving ? 'Adding…' : 'Add Scope'}
             </button>
           </div>

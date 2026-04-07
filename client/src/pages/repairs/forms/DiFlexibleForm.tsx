@@ -18,7 +18,7 @@ const s = {
     gap: 8,
     fontFamily: "'Inter', Arial, sans-serif",
     fontSize: 11,
-    color: '#111',
+    color: 'var(--print-text)',
     boxSizing: 'border-box' as const,
   },
   formHeader: {
@@ -29,10 +29,10 @@ const s = {
   },
   formTitle: { fontSize: 15, fontWeight: 800, color: 'var(--navy)' },
   formSubtitle: { fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 },
-  formNumber: { fontSize: 10, color: '#666', marginTop: 2 },
+  formNumber: { fontSize: 10, color: 'var(--print-light)', marginTop: 2 },
   sectionBar: {
     background: 'var(--primary)',
-    color: '#fff',
+    color: 'var(--card)',
     fontSize: 9,
     fontWeight: 700 as const,
     textTransform: 'uppercase' as const,
@@ -43,11 +43,11 @@ const s = {
     fontSize: 8.5,
     fontWeight: 700 as const,
     textTransform: 'uppercase' as const,
-    color: '#555',
+    color: 'var(--print-muted)',
     letterSpacing: '0.04em',
   },
   fv: {
-    borderBottom: '1px solid #999',
+    borderBottom: '1px solid var(--print-check-border)',
     minHeight: 17,
     fontSize: 11,
     padding: '1px 2px',
@@ -55,28 +55,28 @@ const s = {
   cbBox: {
     width: 12,
     height: 12,
-    border: '1px solid #999',
+    border: '1px solid var(--print-check-border)',
     borderRadius: 2,
     display: 'inline-block' as const,
     flexShrink: 0,
     verticalAlign: 'middle' as const,
   },
   costField: {
-    borderBottom: '1px solid #aaa',
+    borderBottom: '1px solid var(--print-placeholder)',
     minWidth: 60,
     display: 'inline-block' as const,
     height: 14,
     verticalAlign: 'middle' as const,
   },
   sigMini: {
-    borderBottom: '1px solid #aaa',
+    borderBottom: '1px solid var(--print-placeholder)',
     minWidth: 100,
     display: 'inline-block' as const,
     height: 14,
     verticalAlign: 'middle' as const,
   },
   textField: {
-    border: '1px solid #ccc',
+    border: '1px solid var(--print-border)',
     borderRadius: 3,
     minHeight: 28,
     padding: '3px 6px',
@@ -87,12 +87,12 @@ const s = {
   formFooter: {
     marginTop: 'auto' as const,
     paddingTop: 8,
-    borderTop: '1px solid #ccc',
+    borderTop: '1px solid var(--print-border)',
     display: 'flex',
     justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
     fontSize: 8,
-    color: '#888',
+    color: 'var(--print-footer)',
   },
 };
 
@@ -198,7 +198,7 @@ const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2
 
 const repairTableTh: React.CSSProperties = {
   background: 'var(--primary)',
-  color: '#fff',
+  color: 'var(--card)',
   fontSize: 8,
   fontWeight: 700,
   textTransform: 'uppercase',
@@ -218,7 +218,7 @@ const repairTableTd: React.CSSProperties = {
 
 const pfTableTh: React.CSSProperties = {
   background: 'var(--primary)',
-  color: '#fff',
+  color: 'var(--card)',
   fontSize: 8,
   fontWeight: 700,
   textTransform: 'uppercase',
@@ -247,7 +247,7 @@ const pfBtn = (type: 'p' | 'f' | 'na') => ({
   fontSize: 8,
   fontWeight: 700 as const,
   margin: '0 1px',
-  color: type === 'p' ? 'var(--success)' : type === 'f' ? 'var(--danger)' : '#666',
+  color: type === 'p' ? 'var(--success)' : type === 'f' ? 'var(--danger)' : 'var(--print-light)',
 });
 
 const LogoBlock = () => (
@@ -287,15 +287,15 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           onClick={() => window.print()}
           style={{
             height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
-            background: 'var(--primary)', color: '#fff',
+            background: 'var(--primary)', color: 'var(--card)',
             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >Print</button>
         <button
           onClick={onClose}
           style={{
-            height: 32, padding: '0 14px', border: '1px solid #ccc', borderRadius: 5,
-            background: 'var(--card)', color: '#555',
+            height: 32, padding: '0 14px', border: '1px solid var(--print-border)', borderRadius: 5,
+            background: 'var(--card)', color: 'var(--print-muted)',
             fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >Close</button>
@@ -381,7 +381,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4, gap: 20 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
               <span style={s.fl}>Subtotal Estimate</span>
-              <div style={{ borderBottom: '1px solid #999', minWidth: 100, height: 17 }}></div>
+              <div style={{ borderBottom: '1px solid var(--print-check-border)', minWidth: 100, height: 17 }}></div>
             </div>
           </div>
 
@@ -392,20 +392,20 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           {/* Signature block */}
           <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Technician / Estimator</div>
+              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }}></div>
+              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Technician / Estimator</div>
             </div>
             <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
+              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }}></div>
+              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Date</div>
             </div>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Customer Authorization</div>
+              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }}></div>
+              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Customer Authorization</div>
             </div>
             <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
+              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }}></div>
+              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Date</div>
             </div>
           </div>
 
@@ -480,12 +480,12 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           {/* Signature */}
           <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Lead Technician / Signature</div>
+              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }}></div>
+              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Lead Technician / Signature</div>
             </div>
             <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 26 }}></div>
-              <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
+              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }}></div>
+              <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Date</div>
             </div>
           </div>
 
@@ -597,17 +597,17 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
             {/* Responsible Tech */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={s.fl}>Responsible Tech</span>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 18, marginTop: 2 }}></div>
+              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 18, marginTop: 2 }}></div>
             </div>
             {/* QC Initials */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={s.fl}>QC Initials</span>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 18, marginTop: 2 }}></div>
+              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 18, marginTop: 2 }}></div>
             </div>
             {/* Test Equipment — span 2 */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2, gridColumn: 'span 2' }}>
               <span style={s.fl}>Test Equipment Used</span>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 18, marginTop: 2 }}></div>
+              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 18, marginTop: 2 }}></div>
             </div>
             {/* Commercial QC */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -624,7 +624,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
             {/* Inspected By */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <span style={s.fl}>Inspected By</span>
-              <div style={{ borderBottom: '1px solid #999', minHeight: 18, marginTop: 2 }}></div>
+              <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 18, marginTop: 2 }}></div>
             </div>
           </div>
 

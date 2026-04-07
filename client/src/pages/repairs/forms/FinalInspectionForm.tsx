@@ -9,7 +9,7 @@ interface Props {
 // ── Styles matching OM10-2 exactly ──
 const sectionBar: React.CSSProperties = {
   background: 'var(--primary)',
-  color: '#fff',
+  color: 'var(--card)',
   fontSize: 9,
   fontWeight: 700,
   textTransform: 'uppercase',
@@ -22,12 +22,12 @@ const fl: React.CSSProperties = {
   fontSize: 8.5,
   fontWeight: 700,
   textTransform: 'uppercase',
-  color: '#555',
+  color: 'var(--print-muted)',
   letterSpacing: '0.04em',
 };
 
 const fv: React.CSSProperties = {
-  borderBottom: '1px solid #999',
+  borderBottom: '1px solid var(--print-check-border)',
   minHeight: 16,
   fontSize: 11,
   padding: '1px 2px',
@@ -35,7 +35,7 @@ const fv: React.CSSProperties = {
 
 const pfTableTh: React.CSSProperties = {
   background: 'var(--primary)',
-  color: '#fff',
+  color: 'var(--card)',
   fontSize: 8.5,
   fontWeight: 700,
   textTransform: 'uppercase',
@@ -47,7 +47,7 @@ const pfTableTh: React.CSSProperties = {
 const pfTableTd: React.CSSProperties = {
   padding: '3px 8px',
   fontSize: 10.5,
-  borderBottom: '1px solid #ddd',
+  borderBottom: '1px solid var(--print-border-lt)',
   verticalAlign: 'middle',
 };
 
@@ -55,7 +55,7 @@ const pfBtnBase: React.CSSProperties = {
   display: 'inline-block',
   width: 28,
   height: 16,
-  border: '1px solid #aaa',
+  border: '1px solid var(--print-placeholder)',
   borderRadius: 2,
   textAlign: 'center',
   lineHeight: '16px',
@@ -121,7 +121,7 @@ const cbBox: React.CSSProperties = {
   display: 'inline-block',
   width: 11,
   height: 11,
-  border: '1px solid #aaa',
+  border: '1px solid var(--print-placeholder)',
   borderRadius: 2,
   flexShrink: 0,
 };
@@ -147,15 +147,15 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
           onClick={() => window.print()}
           style={{
             height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
-            background: 'var(--primary)', color: '#fff',
+            background: 'var(--primary)', color: 'var(--card)',
             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >Print</button>
         <button
           onClick={onClose}
           style={{
-            height: 32, padding: '0 14px', border: '1px solid #ccc', borderRadius: 5,
-            background: 'var(--card)', color: '#555',
+            height: 32, padding: '0 14px', border: '1px solid var(--print-border)', borderRadius: 5,
+            background: 'var(--card)', color: 'var(--print-muted)',
             fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >Close</button>
@@ -174,7 +174,7 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
           gap: 8,
           fontFamily: "'Inter', Arial, sans-serif",
           fontSize: 11,
-          color: '#111',
+          color: 'var(--print-text)',
           boxSizing: 'border-box',
           boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
         }}
@@ -187,7 +187,7 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Final Inspection Report</div>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Flexible Endoscope</div>
-            <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM10-2</div>
+            <div style={{ fontSize: 10, color: 'var(--print-light)', marginTop: 2 }}>OM10-2</div>
           </div>
         </div>
 
@@ -246,18 +246,18 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
             <div style={{ ...sectionBar, marginTop: 6 }}>Broken Fibers</div>
             <div style={{ padding: '6px 0' }}>
               {/* Insertion Tube IN */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr', gap: '4px 12px', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #eee' }}>
-                <span style={{ fontSize: 9.5, fontWeight: 700, color: '#555', whiteSpace: 'nowrap' }}>Insertion Tube (IN)</span>
-                <div style={{ borderBottom: '1px solid #999', minHeight: 16, fontSize: 10.5 }}></div>
-                <div style={{ borderBottom: '1px solid #999', minHeight: 16, fontSize: 10.5 }}></div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr', gap: '4px 12px', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid var(--print-border-xlt)' }}>
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--print-muted)', whiteSpace: 'nowrap' }}>Insertion Tube (IN)</span>
+                <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 16, fontSize: 10.5 }}></div>
+                <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 16, fontSize: 10.5 }}></div>
               </div>
               {/* Bending Section OUT */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr', gap: '4px 12px', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid #eee' }}>
-                <span style={{ fontSize: 9.5, fontWeight: 700, color: '#555', whiteSpace: 'nowrap' }}>Bending Section (OUT)</span>
-                <div style={{ borderBottom: '1px solid #999', minHeight: 16, fontSize: 10.5 }}></div>
-                <div style={{ borderBottom: '1px solid #999', minHeight: 16, fontSize: 10.5 }}></div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr 1fr', gap: '4px 12px', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid var(--print-border-xlt)' }}>
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: 'var(--print-muted)', whiteSpace: 'nowrap' }}>Bending Section (OUT)</span>
+                <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 16, fontSize: 10.5 }}></div>
+                <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 16, fontSize: 10.5 }}></div>
               </div>
-              <div style={{ marginTop: 4, fontSize: 8.5, color: '#555' }}>Count IN before repair / OUT after repair</div>
+              <div style={{ marginTop: 4, fontSize: 8.5, color: 'var(--print-muted)' }}>Count IN before repair / OUT after repair</div>
             </div>
           </div>
 
@@ -266,7 +266,7 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
             <div style={{ ...sectionBar, marginTop: 6 }}>Scope Includes</div>
             <ul style={{ listStyle: 'none', padding: 0, margin: '4px 0 0' }}>
               {SCOPE_INCLUDES.map((inc, i) => (
-                <li key={i} style={{ padding: '3px 0', fontSize: 10.5, borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <li key={i} style={{ padding: '3px 0', fontSize: 10.5, borderBottom: '1px solid var(--print-border-xlt)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={cbBox}></span>{inc}
                 </li>
               ))}
@@ -278,7 +278,7 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
         <div style={{ ...sectionBar, marginTop: 6 }}>Repairs Performed</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 20px', marginTop: 4 }}>
           {REPAIRS_PERFORMED.map((rep, i) => (
-            <div key={i} style={{ padding: '2px 0', fontSize: 10, borderBottom: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div key={i} style={{ padding: '2px 0', fontSize: 10, borderBottom: '1px solid var(--print-border-xlt)', display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={cbBox}></span>{rep}
             </div>
           ))}
@@ -290,24 +290,24 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
           overflow: 'hidden', marginTop: 10,
         }}>
           <div style={{ flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, borderRight: '2px solid var(--primary)' }}>
-            <div style={{ fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', color: '#555', letterSpacing: '0.05em' }}>Condition</div>
+            <div style={{ fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', color: 'var(--print-muted)', letterSpacing: '0.05em' }}>Condition</div>
             <div style={{ display: 'flex', gap: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700 }}>
-                <div style={{ width: 16, height: 16, border: '1.5px solid #999', borderRadius: '50%', flexShrink: 0 }}></div>USABLE
+                <div style={{ width: 16, height: 16, border: '1.5px solid var(--print-check-border)', borderRadius: '50%', flexShrink: 0 }}></div>USABLE
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700 }}>
-                <div style={{ width: 16, height: 16, border: '1.5px solid #999', borderRadius: '50%', flexShrink: 0 }}></div>UNUSABLE
+                <div style={{ width: 16, height: 16, border: '1.5px solid var(--print-check-border)', borderRadius: '50%', flexShrink: 0 }}></div>UNUSABLE
               </div>
             </div>
           </div>
           <div style={{ flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <div style={{ fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', color: '#555', letterSpacing: '0.05em' }}>Final Result</div>
+            <div style={{ fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', color: 'var(--print-muted)', letterSpacing: '0.05em' }}>Final Result</div>
             <div style={{ display: 'flex', gap: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700 }}>
-                <div style={{ width: 16, height: 16, border: '1.5px solid #999', borderRadius: '50%', flexShrink: 0 }}></div>PASSED
+                <div style={{ width: 16, height: 16, border: '1.5px solid var(--print-check-border)', borderRadius: '50%', flexShrink: 0 }}></div>PASSED
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700 }}>
-                <div style={{ width: 16, height: 16, border: '1.5px solid #999', borderRadius: '50%', flexShrink: 0 }}></div>FAILED
+                <div style={{ width: 16, height: 16, border: '1.5px solid var(--print-check-border)', borderRadius: '50%', flexShrink: 0 }}></div>FAILED
               </div>
             </div>
           </div>
@@ -316,20 +316,20 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
         {/* ── Signature Block ── */}
         <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ borderBottom: '1px solid #999', minHeight: 28 }}></div>
-            <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Repair Technician / Signature</div>
+            <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 28 }}></div>
+            <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Repair Technician / Signature</div>
           </div>
           <div style={{ flex: 1, maxWidth: 140, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ borderBottom: '1px solid #999', minHeight: 28 }}></div>
-            <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
+            <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 28 }}></div>
+            <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Date</div>
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ borderBottom: '1px solid #999', minHeight: 28 }}></div>
-            <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Final Inspector / Signature</div>
+            <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 28 }}></div>
+            <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Final Inspector / Signature</div>
           </div>
           <div style={{ flex: 1, maxWidth: 140, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ borderBottom: '1px solid #999', minHeight: 28 }}></div>
-            <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
+            <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 28 }}></div>
+            <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Date</div>
           </div>
         </div>
 
@@ -337,12 +337,12 @@ export const FinalInspectionForm = ({ repair, onClose }: Props) => {
         <div style={{
           marginTop: 'auto',
           paddingTop: 8,
-          borderTop: '1px solid #ccc',
+          borderTop: '1px solid var(--print-border)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           fontSize: 8,
-          color: '#888',
+          color: 'var(--print-footer)',
         }}>
           <span>ISO 13485 Certified</span>
           <span>Total Scope Inc.&nbsp;|&nbsp;17 Creek Pkwy, Upper Chichester PA 19061&nbsp;|&nbsp;(610) 485-3838</span>

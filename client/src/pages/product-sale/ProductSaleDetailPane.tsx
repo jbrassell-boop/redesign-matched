@@ -60,7 +60,7 @@ export const ProductSaleDetailPane = ({ detail, loading, onClose }: Props) => {
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontWeight: 700, color: '#fff', fontSize: 14 }}>
+          <span style={{ fontWeight: 700, color: 'var(--card)', fontSize: 14 }}>
             {detail?.invoiceNumber || 'Sale Detail'}
           </span>
           {detail && <StatusBadge status={detail.status} />}

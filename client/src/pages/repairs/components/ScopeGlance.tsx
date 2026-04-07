@@ -12,7 +12,7 @@ export const ScopeGlance = ({ repair, flags }: ScopeGlanceProps) => {
 
   return (
     <div style={{
-      background: '#f0f6ff',
+      background: 'var(--primary-hover-bg)',
       borderBottom: '2px solid var(--border)',
       padding: '5px 14px',
       display: 'flex',
@@ -58,14 +58,14 @@ export const ScopeGlance = ({ repair, flags }: ScopeGlanceProps) => {
 
         {repair.isUrgent && (
           <span style={{
-            background: 'var(--danger)', color: '#fff',
+            background: 'var(--danger)', color: 'var(--card)',
             padding: '2px 9px', borderRadius: 10,
             fontSize: 10, fontWeight: 700,
           }}>⚑ Rush</span>
         )}
         {flags.map((f) => (
           <span key={f.flagKey} style={{
-            background: 'var(--amber-light)', color: '#92400E',
+            background: 'var(--amber-light)', color: 'var(--badge-amber-text)',
             border: '1px solid var(--amber-border)',
             padding: '2px 9px', borderRadius: 10,
             fontSize: 10, fontWeight: 700,

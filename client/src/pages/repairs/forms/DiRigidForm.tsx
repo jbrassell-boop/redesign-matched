@@ -11,11 +11,11 @@ export const DiRigidForm = ({ repair, onClose }: Props) => {
 
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflow: 'auto', padding: '20px 0' }}>
-      <div className="print-form" style={{ width: '8.5in', background: 'var(--card)', fontFamily: "'Inter', Arial, sans-serif", fontSize: 11, color: '#111' }}>
+      <div className="print-form" style={{ width: '8.5in', background: 'var(--card)', fontFamily: "'Inter', Arial, sans-serif", fontSize: 11, color: 'var(--print-text)' }}>
         {/* Print/Close */}
         <div className="no-print" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 0' }}>
-          <button onClick={() => window.print()} style={{ padding: '8px 20px', background: 'var(--primary)', color: '#fff', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Print / Save PDF</button>
-          <button onClick={onClose} style={{ padding: '8px 20px', background: '#666', color: '#fff', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
+          <button onClick={() => window.print()} style={{ padding: '8px 20px', background: 'var(--primary)', color: 'var(--card)', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Print / Save PDF</button>
+          <button onClick={onClose} style={{ padding: '8px 20px', background: 'var(--print-light)', color: 'var(--card)', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
         </div>
 
         <div style={{ padding: '0.5in', display: 'flex', flexDirection: 'column', gap: 7 }}>
@@ -25,7 +25,7 @@ export const DiRigidForm = ({ repair, onClose }: Props) => {
             <div style={{ textAlign: 'right' }}>
               <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>D&amp;I Inspection Report</div>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Rigid Endoscope</div>
-              <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM05-3</div>
+              <div style={{ fontSize: 10, color: 'var(--print-light)', marginTop: 2 }}>OM05-3</div>
             </div>
           </div>
 
@@ -57,9 +57,9 @@ export const DiRigidForm = ({ repair, onClose }: Props) => {
           {/* Item Received Condition */}
           <Bar>Item Received Condition</Bar>
           <CbRow>
-            <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: '#555', letterSpacing: '.04em', marginRight: 4 }}>Received:</span>
+            <span style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--print-muted)', letterSpacing: '.04em', marginRight: 4 }}>Received:</span>
             <Cb label="Clean" /><Cb label="Unclean" />
-            <span style={{ background: 'var(--amber-subtle)', border: '1px solid var(--amber-border)', borderRadius: 3, padding: '4px 8px', fontSize: 9, color: '#92400E', fontWeight: 600, marginLeft: 8 }}>
+            <span style={{ background: 'var(--amber-subtle)', border: '1px solid var(--amber-border)', borderRadius: 3, padding: '4px 8px', fontSize: 9, color: 'var(--badge-amber-text)', fontWeight: 600, marginLeft: 8 }}>
               If Unclean — follow OM-22 decontamination protocol before proceeding
             </span>
           </CbRow>
@@ -127,7 +127,7 @@ export const DiRigidForm = ({ repair, onClose }: Props) => {
           </div>
 
           {/* Footer */}
-          <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: '#888' }}>
+          <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid var(--print-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: 'var(--print-footer)' }}>
             <span>ISO 13485 Certified</span>
             <span>Total Scope, Inc. &nbsp;|&nbsp; 17 Creek Pkwy, Upper Chichester PA 19061 &nbsp;|&nbsp; (610) 485-3838</span>
             <span>OM05-3</span>
@@ -139,22 +139,22 @@ export const DiRigidForm = ({ repair, onClose }: Props) => {
 };
 
 /* ── Primitives ── */
-const fl: React.CSSProperties = { fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: '#555', letterSpacing: '.04em' };
+const fl: React.CSSProperties = { fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--print-muted)', letterSpacing: '.04em' };
 
 const Bar = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ background: 'var(--primary)', color: '#fff', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', padding: '4px 10px' }}>{children}</div>
+  <div style={{ background: 'var(--primary)', color: 'var(--card)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', padding: '4px 10px' }}>{children}</div>
 );
 
 const Fld = ({ label, value, span2, h }: { label: string; value?: string | null; span2?: boolean; h?: number }) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 1, ...(span2 ? { gridColumn: 'span 2' } : {}) }}>
     <span style={fl}>{label}</span>
-    <div style={{ borderBottom: '1px solid #999', minHeight: h ?? 17, fontSize: 11, padding: '1px 2px' }}>{value || ''}</div>
+    <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: h ?? 17, fontSize: 11, padding: '1px 2px' }}>{value || ''}</div>
   </div>
 );
 
 const Cb = ({ label }: { label: string }) => (
   <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '10.5px' }}>
-    <span style={{ width: 12, height: 12, border: '1px solid #999', borderRadius: 2, display: 'inline-block', flexShrink: 0 }} />{label}
+    <span style={{ width: 12, height: 12, border: '1px solid var(--print-check-border)', borderRadius: 2, display: 'inline-block', flexShrink: 0 }} />{label}
   </span>
 );
 
@@ -163,13 +163,13 @@ const CbRow = ({ children }: { children: React.ReactNode }) => (
 );
 
 const TextField = ({ h }: { h: number }) => (
-  <div style={{ border: '1px solid #ccc', borderRadius: 3, minHeight: h, padding: '3px 6px', marginTop: 3, fontSize: '10.5px' }} />
+  <div style={{ border: '1px solid var(--print-border)', borderRadius: 3, minHeight: h, padding: '3px 6px', marginTop: 3, fontSize: '10.5px' }} />
 );
 
 const Sig = ({ label, narrow }: { label: string; narrow?: boolean }) => (
   <div style={{ flex: narrow ? undefined : 1, maxWidth: narrow ? 130 : undefined, display: 'flex', flexDirection: 'column', gap: 2 }}>
-    <div style={{ borderBottom: '1px solid #999', minHeight: 26 }} />
-    <div style={{ fontSize: '8.5px', color: '#555', fontWeight: 600, marginTop: 2 }}>{label}</div>
+    <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 26 }} />
+    <div style={{ fontSize: '8.5px', color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>{label}</div>
   </div>
 );
 
@@ -182,8 +182,8 @@ const PfBtn = ({ pass, fail: _fail }: { pass?: boolean; fail?: boolean }) => (
 );
 
 /* 33-point rigid table */
-const defBox = { display: 'inline-block', width: 10, height: 10, border: '1px solid #bbb', borderRadius: 1, verticalAlign: 'middle' } as React.CSSProperties;
-const thS: React.CSSProperties = { background: 'var(--primary)', color: '#fff', fontSize: 8, fontWeight: 700, textTransform: 'uppercase', padding: '3px 5px', textAlign: 'center', letterSpacing: '.03em', borderRight: '1px solid rgba(255,255,255,.2)' };
+const defBox = { display: 'inline-block', width: 10, height: 10, border: '1px solid var(--print-border)', borderRadius: 1, verticalAlign: 'middle' } as React.CSSProperties;
+const thS: React.CSSProperties = { background: 'var(--primary)', color: 'var(--card)', fontSize: 8, fontWeight: 700, textTransform: 'uppercase', padding: '3px 5px', textAlign: 'center', letterSpacing: '.03em', borderRight: '1px solid rgba(255,255,255,.2)' };
 const defCols = ['Nicks', 'Scratches', 'Dirt', 'Chips', 'Cracks', 'Missing', 'Loose', 'Other'];
 
 type RigidGroup = { cat: string; items: string[] };
@@ -215,15 +215,15 @@ const RigidTable = () => (
           </tr>
           {g.items.map((item, i) => (
             <tr key={item} style={i % 2 === 1 ? { background: 'var(--bg)' } : undefined}>
-              <td style={{ padding: '2px 5px', borderBottom: '1px solid #e8e8e8', borderRight: '1px solid #eee', verticalAlign: 'middle' }}>{item}</td>
-              <td style={{ padding: '2px 5px', textAlign: 'center', borderBottom: '1px solid #e8e8e8', borderRight: '1px solid #eee' }}>
+              <td style={{ padding: '2px 5px', borderBottom: '1px solid var(--print-border-md)', borderRight: '1px solid var(--print-border-xlt)', verticalAlign: 'middle' }}>{item}</td>
+              <td style={{ padding: '2px 5px', textAlign: 'center', borderBottom: '1px solid var(--print-border-md)', borderRight: '1px solid var(--print-border-xlt)' }}>
                 <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid var(--success)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--success)' }}>P</span>
               </td>
-              <td style={{ padding: '2px 5px', textAlign: 'center', borderBottom: '1px solid #e8e8e8', borderRight: '1px solid #eee' }}>
+              <td style={{ padding: '2px 5px', textAlign: 'center', borderBottom: '1px solid var(--print-border-md)', borderRight: '1px solid var(--print-border-xlt)' }}>
                 <span style={{ display: 'inline-block', width: 22, height: 14, border: '1px solid var(--danger)', borderRadius: 2, textAlign: 'center', lineHeight: '14px', fontSize: 8, fontWeight: 700, color: 'var(--danger)' }}>F</span>
               </td>
               {defCols.map(c => (
-                <td key={c} style={{ padding: '2px 5px', textAlign: 'center', borderBottom: '1px solid #e8e8e8', borderRight: '1px solid #eee' }}>
+                <td key={c} style={{ padding: '2px 5px', textAlign: 'center', borderBottom: '1px solid var(--print-border-md)', borderRight: '1px solid var(--print-border-xlt)' }}>
                   <span style={defBox} />
                 </td>
               ))}

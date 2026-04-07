@@ -32,7 +32,7 @@ export const LoginPage = () => {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f172a 100%)',
+      background: 'linear-gradient(135deg, var(--login-gradient-dark) 0%, var(--navy) 50%, var(--login-gradient-dark) 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -74,8 +74,8 @@ export const LoginPage = () => {
 
             {error && (
               <div role="alert" style={{
-                background: '#FEF2F2',
-                border: '1px solid #FECACA',
+                background: 'var(--danger-light)',
+                border: '1px solid var(--badge-red-border)',
                 borderRadius: 6,
                 padding: '10px 14px',
                 fontSize: 12,
@@ -105,7 +105,7 @@ export const LoginPage = () => {
                     fontFamily: 'inherit', color: 'var(--text)', outline: 'none',
                     boxSizing: 'border-box', transition: 'border-color .15s, box-shadow .15s',
                   }}
-                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(46,117,182,0.1)'; }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(var(--primary-rgb), 0.1)'; }}
                   onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-dk)'; e.currentTarget.style.boxShadow = 'none'; }}
                 />
               </div>
@@ -128,7 +128,7 @@ export const LoginPage = () => {
                     fontFamily: 'inherit', color: 'var(--text)', outline: 'none',
                     boxSizing: 'border-box', transition: 'border-color .15s, box-shadow .15s',
                   }}
-                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(46,117,182,0.1)'; }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(var(--primary-rgb), 0.1)'; }}
                   onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-dk)'; e.currentTarget.style.boxShadow = 'none'; }}
                 />
               </div>
@@ -138,8 +138,8 @@ export const LoginPage = () => {
                 disabled={loading}
                 style={{
                   width: '100%', height: 44,
-                  background: loading ? 'rgba(15,23,42,0.6)' : 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)',
-                  color: '#fff', border: 'none',
+                  background: loading ? 'rgba(15,23,42,0.6)' : 'linear-gradient(135deg, var(--login-gradient-dark) 0%, var(--navy) 100%)',
+                  color: 'var(--card)', border: 'none',
                   borderRadius: 6,
                   fontSize: 13, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer',
                   fontFamily: 'inherit', letterSpacing: '0.04em',
@@ -162,7 +162,7 @@ export const LoginPage = () => {
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               padding: '3px 10px', borderRadius: 4,
-              background: '#EFF6FF', border: '1px solid #BFDBFE',
+              background: 'var(--info-bg)', border: '1px solid var(--badge-blue-border)',
             }}>
               <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth={2.5}>
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />

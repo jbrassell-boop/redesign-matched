@@ -118,6 +118,73 @@ const TABS: TabDef[] = [
   { key: 'Reports', label: 'Reports' },
 ];
 
+// ── Extracted static styles (performance: avoid re-creating objects each render) ──
+const pageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
+const statStripStyle: React.CSSProperties = { display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const tabFlexColumnStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 };
+const toolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' };
+const filterLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' };
+const segmentedWrapStyle: React.CSSProperties = { display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' };
+const separatorStyle: React.CSSProperties = { width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 };
+const dateInputStyle: React.CSSProperties = { height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', width: 120 };
+const dateToLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
+const searchInputStyle: React.CSSProperties = { marginLeft: 'auto', height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center` };
+const ncrSearchInputStyle: React.CSSProperties = { ...searchInputStyle, width: 240 };
+const capaSearchInputStyle: React.CSSProperties = { ...searchInputStyle, width: 260 };
+const tableCardBgStyle: React.CSSProperties = { flex: 1, overflow: 'auto', background: 'var(--card)' };
+const tableFixedStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' };
+const thCellStyle: React.CSSProperties = { background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700, padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11, position: 'sticky', top: 0, zIndex: 2, whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', borderBottom: '1px solid var(--neutral-200)', userSelect: 'none' };
+const tdCellStyle: React.CSSProperties = { padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const tdCellMutedStyle: React.CSSProperties = { ...tdCellStyle, color: 'var(--muted)' };
+const tdCellNoBorderStyle: React.CSSProperties = { padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)' };
+const tdCellDateMutedStyle: React.CSSProperties = { padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' };
+const emptyRowStyle: React.CSSProperties = { textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 };
+const footerBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 16px', background: 'var(--neutral-50)', borderTop: '1.5px solid var(--border-dk)', flexShrink: 0, fontSize: 11, color: 'var(--muted)' };
+const paginationWrapStyle: React.CSSProperties = { display: 'flex', gap: 3, alignItems: 'center' };
+const navyBoldStyle: React.CSSProperties = { fontWeight: 700, color: 'var(--navy)' };
+const newBtnStyle: React.CSSProperties = { height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit', background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 };
+
+const QC_COLS = [
+  { label: 'WO#', width: 90 },
+  { label: 'Type', width: 120 },
+  { label: 'Client', width: 200 },
+  { label: 'Scope S/N', width: 130 },
+  { label: 'Tech Key', width: 100 },
+  { label: 'Date', width: 100 },
+  { label: 'Result', width: 110 },
+];
+
+const NCR_COLS = [
+  { label: 'NCR#', width: 90 },
+  { label: 'WO#', width: 90 },
+  { label: 'Description', width: 220 },
+  { label: 'Category', width: 100 },
+  { label: 'Severity', width: 90 },
+  { label: 'Status', width: 110 },
+  { label: 'Date Filed', width: 100 },
+];
+
+const CAPA_COLS = [
+  { label: 'CAPA#', width: 90 },
+  { label: 'NCR Ref', width: 90 },
+  { label: 'Type', width: 100 },
+  { label: 'Description', width: 220 },
+  { label: 'Owner', width: 120 },
+  { label: 'Due Date', width: 100 },
+  { label: 'Status', width: 100 },
+];
+
+const REWORK_COLS = [
+  { label: 'RW#', width: 80 },
+  { label: 'WO#', width: 90 },
+  { label: 'Serial#', width: 120 },
+  { label: 'Reason', width: 210 },
+  { label: 'Tech', width: 120 },
+  { label: 'Original Complete', width: 110 },
+  { label: 'Rework Due', width: 100 },
+  { label: 'Status', width: 100 },
+];
+
 export const QualityPage = () => {
   const [activeTab, setActiveTab] = useState('QC Inspections');
   const [stats, setStats] = useState<QualityStats | null>(null);
@@ -283,15 +350,10 @@ export const QualityPage = () => {
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div style={pageContainerStyle}>
 
       {/* ── Stat Strip ── */}
-      <div style={{
-        display: 'flex',
-        background: 'var(--card)',
-        borderBottom: '1px solid var(--neutral-200)',
-        flexShrink: 0,
-      }}>
+      <div style={statStripStyle}>
         <StatChip
           label="Total Inspections"
           value={statsLoading ? '—' : (stats?.totalInspections ?? 0)}
@@ -364,7 +426,7 @@ export const QualityPage = () => {
       {/* ── Tab Content ── */}
 
       {activeTab === 'QC Inspections' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div style={tabFlexColumnStyle}>
 
           {/* Toolbar */}
           <div style={{
@@ -474,19 +536,11 @@ export const QualityPage = () => {
           </div>
 
           {/* Table */}
-          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <div style={tableCardBgStyle}>
+            <table style={tableFixedStyle}>
               <thead>
                 <tr>
-                  {[
-                    { label: 'WO#', width: 90 },
-                    { label: 'Type', width: 120 },
-                    { label: 'Client', width: 200 },
-                    { label: 'Scope S/N', width: 130 },
-                    { label: 'Tech Key', width: 100 },
-                    { label: 'Date', width: 100 },
-                    { label: 'Result', width: 110 },
-                  ].map(col => (
+                  {QC_COLS.map(col => (
                     <th
                       key={col.label}
                       style={{
@@ -516,13 +570,13 @@ export const QualityPage = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>
+                    <td colSpan={7} style={emptyRowStyle}>
                       Loading...
                     </td>
                   </tr>
                 ) : inspections.length === 0 ? (
                   <tr>
-                    <td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>
+                    <td colSpan={7} style={emptyRowStyle}>
                       No inspections found.
                     </td>
                   </tr>
@@ -537,30 +591,30 @@ export const QualityPage = () => {
                       onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
                     >
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={tdCellStyle}>
                         <span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>
                           {item.workOrderNumber}
                         </span>
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={tdCellStyle}>
                         <StatusBadge
                           status={item.inspectionType}
                           variant={item.inspectionType === 'D&I Intake' ? 'blue' : 'purple'}
                         />
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={tdCellStyle}>
                         {item.clientName}
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--muted)' }}>
+                      <td style={tdCellMutedStyle}>
                         {item.scopeSN ?? '—'}
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--muted)' }}>
+                      <td style={tdCellMutedStyle}>
                         {item.technicianKey ?? '—'}
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--muted)' }}>
+                      <td style={tdCellMutedStyle}>
                         {item.inspectionDate}
                       </td>
-                      <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <td style={tdCellStyle}>
                         <StatusBadge
                           status={item.result}
                           variant={item.result === 'Pass' ? 'green' : item.result === 'Fail' ? 'red' : 'amber'}
@@ -655,7 +709,7 @@ export const QualityPage = () => {
       )}
 
       {activeTab === 'Non-Conformances' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div style={tabFlexColumnStyle}>
           {/* Toolbar */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
@@ -693,19 +747,11 @@ export const QualityPage = () => {
           </div>
 
           {/* Table */}
-          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <div style={tableCardBgStyle}>
+            <table style={tableFixedStyle}>
               <thead>
                 <tr>
-                  {[
-                    { label: 'NCR#', width: 90 },
-                    { label: 'WO#', width: 90 },
-                    { label: 'Description', width: 220 },
-                    { label: 'Category', width: 100 },
-                    { label: 'Severity', width: 90 },
-                    { label: 'Status', width: 110 },
-                    { label: 'Date Filed', width: 100 },
-                  ].map(col => (
+                  {NCR_COLS.map(col => (
                     <th key={col.label} style={{
                       width: col.width, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700,
                       padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
@@ -717,34 +763,34 @@ export const QualityPage = () => {
               </thead>
               <tbody>
                 {ncrLoading ? (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>Loading...</td></tr>
+                  <tr><td colSpan={7} style={emptyRowStyle}>Loading...</td></tr>
                 ) : ncrItems.length === 0 ? (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No non-conformances match current filters</td></tr>
+                  <tr><td colSpan={7} style={emptyRowStyle}>No non-conformances match current filters</td></tr>
                 ) : ncrItems.map((item, idx) => (
                   <tr key={item.isoComplaintKey}
                     style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
                   >
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <td style={tdCellStyle}>
                       <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.ncrNumber}</span>
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.workOrderNumber}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.description}>{item.description}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.category}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)' }}>
+                    <td style={tdCellStyle}>{item.workOrderNumber}</td>
+                    <td style={tdCellStyle} title={item.description}>{item.description}</td>
+                    <td style={tdCellStyle}>{item.category}</td>
+                    <td style={tdCellNoBorderStyle}>
                       <StatusBadge
                         status={item.severity}
                         variant={item.severity === 'Critical' ? 'red' : item.severity === 'Major' ? 'amber' : 'blue'}
                       />
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)' }}>
+                    <td style={tdCellNoBorderStyle}>
                       <StatusBadge
                         status={item.status}
                         variant={item.status === 'Open' ? 'red' : item.status === 'Under Review' ? 'amber' : 'gray'}
                       />
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.dateFiled}</td>
+                    <td style={tdCellDateMutedStyle}>{item.dateFiled}</td>
                   </tr>
                 ))}
               </tbody>
@@ -781,7 +827,7 @@ export const QualityPage = () => {
       )}
 
       {activeTab === 'CAPA Log' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div style={tabFlexColumnStyle}>
           {/* Toolbar */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
@@ -822,19 +868,11 @@ export const QualityPage = () => {
           </div>
 
           {/* Table */}
-          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <div style={tableCardBgStyle}>
+            <table style={tableFixedStyle}>
               <thead>
                 <tr>
-                  {[
-                    { label: 'CAPA#', width: 90 },
-                    { label: 'NCR Ref', width: 90 },
-                    { label: 'Type', width: 100 },
-                    { label: 'Description', width: 220 },
-                    { label: 'Owner', width: 120 },
-                    { label: 'Due Date', width: 100 },
-                    { label: 'Status', width: 100 },
-                  ].map(col => (
+                  {CAPA_COLS.map(col => (
                     <th key={col.label} style={{
                       width: col.width, background: 'var(--neutral-50)', color: 'var(--neutral-500)', fontWeight: 700,
                       padding: '8px 10px', textAlign: 'left', textTransform: 'uppercase', letterSpacing: '0.04em', fontSize: 11,
@@ -845,7 +883,7 @@ export const QualityPage = () => {
                 </tr>
               </thead>
               <tbody>
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No CAPA records found. CAPA tracking will be available when linked to NCR records.</td></tr>
+                <tr><td colSpan={7} style={emptyRowStyle}>No CAPA records found. CAPA tracking will be available when linked to NCR records.</td></tr>
               </tbody>
             </table>
           </div>
@@ -861,7 +899,7 @@ export const QualityPage = () => {
       )}
 
       {activeTab === 'Rework Tracking' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div style={tabFlexColumnStyle}>
           {/* Toolbar */}
           <div style={{
             display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
@@ -887,8 +925,8 @@ export const QualityPage = () => {
           </div>
 
           {/* Table */}
-          <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+          <div style={tableCardBgStyle}>
+            <table style={tableFixedStyle}>
               <thead>
                 <tr>
                   {[
@@ -912,25 +950,25 @@ export const QualityPage = () => {
               </thead>
               <tbody>
                 {reworkLoading ? (
-                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>Loading...</td></tr>
+                  <tr><td colSpan={8} style={emptyRowStyle}>Loading...</td></tr>
                 ) : reworkItems.length === 0 ? (
-                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No rework records match current filters</td></tr>
+                  <tr><td colSpan={8} style={emptyRowStyle}>No rework records match current filters</td></tr>
                 ) : reworkItems.map((item, idx) => (
                   <tr key={item.repairKey}
                     style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
                   >
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <td style={tdCellStyle}>
                       <span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.reworkNumber}</span>
                     </td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.workOrderNumber}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.serialNumber}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={item.reason}>{item.reason}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.techName || '—'}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.originalComplete || '—'}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', color: 'var(--muted)' }}>{item.reworkDue || '—'}</td>
-                    <td style={{ padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)' }}>
+                    <td style={tdCellStyle}>{item.workOrderNumber}</td>
+                    <td style={tdCellStyle}>{item.serialNumber}</td>
+                    <td style={tdCellStyle} title={item.reason}>{item.reason}</td>
+                    <td style={tdCellStyle}>{item.techName || '—'}</td>
+                    <td style={tdCellDateMutedStyle}>{item.originalComplete || '—'}</td>
+                    <td style={tdCellDateMutedStyle}>{item.reworkDue || '—'}</td>
+                    <td style={tdCellNoBorderStyle}>
                       <StatusBadge
                         status={item.status}
                         variant={item.status === 'Complete' ? 'green' : item.status === 'In Progress' ? 'blue' : 'amber'}
@@ -1056,7 +1094,7 @@ export const QualityPage = () => {
       </Modal>
 
       {activeTab === 'Reports' && (
-        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div style={tabFlexColumnStyle}>
           <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
               {[

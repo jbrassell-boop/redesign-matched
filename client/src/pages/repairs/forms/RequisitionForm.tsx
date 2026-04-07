@@ -10,7 +10,7 @@ interface Props {
 // ── Styles matching OM07-2 exactly ──
 const sectionBar: React.CSSProperties = {
   background: 'var(--primary)',
-  color: '#fff',
+  color: 'var(--card)',
   fontSize: 9,
   fontWeight: 700,
   textTransform: 'uppercase',
@@ -23,12 +23,12 @@ const fl: React.CSSProperties = {
   fontSize: 8.5,
   fontWeight: 700,
   textTransform: 'uppercase',
-  color: '#555',
+  color: 'var(--print-muted)',
   letterSpacing: '0.04em',
 };
 
 const fv: React.CSSProperties = {
-  borderBottom: '1px solid #999',
+  borderBottom: '1px solid var(--print-check-border)',
   minHeight: 18,
   fontSize: 11,
   padding: '1px 2px',
@@ -38,7 +38,7 @@ const ynBox: React.CSSProperties = {
   display: 'inline-block',
   width: 18,
   height: 14,
-  border: '1px solid #999',
+  border: '1px solid var(--print-check-border)',
   borderRadius: 2,
   textAlign: 'center',
   lineHeight: '14px',
@@ -95,15 +95,15 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           onClick={() => window.print()}
           style={{
             height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
-            background: 'var(--primary)', color: '#fff',
+            background: 'var(--primary)', color: 'var(--card)',
             fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >Print</button>
         <button
           onClick={onClose}
           style={{
-            height: 32, padding: '0 14px', border: '1px solid #ccc', borderRadius: 5,
-            background: 'var(--card)', color: '#555',
+            height: 32, padding: '0 14px', border: '1px solid var(--print-border)', borderRadius: 5,
+            background: 'var(--card)', color: 'var(--print-muted)',
             fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
           }}
         >Close</button>
@@ -122,7 +122,7 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           gap: 10,
           fontFamily: "'Inter', Arial, sans-serif",
           fontSize: 11,
-          color: '#111',
+          color: 'var(--print-text)',
           boxSizing: 'border-box',
           boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
         }}
@@ -134,7 +134,7 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Requisition for Approval</div>
-            <div style={{ fontSize: 10, color: '#666', marginTop: 2 }}>OM07-2 (12/2020)</div>
+            <div style={{ fontSize: 10, color: 'var(--print-light)', marginTop: 2 }}>OM07-2 (12/2020)</div>
           </div>
         </div>
 
@@ -198,17 +198,17 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           <thead>
             <tr>
               <th style={{
-                background: 'var(--primary)', color: '#fff', fontSize: 8.5, fontWeight: 700,
+                background: 'var(--primary)', color: 'var(--card)', fontSize: 8.5, fontWeight: 700,
                 textTransform: 'uppercase', padding: '5px 8px', textAlign: 'left',
                 letterSpacing: '0.04em', width: '40%',
               }}>Problem / Item</th>
               <th style={{
-                background: 'var(--primary)', color: '#fff', fontSize: 8.5, fontWeight: 700,
+                background: 'var(--primary)', color: 'var(--card)', fontSize: 8.5, fontWeight: 700,
                 textTransform: 'uppercase', padding: '5px 8px', textAlign: 'left',
                 letterSpacing: '0.04em',
               }}>Description of Work</th>
               <th style={{
-                background: 'var(--primary)', color: '#fff', fontSize: 8.5, fontWeight: 700,
+                background: 'var(--primary)', color: 'var(--card)', fontSize: 8.5, fontWeight: 700,
                 textTransform: 'uppercase', padding: '5px 8px', textAlign: 'center',
                 letterSpacing: '0.04em', width: 60,
               }}>Approve<br /><span style={{ fontSize: 7, fontWeight: 400 }}>Y / N</span></th>
@@ -217,13 +217,13 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           <tbody>
             {displayRows.map((row, i) => (
               <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
-                <td style={{ padding: '5px 8px', fontSize: 10.5, borderBottom: '1px solid #ddd', verticalAlign: 'middle', minHeight: 22 }}>
+                <td style={{ padding: '5px 8px', fontSize: 10.5, borderBottom: '1px solid var(--print-border-lt)', verticalAlign: 'middle', minHeight: 22 }}>
                   {row?.problem ?? ''}
                 </td>
-                <td style={{ padding: '5px 8px', fontSize: 10.5, borderBottom: '1px solid #ddd', verticalAlign: 'middle' }}>
+                <td style={{ padding: '5px 8px', fontSize: 10.5, borderBottom: '1px solid var(--print-border-lt)', verticalAlign: 'middle' }}>
                   {row?.description ?? ''}
                 </td>
-                <td style={{ padding: '5px 8px', fontSize: 10, borderBottom: '1px solid #ddd', verticalAlign: 'middle', textAlign: 'center', color: '#555' }}>
+                <td style={{ padding: '5px 8px', fontSize: 10, borderBottom: '1px solid var(--print-border-lt)', verticalAlign: 'middle', textAlign: 'center', color: 'var(--print-muted)' }}>
                   <span style={ynBox}>Y</span>
                   <span style={ynBox}>N</span>
                 </td>
@@ -237,21 +237,21 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           <table style={{ width: 260, borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', color: '#555', fontWeight: 600, textAlign: 'right', width: 140 }}>Subtotal</td>
-                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', textAlign: 'right', fontWeight: 700, borderBottomColor: '#999' }}>
+                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid var(--print-border-xlt)', color: 'var(--print-muted)', fontWeight: 600, textAlign: 'right', width: 140 }}>Subtotal</td>
+                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid var(--print-border-xlt)', textAlign: 'right', fontWeight: 700, borderBottomColor: 'var(--print-check-border)' }}>
                   {subtotal > 0 ? '$' + subtotal.toFixed(2) : '$'}
                 </td>
               </tr>
               <tr>
-                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', color: '#555', fontWeight: 600, textAlign: 'right' }}>Shipping</td>
-                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', textAlign: 'right', fontWeight: 700, borderBottomColor: '#999' }}>$</td>
+                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid var(--print-border-xlt)', color: 'var(--print-muted)', fontWeight: 600, textAlign: 'right' }}>Shipping</td>
+                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid var(--print-border-xlt)', textAlign: 'right', fontWeight: 700, borderBottomColor: 'var(--print-check-border)' }}>$</td>
               </tr>
               <tr>
-                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', color: '#555', fontWeight: 600, textAlign: 'right' }}>Tax</td>
-                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid #eee', textAlign: 'right', fontWeight: 700, borderBottomColor: '#999' }}>$</td>
+                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid var(--print-border-xlt)', color: 'var(--print-muted)', fontWeight: 600, textAlign: 'right' }}>Tax</td>
+                <td style={{ padding: '3px 8px', fontSize: 10.5, borderBottom: '1px solid var(--print-border-xlt)', textAlign: 'right', fontWeight: 700, borderBottomColor: 'var(--print-check-border)' }}>$</td>
               </tr>
-              <tr style={{ fontSize: 12, fontWeight: 800, borderTop: '2px solid var(--primary)', background: '#F0F6FF' }}>
-                <td style={{ padding: '3px 8px', color: '#555', fontWeight: 600, textAlign: 'right' }}>Total</td>
+              <tr style={{ fontSize: 12, fontWeight: 800, borderTop: '2px solid var(--primary)', background: 'var(--primary-hover-bg)' }}>
+                <td style={{ padding: '3px 8px', color: 'var(--print-muted)', fontWeight: 600, textAlign: 'right' }}>Total</td>
                 <td style={{ padding: '3px 8px', textAlign: 'right', fontWeight: 800, fontSize: 12 }}>$</td>
               </tr>
             </tbody>
@@ -260,8 +260,8 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
 
         {/* ── Disclaimer ── */}
         <div style={{
-          marginTop: 10, fontSize: 8.5, color: '#555', lineHeight: 1.4,
-          padding: '6px 10px', background: 'var(--bg)', border: '1px solid #ddd', borderRadius: 3,
+          marginTop: 10, fontSize: 8.5, color: 'var(--print-muted)', lineHeight: 1.4,
+          padding: '6px 10px', background: 'var(--bg)', border: '1px solid var(--print-border-lt)', borderRadius: 3,
         }}>
           By signing below, customer authorizes Total Scope Inc. (TSI) to proceed with the approved repair items listed above.
           Items marked "N" will not be repaired and will be returned as-is. TSI's standard Terms &amp; Conditions apply.
@@ -273,20 +273,20 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
         <div style={{ ...sectionBar, marginTop: 10 }}>Customer Authorization</div>
         <div style={{ display: 'flex', gap: 24, marginTop: 10 }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ borderBottom: '1px solid #999', minHeight: 32 }}></div>
-            <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Authorized Signature</div>
+            <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 32 }}></div>
+            <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Authorized Signature</div>
           </div>
           <div style={{ flex: 1, maxWidth: 180, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ borderBottom: '1px solid #999', minHeight: 32 }}></div>
-            <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Printed Name</div>
+            <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 32 }}></div>
+            <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Printed Name</div>
           </div>
           <div style={{ flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ borderBottom: '1px solid #999', minHeight: 32 }}></div>
-            <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Title</div>
+            <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 32 }}></div>
+            <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Title</div>
           </div>
           <div style={{ flex: 1, maxWidth: 110, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ borderBottom: '1px solid #999', minHeight: 32 }}></div>
-            <div style={{ fontSize: 8.5, color: '#555', fontWeight: 600, marginTop: 2 }}>Date</div>
+            <div style={{ borderBottom: '1px solid var(--print-check-border)', minHeight: 32 }}></div>
+            <div style={{ fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 }}>Date</div>
           </div>
         </div>
 
@@ -294,12 +294,12 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
         <div style={{
           marginTop: 'auto',
           paddingTop: 10,
-          borderTop: '1px solid #ccc',
+          borderTop: '1px solid var(--print-border)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           fontSize: 8,
-          color: '#888',
+          color: 'var(--print-footer)',
         }}>
           <span>ISO 13485 Certified</span>
           <span>Total Scope Inc.&nbsp;|&nbsp;17 Creek Pkwy, Upper Chichester PA 19061&nbsp;|&nbsp;(610) 485-3838</span>

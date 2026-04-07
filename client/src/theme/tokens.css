@@ -102,6 +102,48 @@
   --radius-lg: 8px;
   --radius-xl: 12px;
   --radius-pill: 9999px;
+
+  /* print-form palette (used in repair print forms) */
+  --print-text: #111;
+  --print-muted: #555;
+  --print-light: #666;
+  --print-footer: #888;
+  --print-border: #ccc;
+  --print-border-lt: #ddd;
+  --print-border-xlt: #eee;
+  --print-input-bg: #eee;
+  --print-placeholder: #aaa;
+  --print-body: #333;
+  --print-subtle: #444;
+  --print-subtext: #777;
+  --print-warn-bg: #FEF9E7;
+  --print-warn-text: #78350F;
+  --print-error-text: #7F1D1D;
+
+  /* additional badge / status colours */
+  --badge-orange-text-dk: #C2410C;
+  --badge-orange-border-lt: #FED7AA;
+  --badge-orange-bg-lt: #FFF7ED;
+  --badge-purple-border-lt: #DDD6FE;
+
+  /* bright accent colours for dark backgrounds */
+  --stat-green: #4ade80;
+  --stat-red: #f87171;
+  --stat-amber-lt: #fbbf24;
+  --danger-text-lt: #fca5a5;
+
+  /* login / gradient */
+  --login-gradient-dark: #0f172a;
+
+  /* misc UI */
+  --text-near-black: #1a1a1a;
+  --print-border-md: #e8e8e8;
+  --print-check-border: #999;
+  --primary-hover-bg: #f0f6ff;
+  --info-bg: #EFF6FF;
+  --info-section-bg: #f8faff;
+  --info-section-border: #dce8f8;
+  --navy-dark: #1a365d;
 }
 
 * { box-sizing: border-box; }
@@ -117,6 +159,26 @@ body {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--neutral-200); border-radius: 3px; }
+
+/* ── FOCUS-VISIBLE — shell buttons ── */
+/* Sidebar nav buttons */
+nav[aria-label="Main navigation"] button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+/* Topbar buttons (Work Orders, density toggle, sign out) */
+header button:focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: -2px;
+}
+
+/* Topbar dropdown menu items */
+div[role="menuitem"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  background: var(--neutral-50);
+}
 
 /* ── DENSITY TOGGLE — compact mode ── */
 [data-density="compact"] .tab-bar__item { padding: 6px 14px; font-size: var(--text-xs); }

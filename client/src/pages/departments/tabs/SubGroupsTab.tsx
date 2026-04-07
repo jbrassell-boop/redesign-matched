@@ -31,7 +31,7 @@ const actionBtn = (variant: 'remove' | 'add'): React.CSSProperties => ({
   fontSize: 11, fontWeight: 700, padding: '2px 8px',
   border: 'none', borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit',
   background: variant === 'remove' ? 'transparent' : 'var(--navy)',
-  color: variant === 'remove' ? 'var(--danger)' : '#fff',
+  color: variant === 'remove' ? 'var(--danger)' : 'var(--card)',
 });
 
 export const SubGroupsTab = ({ deptKey }: SubGroupsTabProps) => {

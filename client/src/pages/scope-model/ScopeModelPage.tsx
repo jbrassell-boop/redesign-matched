@@ -274,7 +274,7 @@ export const ScopeModelPage = () => {
     <button onClick={oc} style={{
       height: 28, padding: '0 10px', fontSize: 11, fontWeight: a ? 700 : 500, fontFamily: 'inherit',
       border: '1px solid var(--border-dk)', borderRight: 'none', cursor: 'pointer',
-      background: a ? 'var(--navy)' : 'var(--card)', color: a ? '#fff' : 'var(--muted)',
+      background: a ? 'var(--navy)' : 'var(--card)', color: a ? 'var(--card)' : 'var(--muted)',
     }}>{label}</button>
   );
 
@@ -319,7 +319,7 @@ export const ScopeModelPage = () => {
         onClick={() => { setNewModelName(''); setNewModelMfg(''); setNewModelType('F'); setNewModelOpen(true); }}
         style={{
           height: 30, padding: '0 12px', fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
-          background: 'var(--navy)', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer',
+          background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
           display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0,
         }}
       >
@@ -688,7 +688,7 @@ const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactN
       border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, fontFamily: 'inherit',
       cursor: disabled ? 'default' : 'pointer',
       background: active ? 'var(--navy)' : 'var(--card)',
-      color: active ? '#fff' : 'var(--muted)',
+      color: active ? 'var(--card)' : 'var(--muted)',
       fontWeight: active ? 600 : 400,
       opacity: disabled ? 0.4 : 1,
     }}

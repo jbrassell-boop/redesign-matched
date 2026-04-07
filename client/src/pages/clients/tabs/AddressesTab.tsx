@@ -104,7 +104,7 @@ export const AddressesTab = ({ client, onChange }: AddressesTabProps) => {
         <div style={{ marginBottom: 0 }}>
           <div style={{
             background: 'var(--primary)',
-            color: '#fff',
+            color: 'var(--card)',
             padding: '8px 12px',
             fontSize: 11,
             fontWeight: 700,
@@ -118,7 +118,7 @@ export const AddressesTab = ({ client, onChange }: AddressesTabProps) => {
             <span>Ship To</span>
             <label style={{
               fontSize: 11, fontWeight: 500, display: 'flex', alignItems: 'center',
-              gap: 4, textTransform: 'none', letterSpacing: 0, cursor: 'pointer', color: '#fff',
+              gap: 4, textTransform: 'none', letterSpacing: 0, cursor: 'pointer', color: 'var(--card)',
             }}>
               <input
                 type="checkbox"
