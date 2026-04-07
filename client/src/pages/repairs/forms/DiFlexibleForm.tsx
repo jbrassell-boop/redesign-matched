@@ -250,8 +250,64 @@ const pfBtn = (type: 'p' | 'f' | 'na') => ({
   color: type === 'p' ? 'var(--success)' : type === 'f' ? 'var(--danger)' : 'var(--print-light)',
 });
 
+// ── Extracted static styles ──
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed', inset: 0, zIndex: 1100,
+  background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)',
+  display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+  padding: '24px 16px', overflowY: 'auto',
+};
+const actionBarStyle: React.CSSProperties = {
+  position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200,
+};
+const printBtnStyle: React.CSSProperties = {
+  height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
+  background: 'var(--primary)', color: 'var(--card)',
+  fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+};
+const closeBtnStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', border: '1px solid var(--print-border)', borderRadius: 5,
+  background: 'var(--card)', color: 'var(--print-muted)',
+  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+};
+const printFormStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 0 };
+const textAlignRightStyle: React.CSSProperties = { textAlign: 'right' };
+const scopeInfoGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px 12px', padding: '6px 0 2px' };
+const fieldColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1 };
+const fieldColSpan2Style: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1, gridColumn: 'span 2' };
+const repairTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 10 };
+const repairTableTdCenter: React.CSSProperties = { ...repairTableTd, textAlign: 'center' };
+const repairTableTdNoBorder: React.CSSProperties = { ...repairTableTd, textAlign: 'center', borderRight: 'none' };
+const subtotalRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', marginTop: 4, gap: 20 };
+const subtotalColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' };
+const subtotalLineStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-check-border)', minWidth: 100, height: 17 };
+const sigBlockStyle: React.CSSProperties = { display: 'flex', gap: 16, marginTop: 6 };
+const sigColStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', gap: 2 };
+const sigDateColStyle: React.CSSProperties = { flex: 1, maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 };
+const sigLineStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-check-border)', minHeight: 26 };
+const sigLabelStyle: React.CSSProperties = { fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 };
+const miniHeaderGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 12px', padding: '4px 0 6px' };
+const totalLineStyle: React.CSSProperties = { borderBottom: '2px solid var(--primary)', minWidth: 100, height: 17, fontWeight: 700 };
+const sigBlock2Style: React.CSSProperties = { display: 'flex', gap: 16, marginTop: 10 };
+const accessoriesGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px 12px', padding: '5px 0' };
+const accessoryItemStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 5, fontSize: 10 };
+const qcGridStyle: React.CSSProperties = {
+  display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px 10px',
+  padding: '8px 10px', border: '1px solid var(--print-border-lt)', borderRadius: 3,
+  background: 'var(--bg)', marginTop: 6,
+};
+const qcFieldColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 2 };
+const qcYnRowStyle: React.CSSProperties = { display: 'flex', gap: 14, alignItems: 'center', padding: '2px 0' };
+const qcYnItemStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 4, fontSize: 10 };
+const qcFieldLineStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-check-border)', minHeight: 18, marginTop: 2 };
+const qcFieldSpan2Style: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 2, gridColumn: 'span 2' };
+const pfCatRowStyle: React.CSSProperties = { fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.04em', padding: '3px 8px' };
+const pfTableTdCenter: React.CSSProperties = { ...pfTableTd, textAlign: 'center' };
+const pfTableTdNoBorder: React.CSSProperties = { ...pfTableTd, borderRight: 'none' };
+const logoStyle: React.CSSProperties = { height: 44 };
+
 const LogoBlock = () => (
-  <img src="/logo-color.png" alt="Total Scope Inc." loading="lazy" style={{ height: 44 }} />
+  <img src="/logo-color.png" alt="Total Scope Inc." loading="lazy" style={logoStyle} />
 );
 
 const FormFooter = ({ page }: { page: string }) => (
@@ -272,36 +328,21 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
   return (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1100,
-        background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)',
-        display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-        padding: '24px 16px', overflowY: 'auto',
-      }}
+      style={overlayStyle}
     >
       {/* Action bar */}
-      <div className="no-print" style={{
-        position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200,
-      }}>
+      <div className="no-print" style={actionBarStyle}>
         <button
           onClick={() => window.print()}
-          style={{
-            height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
-            background: 'var(--primary)', color: 'var(--card)',
-            fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-          }}
+          style={printBtnStyle}
         >Print</button>
         <button
           onClick={onClose}
-          style={{
-            height: 32, padding: '0 14px', border: '1px solid var(--print-border)', borderRadius: 5,
-            background: 'var(--card)', color: 'var(--print-muted)',
-            fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-          }}
+          style={closeBtnStyle}
         >Close</button>
       </div>
 
-      <div className="print-form flex-col" style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+      <div className="print-form flex-col" style={printFormStyle}>
 
         {/* ══════════════════════════════════════════════════════
             PAGE 1 — Items Found / Approved + Comments
@@ -310,7 +351,7 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
           {/* Header */}
           <div style={s.formHeader}>
             <LogoBlock />
-            <div style={{ textAlign: 'right' }}>
+            <div style={textAlignRightStyle}>
               <div style={s.formTitle}>Blank Inspection Report</div>
               <div style={s.formSubtitle}>Flexible Endoscope</div>
               <div style={s.formNumber}>OM07-3 &nbsp;|&nbsp; Page 1 of 3</div>
@@ -319,36 +360,36 @@ export const DiFlexibleForm = ({ repair, onClose }: Props) => {
 
           {/* Scope Information */}
           <div style={s.sectionBar}>Scope Information</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px 12px', padding: '6px 0 2px' }}>
-            <div style={{ gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div style={scopeInfoGridStyle}>
+            <div style={fieldColSpan2Style}>
               <span style={s.fl}>Client / Facility</span>
               <div style={s.fv}>{clientName}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Date</span>
               <div style={s.fv}>{today}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Work Order #</span>
               <div style={s.fv}>{woNum}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Serial #</span>
               <div style={s.fv}>{serialNum}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, gridColumn: 'span 2' }}>
+            <div style={fieldColSpan2Style}>
               <span style={s.fl}>Scope Model</span>
               <div style={s.fv}>{model}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Rack #</span>
               <div style={s.fv}></div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1, gridColumn: 'span 2' }}>
+            <div style={fieldColSpan2Style}>
               <span style={s.fl}>Complaint</span>
               <div style={{ ...s.fv, minHeight: 24 }}>{complaint}</div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <div style={fieldColStyle}>
               <span style={s.fl}>Cust. Expected Delivery</span>
               <div style={s.fv}></div>
             </div>

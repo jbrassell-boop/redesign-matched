@@ -126,6 +126,90 @@ const cbBox: React.CSSProperties = {
   flexShrink: 0,
 };
 
+// ── Extracted static styles ──
+const overlayStyle: React.CSSProperties = {
+  position: 'fixed', inset: 0, zIndex: 1100,
+  background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(2px)',
+  display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+  padding: '24px 16px', overflowY: 'auto',
+};
+const actionBarStyle: React.CSSProperties = {
+  position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200,
+};
+const printBtnStyle: React.CSSProperties = {
+  height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
+  background: 'var(--primary)', color: 'var(--card)',
+  fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+};
+const closeBtnStyle: React.CSSProperties = {
+  height: 32, padding: '0 14px', border: '1px solid var(--print-border)', borderRadius: 5,
+  background: 'var(--card)', color: 'var(--print-muted)',
+  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
+};
+const printPageStyle: React.CSSProperties = {
+  width: '8.5in',
+  minHeight: '11in',
+  background: 'var(--card)',
+  padding: '0.5in',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 8,
+  fontFamily: "'Inter', Arial, sans-serif",
+  fontSize: 11,
+  color: 'var(--print-text)',
+  boxSizing: 'border-box',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
+};
+const headerRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 };
+const logoStyle: React.CSSProperties = { fontWeight: 800, fontSize: 16, color: 'var(--navy)' };
+const primaryLetterStyle: React.CSSProperties = { color: 'var(--primary)' };
+const headerRightStyle: React.CSSProperties = { textAlign: 'right' };
+const headerTitleStyle: React.CSSProperties = { fontSize: 15, fontWeight: 800, color: 'var(--navy)' };
+const headerSubtitleStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 };
+const headerFormCodeStyle: React.CSSProperties = { fontSize: 10, color: 'var(--print-light)', marginTop: 2 };
+const sectionBarNoMargin: React.CSSProperties = { ...sectionBar, marginTop: 0 };
+const scopeInfoGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px 12px', padding: '6px 0 2px' };
+const fieldColSpan2Style: React.CSSProperties = { gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 1 };
+const fieldColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1 };
+const funcTestTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', marginTop: 4 };
+const pfTableThCenter: React.CSSProperties = { ...pfTableTh, textAlign: 'center', width: 42 };
+const pfTableTdCenter: React.CSSProperties = { ...pfTableTd, textAlign: 'center' };
+const twoColGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 };
+const sectionBarMt6: React.CSSProperties = { ...sectionBar, marginTop: 6 };
+const brokenFiberGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'auto 1fr 1fr', gap: '4px 12px', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid var(--print-border-xlt)' };
+const brokenFiberLabelStyle: React.CSSProperties = { fontSize: 9.5, fontWeight: 700, color: 'var(--print-muted)', whiteSpace: 'nowrap' };
+const brokenFiberCellStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-check-border)', minHeight: 16, fontSize: 10.5 };
+const brokenFiberNoteStyle: React.CSSProperties = { marginTop: 4, fontSize: 8.5, color: 'var(--print-muted)' };
+const scopeIncludesListStyle: React.CSSProperties = { listStyle: 'none', padding: 0, margin: '4px 0 0' };
+const scopeIncludeItemStyle: React.CSSProperties = { padding: '3px 0', fontSize: 10.5, borderBottom: '1px solid var(--print-border-xlt)', display: 'flex', alignItems: 'center', gap: 8 };
+const repairsPerformedGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 20px', marginTop: 4 };
+const repairPerformedItemStyle: React.CSSProperties = { padding: '2px 0', fontSize: 10, borderBottom: '1px solid var(--print-border-xlt)', display: 'flex', alignItems: 'center', gap: 6 };
+const resultFooterStyle: React.CSSProperties = {
+  display: 'flex', gap: 0, border: '2px solid var(--primary)', borderRadius: 4,
+  overflow: 'hidden', marginTop: 10,
+};
+const resultSectionStyle: React.CSSProperties = { flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, borderRight: '2px solid var(--primary)' };
+const resultSectionLastStyle: React.CSSProperties = { flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 };
+const resultLabelStyle: React.CSSProperties = { fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', color: 'var(--print-muted)', letterSpacing: '0.05em' };
+const resultOptionsRowStyle: React.CSSProperties = { display: 'flex', gap: 16 };
+const resultOptionStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700 };
+const radioCircleStyle: React.CSSProperties = { width: 16, height: 16, border: '1.5px solid var(--print-check-border)', borderRadius: '50%', flexShrink: 0 };
+const sigBlockRowStyle: React.CSSProperties = { display: 'flex', gap: 20, marginTop: 8 };
+const sigFieldStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', gap: 2 };
+const sigFieldDateStyle: React.CSSProperties = { flex: 1, maxWidth: 140, display: 'flex', flexDirection: 'column', gap: 2 };
+const sigLineStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-check-border)', minHeight: 28 };
+const sigLabelStyle: React.CSSProperties = { fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 };
+const formFooterStyle: React.CSSProperties = {
+  marginTop: 'auto',
+  paddingTop: 8,
+  borderTop: '1px solid var(--print-border)',
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  fontSize: 8,
+  color: 'var(--print-footer)',
+};
+
 export const FinalInspectionForm = ({ repair, onClose }: Props) => {
   const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 
