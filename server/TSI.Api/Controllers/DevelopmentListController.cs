@@ -35,6 +35,7 @@ public class DevelopmentListController(IConfiguration config) : ControllerBase
             {where}
             """;
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search))
             countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (statusId.HasValue)
@@ -57,6 +58,7 @@ public class DevelopmentListController(IConfiguration config) : ControllerBase
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search))
             cmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (statusId.HasValue)
@@ -107,6 +109,7 @@ public class DevelopmentListController(IConfiguration config) : ControllerBase
             WHERE t.ToDoID = @id
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         await using var reader = await cmd.ExecuteReaderAsync();
         if (!await reader.ReadAsync())
@@ -142,6 +145,7 @@ public class DevelopmentListController(IConfiguration config) : ControllerBase
             ORDER BY ToDoStatusSortOrder ASC
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         var statuses = new List<DevListStatus>();
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
@@ -172,6 +176,7 @@ public class DevelopmentListController(IConfiguration config) : ControllerBase
             LEFT JOIN tblToDoStatuses s ON s.ToDoStatusID = t.ToDoStatusID
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
         var stats = new DevListStats(

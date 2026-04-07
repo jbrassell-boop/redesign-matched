@@ -55,11 +55,13 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter)) countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter)) dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -106,6 +108,7 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -147,6 +150,7 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var itemsCmd = new SqlCommand(itemsSql, conn);
+        itemsCmd.CommandTimeout = 30;
         itemsCmd.Parameters.AddWithValue("@id", id);
         await using var itemsReader = await itemsCmd.ExecuteReaderAsync();
         var lineItems = new List<InstrumentRepairItem>();
@@ -222,11 +226,13 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(typeFilter)) countCmd.Parameters.AddWithValue("@typeFilter", typeFilter);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(typeFilter)) dataCmd.Parameters.AddWithValue("@typeFilter", typeFilter);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -278,6 +284,7 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -327,6 +334,7 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
@@ -342,6 +350,7 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
 
         const string valueSql = "SELECT ISNULL(SUM(dblRepairPrice), 0) FROM tblRepairItemTran";
         await using var valueCmd = new SqlCommand(valueSql, conn);
+        valueCmd.CommandTimeout = 30;
         var totalValue = Convert.ToDouble(await valueCmd.ExecuteScalarAsync());
 
         return Ok(new InstrumentRepairStats(

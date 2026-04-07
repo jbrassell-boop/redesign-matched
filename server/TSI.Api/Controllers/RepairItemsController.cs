@@ -30,6 +30,7 @@ public class RepairItemsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
@@ -78,11 +79,13 @@ public class RepairItemsController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(typeFilter) && (typeFilter == "F" || typeFilter == "R")) countCmd.Parameters.AddWithValue("@typeFilter", typeFilter);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(typeFilter) && (typeFilter == "F" || typeFilter == "R")) dataCmd.Parameters.AddWithValue("@typeFilter", typeFilter);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -132,6 +135,7 @@ public class RepairItemsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@key", key);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -187,6 +191,7 @@ public class RepairItemsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@description", data.ItemDescription);
         cmd.Parameters.AddWithValue("@problemId", (object?)data.ProblemId ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@tsiCode", (object?)data.TsiCode ?? DBNull.Value);
@@ -207,6 +212,7 @@ public class RepairItemsController(IConfiguration config) : ControllerBase
 
         var sets = new List<string>();
         var cmd = new SqlCommand { Connection = conn };
+        cmd.CommandTimeout = 30;
 
         if (update.ItemDescription != null) { sets.Add("sItemDescription = @description"); cmd.Parameters.AddWithValue("@description", update.ItemDescription); }
         if (update.ProblemId != null) { sets.Add("sProblemID = @problemId"); cmd.Parameters.AddWithValue("@problemId", update.ProblemId); }
@@ -255,6 +261,7 @@ public class RepairItemsController(IConfiguration config) : ControllerBase
         // Soft delete — set bActive = 0
         await using var cmd = new SqlCommand(
             "UPDATE tblRepairItem SET bActive = 0, dtLastUpdate = GETDATE() WHERE lRepairItemKey = @key", conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@key", key);
 
         var rows = await cmd.ExecuteNonQueryAsync();

@@ -42,6 +42,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
@@ -69,6 +70,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
             ORDER BY r.dtDateIn DESC
             """;
         await using var recentCmd = new SqlCommand(recentSql, conn);
+        recentCmd.CommandTimeout = 30;
         var items = new List<RepairQueueItem>();
         await using var rr = await recentCmd.ExecuteReaderAsync();
         while (await rr.ReadAsync())
@@ -99,6 +101,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
             ORDER BY r.dtDateIn ASC
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         var items = new List<OverdueItem>();
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
@@ -125,6 +128,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
             WHERE r.dtShipDate IS NOT NULL
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
         var result = new InvoicesWidget(
@@ -149,6 +153,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
             ORDER BY con.dtContractEnd ASC
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         var items = new List<ContractExpiringItem>();
         try
         {

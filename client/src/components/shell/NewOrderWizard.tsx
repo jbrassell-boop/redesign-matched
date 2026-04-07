@@ -128,7 +128,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
     setScopes(sc);
     // Load instrument types for new scope form
     if (instTypes.length === 0) {
-      getInstrumentTypes().then(setInstTypes).catch(() => {});
+      getInstrumentTypes().then(setInstTypes).catch(() => { message.error('Failed to load instrument types'); });
     }
     goStep(3);
   }, [goStep, instTypes.length]);

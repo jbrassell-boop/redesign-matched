@@ -60,7 +60,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
   const [complaint, setComplaint] = useState(repair.complaint ?? '');
 
   useEffect(() => {
-    getRepairReasonOptions().then(setRepairReasons).catch(() => {});
+    getRepairReasonOptions().then(setRepairReasons).catch(() => { message.error('Failed to load repair reasons'); });
   }, []);
 
   const detailsSaveFn = useCallback(
@@ -424,7 +424,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
         repair={repair}
         slips={slipsData}
         onSlipCreated={() => {
-          getUpdateSlips(repair.repairKey).then(setSlipsData).catch(() => {});
+          getUpdateSlips(repair.repairKey).then(setSlipsData).catch(() => { message.error('Failed to load update slips'); });
         }}
       />
       <DefectTrackingModal

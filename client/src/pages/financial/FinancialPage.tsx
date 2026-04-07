@@ -119,7 +119,7 @@ export const FinancialPage = () => {
 
   // Load stats once
   useEffect(() => {
-    getFinancialStats().then(setStats).catch(() => {});
+    getFinancialStats().then(setStats).catch(() => { message.error('Failed to load financial stats'); });
   }, []);
 
   const loadData = useCallback(async () => {

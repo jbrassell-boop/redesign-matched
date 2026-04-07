@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { message } from 'antd';
 import type { DepartmentFull } from '../types';
 import { SectionCard } from '../../../components/shared';
 import { getSalesReps, getPricingCategories } from '../../../api/lookups';
@@ -105,8 +106,8 @@ export const InfoTab = ({ dept, onChange }: InfoTabProps) => {
   const [pricingCats, setPricingCats] = useState<LookupOption[]>([]);
 
   useEffect(() => {
-    getSalesReps().then(setSalesReps).catch(() => {});
-    getPricingCategories().then(setPricingCats).catch(() => {});
+    getSalesReps().then(setSalesReps).catch(() => { message.error('Failed to load sales reps'); });
+    getPricingCategories().then(setPricingCats).catch(() => { message.error('Failed to load pricing categories'); });
   }, []);
 
   return (

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Spin } from 'antd';
+import { Spin, message } from 'antd';
 import { getDevList, getDevListDetail, getDevListStatuses, getDevListStats } from '../../api/development-list';
 import type { DevListItem, DevListStatus, DevListStats } from './types';
 import { StatusBadge } from '../../components/shared/StatusBadge';
@@ -60,7 +60,7 @@ export const DevelopmentListPage = () => {
   useEffect(() => { loadList(); }, [loadList]);
 
   useEffect(() => {
-    getDevListStatuses().then(setStatuses).catch(() => {});
+    getDevListStatuses().then(setStatuses).catch(() => { message.error('Failed to load development list statuses'); });
   }, []);
 
   const selectItem = async (id: number) => {

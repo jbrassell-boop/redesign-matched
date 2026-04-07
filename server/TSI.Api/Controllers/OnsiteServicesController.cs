@@ -27,6 +27,7 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
 
         // Call stored procedure to get onsite services
         await using var cmd = new SqlCommand("onsiteServicesGet", conn);
+        cmd.CommandTimeout = 30;
         cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
         var items = new List<OnsiteServiceListItem>();
@@ -101,6 +102,7 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         await using var cmd = new SqlCommand("onsiteServicesGet", conn);
+        cmd.CommandTimeout = 30;
         cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
         var total = 0;
@@ -145,6 +147,7 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
 
         const string sql = "SELECT lTechnicianKey, sTechName FROM tblTechnicians WHERE bIsActive = 1 ORDER BY sTechName";
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         var list = new List<object>();
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
@@ -168,6 +171,7 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
         await using var seqCmd = new SqlCommand(
             "SELECT ISNULL(MAX(CAST(REPLACE(sInvoiceNumber, 'INV-', '') AS INT)), 4000) + 1 FROM tblOnsiteService WHERE sInvoiceNumber LIKE 'INV-%'",
             conn);
+        seqCmd.CommandTimeout = 30;
 
         int nextNum;
         try
@@ -192,6 +196,7 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@invoiceNum", invoiceNum);
         cmd.Parameters.AddWithValue("@clientKey", req.ClientKey);
         cmd.Parameters.AddWithValue("@deptKey", req.DepartmentKey);
@@ -229,6 +234,7 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
         sql += " WHERE lOnsiteServiceKey = @id";
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@status", req.Status);
         cmd.Parameters.AddWithValue("@id", id);
         if (!string.IsNullOrWhiteSpace(req.Notes))
@@ -277,6 +283,7 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -325,6 +332,7 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -358,6 +366,7 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
             await using var cmd = new SqlCommand(
                 "UPDATE tblSiteServices SET dtDateSubmitted = GETDATE() WHERE lSiteServiceKey = @id AND dtDateSubmitted IS NULL",
                 conn);
+            cmd.CommandTimeout = 30;
             cmd.Parameters.AddWithValue("@id", id);
             var rows = await cmd.ExecuteNonQueryAsync();
             return Ok(new { submitted = rows > 0 });

@@ -58,7 +58,7 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
 
   useEffect(() => {
     setLoading(true);
-    getRepairInspections(repairKey).then(setData).catch(() => {}).finally(() => setLoading(false));
+    getRepairInspections(repairKey).then(setData).catch(() => { message.error('Failed to load inspections'); }).finally(() => setLoading(false));
   }, [repairKey]);
 
   const update = useCallback((key: keyof RepairInspections, value: string) => {

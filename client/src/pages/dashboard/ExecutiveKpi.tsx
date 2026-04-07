@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { message } from 'antd';
 import apiClient from '../../api/client';
 
 interface KpiData {
@@ -53,7 +54,7 @@ export const ExecutiveKpi = () => {
   useEffect(() => {
     apiClient.get('/dashboard/executive-kpi')
       .then(r => setData(r.data))
-      .catch(() => {})
+      .catch(() => { message.error('Failed to load KPI data'); })
       .finally(() => setLoading(false));
   }, []);
 

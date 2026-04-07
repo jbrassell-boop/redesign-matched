@@ -60,11 +60,13 @@ public class EndoCartsController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(rigidOrFlexible)) countCmd.Parameters.AddWithValue("@rigidOrFlexible", rigidOrFlexible);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(rigidOrFlexible)) dataCmd.Parameters.AddWithValue("@rigidOrFlexible", rigidOrFlexible);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -141,11 +143,13 @@ public class EndoCartsController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(status)) countCmd.Parameters.AddWithValue("@status", status);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(status)) dataCmd.Parameters.AddWithValue("@status", status);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -189,6 +193,7 @@ public class EndoCartsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
@@ -205,6 +210,7 @@ public class EndoCartsController(IConfiguration config) : ControllerBase
             """;
 
         await using var repairCmd = new SqlCommand(repairSql, conn);
+        repairCmd.CommandTimeout = 30;
         await using var repairReader = await repairCmd.ExecuteReaderAsync();
         await repairReader.ReadAsync();
 

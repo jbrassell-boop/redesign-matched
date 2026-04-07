@@ -29,6 +29,7 @@ public class AuthController(IConfiguration config, JwtService jwtService) : Cont
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@username", request.Username);
 
         await using var reader = await cmd.ExecuteReaderAsync();

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { message } from 'antd';
 import { getDashboardBriefing } from '../../api/dashboard';
 import apiClient from '../../api/client';
 import type { BriefingStats, DashboardStats } from './types';
@@ -75,7 +76,7 @@ export const OpsBriefing = ({ stats }: Props) => {
       // Flow data comes back with the briefing now
       if ((b as any)?.flow) setFlow((b as any).flow);
     })
-      .catch(() => {})
+      .catch(() => { message.error('Failed to load ops briefing data'); })
       .finally(() => setLoading(false));
   }, []);
 

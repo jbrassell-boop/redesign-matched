@@ -61,10 +61,12 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -131,6 +133,7 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -186,6 +189,7 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
             """;
 
         await using var linesCmd = new SqlCommand(linesSql, conn);
+        linesCmd.CommandTimeout = 30;
         linesCmd.Parameters.AddWithValue("@id", id);
         await using var linesReader = await linesCmd.ExecuteReaderAsync();
         var lineItems = new List<ProductSaleLineItem>();
@@ -254,6 +258,7 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
@@ -282,6 +287,7 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
             VALUES
                 (GETDATE(), @po, @note, 0, 0, 0, 0)
             """, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@po", (object?)body.PurchaseOrder ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@note", (object?)body.Note ?? DBNull.Value);
 

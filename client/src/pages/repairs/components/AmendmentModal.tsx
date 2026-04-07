@@ -34,14 +34,14 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
       .catch(() => message.error('Failed to load amendments'));
     getAmendTypes()
       .then(setAmendTypes)
-      .catch(() => {});
+      .catch(() => { message.error('Failed to load amendment types'); });
   }, [open, repairKey]);
 
   useEffect(() => {
     if (typeKey) {
       getAmendReasons(Number(typeKey))
         .then(setAmendReasons)
-        .catch(() => {});
+        .catch(() => { message.error('Failed to load amendment reasons'); });
     } else {
       setAmendReasons([]);
     }

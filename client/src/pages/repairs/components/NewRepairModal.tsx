@@ -124,7 +124,7 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
   // Load depts when new-scope client changes
   useEffect(() => {
     if (!newClientKey) { setDepts([]); return; }
-    getDepartmentsByClient(newClientKey).then(setDepts).catch(() => {});
+    getDepartmentsByClient(newClientKey).then(setDepts).catch(() => { message.error('Failed to load departments'); });
   }, [newClientKey]);
 
   const handleLookup = async () => {

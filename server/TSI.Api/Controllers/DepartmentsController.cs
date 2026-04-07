@@ -51,11 +51,13 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (clientKey.HasValue) countCmd.Parameters.AddWithValue("@clientKey", clientKey.Value);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (clientKey.HasValue) dataCmd.Parameters.AddWithValue("@clientKey", clientKey.Value);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -102,6 +104,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -169,6 +172,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -251,6 +255,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -273,6 +278,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
 
         var sets = new List<string>();
         var cmd = new SqlCommand { Connection = conn };
+        cmd.CommandTimeout = 30;
 
         if (update.Name != null) { sets.Add("sDepartmentName = @name"); cmd.Parameters.AddWithValue("@name", update.Name); }
         if (update.Address1 != null) { sets.Add("sShipAddr1 = @addr"); cmd.Parameters.AddWithValue("@addr", update.Address1); }
@@ -342,6 +348,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         // Department contacts come from the parent client's contacts via tblContactTran
         // First get the client key for this department
         await using var deptCmd = new SqlCommand("SELECT lClientKey FROM tblDepartment WHERE lDepartmentKey = @deptKey", conn);
+        deptCmd.CommandTimeout = 30;
         deptCmd.Parameters.AddWithValue("@deptKey", deptKey);
         var clientKeyObj = await deptCmd.ExecuteScalarAsync();
         if (clientKeyObj == null) return NotFound(new { message = "Department not found." });
@@ -358,6 +365,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -403,6 +411,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@scopeKey", scopeKey);
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -462,10 +471,12 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         countCmd.Parameters.AddWithValue("@deptKey", deptKey);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         dataCmd.Parameters.AddWithValue("@deptKey", deptKey);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -497,16 +508,20 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
 
         // Delete existing assignments
         await using var delCmd = new SqlCommand("DELETE FROM tblDepartmentSubGroups WHERE lDepartmentKey = @deptKey", conn);
+        delCmd.CommandTimeout = 30;
         delCmd.Parameters.AddWithValue("@deptKey", deptKey);
         await delCmd.ExecuteNonQueryAsync();
 
-        // Insert new assignments
-        foreach (var sgKey in subGroupKeys)
+        // Insert new assignments as a single batch
+        if (subGroupKeys.Length > 0)
         {
+            var values = string.Join(", ", subGroupKeys.Select((_, i) => $"(@deptKey, @sg{i})"));
             await using var insCmd = new SqlCommand(
-                "INSERT INTO tblDepartmentSubGroups (lDepartmentKey, lSubGroupKey) VALUES (@deptKey, @sgKey)", conn);
+                $"INSERT INTO tblDepartmentSubGroups (lDepartmentKey, lSubGroupKey) VALUES {values}", conn);
+            insCmd.CommandTimeout = 30;
             insCmd.Parameters.AddWithValue("@deptKey", deptKey);
-            insCmd.Parameters.AddWithValue("@sgKey", sgKey);
+            for (int i = 0; i < subGroupKeys.Length; i++)
+                insCmd.Parameters.AddWithValue($"@sg{i}", subGroupKeys[i]);
             await insCmd.ExecuteNonQueryAsync();
         }
 
@@ -525,6 +540,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", deptKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -555,6 +571,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -591,6 +608,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -635,6 +653,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -666,6 +685,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@flagTypeKey", flag.FlagTypeKey);
         cmd.Parameters.AddWithValue("@ownerKey", deptKey);
         cmd.Parameters.AddWithValue("@flag", flag.Flag);
@@ -689,6 +709,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@flagTypeKey", flag.FlagTypeKey);
         cmd.Parameters.AddWithValue("@flag", flag.Flag);
         cmd.Parameters.AddWithValue("@visibleDI", flag.VisibleOnDI);
@@ -709,6 +730,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(
             "DELETE FROM tblFlags WHERE lFlagKey = @flagKey AND lOwnerKey = @ownerKey", conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@flagKey", flagKey);
         cmd.Parameters.AddWithValue("@ownerKey", deptKey);
 
@@ -739,6 +761,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -779,6 +802,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             ORDER BY sDepartmentName
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         var list = new List<object>();
@@ -803,6 +827,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -826,6 +851,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
 
         // Get client key for this department
         await using var deptCmd = new SqlCommand("SELECT lClientKey FROM tblDepartment WHERE lDepartmentKey = @deptKey", conn);
+        deptCmd.CommandTimeout = 30;
         deptCmd.Parameters.AddWithValue("@deptKey", deptKey);
         var clientKeyObj = await deptCmd.ExecuteScalarAsync();
         if (clientKeyObj == null) return NotFound(new { message = "Department not found." });
@@ -838,6 +864,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
         cmd.Parameters.AddWithValue("@clientKey", (object?)clientKey ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@scopeTypeKey", (object?)body.ScopeTypeKey ?? DBNull.Value);
@@ -855,6 +882,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
 
         // Get client key for this department
         await using var deptCmd = new SqlCommand("SELECT lClientKey FROM tblDepartment WHERE lDepartmentKey = @deptKey", conn);
+        deptCmd.CommandTimeout = 30;
         deptCmd.Parameters.AddWithValue("@deptKey", deptKey);
         var clientKeyObj = await deptCmd.ExecuteScalarAsync();
         if (clientKeyObj == null) return NotFound(new { message = "Department not found." });
@@ -872,6 +900,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -921,6 +950,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey",           (object?)body.ClientKey ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@name",                body.Name);
         cmd.Parameters.AddWithValue("@addr1",               (object?)body.Address1 ?? DBNull.Value);
@@ -954,6 +984,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
                 VALUES (@deptKey, @clientKey, @scopeTypeKey, @serialNumber, GETDATE(), 1)
                 """;
             await using var scopeCmd = new SqlCommand(scopeSql, conn);
+            scopeCmd.CommandTimeout = 30;
             scopeCmd.Parameters.AddWithValue("@deptKey",      newKey);
             scopeCmd.Parameters.AddWithValue("@clientKey",    (object?)body.ClientKey ?? DBNull.Value);
             scopeCmd.Parameters.AddWithValue("@scopeTypeKey", (object?)body.ScopeTypeKey ?? DBNull.Value);
@@ -987,6 +1018,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
 
         await using var reader = await cmd.ExecuteReaderAsync();

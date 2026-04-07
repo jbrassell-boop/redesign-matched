@@ -113,14 +113,14 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       const promises: Promise<void>[] = [];
       if (repair.clientKey) {
         promises.push(
-          getClientFlags(repair.clientKey).then(setFlags).catch(() => {}),
+          getClientFlags(repair.clientKey).then(setFlags).catch(() => { message.error('Failed to load client flags'); }),
         );
       }
       promises.push(
-        getRepairLineItems(resolvedKey).then(setLineItems).catch(() => {}),
+        getRepairLineItems(resolvedKey).then(setLineItems).catch(() => { message.error('Failed to load repair line items'); }),
       );
       return Promise.all(promises);
-    }).catch(() => {}).finally(() => setCockpitLoading(false));
+    }).catch(() => { message.error('Failed to load repair data'); }).finally(() => setCockpitLoading(false));
   }, [isCockpit, resolvedKey]);
 
   const rk = isCockpit ? (fullRepair?.repairKey ?? 0) : (detail?.repairKey ?? 0);
@@ -153,7 +153,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   // Load statuses once (non-cockpit mode)
   useEffect(() => {
     if (!isCockpit) {
-      getRepairStatuses().then(setStatuses).catch(() => {});
+      getRepairStatuses().then(setStatuses).catch(() => { message.error('Failed to load repair statuses'); });
     }
   }, [isCockpit]);
 
@@ -211,7 +211,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       message.info('Workflow complete — repair shipped and invoiced');
       onStatusChanged?.(rk);
       if (isCockpit && resolvedKey) {
-        getRepairFull(resolvedKey).then(setFullRepair).catch(() => {});
+        getRepairFull(resolvedKey).then(setFullRepair).catch(() => { message.error('Failed to reload repair'); });
       }
       return;
     }
@@ -221,7 +221,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       message.success(`Advanced to: ${nextName}`);
       onStatusChanged?.(rk);
       if (isCockpit && resolvedKey) {
-        getRepairFull(resolvedKey).then(setFullRepair).catch(() => {});
+        getRepairFull(resolvedKey).then(setFullRepair).catch(() => { message.error('Failed to reload repair'); });
       }
     } catch {
       message.error('Failed to advance status');
@@ -236,7 +236,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       message.success(`Status changed to: ${name}`);
       onStatusChanged?.(rk);
       if (isCockpit && resolvedKey) {
-        getRepairFull(resolvedKey).then(setFullRepair).catch(() => {});
+        getRepairFull(resolvedKey).then(setFullRepair).catch(() => { message.error('Failed to reload repair'); });
       }
     } catch {
       message.error('Failed to change status');

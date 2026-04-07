@@ -24,6 +24,7 @@ public class LookupsController(IConfiguration config) : ControllerBase
             ORDER BY sRepLast, sRepFirst
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         var list = new List<object>();
         while (await reader.ReadAsync())
@@ -46,6 +47,7 @@ public class LookupsController(IConfiguration config) : ControllerBase
             ORDER BY sPricingDescription
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         var list = new List<object>();
         while (await reader.ReadAsync())
@@ -67,6 +69,7 @@ public class LookupsController(IConfiguration config) : ControllerBase
             ORDER BY sTermsDesc
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         var list = new List<object>();
         while (await reader.ReadAsync())
@@ -88,6 +91,7 @@ public class LookupsController(IConfiguration config) : ControllerBase
             ORDER BY sDeliveryDesc
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         var list = new List<object>();
         while (await reader.ReadAsync())
@@ -109,6 +113,7 @@ public class LookupsController(IConfiguration config) : ControllerBase
             ORDER BY sRepairLevel
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         var list = new List<object>();
         while (await reader.ReadAsync())
@@ -131,6 +136,7 @@ public class LookupsController(IConfiguration config) : ControllerBase
             ORDER BY sRepairReason
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         var list = new List<object>();
         while (await reader.ReadAsync())
@@ -154,6 +160,7 @@ public class LookupsController(IConfiguration config) : ControllerBase
             ORDER BY sScopeTypeDesc
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         var list = new List<object>();
         while (await reader.ReadAsync())
@@ -178,6 +185,7 @@ public class LookupsController(IConfiguration config) : ControllerBase
             ORDER BY sManufacturer
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         var list = new List<object>();
         while (await reader.ReadAsync())

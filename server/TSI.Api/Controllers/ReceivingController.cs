@@ -47,6 +47,7 @@ public class ReceivingController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search))
             cmd.Parameters.AddWithValue("@search", $"%{search}%");
 
@@ -83,12 +84,14 @@ public class ReceivingController(IConfiguration config) : ControllerBase
         // Get "Received" status ID
         await using var statusCmd = new SqlCommand(
             "SELECT TOP 1 lRepairStatusID FROM tblRepairStatuses WHERE sRepairStatus = 'Received' ORDER BY lRepairStatusSortOrder", conn);
+        statusCmd.CommandTimeout = 30;
         var statusObj = await statusCmd.ExecuteScalarAsync();
         var statusId = statusObj != null ? Convert.ToInt32(statusObj) : 1;
 
         // Generate next WO number
         await using var woCmd = new SqlCommand(
             "SELECT ISNULL(MAX(CAST(sWorkOrderNumber AS INT)), 0) + 1 FROM tblRepair WHERE ISNUMERIC(sWorkOrderNumber) = 1", conn);
+        woCmd.CommandTimeout = 30;
         var nextWo = Convert.ToInt64(await woCmd.ExecuteScalarAsync());
         var woNumber = nextWo.ToString().PadLeft(7, '0');
 
@@ -98,6 +101,7 @@ public class ReceivingController(IConfiguration config) : ControllerBase
         {
             await using var scopeCmd = new SqlCommand(
                 "SELECT TOP 1 lScopeKey FROM tblScope WHERE sSerialNumber = @serial", conn);
+            scopeCmd.CommandTimeout = 30;
             scopeCmd.Parameters.AddWithValue("@serial", request.SerialNumber.Trim());
             var existing = await scopeCmd.ExecuteScalarAsync();
             if (existing != null)
@@ -113,6 +117,7 @@ public class ReceivingController(IConfiguration config) : ControllerBase
             """;
 
         await using var insertCmd = new SqlCommand(insertSql, conn);
+        insertCmd.CommandTimeout = 30;
         insertCmd.Parameters.AddWithValue("@deptKey", request.DepartmentKey);
         insertCmd.Parameters.AddWithValue("@scopeKey", scopeKey.HasValue ? scopeKey.Value : DBNull.Value);
         insertCmd.Parameters.AddWithValue("@statusId", statusId);
@@ -144,6 +149,7 @@ public class ReceivingController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {

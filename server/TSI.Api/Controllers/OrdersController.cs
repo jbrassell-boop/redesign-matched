@@ -38,6 +38,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search))
             cmd.Parameters.AddWithValue("@search", $"%{search}%");
 
@@ -76,6 +77,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -114,6 +116,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -149,6 +152,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var labelMap = new Dictionary<string, string>
@@ -184,6 +188,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@type", instrumentType);
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -222,6 +227,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
                 WHERE d.lDepartmentKey = @deptKey
                 """;
             await using var deptCmd = new SqlCommand(deptSql, conn);
+            deptCmd.CommandTimeout = 30;
             deptCmd.Parameters.AddWithValue("@deptKey", request.DepartmentKey);
             await using var deptReader = await deptCmd.ExecuteReaderAsync();
 
@@ -256,6 +262,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
                     SELECT @sk;
                     """;
                 await using var scopeCmd = new SqlCommand(scopeSql, conn);
+                scopeCmd.CommandTimeout = 30;
                 scopeCmd.Parameters.AddWithValue("@deptKey", request.DepartmentKey);
                 scopeCmd.Parameters.AddWithValue("@scopeTypeKey", (object?)request.ScopeTypeKey ?? DBNull.Value);
                 scopeCmd.Parameters.AddWithValue("@sn", request.SerialNumber);
@@ -272,6 +279,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
                 {
                     await using var stCmd = new SqlCommand(
                         "SELECT ISNULL(lScopeTypeKey, 0) FROM tblScope WHERE lScopeKey = @sk", conn);
+                    stCmd.CommandTimeout = 30;
                     stCmd.Parameters.AddWithValue("@sk", scopeKey);
                     var stObj = await stCmd.ExecuteScalarAsync();
                     scopeTypeKey = stObj != null ? Convert.ToInt32(stObj) : 0;
@@ -282,6 +290,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
                     // Try department-specific max charge first
                     await using var mcCmd = new SqlCommand(
                         "SELECT nMaxCharge FROM tblScopeTypeDepartmentMaxCharges WHERE lScopeTypeKey = @stk AND lDepartmentKey = @dk", conn);
+                    mcCmd.CommandTimeout = 30;
                     mcCmd.Parameters.AddWithValue("@stk", scopeTypeKey);
                     mcCmd.Parameters.AddWithValue("@dk", request.DepartmentKey);
                     var mcObj = await mcCmd.ExecuteScalarAsync();
@@ -293,6 +302,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
                     {
                         await using var mcDef = new SqlCommand(
                             "SELECT mMaxCharge FROM tblScopeType WHERE lScopeTypeKey = @stk", conn);
+                        mcDef.CommandTimeout = 30;
                         mcDef.Parameters.AddWithValue("@stk", scopeTypeKey);
                         var defObj = await mcDef.ExecuteScalarAsync();
                         if (defObj != null && defObj != DBNull.Value)
@@ -304,6 +314,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
             // 4. Get "Received" status ID
             await using var statusCmd = new SqlCommand(
                 "SELECT TOP 1 lRepairStatusID FROM tblRepairStatuses WHERE sRepairStatus = 'Received' ORDER BY lRepairStatusSortOrder", conn);
+            statusCmd.CommandTimeout = 30;
             var statusObj = await statusCmd.ExecuteScalarAsync();
             var statusId = statusObj != null ? Convert.ToInt32(statusObj) : 1;
 
@@ -342,6 +353,7 @@ public class OrdersController(IConfiguration config) : ControllerBase
                 """;
 
             await using var insertCmd = new SqlCommand(insertSql, conn);
+            insertCmd.CommandTimeout = 30;
             insertCmd.Parameters.AddWithValue("@deptKey", request.DepartmentKey);
             insertCmd.Parameters.AddWithValue("@scopeKey", scopeKey > 0 ? scopeKey : DBNull.Value);
             insertCmd.Parameters.AddWithValue("@statusId", statusId);

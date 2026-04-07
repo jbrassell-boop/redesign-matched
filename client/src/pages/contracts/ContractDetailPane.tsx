@@ -126,7 +126,7 @@ const ScopesTab = ({ contractKey }: { contractKey: number }) => {
 
   useEffect(() => {
     setLoading(true);
-    getContractScopes(contractKey).then(setScopes).catch(() => {}).finally(() => setLoading(false));
+    getContractScopes(contractKey).then(setScopes).catch(() => { message.error('Failed to load contract scopes'); }).finally(() => setLoading(false));
   }, [contractKey]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
@@ -194,7 +194,7 @@ const RepairsTab = ({ contractKey }: { contractKey: number }) => {
 
   useEffect(() => {
     setLoading(true);
-    getContractRepairs(contractKey).then(setRepairs).catch(() => {}).finally(() => setLoading(false));
+    getContractRepairs(contractKey).then(setRepairs).catch(() => { message.error('Failed to load contract repairs'); }).finally(() => setLoading(false));
   }, [contractKey]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
@@ -249,7 +249,7 @@ const InvoicesTab = ({ contractKey, detail }: { contractKey: number; detail: Con
 
   useEffect(() => {
     setLoading(true);
-    getContractInvoices(contractKey).then(setInvoices).catch(() => {}).finally(() => setLoading(false));
+    getContractInvoices(contractKey).then(setInvoices).catch(() => { message.error('Failed to load contract invoices'); }).finally(() => setLoading(false));
   }, [contractKey]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
@@ -321,7 +321,7 @@ const NotesTab = ({ contractKey }: { contractKey: number }) => {
 
   useEffect(() => {
     setLoading(true);
-    getContractNotes(contractKey).then(setNotes).catch(() => {}).finally(() => setLoading(false));
+    getContractNotes(contractKey).then(setNotes).catch(() => { message.error('Failed to load contract notes'); }).finally(() => setLoading(false));
   }, [contractKey]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
@@ -366,7 +366,7 @@ const DocumentsTab = ({ contractKey }: { contractKey: number }) => {
 
   useEffect(() => {
     setLoading(true);
-    getContractDocuments(contractKey).then(setDocs).catch(() => {}).finally(() => setLoading(false));
+    getContractDocuments(contractKey).then(setDocs).catch(() => { message.error('Failed to load contract documents'); }).finally(() => setLoading(false));
   }, [contractKey]);
 
   if (loading) return <div style={{ padding: 24, textAlign: 'center' }}><Spin size="small" /></div>;
@@ -427,7 +427,7 @@ const HealthIndicator = ({ contractKey }: { contractKey: number }) => {
 
   useEffect(() => {
     setLoading(true);
-    getContractHealth(contractKey).then(setHealth).catch(() => {}).finally(() => setLoading(false));
+    getContractHealth(contractKey).then(setHealth).catch(() => { message.error('Failed to load contract health'); }).finally(() => setLoading(false));
   }, [contractKey]);
 
   if (loading) return null;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { message } from 'antd';
 import type { ClientFull } from '../types';
 import { SectionCard } from '../../../components/shared';
 import { getSalesReps, getPricingCategories, getPaymentTerms } from '../../../api/lookups';
@@ -125,9 +126,9 @@ export const InfoTab = ({ client, onChange }: InfoTabProps) => {
   const [payTerms, setPayTerms] = useState<LookupOption[]>([]);
 
   useEffect(() => {
-    getSalesReps().then(setSalesReps).catch(() => {});
-    getPricingCategories().then(setPricingCats).catch(() => {});
-    getPaymentTerms().then(setPayTerms).catch(() => {});
+    getSalesReps().then(setSalesReps).catch(() => { message.error('Failed to load sales reps'); });
+    getPricingCategories().then(setPricingCats).catch(() => { message.error('Failed to load pricing categories'); });
+    getPaymentTerms().then(setPayTerms).catch(() => { message.error('Failed to load payment terms'); });
   }, []);
 
   return (

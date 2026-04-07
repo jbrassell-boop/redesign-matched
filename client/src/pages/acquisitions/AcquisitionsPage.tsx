@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Spin } from 'antd';
+import { Input, Spin, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { getAcquisitions, getAcquisitionsSold, getAcquisitionStats, getAcquisitionDetail } from '../../api/acquisitions';
 import { TabBar, Field, FormGrid, StatusBadge } from '../../components/shared';
@@ -165,7 +165,7 @@ export const AcquisitionsPage = () => {
     setDetail(null);
   };
 
-  useEffect(() => { getAcquisitionStats().then(setStats).catch(() => {}); }, []);
+  useEffect(() => { getAcquisitionStats().then(setStats).catch(() => { message.error('Failed to load acquisition stats'); }); }, []);
 
   const loadInHouse = useCallback(async (s: string, p: number) => {
     setInHouseLoading(true);

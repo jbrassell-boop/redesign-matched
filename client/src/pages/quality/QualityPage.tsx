@@ -959,7 +959,7 @@ export const QualityPage = () => {
             message.success('NCR submitted (demo — no backend call)');
             setNcrModalOpen(false);
             ncrForm.resetFields();
-          }).catch(() => {});
+          }).catch(() => { message.error('Please fill in all required fields'); });
         }}
         okText="Submit NCR"
         okButtonProps={{ style: { background: 'var(--navy)', borderColor: 'var(--navy)' } }}
@@ -1002,7 +1002,7 @@ export const QualityPage = () => {
             message.success('CAPA submitted (demo — no backend call)');
             setCapaModalOpen(false);
             capaForm.resetFields();
-          }).catch(() => {});
+          }).catch(() => { message.error('Please fill in all required fields'); });
         }}
         okText="Submit CAPA"
         okButtonProps={{ style: { background: 'var(--navy)', borderColor: 'var(--navy)' } }}

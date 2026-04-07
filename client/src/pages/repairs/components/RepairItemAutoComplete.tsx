@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { message } from 'antd';
 import type { RepairCatalogItem } from '../types';
 import { getRepairItemCatalog } from '../../../api/repairs';
 
@@ -18,7 +19,7 @@ export const RepairItemAutoComplete = ({ repairKey, onSelect, inputRef }: Props)
   useEffect(() => {
     getRepairItemCatalog(repairKey)
       .then(setCatalog)
-      .catch(() => {});  // catalog load failure — don't block the UI
+      .catch(() => { message.error('Failed to load repair item catalog'); });  // catalog load failure — don't block the UI
   }, [repairKey]);
 
   const filtered = query.length >= 1

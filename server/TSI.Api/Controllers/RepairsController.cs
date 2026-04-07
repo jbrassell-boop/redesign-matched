@@ -64,11 +64,13 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -131,6 +133,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -177,6 +180,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(
             "UPDATE tblRepair SET mComments = @notes WHERE lRepairKey = @id", conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", repairKey);
         cmd.Parameters.AddWithValue("@notes", (object?)body.Notes ?? DBNull.Value);
         var rows = await cmd.ExecuteNonQueryAsync();
@@ -286,6 +290,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -398,6 +403,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
         await using var cmd = new SqlCommand(
             "UPDATE tblRepair SET sPurchaseOrder = @po WHERE lRepairKey = @id", conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@po", (object?)po ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@id", repairKey);
         var rows = await cmd.ExecuteNonQueryAsync();
@@ -445,6 +451,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 sBillZip                  = COALESCE(@billZip, sBillZip)
             WHERE lRepairKey = @id
             """, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", repairKey);
         cmd.Parameters.AddWithValue("@isUrgent", body.IsUrgent.HasValue ? (object)body.IsUrgent.Value : DBNull.Value);
         cmd.Parameters.AddWithValue("@po", (object?)body.PurchaseOrder ?? DBNull.Value);
@@ -508,6 +515,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<RepairLineItem>();
@@ -540,6 +548,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
         // First get the scope key for this repair
         const string scopeSql = "SELECT lScopeKey FROM tblRepair WHERE lRepairKey = @repairKey";
         await using var scopeCmd = new SqlCommand(scopeSql, conn);
+        scopeCmd.CommandTimeout = 30;
         scopeCmd.Parameters.AddWithValue("@repairKey", repairKey);
         var scopeKeyObj = await scopeCmd.ExecuteScalarAsync();
         if (scopeKeyObj == null || scopeKeyObj == DBNull.Value)
@@ -565,6 +574,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@scopeKey", scopeKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         var history = new List<RepairScopeHistory>();
@@ -600,6 +610,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             ORDER BY sTechName
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         var techs = new List<TechnicianOption>();
         while (await reader.ReadAsync())
@@ -626,6 +637,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 mComments         = COALESCE(@notes, mComments)
             WHERE lRepairKey = @id
             """, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", repairKey);
         cmd.Parameters.AddWithValue("@statusId", (object?)body.StatusId ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@techKey", (object?)body.TechnicianKey ?? DBNull.Value);
@@ -640,6 +652,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 SELECT @repairKey, @statusId, rs.sRepairStatus, GETDATE()
                 FROM tblRepairStatuses rs WHERE rs.lRepairStatusID = @statusId
                 """, conn);
+            logCmd.CommandTimeout = 30;
             logCmd.Parameters.AddWithValue("@repairKey", repairKey);
             logCmd.Parameters.AddWithValue("@statusId", body.StatusId.Value);
             await logCmd.ExecuteNonQueryAsync();
@@ -663,6 +676,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         var statuses = new List<RepairStatusOption>();
         while (await reader.ReadAsync())
@@ -686,6 +700,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
         // Update the repair record
         await using var updateCmd = new SqlCommand(
             "UPDATE tblRepair SET lRepairStatusID = @statusId WHERE lRepairKey = @id", conn);
+        updateCmd.CommandTimeout = 30;
         updateCmd.Parameters.AddWithValue("@id", repairKey);
         updateCmd.Parameters.AddWithValue("@statusId", body.StatusId);
         var rows = await updateCmd.ExecuteNonQueryAsync();
@@ -697,6 +712,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             SELECT @repairKey, @statusId, rs.sRepairStatus, GETDATE()
             FROM tblRepairStatuses rs WHERE rs.lRepairStatusID = @statusId
             """, conn);
+        logCmd.CommandTimeout = 30;
         logCmd.Parameters.AddWithValue("@repairKey", repairKey);
         logCmd.Parameters.AddWithValue("@statusId", body.StatusId);
         await logCmd.ExecuteNonQueryAsync();
@@ -720,6 +736,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         var history = new List<RepairStatusLogEntry>();
@@ -758,6 +775,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -819,6 +837,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         cmd.Parameters.AddWithValue("@scopeRepairable", (object?)body.ScopeRepairable ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@scopeUsable", (object?)body.ScopeUsable ?? DBNull.Value);
@@ -886,6 +905,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -927,6 +947,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         cmd.Parameters.AddWithValue("@itemKey", (object?)itemKey ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@cause", (object?)body.Cause ?? DBNull.Value);
@@ -960,6 +981,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@tranKey", tranKey);
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         cmd.Parameters.AddWithValue("@repairItemKey", body.ItemCode != null && int.TryParse(body.ItemCode, out var ik) ? (object)ik : DBNull.Value);
@@ -981,6 +1003,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(
             "DELETE FROM tblRepairItemTran WHERE lRepairItemTranKey = @tranKey AND lRepairKey = @repairKey", conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@tranKey", tranKey);
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         var rows = await cmd.ExecuteNonQueryAsync();
@@ -1002,6 +1025,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@cause", (object?)body.Cause ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@comments", (object?)body.Comments ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@tranKey", tranKey);
@@ -1019,6 +1043,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
 
         const string sql = "SELECT lAmendRepairTypeKey, sAmendRepairType FROM tblAmendRepairTypes ORDER BY sAmendRepairType";
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var items = new List<AmendTypeItem>();
@@ -1043,6 +1068,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@typeKey", typeKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -1076,6 +1102,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -1116,6 +1143,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 updateSql.Append(" WHERE lRepairItemTranKey = @tranKey AND lRepairKey = @repairKey");
 
                 await using var updCmd = new SqlCommand(updateSql.ToString(), conn, tx);
+                updCmd.CommandTimeout = 30;
                 updCmd.Parameters.AddWithValue("@repairKey", repairKey);
                 updCmd.Parameters.AddWithValue("@tranKey", body.TranKey);
                 if (body.NewFixType != null) updCmd.Parameters.AddWithValue("@fixType", body.NewFixType);
@@ -1132,6 +1160,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             await using var numCmd = new SqlCommand(
                 "SELECT ISNULL(MAX(lAmendmentNumber), 0) + 1 FROM tblAmendRepairComments WHERE lRepairKey = @repairKey",
                 conn, tx);
+            numCmd.CommandTimeout = 30;
             numCmd.Parameters.AddWithValue("@repairKey", repairKey);
             var nextNum = Convert.ToInt32(await numCmd.ExecuteScalarAsync());
 
@@ -1146,6 +1175,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 """;
 
             await using var insCmd = new SqlCommand(insertSql, conn, tx);
+            insCmd.CommandTimeout = 30;
             insCmd.Parameters.AddWithValue("@repairKey", repairKey);
             insCmd.Parameters.AddWithValue("@typeKey", body.AmendTypeKey);
             insCmd.Parameters.AddWithValue("@reasonKey", body.AmendReasonKey);
@@ -1172,6 +1202,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
 
         const string sql = "UPDATE tblRepairItemTran SET sApproved = @approved WHERE lRepairKey = @repairKey";
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@approved", body.Approved ?? "Y");
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         var rows = await cmd.ExecuteNonQueryAsync();
@@ -1193,6 +1224,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         cmd.Parameters.AddWithValue("@techKey", body.TechKey);
         cmd.Parameters.AddWithValue("@tech2Key", body.Tech2Key.HasValue ? (object)body.Tech2Key.Value : DBNull.Value);
@@ -1221,6 +1253,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<object>();
@@ -1243,6 +1276,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
         await using var cmd = new SqlCommand("SELECT lMainRepairUpdateSlipReasonKey AS [key], sMainRepairUpdateSlipReason AS name FROM tblMainRepairUpdateSlipReasons WHERE ISNULL(bActive,1) = 1 ORDER BY sMainRepairUpdateSlipReason", conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<object>();
         while (await reader.ReadAsync())
@@ -1263,6 +1297,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         cmd.Parameters.AddWithValue("@techKey", body.TechKey.HasValue ? (object)body.TechKey.Value : DBNull.Value);
         cmd.Parameters.AddWithValue("@tech2Key", body.Tech2Key.HasValue ? (object)body.Tech2Key.Value : DBNull.Value);
@@ -1288,6 +1323,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<object>();
@@ -1324,6 +1360,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<object>();
@@ -1359,6 +1396,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         var result = await cmd.ExecuteScalarAsync();
         if (result == null) return NotFound();
@@ -1386,6 +1424,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         var notes = new List<object>();
@@ -1418,6 +1457,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         cmd.Parameters.AddWithValue("@note", body.Note ?? "");
         await cmd.ExecuteNonQueryAsync();
@@ -1446,6 +1486,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -1511,6 +1552,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@sn", sn.Trim());
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -1548,6 +1590,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 VALUES (@scopeTypeKey, @deptKey, @sn, GETDATE())
                 """;
             await using var scopeCmd = new SqlCommand(scopeSql, conn);
+            scopeCmd.CommandTimeout = 30;
             scopeCmd.Parameters.AddWithValue("@scopeTypeKey", (object?)body.ScopeTypeKey ?? DBNull.Value);
             scopeCmd.Parameters.AddWithValue("@deptKey", body.DeptKey);
             scopeCmd.Parameters.AddWithValue("@sn", (object?)body.SerialNumber ?? DBNull.Value);
@@ -1573,6 +1616,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@scopeKey",        scopeKey > 0 ? (object)scopeKey : DBNull.Value);
         cmd.Parameters.AddWithValue("@deptKey",         body.DeptKey > 0 ? (object)body.DeptKey : DBNull.Value);
         cmd.Parameters.AddWithValue("@statusId",        body.StatusId.HasValue ? (object)body.StatusId.Value : DBNull.Value);
@@ -1600,6 +1644,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
         // Set work order number = the new repair key (matches legacy format)
         await using var woCmd = new SqlCommand(
             "UPDATE tblRepair SET sWorkOrderNumber = CAST(@k AS NVARCHAR) WHERE lRepairKey = @k", conn);
+        woCmd.CommandTimeout = 30;
         woCmd.Parameters.AddWithValue("@k", newKey);
         await woCmd.ExecuteNonQueryAsync();
 

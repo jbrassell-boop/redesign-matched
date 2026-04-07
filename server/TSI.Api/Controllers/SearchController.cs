@@ -28,6 +28,7 @@ public class SearchController(IConfiguration config) : ControllerBase
         var repairs = new List<object>();
         {
             await using var cmd = conn.CreateCommand();
+            cmd.CommandTimeout = 30;
             cmd.CommandText = @"
                 SELECT TOP (@limit) r.lRepairKey, r.sWorkOrderNumber, r.sSerialNumber,
                        c.sClientName1
@@ -54,6 +55,7 @@ public class SearchController(IConfiguration config) : ControllerBase
         var clients = new List<object>();
         {
             await using var cmd = conn.CreateCommand();
+            cmd.CommandTimeout = 30;
             cmd.CommandText = @"
                 SELECT TOP (@limit) lClientKey, sClientName1, sMailCity, sMailState
                 FROM tblClient
@@ -80,6 +82,7 @@ public class SearchController(IConfiguration config) : ControllerBase
         var departments = new List<object>();
         {
             await using var cmd = conn.CreateCommand();
+            cmd.CommandTimeout = 30;
             cmd.CommandText = @"
                 SELECT TOP (@limit) d.lDepartmentKey, d.sDepartmentName, c.sClientName1
                 FROM tblDepartment d
@@ -104,6 +107,7 @@ public class SearchController(IConfiguration config) : ControllerBase
         var contracts = new List<object>();
         {
             await using var cmd = conn.CreateCommand();
+            cmd.CommandTimeout = 30;
             cmd.CommandText = @"
                 SELECT TOP (@limit) lContractKey, sContractNumber, sContractName1
                 FROM tblContract

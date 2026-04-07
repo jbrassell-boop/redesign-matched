@@ -1,6 +1,6 @@
 // client/src/pages/repairs/tabs/ExpenseTab.tsx
 import { useState, useEffect } from 'react';
-import { Spin } from 'antd';
+import { Spin, message } from 'antd';
 import type { RepairFinancials } from '../types';
 import { getRepairFinancials } from '../../../api/repairs';
 
@@ -19,7 +19,7 @@ export const ExpenseTab = ({ repairKey }: ExpenseTabProps) => {
     setLoading(true);
     getRepairFinancials(repairKey)
       .then(setFin)
-      .catch(() => {})
+      .catch(() => { message.error('Failed to load repair financials'); })
       .finally(() => setLoading(false));
   }, [repairKey]);
 

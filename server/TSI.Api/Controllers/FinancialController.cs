@@ -73,11 +73,13 @@ public class FinancialController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(clientFilter)) countCmd.Parameters.AddWithValue("@clientFilter", clientFilter);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(clientFilter)) dataCmd.Parameters.AddWithValue("@clientFilter", clientFilter);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -143,6 +145,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -167,6 +170,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
             """;
 
         await using var detailCmd = new SqlCommand(detailSql, conn);
+        detailCmd.CommandTimeout = 30;
         detailCmd.Parameters.AddWithValue("@id", id);
         await using var detailReader = await detailCmd.ExecuteReaderAsync();
         var lineItems = new List<InvoiceLineItem>();
@@ -183,6 +187,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
 
         // Re-read header for detail construction
         await using var cmd2 = new SqlCommand(sql, conn);
+        cmd2.CommandTimeout = 30;
         cmd2.Parameters.AddWithValue("@id", id);
         await using var r = await cmd2.ExecuteReaderAsync();
         await r.ReadAsync();
@@ -254,10 +259,12 @@ public class FinancialController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -298,9 +305,11 @@ public class FinancialController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
 
@@ -334,6 +343,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var items = new List<GLAccountItem>();
@@ -363,6 +373,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
             """;
 
         await using var arCmd = new SqlCommand(arSql, conn);
+        arCmd.CommandTimeout = 30;
         await using var arReader = await arCmd.ExecuteReaderAsync();
         double totalAR = 0;
         if (await arReader.ReadAsync())
@@ -375,6 +386,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
             WHERE dblTranAmount > 0 AND dtDueDate < DATEADD(day, -90, GETDATE())
             """;
         await using var overdueCmd = new SqlCommand(overdueSql, conn);
+        overdueCmd.CommandTimeout = 30;
         var overdueCount = Convert.ToInt32(await overdueCmd.ExecuteScalarAsync());
 
         // Average aging days
@@ -384,16 +396,19 @@ public class FinancialController(IConfiguration config) : ControllerBase
             WHERE dblTranAmount > 0 AND dtDueDate IS NOT NULL
             """;
         await using var agingCmd = new SqlCommand(agingSql, conn);
+        agingCmd.CommandTimeout = 30;
         var avgAging = Convert.ToInt32(await agingCmd.ExecuteScalarAsync());
 
         // Drafts: invoices not exported
         const string draftsSql = "SELECT COUNT(*) FROM tblInvoice WHERE sExported IS NULL OR sExported = ''";
         await using var draftsCmd = new SqlCommand(draftsSql, conn);
+        draftsCmd.CommandTimeout = 30;
         var draftsCount = Convert.ToInt32(await draftsCmd.ExecuteScalarAsync());
 
         // On hold: inactive clients
         const string holdSql = "SELECT COUNT(*) FROM tblClient WHERE bActive = 0";
         await using var holdCmd = new SqlCommand(holdSql, conn);
+        holdCmd.CommandTimeout = 30;
         var holdCount = Convert.ToInt32(await holdCmd.ExecuteScalarAsync());
 
         // Paid MTD from tblInvoicePayments
@@ -402,6 +417,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
             WHERE dtPaymentDate >= DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)
             """;
         await using var paidCmd = new SqlCommand(paidSql, conn);
+        paidCmd.CommandTimeout = 30;
         var paidResult = await paidCmd.ExecuteScalarAsync();
         var paidMTD = paidResult == null || paidResult == DBNull.Value ? 0.0 : Convert.ToDouble(paidResult);
 
@@ -457,6 +473,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
         cmd.Parameters.AddWithValue("@dateTo", dateTo);
         cmd.Parameters.AddWithValue("@minInvoices", minInvoices);
@@ -524,6 +541,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@dateFrom", dateFrom);
         cmd.Parameters.AddWithValue("@dateTo", dateTo);
 

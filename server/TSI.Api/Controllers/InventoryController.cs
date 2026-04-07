@@ -56,10 +56,12 @@ public class InventoryController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -124,6 +126,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
             """;
 
         await using var itemCmd = new SqlCommand(itemSql, conn);
+        itemCmd.CommandTimeout = 30;
         itemCmd.Parameters.AddWithValue("@inventoryKey", inventoryKey);
         await using var itemReader = await itemCmd.ExecuteReaderAsync();
 
@@ -149,6 +152,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
         await itemReader.CloseAsync();
 
         await using var sizesCmd = new SqlCommand(sizesSql, conn);
+        sizesCmd.CommandTimeout = 30;
         sizesCmd.Parameters.AddWithValue("@inventoryKey", inventoryKey);
         await using var sizesReader = await sizesCmd.ExecuteReaderAsync();
 
@@ -214,6 +218,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@inventoryKey", inventoryKey);
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -257,6 +262,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@inventoryKey", inventoryKey);
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -295,6 +301,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
@@ -331,6 +338,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var items = new List<InventoryReceivingItem>();
@@ -380,6 +388,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
             """;
 
         await using var tranCmd = new SqlCommand(tranSql, conn);
+        tranCmd.CommandTimeout = 30;
         tranCmd.Parameters.AddWithValue("@sizeKey", req.InventorySizeKey);
         tranCmd.Parameters.AddWithValue("@qty", req.Quantity);
         tranCmd.Parameters.AddWithValue("@lotNumber", (object?)req.LotNumber ?? DBNull.Value);
@@ -388,6 +397,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
         await tranCmd.ExecuteNonQueryAsync();
 
         await using var updateCmd = new SqlCommand(updateSql, conn);
+        updateCmd.CommandTimeout = 30;
         updateCmd.Parameters.AddWithValue("@qty", req.Quantity);
         updateCmd.Parameters.AddWithValue("@binNumber", (object?)req.BinNumber ?? DBNull.Value);
         updateCmd.Parameters.AddWithValue("@sizeKey", req.InventorySizeKey);

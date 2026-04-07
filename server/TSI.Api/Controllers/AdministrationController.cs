@@ -31,6 +31,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
 
         await using var countCmd = new SqlCommand(
             $"SELECT COUNT(*) FROM tblUsers u {where}", conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search))
             countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         var totalCount = (int)(await countCmd.ExecuteScalarAsync())!;
@@ -47,6 +48,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             {where}
             ORDER BY u.sLastName, u.sFirstName
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY", conn);
+        cmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search))
             cmd.Parameters.AddWithValue("@search", $"%{search}%");
         cmd.Parameters.AddWithValue("@offset", offset);
@@ -83,6 +85,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
                    sg.bActive
             FROM tblSecurityGroup sg
             ORDER BY sg.sSecurityGroupName", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<SecurityGroupItem>();
@@ -111,6 +114,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             SELECT lDeliveryMethodKey, sDeliveryMethod, mCost, bDefault, bActive
             FROM tblDeliveryMethod
             ORDER BY sDeliveryMethod", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<DeliveryMethodItem>();
@@ -140,6 +144,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
                    sDueDateMode, bDefault
             FROM tblPaymentTerms
             ORDER BY sPaymentTerms", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<PaymentTermsItem>();
@@ -174,6 +179,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             FROM tblScopeTypeCategories
             {where}
             ORDER BY sScopeTypeCategory", conn);
+        cmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(type))
             cmd.Parameters.AddWithValue("@type", type);
 
@@ -211,6 +217,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             LEFT JOIN tblCompany c ON d.lCompanyKey = c.lCompanyKey
             {where}
             ORDER BY d.sDistributor", conn);
+        cmd.CommandTimeout = 30;
         if (active.HasValue)
             cmd.Parameters.AddWithValue("@active", active.Value);
 
@@ -246,6 +253,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
                    (SELECT COUNT(*) FROM tblDistributor d WHERE d.lCompanyKey = c.lCompanyKey) AS DistributorCount
             FROM tblCompany c
             ORDER BY c.sCompany", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<CompanyItem>();
@@ -279,6 +287,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             FROM tblRepairReasons r
             LEFT JOIN tblRepairReasonCategories rc ON r.lRepairReasonCategoryKey = rc.lRepairReasonCategoryKey
             ORDER BY r.sRepairReason", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<RepairReasonItem>();
@@ -306,6 +315,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             OUTPUT INSERTED.lRepairReasonKey
             VALUES (@reason, @active, NULL)
             """, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@reason", body.Reason);
         cmd.Parameters.AddWithValue("@active", body.Active);
         var key = Convert.ToInt32(await cmd.ExecuteScalarAsync());
@@ -319,6 +329,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
         await using var cmd = new SqlCommand(
             "UPDATE tblRepairReasons SET sRepairReason = @reason, bActive = @active WHERE lRepairReasonKey = @key", conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@key", key);
         cmd.Parameters.AddWithValue("@reason", body.Reason);
         cmd.Parameters.AddWithValue("@active", body.Active);
@@ -333,6 +344,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
         await using var cmd = new SqlCommand(
             "DELETE FROM tblRepairReasons WHERE lRepairReasonKey = @key", conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@key", key);
         var rows = await cmd.ExecuteNonQueryAsync();
         return rows > 0 ? NoContent() : NotFound();
@@ -349,6 +361,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             SELECT lRepairStatusID, sRepairStatus, lRepairStatusSortOrder, bIsReadOnly
             FROM tblRepairStatuses
             ORDER BY lRepairStatusSortOrder", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<RepairStatusItem>();
@@ -376,6 +389,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             OUTPUT INSERTED.lRepairStatusID
             VALUES (@status, @sortOrder, 0)
             """, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@status", body.StatusName);
         cmd.Parameters.AddWithValue("@sortOrder", (object?)body.SortOrder ?? DBNull.Value);
         var key = Convert.ToInt32(await cmd.ExecuteScalarAsync());
@@ -392,6 +406,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             SET sRepairStatus = @status, lRepairStatusSortOrder = @sortOrder
             WHERE lRepairStatusID = @id AND ISNULL(bIsReadOnly, 0) = 0
             """, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         cmd.Parameters.AddWithValue("@status", body.StatusName);
         cmd.Parameters.AddWithValue("@sortOrder", (object?)body.SortOrder ?? DBNull.Value);
@@ -407,6 +422,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         // Only delete non-read-only statuses
         await using var cmd = new SqlCommand(
             "DELETE FROM tblRepairStatuses WHERE lRepairStatusID = @id AND ISNULL(bIsReadOnly, 0) = 0", conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         var rows = await cmd.ExecuteNonQueryAsync();
         return rows > 0 ? NoContent() : NotFound();
@@ -425,6 +441,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
                 bActive         = COALESCE(@active, bActive)
             WHERE lUserKey = @key
             """, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@key", key);
         cmd.Parameters.AddWithValue("@fullName", (object?)body.FullName ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@email", (object?)body.EmailAddress ?? DBNull.Value);
@@ -444,6 +461,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             SELECT lHolidayKey, sHolidayName, dtHolidayDate, bRecurring, bActive
             FROM tblHolidays
             ORDER BY dtHolidayDate", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<HolidayItem>();
@@ -474,6 +492,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             SELECT lSalesTaxKey, sStateCode, sStateName, dblTaxRate, dtEffectiveDate, bTaxable
             FROM tblSalesTax
             ORDER BY sStateName", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<SalesTaxItem>();
@@ -506,6 +525,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
                    p.dtLastUpdated, p.bActive
             FROM tblPricingCategory p
             ORDER BY p.sPricingCategory", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<PricingListItem>();
@@ -537,6 +557,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
                    lConfigurationValue, nConfigurationValue
             FROM tblConfigurationItems
             ORDER BY sConfigurationItem", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<SystemSettingItem>();
@@ -582,6 +603,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
 
         await using var countCmd = new SqlCommand(
             $"SELECT COUNT(*) FROM tblAuditLog a LEFT JOIN tblUsers u ON a.lUserKey = u.lUserKey {where}", conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(action)) countCmd.Parameters.AddWithValue("@action", action);
         if (!string.IsNullOrWhiteSpace(dateFrom)) countCmd.Parameters.AddWithValue("@dateFrom", DateTime.Parse(dateFrom));
@@ -600,6 +622,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             {where}
             ORDER BY a.dtTimestamp DESC
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY", conn);
+        cmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) cmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(action)) cmd.Parameters.AddWithValue("@action", action);
         if (!string.IsNullOrWhiteSpace(dateFrom)) cmd.Parameters.AddWithValue("@dateFrom", DateTime.Parse(dateFrom));
@@ -636,6 +659,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             SELECT lSystemCodesKey, sItemText
             FROM vwSysCodesCreditLimit
             ORDER BY nOrdinal, sItemText", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<CreditLimitItem>();
@@ -665,6 +689,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
                    CASE WHEN cItemChar = 'A' THEN 1 ELSE 0 END AS IsActive
             FROM vwSysCodesReportingGroup
             ORDER BY nOrdinal, sItemText", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<ReportingGroupItem>();
@@ -692,6 +717,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
                    CASE WHEN cItemChar = 'A' THEN 1 ELSE 0 END AS IsActive
             FROM vwSysCodesStdDeptName
             ORDER BY nOrdinal, sItemText", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<StandardDeptItem>();
@@ -719,6 +745,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
                    CASE WHEN cItemChar = 'A' THEN 1 ELSE 0 END AS IsActive
             FROM vwSysCodesDeptProfClean
             ORDER BY nOrdinal, sItemText", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<CleaningSystemItem>();
@@ -745,6 +772,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             SELECT ROW_NUMBER() OVER (ORDER BY lSortOrder, Country) AS RowNum, Country
             FROM tblCountries
             ORDER BY lSortOrder, Country", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<CountryItem>();
@@ -775,6 +803,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             FROM tblSalesRep sr
             {where}
             ORDER BY sr.sRepLast, sr.sRepFirst", conn);
+        cmd.CommandTimeout = 30;
         if (companyKey.HasValue)
             cmd.Parameters.AddWithValue("@companyKey", companyKey.Value);
 
@@ -809,6 +838,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             INNER JOIN tblSalesRep sr ON srl.lSalesRepKey = sr.lSalesRepKey
             WHERE srl.lSalesRepKey = @salesRepKey
             ORDER BY c.sClientName, d.sDepartmentName", conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@salesRepKey", salesRepKey);
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -844,6 +874,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
             {
                 CommandType = System.Data.CommandType.StoredProcedure
             };
+            cmd.CommandTimeout = 30;
 
             await using var reader = await cmd.ExecuteReaderAsync();
             var items = new List<BonusPoolItem>();
@@ -879,6 +910,7 @@ public class AdministrationController(IConfiguration config) : ControllerBase
                 (SELECT COUNT(*) FROM tblPricingCategory WHERE bActive = 1) AS PricingLists,
                 0 AS AuditEntries24h,
                 (SELECT COUNT(*) FROM tblUsers WHERE bLocked = 1) AS LockedAccounts", conn);
+        cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();

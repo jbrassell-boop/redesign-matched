@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Select } from 'antd';
+import { Input, Select, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import {
   getInstrumentRepairs,
@@ -76,7 +76,7 @@ export const InstrumentsPage = () => {
   const [catalogDetailLoading, setCatalogDetailLoading] = useState(false);
 
   useEffect(() => {
-    getInstrumentStats().then(setStats).catch(() => {});
+    getInstrumentStats().then(setStats).catch(() => { message.error('Failed to load instrument stats'); });
   }, []);
 
   const loadData = useCallback(async () => {

@@ -32,7 +32,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
-        cmd.CommandTimeout = 30;
+        cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         if (!await reader.ReadAsync())
@@ -51,7 +51,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
         // Contract expiration check
         await using var contractCmd = new SqlCommand(
             "SELECT COUNT(*) FROM tblContract WHERE dtDateTermination BETWEEN GETDATE() AND DATEADD(DAY, 90, GETDATE())", conn);
-        contractCmd.CommandTimeout = 10;
+        contractCmd.CommandTimeout = 60;
         var expiringContracts = Convert.ToInt32(await contractCmd.ExecuteScalarAsync());
 
         return Ok(new {
@@ -155,6 +155,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         if (type != "all" && type != "Carts") { var tc = type switch { "Flexible" => "F", "Rigid" => "R", "Instrument" => "I", "Camera" => "C", _ => type }; countCmd.Parameters.AddWithValue("@type", tc); }
@@ -162,6 +163,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         if (type != "all" && type != "Carts") { var tc2 = type switch { "Flexible" => "F", "Rigid" => "R", "Instrument" => "I", "Camera" => "C", _ => type }; dataCmd.Parameters.AddWithValue("@type", tc2); }
@@ -219,6 +221,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
                  WHERE ISNULL(r.sRepairClosed, 'N') != 'Y'
                  AND DATEDIFF(DAY, dtDateIn, GETDATE()) > 14) AS Overdue
         ", conn);
+        cmd.CommandTimeout = 60;
         cmd.Parameters.AddWithValue("@yesterday", yesterday);
         await using var rdr = await cmd.ExecuteReaderAsync();
         await rdr.ReadAsync();
@@ -241,7 +244,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             GROUP BY st.sRigidOrFlexible
         ", conn);
         flowCmd.Parameters.AddWithValue("@yesterday", yesterday);
-        flowCmd.CommandTimeout = 15;
+        flowCmd.CommandTimeout = 60;
         await using var flowRdr = await flowCmd.ExecuteReaderAsync();
         var flow = new List<object>();
         while (await flowRdr.ReadAsync())
@@ -286,6 +289,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             """;
 
         await using var statsCmd = new SqlCommand(statsSql, conn);
+        statsCmd.CommandTimeout = 60;
         await using var statsReader = await statsCmd.ExecuteReaderAsync();
         int openCount = 0, fulfilledCount = 0, portalCount = 0;
         if (await statsReader.ReadAsync())
@@ -305,6 +309,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             ORDER BY Cnt DESC
             """;
         await using var topCmd = new SqlCommand(topTypeSql, conn);
+        topCmd.CommandTimeout = 60;
         await using var topReader = await topCmd.ExecuteReaderAsync();
         string topTypeLabel = "Top Type";
         int topTypeCount = 0;
@@ -357,10 +362,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -425,10 +432,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -526,10 +535,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -566,6 +577,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             """;
         await using var shipStatsCmd = new SqlCommand(shipStatsSql, conn);
+        shipStatsCmd.CommandTimeout = 60;
         await using var shipStatsReader = await shipStatsCmd.ExecuteReaderAsync();
         int readyToShip = 0, shippedToday = 0; decimal totalCharges = 0;
         if (await shipStatsReader.ReadAsync())
@@ -624,10 +636,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -662,6 +676,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             FROM tblInvoice i
             """;
         await using var invStatsCmd = new SqlCommand(invStatsSql, conn);
+        invStatsCmd.CommandTimeout = 60;
         await using var invStatsReader = await invStatsCmd.ExecuteReaderAsync();
         int readyToInvoice = 0, invoicedMonth = 0; decimal invTotal = 0, invAvg = 0;
         if (await invStatsReader.ReadAsync())
@@ -716,11 +731,13 @@ public class DashboardController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(flagType) && flagType != "All") countCmd.Parameters.AddWithValue("@flagType", flagType);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(flagType) && flagType != "All") dataCmd.Parameters.AddWithValue("@flagType", flagType);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -752,6 +769,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             LEFT JOIN tblFlagTypes ft ON ft.lFlagTypeKey = f.lFlagTypeKey
             """;
         await using var flagStatsCmd = new SqlCommand(flagStatsSql, conn);
+        flagStatsCmd.CommandTimeout = 60;
         await using var flagStatsReader = await flagStatsCmd.ExecuteReaderAsync();
         int fTotal = 0, fClient = 0, fScopeType = 0, fScope = 0, fRepair = 0;
         if (await flagStatsReader.ReadAsync())
@@ -819,11 +837,13 @@ public class DashboardController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter)) countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 60;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter)) dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -857,6 +877,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             """;
         await using var tbStatsCmd = new SqlCommand(tbStatsSql, conn);
+        tbStatsCmd.CommandTimeout = 60;
         await using var tbStatsReader = await tbStatsCmd.ExecuteReaderAsync();
         int tbAssigned = 0, tbInRepair = 0, tbOnHold = 0, tbCompleted = 0;
         if (await tbStatsReader.ReadAsync())
@@ -888,6 +909,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             """;
         await using var aStatsCmd = new SqlCommand(aStatsSql, conn);
+        aStatsCmd.CommandTimeout = 60;
         await using var aStatsReader = await aStatsCmd.ExecuteReaderAsync();
         int inHouse = 0, throughput = 0; decimal avgTat = 0;
         if (await aStatsReader.ReadAsync())
@@ -914,6 +936,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
             ORDER BY COUNT(*) DESC
             """;
         await using var metricsCmd = new SqlCommand(metricsSql, conn);
+        metricsCmd.CommandTimeout = 60;
         await using var metricsReader = await metricsCmd.ExecuteReaderAsync();
         var metrics = new List<DashboardAnalyticsMetric>();
         int rank = 0;
@@ -1063,7 +1086,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@ck", clientKey);
-        cmd.CommandTimeout = 30;
+        cmd.CommandTimeout = 60;
         await using var rdr = await cmd.ExecuteReaderAsync();
         if (!await rdr.ReadAsync()) return NotFound();
 

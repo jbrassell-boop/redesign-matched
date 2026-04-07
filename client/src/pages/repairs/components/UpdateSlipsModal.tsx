@@ -36,8 +36,8 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
 
   useEffect(() => {
     if (!open) return;
-    getUpdateSlipReasons().then(setReasons).catch(() => {});
-    getRepairTechnicians().then(setTechs).catch(() => {});
+    getUpdateSlipReasons().then(setReasons).catch(() => { message.error('Failed to load update slip reasons'); });
+    getRepairTechnicians().then(setTechs).catch(() => { message.error('Failed to load technicians'); });
   }, [open]);
 
   const handleCreate = async () => {

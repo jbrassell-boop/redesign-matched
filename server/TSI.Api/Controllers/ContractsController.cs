@@ -39,6 +39,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         if (!await reader.ReadAsync())
@@ -100,10 +101,12 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -173,6 +176,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@contractKey", contractKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -225,6 +229,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
 
         var sets = new List<string>();
         var cmd = new SqlCommand();
+        cmd.CommandTimeout = 30;
         cmd.Connection = conn;
 
         if (body.Name is not null)           { sets.Add("sContractName1 = @name");      cmd.Parameters.AddWithValue("@name",       body.Name); }
@@ -270,6 +275,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@contractKey", contractKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -313,6 +319,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@contractKey", contractKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -351,6 +358,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@contractKey", contractKey);
         cmd.Parameters.AddWithValue("@amendmentDate", request.AmendmentDate ?? DateTime.Today);
         cmd.Parameters.AddWithValue("@previousTotal", request.PreviousTotal);
@@ -385,6 +393,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@contractKey", contractKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -430,6 +439,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@contractKey", contractKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -480,6 +490,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@contractKey", contractKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -522,6 +533,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@contractKey", contractKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -561,6 +573,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@contractKey", contractKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -598,6 +611,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@contractKey", contractKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -633,6 +647,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@contractKey", contractKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 

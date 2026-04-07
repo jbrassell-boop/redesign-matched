@@ -135,7 +135,7 @@ export function AdministrationPage() {
   const [userSaving, setUserSaving] = useState(false);
 
   useEffect(() => {
-    getAdminStats().then(setStats).catch(() => {});
+    getAdminStats().then(setStats).catch(() => { message.error('Failed to load admin stats'); });
   }, []);
 
   const loadTabData = useCallback((tab: string) => {
@@ -143,73 +143,73 @@ export function AdministrationPage() {
       case 'users':
         getAdminUsers({ search: search || undefined, page: userPage, pageSize: 50 })
           .then((r: any) => { setUsers(r.items); setUserTotal(r.totalCount); })
-          .catch(() => {});
+          .catch(() => { message.error('Failed to load users'); });
         break;
       case 'security':
-        getSecurityGroups().then(setSecurityGroups).catch(() => {});
+        getSecurityGroups().then(setSecurityGroups).catch(() => { message.error('Failed to load security groups'); });
         break;
       case 'pricing':
-        getPricingLists().then(setPricingLists).catch(() => {});
+        getPricingLists().then(setPricingLists).catch(() => { message.error('Failed to load pricing lists'); });
         break;
       case 'delivery':
-        getDeliveryMethods().then(setDeliveryMethods).catch(() => {});
+        getDeliveryMethods().then(setDeliveryMethods).catch(() => { message.error('Failed to load delivery methods'); });
         break;
       case 'payterms':
-        getPaymentTerms().then(setPaymentTerms).catch(() => {});
+        getPaymentTerms().then(setPaymentTerms).catch(() => { message.error('Failed to load payment terms'); });
         break;
       case 'distributors':
         getDistributors(distribActiveFilter === '' ? undefined : distribActiveFilter === '1')
-          .then(setDistributors).catch(() => {});
+          .then(setDistributors).catch(() => { message.error('Failed to load distributors'); });
         break;
       case 'companies':
-        getCompanies().then(setCompanies).catch(() => {});
+        getCompanies().then(setCompanies).catch(() => { message.error('Failed to load companies'); });
         break;
       case 'scopecat':
-        getScopeCategories(scopeTypeFilter || undefined).then(setScopeCategories).catch(() => {});
+        getScopeCategories(scopeTypeFilter || undefined).then(setScopeCategories).catch(() => { message.error('Failed to load scope categories'); });
         break;
       case 'reasons':
-        getRepairReasons().then(setRepairReasons).catch(() => {});
+        getRepairReasons().then(setRepairReasons).catch(() => { message.error('Failed to load repair reasons'); });
         break;
       case 'statuses':
-        getRepairStatuses().then(setRepairStatuses).catch(() => {});
+        getRepairStatuses().then(setRepairStatuses).catch(() => { message.error('Failed to load repair statuses'); });
         break;
       case 'holidays':
-        getHolidays().then(setHolidays).catch(() => {});
+        getHolidays().then(setHolidays).catch(() => { message.error('Failed to load holidays'); });
         break;
       case 'salestax':
-        getSalesTax().then(setSalesTax).catch(() => {});
+        getSalesTax().then(setSalesTax).catch(() => { message.error('Failed to load sales tax'); });
         break;
       case 'settings':
-        getSettings().then(setSettings).catch(() => {});
+        getSettings().then(setSettings).catch(() => { message.error('Failed to load settings'); });
         break;
       case 'audit':
         getAuditLog({ search: search || undefined, action: auditAction || undefined, page: auditPage, pageSize: 50 })
           .then((r: any) => { setAuditItems(r.items); setAuditTotal(r.totalCount); })
-          .catch(() => {});
+          .catch(() => { message.error('Failed to load audit log'); });
         break;
       case 'creditlimits':
-        getCreditLimits().then(setCreditLimits).catch(() => {});
+        getCreditLimits().then(setCreditLimits).catch(() => { message.error('Failed to load credit limits'); });
         break;
       case 'reportgroups':
-        getReportingGroups().then(setReportingGroups).catch(() => {});
+        getReportingGroups().then(setReportingGroups).catch(() => { message.error('Failed to load reporting groups'); });
         break;
       case 'stddepts':
-        getStandardDepts().then(setStandardDepts).catch(() => {});
+        getStandardDepts().then(setStandardDepts).catch(() => { message.error('Failed to load standard departments'); });
         break;
       case 'cleaningsys':
-        getCleaningSystems().then(setCleaningSystems).catch(() => {});
+        getCleaningSystems().then(setCleaningSystems).catch(() => { message.error('Failed to load cleaning systems'); });
         break;
       case 'countries':
-        getCountries().then(setCountries).catch(() => {});
+        getCountries().then(setCountries).catch(() => { message.error('Failed to load countries'); });
         break;
       case 'salesreassign':
-        getSalesReps().then(setSalesReps).catch(() => {});
+        getSalesReps().then(setSalesReps).catch(() => { message.error('Failed to load sales reps'); });
         if (selectedFromRep) {
-          getSalesRepAssignments(selectedFromRep).then(setReassignments).catch(() => {});
+          getSalesRepAssignments(selectedFromRep).then(setReassignments).catch(() => { message.error('Failed to load reassignments'); });
         }
         break;
       case 'bonuspools':
-        getBonusPools(bonusPoolType).then(setBonusPools).catch(() => {});
+        getBonusPools(bonusPoolType).then(setBonusPools).catch(() => { message.error('Failed to load bonus pools'); });
         break;
     }
   }, [search, userPage, scopeTypeFilter, distribActiveFilter, auditPage, auditAction, selectedFromRep, bonusPoolType]);
@@ -623,7 +623,7 @@ export function AdministrationPage() {
               <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--label)' }}>Previous Rep</span>
               <Select
                 value={selectedFromRep}
-                onChange={(v) => { setSelectedFromRep(v); if (v) getSalesRepAssignments(v).then(setReassignments).catch(() => {}); else setReassignments([]); }}
+                onChange={(v) => { setSelectedFromRep(v); if (v) getSalesRepAssignments(v).then(setReassignments).catch(() => { message.error('Failed to load reassignments'); }); else setReassignments([]); }}
                 style={{ width: 200 }}
                 placeholder="Select Rep..."
                 allowClear

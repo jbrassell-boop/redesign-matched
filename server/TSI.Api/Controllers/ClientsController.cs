@@ -45,10 +45,12 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -92,6 +94,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -136,6 +139,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", clientKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -169,6 +173,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -206,6 +211,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -239,6 +245,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -303,6 +310,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -389,6 +397,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
@@ -409,6 +418,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
 
         var sets = new List<string>();
         var cmd = new SqlCommand { Connection = conn };
+        cmd.CommandTimeout = 30;
 
         if (update.Name != null) { sets.Add("sClientName1 = @name"); cmd.Parameters.AddWithValue("@name", update.Name); }
         if (update.Address1 != null) { sets.Add("sMailAddr1 = @addr1"); cmd.Parameters.AddWithValue("@addr1", update.Address1); }
@@ -484,6 +494,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@name", (object?)data.Name ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@addr1", (object?)data.Address1 ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@addr2", (object?)data.Address2 ?? DBNull.Value);
@@ -512,6 +523,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(
             "UPDATE tblClient SET bActive = 0, dtLastUpdate = GETDATE() WHERE lClientKey = @clientKey", conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
 
         var rows = await cmd.ExecuteNonQueryAsync();
@@ -531,6 +543,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             WHERE d.lClientKey = @clientKey
             """, conn);
+        checkCmd.CommandTimeout = 30;
         checkCmd.Parameters.AddWithValue("@clientKey", clientKey);
         var repairCount = Convert.ToInt32(await checkCmd.ExecuteScalarAsync());
 
@@ -538,6 +551,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             return Conflict(new { message = $"Cannot delete client with {repairCount} linked repairs. Deactivate instead." });
 
         await using var cmd = new SqlCommand("DELETE FROM tblClient WHERE lClientKey = @clientKey", conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
         var rows = await cmd.ExecuteNonQueryAsync();
         if (rows == 0) return NotFound(new { message = "Client not found." });
@@ -560,6 +574,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@first", contact.FirstName);
         cmd.Parameters.AddWithValue("@last", contact.LastName);
         cmd.Parameters.AddWithValue("@phone", (object?)contact.Phone ?? DBNull.Value);
@@ -586,6 +601,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@first", contact.FirstName);
         cmd.Parameters.AddWithValue("@last", contact.LastName);
         cmd.Parameters.AddWithValue("@phone", (object?)contact.Phone ?? DBNull.Value);
@@ -612,6 +628,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@clientKey", clientKey);
         cmd.Parameters.AddWithValue("@contactKey", contactKey);
         await cmd.ExecuteNonQueryAsync();
@@ -628,12 +645,14 @@ public class ClientsController(IConfiguration config) : ControllerBase
         // Delete the link first, then the contact
         await using var cmd1 = new SqlCommand(
             "DELETE FROM tblContactTran WHERE lContactKey = @contactKey AND lClientKey = @clientKey", conn);
+        cmd1.CommandTimeout = 30;
         cmd1.Parameters.AddWithValue("@contactKey", contactKey);
         cmd1.Parameters.AddWithValue("@clientKey", clientKey);
         await cmd1.ExecuteNonQueryAsync();
 
         await using var cmd2 = new SqlCommand(
             "DELETE FROM tblContacts WHERE lContactKey = @contactKey AND NOT EXISTS (SELECT 1 FROM tblContactTran WHERE lContactKey = @contactKey)", conn);
+        cmd2.CommandTimeout = 30;
         cmd2.Parameters.AddWithValue("@contactKey", contactKey);
         await cmd2.ExecuteNonQueryAsync();
 
@@ -653,6 +672,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@flagTypeKey", flag.FlagTypeKey);
         cmd.Parameters.AddWithValue("@ownerKey", clientKey);
         cmd.Parameters.AddWithValue("@flag", flag.Flag);
@@ -676,6 +696,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@flagTypeKey", flag.FlagTypeKey);
         cmd.Parameters.AddWithValue("@flag", flag.Flag);
         cmd.Parameters.AddWithValue("@visibleDI", flag.VisibleOnDI);
@@ -696,6 +717,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(
             "DELETE FROM tblFlags WHERE lFlagKey = @flagKey AND lOwnerKey = @ownerKey", conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@flagKey", flagKey);
         cmd.Parameters.AddWithValue("@ownerKey", clientKey);
 
@@ -736,10 +758,12 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         countCmd.Parameters.AddWithValue("@clientKey", clientKey);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         dataCmd.Parameters.AddWithValue("@clientKey", clientKey);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -777,6 +801,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             ORDER BY sClientName1
             """;
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         var list = new List<object>();
         while (await reader.ReadAsync())
@@ -812,6 +837,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@name",              body.Name);
         cmd.Parameters.AddWithValue("@unit",              (object?)body.UnitBuilding ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@addr1",             (object?)body.Address1 ?? DBNull.Value);

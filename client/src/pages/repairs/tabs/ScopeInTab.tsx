@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { message } from 'antd';
 import type { RepairFull } from '../types';
 import type { LookupOption } from '../../../api/lookups';
 import { getSalesReps, getPricingCategories, getPaymentTerms } from '../../../api/lookups';
@@ -104,9 +105,9 @@ export const ScopeInTab = ({ repair }: ScopeInTabProps) => {
   const [payTerms, setPayTerms] = useState<LookupOption[]>([]);
 
   useEffect(() => {
-    getSalesReps().then(setSalesReps).catch(() => {});
-    getPricingCategories().then(setPricingCats).catch(() => {});
-    getPaymentTerms().then(setPayTerms).catch(() => {});
+    getSalesReps().then(setSalesReps).catch(() => { message.error('Failed to load sales reps'); });
+    getPricingCategories().then(setPricingCats).catch(() => { message.error('Failed to load pricing categories'); });
+    getPaymentTerms().then(setPayTerms).catch(() => { message.error('Failed to load payment terms'); });
   }, []);
 
   /* ── Local form state (mirrors repair, editable) ──────── */

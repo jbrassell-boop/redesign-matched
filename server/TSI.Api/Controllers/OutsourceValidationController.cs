@@ -72,6 +72,7 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         countCmd.Parameters.AddWithValue("@search", string.IsNullOrWhiteSpace(search) ? (object)DBNull.Value : $"%{search}%");
         if (!string.IsNullOrWhiteSpace(dateFrom)) countCmd.Parameters.AddWithValue("@dateFrom", dateFrom);
         if (!string.IsNullOrWhiteSpace(dateTo)) countCmd.Parameters.AddWithValue("@dateTo", dateTo);
@@ -86,6 +87,7 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(dateFrom)) dataCmd.Parameters.AddWithValue("@dateFrom", dateFrom);
         if (!string.IsNullOrWhiteSpace(dateTo)) dataCmd.Parameters.AddWithValue("@dateTo", dateTo);
@@ -138,6 +140,7 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
 
         const string sql = "SELECT lVendorKey, ISNULL(sVendName1, '') AS sVendName1 FROM tblVendor WHERE sVendName1 IS NOT NULL ORDER BY sVendName1";
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         var list = new List<object>();
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
@@ -167,6 +170,7 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@vendorKey", req.VendorKey);
         cmd.Parameters.AddWithValue("@cost", req.OutsourceCost);
         cmd.Parameters.AddWithValue("@tracking", (object?)req.TrackingNumber ?? DBNull.Value);
@@ -190,6 +194,7 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@trackingReturn", (object?)req.TrackingNumberReturn ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@id", id);
 
@@ -217,6 +222,7 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
 
         var note = $"[VALIDATION {req.Status.ToUpper()} {DateTime.UtcNow:yyyy-MM-dd}] {req.Notes ?? ""}".Trim();
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@note", note);
         cmd.Parameters.AddWithValue("@id", id);
 
@@ -244,6 +250,7 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
@@ -264,6 +271,7 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
             ORDER BY VendorSpend DESC
             """;
         await using var vendorCmd = new SqlCommand(vendorSql, conn);
+        vendorCmd.CommandTimeout = 30;
         var topVendor = "--";
         var topVendorSpend = 0.0;
         await using var vr = await vendorCmd.ExecuteReaderAsync();

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { message } from 'antd';
 import { getContracts, getContract, getContractStats } from '../../api/contracts';
 import { ContractsList } from './ContractsList';
 import { ContractDetailPane } from './ContractDetailPane';
@@ -37,7 +38,7 @@ export const ContractsPage = () => {
   }, []);
 
   useEffect(() => {
-    getContractStats().then(setStats).catch(() => {});
+    getContractStats().then(setStats).catch(() => { message.error('Failed to load contract stats'); });
   }, []);
 
   useEffect(() => {

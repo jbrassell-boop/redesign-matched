@@ -73,10 +73,12 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         AddParams(countCmd, search, typeFilter, statusFilter, manufacturerKey);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         AddParams(dataCmd, search, typeFilter, statusFilter, manufacturerKey);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -151,6 +153,7 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -216,6 +219,7 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
@@ -237,6 +241,7 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
 
         var sql = "SELECT lManufacturerKey, ISNULL(sManufacturer, '') AS sManufacturer FROM tblManufacturers ORDER BY sManufacturer";
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var list = new List<object>();
@@ -273,6 +278,7 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -309,6 +315,7 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -352,6 +359,7 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         await using var reader = await cmd.ExecuteReaderAsync();
         var items = new List<ScopeTypeInventoryItem>();
@@ -392,6 +400,7 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         await using var reader = await cmd.ExecuteReaderAsync();
         var flags = new List<ScopeTypeFlag>();
@@ -416,6 +425,7 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
 
         var sets = new List<string>();
         var cmd = new SqlCommand();
+        cmd.CommandTimeout = 30;
         cmd.Connection = conn;
 
         if (body.Description is not null)       { sets.Add("sScopeTypeDesc = @desc");          cmd.Parameters.AddWithValue("@desc",    body.Description); }

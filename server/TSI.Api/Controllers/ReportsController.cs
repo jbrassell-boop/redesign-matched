@@ -40,7 +40,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
-        cmd.CommandTimeout = 30;
+        cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var csv = new StringBuilder("Period,Total Repairs,Shipped,In Progress,Revenue\n");
@@ -77,7 +77,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
-        cmd.CommandTimeout = 30;
+        cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var csv = new StringBuilder("Period,Scope Type,Repair Count,Avg TAT (days),Min TAT,Max TAT,On Time (<=14d)\n");
@@ -112,7 +112,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
-        cmd.CommandTimeout = 30;
+        cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var csv = new StringBuilder("Client,Repair Count,Total Revenue,Avg Repair Value,Avg TAT (days)\n");
@@ -151,7 +151,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
-        cmd.CommandTimeout = 30;
+        cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var csv = new StringBuilder("Client,Repairs Completed,Revenue,Avg TAT (days),On-Time Count,On-Time %,Departments,Warranty %\n");
@@ -191,7 +191,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
-        cmd.CommandTimeout = 30;
+        cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var csv = new StringBuilder("Technician,Repairs Completed,Revenue,Avg TAT (days),On-Time Count\n");
@@ -224,7 +224,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
-        cmd.CommandTimeout = 30;
+        cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var csv = new StringBuilder("Client,Repair Item,Warranty Count,List Value\n");
@@ -264,7 +264,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
-        cmd.CommandTimeout = 30;
+        cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var csv = new StringBuilder("WO,Date In,Date Out,Status,Client,Dept,Scope Type,Serial,Tech,TAT (days),Amount\n");

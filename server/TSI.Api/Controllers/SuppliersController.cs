@@ -42,10 +42,12 @@ public class SuppliersController(IConfiguration config) : ControllerBase
             """;
 
         await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
+        dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -83,6 +85,7 @@ public class SuppliersController(IConfiguration config) : ControllerBase
                 WHERE sr.lSupplierKey IN ({keyList})
                 """;
             await using var rolesCmd = new SqlCommand(rolesSql, conn);
+            rolesCmd.CommandTimeout = 30;
             var rolesMap = new Dictionary<int, List<string>>();
             await using var rolesReader = await rolesCmd.ExecuteReaderAsync();
             while (await rolesReader.ReadAsync())
@@ -116,6 +119,7 @@ public class SuppliersController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -188,6 +192,7 @@ public class SuppliersController(IConfiguration config) : ControllerBase
             WHERE sr.lSupplierKey = @id
             """;
         await using var rolesCmd = new SqlCommand(rolesSql, conn);
+        rolesCmd.CommandTimeout = 30;
         rolesCmd.Parameters.AddWithValue("@id", id);
         var roles = new List<string>();
         await using (var rr = await rolesCmd.ExecuteReaderAsync())
@@ -209,6 +214,7 @@ public class SuppliersController(IConfiguration config) : ControllerBase
             ORDER BY po.dtDateOfPO DESC
             """;
         await using var poCmd = new SqlCommand(poSql, conn);
+        poCmd.CommandTimeout = 30;
         poCmd.Parameters.AddWithValue("@id", id);
         var pos = new List<SupplierPo>();
         await using (var pr = await poCmd.ExecuteReaderAsync())
@@ -241,6 +247,7 @@ public class SuppliersController(IConfiguration config) : ControllerBase
 
         var sets = new List<string>();
         var cmd = new SqlCommand();
+        cmd.CommandTimeout = 30;
         cmd.Connection = conn;
 
         if (body.Name is not null)        { sets.Add("sSupplierName1 = @name");  cmd.Parameters.AddWithValue("@name",  body.Name); }
@@ -283,6 +290,7 @@ public class SuppliersController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
@@ -299,6 +307,7 @@ public class SuppliersController(IConfiguration config) : ControllerBase
             GROUP BY rr.sSupplierRole
             """;
         await using var roleCmd = new SqlCommand(roleSql, conn);
+        roleCmd.CommandTimeout = 30;
         var roleCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
         await using (var rr = await roleCmd.ExecuteReaderAsync())
         {
@@ -337,6 +346,7 @@ public class SuppliersController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -374,6 +384,7 @@ public class SuppliersController(IConfiguration config) : ControllerBase
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", id);
         await using var reader = await cmd.ExecuteReaderAsync();
 
