@@ -74,6 +74,27 @@ const loanerFooterStyle: React.CSSProperties = { background: 'var(--card)', bord
 const loanerTabContentStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' };
 const loanerTabInnerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
 const loanerFilterLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' };
+const loanerDetailLoadingStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: 40 };
+const loanerDetailScrollStyle: React.CSSProperties = { overflow: 'auto', height: '100%' };
+const loanerDetailHeaderBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
+const loanerDetailTitleStyle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: 'var(--navy)' };
+const loanerDetailCloseBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' };
+const loanerDetailBodyStyle: React.CSSProperties = { padding: '0 0 16px' };
+const loanerDetailFieldsStyle: React.CSSProperties = { padding: '0 16px' };
+const loanerDetailPanelStyle: React.CSSProperties = { width: 400, minWidth: 400, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--card)' };
+const loadingCellStyle: React.CSSProperties = { textAlign: 'center', padding: 24 };
+const emptyCellStyle: React.CSSProperties = { textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 };
+const woLinkStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--primary-dark)' };
+const serialMonoStyle: React.CSSProperties = { fontFamily: 'monospace', fontSize: 11 };
+const countTextStyle: React.CSSProperties = { marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' };
+const countBoldStyle: React.CSSProperties = { color: 'var(--text)' };
+const dataTableContainerStyle: React.CSSProperties = { flex: 1, overflow: 'auto', position: 'relative' };
+const borderEndCapStyle: React.CSSProperties = { width: 0, borderRight: '1px solid var(--border-dk)' };
+const fulfillBtnStyle: React.CSSProperties = { width: 28, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer', background: 'rgba(var(--success-rgb), 0.1)', color: 'var(--success)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.1s' };
+const declineBtnStyle: React.CSSProperties = { width: 28, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer', background: 'rgba(var(--danger-rgb), 0.1)', color: 'var(--danger)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.1s' };
+const actionCenterStyle: React.CSSProperties = { display: 'flex', gap: 4, justifyContent: 'center' };
+const statusSmallStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
+const scopeTypeNameStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--navy)' };
 
 const ACTIVE_COLS = [
   { key: 'workOrder', label: 'Work Order', width: 130 },
@@ -848,20 +869,20 @@ export const LoanersPage = () => {
 
   /* ── Inline Detail Pane content ──────────────────────────── */
   const detailPane = detailLoading ? (
-    <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+    <div style={loanerDetailLoadingStyle}><Spin /></div>
   ) : detail ? (
-    <div style={{ overflow: 'auto', height: '100%' }}>
+    <div style={loanerDetailScrollStyle}>
       {/* Close button */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{detail.workOrder || `Loaner #${detail.loanerTranKey}`}</span>
+      <div style={loanerDetailHeaderBarStyle}>
+        <span style={loanerDetailTitleStyle}>{detail.workOrder || `Loaner #${detail.loanerTranKey}`}</span>
         <button
           onClick={() => { setSelectedKey(null); setDetail(null); }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' }}
+          style={loanerDetailCloseBtnStyle}
         >
           &times;
         </button>
       </div>
-      <div style={{ padding: '0 0 16px' }}>
+      <div style={loanerDetailBodyStyle}>
         <DetailHeader
           headingLevel="h2"
           title={detail.workOrder || `Loaner #${detail.loanerTranKey}`}

@@ -471,9 +471,9 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                 </div>
                 {/* Model grid */}
                 {newInstType && modelSearch && (
-                  <div style={{ maxHeight: 120, overflowY: 'auto', border: '1px solid var(--neutral-200)', borderRadius: 4, background: 'var(--card)', marginTop: 6 }}>
+                  <div style={wizModelDropdownStyle}>
                     {filteredModels.length === 0
-                      ? <div style={{ padding: 8, fontSize: 10, color: 'var(--muted)', textAlign: 'center' }}>No models matching &quot;{modelSearch}&quot;</div>
+                      ? <div style={wizModelEmptyStyle}>No models matching &quot;{modelSearch}&quot;</div>
                       : filteredModels.slice(0, 50).map(t => (
                         <div key={t.scopeTypeKey}
                           onClick={() => handlePickModel(t.scopeTypeKey, t.description)}
@@ -488,12 +488,12 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                           onMouseLeave={e => { if (newScopeTypeKey !== t.scopeTypeKey) e.currentTarget.style.background = ''; }}
                         >
                           <span>{t.description}</span>
-                          {t.manufacturer && <span style={{ fontSize: 9, color: 'var(--muted)' }}>{t.manufacturer}</span>}
+                          {t.manufacturer && <span style={wizModelMfgStyle}>{t.manufacturer}</span>}
                         </div>
                       ))}
                   </div>
                 )}
-                <div style={{ display: 'flex', gap: 10, marginTop: 8, alignItems: 'flex-end' }}>
+                <div style={wizSerialRowStyle}>
                   <div style={{ flex: 1 }}>
                     <div style={lbl}>Serial Number *</div>
                     <input value={newSerial} onChange={e => setNewSerial(e.target.value)} placeholder="e.g. 2801442" aria-label="Scope serial number" style={fld} />

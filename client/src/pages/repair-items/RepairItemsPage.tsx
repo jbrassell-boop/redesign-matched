@@ -173,7 +173,7 @@ export const RepairItemsPage = () => {
       {/* Split Layout */}
       <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
         {/* Left panel */}
-        <div style={{
+        <aside aria-label="Repair items list" style={{
           width: 320,
           flexShrink: 0,
           background: 'var(--card)',
@@ -194,16 +194,16 @@ export const RepairItemsPage = () => {
             onStatusFilterChange={setStatusFilter}
             onSelect={handleSelect}
           />
-        </div>
+        </aside>
 
         {/* Right panel */}
-        <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+        <section aria-label="Repair item details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
           <RepairItemDetailPane
             itemKey={selectedKey}
             onItemDeleted={handleItemDeleted}
             onItemSaved={handleItemSaved}
           />
-        </div>
+        </section>
       </div>
 
       {/* Add Item Modal */}

@@ -154,16 +154,11 @@ export const OpsBriefing = ({ stats }: Props) => {
       <div style={twoColGridStyle}>
         {/* Left: Flow table */}
         <Section title="Overall Flow — Previous Work Day" accent="var(--primary)">
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <table style={flowTableStyle}>
             <thead>
               <tr>
                 {['Type', 'IN', 'Closed Out', 'Missed', 'Net'].map(h => (
-                  <th key={h} style={{
-                    padding: '6px 12px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-                    color: 'var(--muted)', letterSpacing: '.04em', textAlign: h === 'Type' ? 'left' : 'right',
-                    borderBottom: '1px solid var(--neutral-200)',
-                    background: 'linear-gradient(180deg, var(--gradient-blue-start), var(--gradient-blue-end))',
-                  }}>
+                  <th key={h} style={{ ...flowThBaseStyle, textAlign: h === 'Type' ? 'left' : 'right' }}>
                     {h}
                   </th>
                 ))}
@@ -181,14 +176,14 @@ export const OpsBriefing = ({ stats }: Props) => {
 
         {/* Right: KPI Summary */}
         <Section title="Key Performance Indicators" accent="var(--navy)">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid var(--neutral-100)' }}>
+          <div style={kpiGrid2Style}>
             <Kpi label="Avg TAT" value={`${(briefing?.avgTat ?? 0).toFixed(1)}d`}
               color={(briefing?.avgTat ?? 0) > 14 ? 'var(--danger)' : 'var(--success)'}
               sub="Target: ≤14 days" />
             <Kpi label="Revenue Yesterday" value={fmt$(briefing?.revenue ?? 0)}
               color="var(--navy)" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr' }}>
+          <div style={kpiGrid2NoBorderStyle}>
             <Kpi label="Overdue (>14d)" value={`${briefing?.overdue ?? 0}`}
               color={(briefing?.overdue ?? 0) > 0 ? 'var(--danger)' : 'var(--success)'}
               sub="Repairs past target" />
