@@ -109,21 +109,17 @@ const bomThRightStyle: React.CSSProperties = { ...bomThStyle, textAlign: 'right'
 const bomTdStyle: React.CSSProperties = { padding: '5px 8px', borderBottom: '1px solid var(--border)' };
 const bomTdCenterStyle: React.CSSProperties = { ...bomTdStyle, textAlign: 'center' };
 const bomTdRightStyle: React.CSSProperties = { ...bomTdStyle, textAlign: 'right' };
+const cellStyle: React.CSSProperties = { padding: '7px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
 const cellStyleCenter: React.CSSProperties = { ...cellStyle, textAlign: 'center' };
 const cellStyleRightBold: React.CSSProperties = { ...cellStyle, textAlign: 'right', fontWeight: 700 };
 const cellStyleNavyBold: React.CSSProperties = { ...cellStyle, fontWeight: 700, color: 'var(--navy)' };
 const cellStyleRightWeight600: React.CSSProperties = { ...cellStyle, textAlign: 'right', fontWeight: 600 };
 const navyBtnStyle: React.CSSProperties = { height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 };
-const navyBtnDisabledStyle: React.CSSProperties = { ...navyBtnStyle, cursor: 'not-allowed', opacity: 0.5 };
-const plusIconStyle: React.CSSProperties = { width: 12, height: 12 };
 const filterLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', whiteSpace: 'nowrap', letterSpacing: '0.04em' };
-const selectStyle: React.CSSProperties = { height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 130 };
 const searchWrapStyle: React.CSSProperties = { position: 'relative', marginLeft: 'auto' };
 const searchIconWrapStyle: React.CSSProperties = { position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' };
 const searchInputStyle: React.CSSProperties = { height: 30, width: 200, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: 'var(--card)' };
-const searchInputWideStyle: React.CSSProperties = { ...searchInputStyle, width: 220 };
 const pagerBtnStyle: React.CSSProperties = { height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' };
-const pagerRowSelectStyle: React.CSSProperties = { height: 36, border: '1px solid var(--border-dk)', borderRadius: 4, padding: '0 6px', fontSize: 11, fontFamily: 'inherit', cursor: 'pointer' };
 const noRecordsStyle: React.CSSProperties = { textAlign: 'center', padding: 30, color: 'var(--muted)' };
 const bomExpandThStyle: React.CSSProperties = { background: 'var(--primary-light)', padding: '4px 8px', fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', textAlign: 'left' };
 const bomExpandThCenterStyle: React.CSSProperties = { ...bomExpandThStyle, textAlign: 'center' };
@@ -134,7 +130,6 @@ const bomExpandTdRightStyle: React.CSSProperties = { ...bomExpandTdStyle, textAl
 const bomExpandContainerStyle: React.CSSProperties = { padding: '8px 16px 12px 32px', background: 'var(--neutral-50)' };
 const bomExpandTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 11 };
 const expandBomBtnStyle: React.CSSProperties = { height: 36, minWidth: 36, padding: '0 10px', fontSize: 11, borderRadius: 4, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, background: 'var(--primary-light)', color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 };
-const spinnerCenterStyle: React.CSSProperties = { flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' };
 const detailPaneStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' };
 const detailCloseRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
 const detailCloseBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' };
@@ -150,25 +145,15 @@ const bomFooterRowStyle: React.CSSProperties = { fontWeight: 700, background: 'v
 const bomFooterTdStyle: React.CSSProperties = { padding: '5px 8px', textAlign: 'right' };
 const statStripBarStyle: React.CSSProperties = { display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--border)', flexShrink: 0, overflowX: 'auto' };
 const splitFlexStyle: React.CSSProperties = { display: 'flex', flex: 1, overflow: 'hidden' };
-const pagerContainerStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12 };
-const pagerRowsStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--muted)' };
 const pagerBtnsStyle: React.CSSProperties = { display: 'flex', gap: 3, alignItems: 'center' };
 const rightPanelStyle: React.CSSProperties = { width: 520, minWidth: 520, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--card)' };
 const pagerSpanStyle: React.CSSProperties = { fontSize: 11, padding: '0 8px' };
 const detailFooterTextStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
 const docEmptyTitleStyle: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--muted)' };
-const docSubtextStyle: React.CSSProperties = { fontSize: 11 };
 const icon14Style: React.CSSProperties = { width: 14, height: 14 };
 const icon13Style: React.CSSProperties = { width: 13, height: 13 };
 const icon12Style: React.CSSProperties = { width: 12, height: 12 };
-const footerRecordCountStyle: React.CSSProperties = { fontWeight: 500 };
-const footerPagerRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 12 };
-const footerRowsCountStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--muted)' };
 const segmentedContainerStyle: React.CSSProperties = { display: 'inline-flex', border: '1.5px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden' };
-const sortArrowStyle: React.CSSProperties = { fontSize: 9, marginLeft: 3 };
-const quoteNumCellStyle: React.CSSProperties = { fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' };
-const cellStyleComplaintWrap: React.CSSProperties = { ...cellStyle, whiteSpace: 'normal', lineHeight: 1.3 };
-const bomExpandTdBorderStyle: React.CSSProperties = { padding: 0, borderBottom: '1px solid var(--border)' };
 const badgeInnerStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' };
 const statChipIconBoxStyle: React.CSSProperties = { width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 };
 const statChipTextColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column' };
@@ -196,7 +181,6 @@ const rowStyle = (idx: number, selected: boolean, detailSelected: boolean): Reac
   cursor: 'pointer',
   borderLeft: detailSelected ? '3px solid var(--primary)' : '3px solid transparent',
 });
-const cellStyle: React.CSSProperties = { padding: '7px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
 
 /* ── Section Card (for detail pane) ─────────────────────────── */
 const SectionCard = ({ title, children }: { title: string; children: React.ReactNode }) => (

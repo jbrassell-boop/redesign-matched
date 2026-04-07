@@ -112,7 +112,6 @@ const statStripWrapStyle: React.CSSProperties = { display: 'flex', marginBottom:
 const statDotBaseStyle: React.CSSProperties = { width: 10, height: 10, borderRadius: 3, flexShrink: 0 };
 const statLabelMutedStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' };
 const flexColGap12Style: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12 };
-const filterRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 };
 const filterGap8Style: React.CSSProperties = { display: 'flex', gap: 8, alignItems: 'center' };
 const switchRowStyle: React.CSSProperties = { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' };
 const switchItemStyle: React.CSSProperties = { display: 'flex', gap: 5, alignItems: 'center' };
@@ -123,9 +122,6 @@ const fullWidthScrollPadStyle: React.CSSProperties = { flex: 1, overflow: 'auto'
 const invoiceDetailPaneStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' };
 const holdOnHoldStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--danger)', textTransform: 'uppercase' };
 const holdSinceStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', marginTop: 2 };
-const invoiceRowFullStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 };
-const invoiceTaxStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
-const invoiceIssuedStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', marginTop: 2 };
 const holdRowFlexStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 };
 
 const INVOICE_EXPORT_COLS = [

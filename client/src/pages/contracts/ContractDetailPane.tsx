@@ -121,10 +121,6 @@ const amendCancelBtnStyle: React.CSSProperties = { padding: '5px 14px', fontSize
 const amendSaveBtnStyle: React.CSSProperties = { padding: '5px 14px', fontSize: 12, border: 'none', borderRadius: 5, background: 'var(--primary)', color: 'var(--card)', cursor: 'pointer', fontWeight: 600 };
 const amendFormContainerStyle: React.CSSProperties = { padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 };
 const closeBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 13 };
-const thStyleRight: React.CSSProperties = { padding: '6px 10px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--navy)', borderBottom: '1px solid var(--neutral-200)', textAlign: 'right', background: 'var(--neutral-50)', whiteSpace: 'nowrap' };
-const tdCellPrimaryStyle: React.CSSProperties = { padding: '7px 10px', fontSize: 12, borderBottom: '1px solid var(--neutral-200)', color: 'var(--text)', fontWeight: 600, color: 'var(--primary)' };
-const tdCellRightStyle: React.CSSProperties = { padding: '7px 10px', fontSize: 12, borderBottom: '1px solid var(--neutral-200)', color: 'var(--text)', textAlign: 'right' };
-const tdCellRightBoldStyle: React.CSSProperties = { padding: '7px 10px', fontSize: 12, borderBottom: '1px solid var(--neutral-200)', color: 'var(--text)', textAlign: 'right', fontWeight: 600 };
 const specsSectionGapStyle: React.CSSProperties = { display: 'flex', gap: 12, marginTop: 4 };
 const specsColumnStyle: React.CSSProperties = { flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 };
 const specsPaddingStyle: React.CSSProperties = { padding: '14px 16px' };
@@ -133,7 +129,6 @@ const detailContainerStyle: React.CSSProperties = { display: 'flex', flexDirecti
 const loadingCenterStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: 40 };
 const emptySelectStyle: React.CSSProperties = { padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 };
 const statStripContainerStyle: React.CSSProperties = { display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
-const tabContentScrollStyle: React.CSSProperties = { flex: 1, overflowY: 'auto' };
 const headerActionsStyle: React.CSSProperties = { display: 'flex', gap: 6 };
 const actionBtnStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', gap: 5,
@@ -149,7 +144,6 @@ const reportMetricCardStyle: React.CSSProperties = {
   background: 'var(--card)', textAlign: 'center',
 };
 const reportMetricLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.04em', marginBottom: 4 };
-const notesLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 };
 const notesBlockStyle: React.CSSProperties = { marginTop: 10, fontSize: 13, color: 'var(--text)', lineHeight: 1.5, borderTop: '1px solid var(--neutral-200)', paddingTop: 10 };
 const newAmendBtnStyle: React.CSSProperties = { padding: '2px 10px', fontSize: 11, fontWeight: 600, border: '1px solid var(--primary)', borderRadius: 4, background: 'rgba(var(--primary-rgb), 0.07)', color: 'var(--primary)', cursor: 'pointer' };
 const expensePlaceholderStyle: React.CSSProperties = { padding: '48px 24px', textAlign: 'center', color: 'var(--muted)' };

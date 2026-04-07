@@ -86,10 +86,6 @@ const loadingCellStyle: React.CSSProperties = { textAlign: 'center', padding: 24
 const emptyCellStyle: React.CSSProperties = { textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 };
 const woLinkStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--primary-dark)' };
 const serialMonoStyle: React.CSSProperties = { fontFamily: 'monospace', fontSize: 11 };
-const countTextStyle: React.CSSProperties = { marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' };
-const countBoldStyle: React.CSSProperties = { color: 'var(--text)' };
-const dataTableContainerStyle: React.CSSProperties = { flex: 1, overflow: 'auto', position: 'relative' };
-const borderEndCapStyle: React.CSSProperties = { width: 0, borderRight: '1px solid var(--border-dk)' };
 const fulfillBtnStyle: React.CSSProperties = { width: 28, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer', background: 'rgba(var(--success-rgb), 0.1)', color: 'var(--success)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.1s' };
 const declineBtnStyle: React.CSSProperties = { width: 28, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer', background: 'rgba(var(--danger-rgb), 0.1)', color: 'var(--danger)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.1s' };
 const actionCenterStyle: React.CSSProperties = { display: 'flex', gap: 4, justifyContent: 'center' };
@@ -673,7 +669,7 @@ export const LoanersPage = () => {
     }
   }, []);
 
-  const loadStats = useCallback(async (cancelled: () => boolean) => {
+  const loadStats = useCallback(async (cancelled: () => boolean = () => false) => {
     try {
       const data = await getLoanerStats();
       if (!cancelled()) setStats(data);

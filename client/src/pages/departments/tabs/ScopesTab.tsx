@@ -28,9 +28,9 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
   };
 
   useEffect(() => {
-    let cancelled = false;
+    let _cancelled = false;
     reload();
-    return () => { cancelled = true; };
+    return () => { _cancelled = true; };
   }, [deptKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openAdd = () => {

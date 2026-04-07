@@ -54,7 +54,7 @@ const flexPfChildrenWrapStyle: React.CSSProperties = { display: 'inline-flex', a
 const flexFldBaseStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1 };
 const flexFormFooterStyle: React.CSSProperties = { marginTop: 'auto', paddingTop: 8, borderTop: '1px solid var(--print-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: 'var(--print-footer)' };
 const flexAngulationHintStyle: React.CSSProperties = { fontSize: 9, color: 'var(--print-light)', marginLeft: 6 };
-const flexNotesCardStyle: React.CSSProperties = { fontSize: 12, color: 'var(--text)', lineHeight: 1.6, whiteSpace: 'pre-wrap' };
+
 
 interface Props {
   repair: RepairFull;

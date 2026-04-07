@@ -143,7 +143,7 @@ export const DashboardPage = () => {
     setQuickEditOpen(false);
     setQuickEditRecord(null);
     // Refresh the repairs list
-    fetchData(toolbarState);
+    fetchData(toolbarState, () => false);
     getDashboardStats().then(setStats).catch(() =>
       message.error('Failed to refresh stats')
     );

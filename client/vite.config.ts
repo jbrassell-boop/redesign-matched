@@ -19,7 +19,7 @@ export default defineConfig({
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
           antd: ['antd'],
-        },
+        } as Record<string, string[]>,
       },
     },
   },
