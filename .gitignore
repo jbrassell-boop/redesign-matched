@@ -19,3 +19,4 @@ client/.env.local
 # General
 .DS_Store
 *.log
+.worktrees/
