@@ -226,7 +226,7 @@ public class AcquisitionsController(IConfiguration config) : ControllerBase
                 ISNULL(CAST(pt.mComment AS nvarchar(max)), '') AS mComment,
                 ISNULL(s.sRigidOrFlexible, '') AS sRigidOrFlexible,
                 ISNULL(s.sScopeIsDead, 'N') AS sScopeIsDead,
-                ISNULL(sup.sSupplierName, '') AS sSupplierName
+                ISNULL(sup.sSupplierName1, '') AS sSupplierName1
             FROM tblScope s
             LEFT JOIN tblAcquisitionSupplierPOTran pt ON pt.lAcquisitionSupplierPOTranKey = s.lAcquisitionSupplierPOTranKey
             LEFT JOIN tblAcquisitionSupplierPO po ON po.lAcquisitionSupplierPOKey = pt.lAcquisitionSupplierPOKey
@@ -251,7 +251,7 @@ public class AcquisitionsController(IConfiguration config) : ControllerBase
             Manufacturer: reader["sManufacturer"]?.ToString() ?? "",
             Client: reader["sClientName1"]?.ToString() ?? "",
             Dept: reader["sDepartmentName"]?.ToString() ?? "",
-            Supplier: reader["sSupplierName"]?.ToString() ?? "",
+            Supplier: reader["sSupplierName1"]?.ToString() ?? "",
             PONumber: reader["sPONumber"]?.ToString() ?? "",
             PODate: reader["dtDateOfPO"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtDateOfPO"]).ToString("MM/dd/yyyy"),
             DateReceived: reader["dtDateReceived"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtDateReceived"]).ToString("MM/dd/yyyy"),

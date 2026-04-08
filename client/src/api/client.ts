@@ -2,9 +2,9 @@ import axios from 'axios';
 
 const TOKEN_KEY = 'tsi_token';
 
-export const getToken = (): string | null => localStorage.getItem(TOKEN_KEY);
-export const setToken = (token: string): void => localStorage.setItem(TOKEN_KEY, token);
-export const removeToken = (): void => localStorage.removeItem(TOKEN_KEY);
+export const getToken = (): string | null => sessionStorage.getItem(TOKEN_KEY);
+export const setToken = (token: string): void => sessionStorage.setItem(TOKEN_KEY, token);
+export const removeToken = (): void => sessionStorage.removeItem(TOKEN_KEY);
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? '/api',

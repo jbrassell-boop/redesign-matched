@@ -98,7 +98,7 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
       if (place) {
         setForm(prev => ({ ...prev, [cityKey]: place['place name'], [stateKey]: place['state abbreviation'] }));
       }
-    } catch { /* silent */ }
+    } catch (err) { console.error('[NewClientModal] zip lookup failed', err); }
   };
 
   useEffect(() => {

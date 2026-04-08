@@ -306,12 +306,12 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
 
         var sql = """
             SELECT mc.lDepartmentKey, ISNULL(d.sDepartmentName, '') AS sDepartmentName,
-                   ISNULL(c.sCompanyName, '') AS sCompanyName, mc.nMaxCharge
+                   ISNULL(c.sClientName1, '') AS sClientName1, mc.nMaxCharge
             FROM tblScopeTypeDepartmentMaxCharges mc
             INNER JOIN tblDepartment d ON d.lDepartmentKey = mc.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             WHERE mc.lScopeTypeKey = @id
-            ORDER BY c.sCompanyName, d.sDepartmentName
+            ORDER BY c.sClientName1, d.sDepartmentName
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
@@ -325,7 +325,7 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
             items.Add(new ScopeTypeDeptMaxCharge(
                 DepartmentKey: Convert.ToInt32(reader["lDepartmentKey"]),
                 DepartmentName: reader["sDepartmentName"]?.ToString() ?? "",
-                ClientName: reader["sCompanyName"]?.ToString() ?? "",
+                ClientName: reader["sClientName1"]?.ToString() ?? "",
                 MaxCharge: reader["nMaxCharge"] == DBNull.Value ? null : Convert.ToDecimal(reader["nMaxCharge"])
             ));
         }
@@ -355,7 +355,7 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
             INNER JOIN tblInventory inv ON inv.lInventoryKey = ii.lInventoryKey
             WHERE stri.lScopeTypeKey = @id
               AND ISNULL(inv.bNotUsedByRepair, 0) = 0
-            ORDER BY inv.sItemDescription
+            ORDER BY sItemDescription
             """;
 
         await using var cmd = new SqlCommand(sql, conn);

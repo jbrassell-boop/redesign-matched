@@ -673,7 +673,7 @@ export const LoanersPage = () => {
     try {
       const data = await getLoanerStats();
       if (!cancelled()) setStats(data);
-    } catch { /* stats are non-critical */ }
+    } catch (err) { console.error('[LoanersPage] loadStats failed', err); }
   }, []);
 
   useEffect(() => {

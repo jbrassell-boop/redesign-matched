@@ -38,7 +38,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
                 SUM(CASE WHEN DATEDIFF(day, r.dtDateIn, GETDATE()) > 7 THEN 1 ELSE 0 END) AS Overdue
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
-            WHERE r.dtShipDate IS NULL AND ISNULL(r.bCancelled, 0) = 0
+            WHERE r.dtDateOut IS NULL
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
@@ -66,7 +66,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
-            WHERE r.dtShipDate IS NULL AND ISNULL(r.bCancelled, 0) = 0
+            WHERE r.dtDateOut IS NULL
             ORDER BY r.dtDateIn DESC
             """;
         await using var recentCmd = new SqlCommand(recentSql, conn);
@@ -96,7 +96,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
             FROM tblRepair r
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
-            WHERE r.dtShipDate IS NULL AND ISNULL(r.bCancelled, 0) = 0
+            WHERE r.dtDateOut IS NULL
                   AND DATEDIFF(day, r.dtDateIn, GETDATE()) > 7
             ORDER BY r.dtDateIn ASC
             """;
@@ -120,12 +120,12 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
     {
         const string sql = """
             SELECT
-                ISNULL(SUM(CASE WHEN r.dtShipDate IS NOT NULL AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS TotalOutstanding,
-                ISNULL(SUM(CASE WHEN DATEDIFF(day, r.dtShipDate, GETDATE()) > 30 AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS PastDue30,
-                ISNULL(SUM(CASE WHEN DATEDIFF(day, r.dtShipDate, GETDATE()) > 60 AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS PastDue60,
-                ISNULL(SUM(CASE WHEN MONTH(r.dtShipDate) = MONTH(GETDATE()) AND YEAR(r.dtShipDate) = YEAR(GETDATE()) AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS InvoicedThisMonth
+                ISNULL(SUM(CASE WHEN r.dtDateOut IS NOT NULL AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS TotalOutstanding,
+                ISNULL(SUM(CASE WHEN DATEDIFF(day, r.dtDateOut, GETDATE()) > 30 AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS PastDue30,
+                ISNULL(SUM(CASE WHEN DATEDIFF(day, r.dtDateOut, GETDATE()) > 60 AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS PastDue60,
+                ISNULL(SUM(CASE WHEN MONTH(r.dtDateOut) = MONTH(GETDATE()) AND YEAR(r.dtDateOut) = YEAR(GETDATE()) AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS InvoicedThisMonth
             FROM tblRepair r
-            WHERE r.dtShipDate IS NOT NULL
+            WHERE r.dtDateOut IS NOT NULL
             """;
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;

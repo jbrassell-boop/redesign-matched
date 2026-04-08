@@ -7,7 +7,7 @@ namespace TSI.Api.Controllers;
 
 [ApiController]
 [Route("api/administration")]
-[Authorize]
+[Authorize(Roles = "Admin")]
 public class AdministrationController(IConfiguration config) : ControllerBase
 {
     private SqlConnection CreateConnection() =>

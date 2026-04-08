@@ -21,7 +21,7 @@ const lookupZip = async (
       onChange(cityField, place['place name']);
       onChange(stateField, place['state abbreviation']);
     }
-  } catch { /* silent */ }
+  } catch (err) { console.error('[InfoTab] zip lookup failed', err); }
 };
 
 interface InfoTabProps {

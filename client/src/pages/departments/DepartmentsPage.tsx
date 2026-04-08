@@ -66,10 +66,12 @@ export const DepartmentsPage = () => {
       {/* Left Panel — Department List */}
       <aside aria-label="Department list" style={{
         width: selectedKey ? 340 : '100%',
+        maxWidth: selectedKey ? 340 : undefined,
         minWidth: selectedKey ? 340 : undefined,
         borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
         display: 'flex', flexDirection: 'column',
         background: 'var(--card)',
+        overflow: 'hidden',
         transition: 'width 0.2s ease',
         willChange: 'width',
       }}>
@@ -89,14 +91,14 @@ export const DepartmentsPage = () => {
                 {filtered.length}
               </span>
             </div>
-            <div style={{ display: 'flex', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
               <ExportButton data={departments as unknown as Record<string, unknown>[]} columns={DEPT_EXPORT_COLS} filename="departments-export" sheetName="Departments" />
               <Button
                 icon={<PlusOutlined />} type="primary" size="small"
                 onClick={() => setNewModalOpen(true)}
-                style={{ background: 'var(--primary)', borderColor: 'var(--primary)', fontSize: 11, height: 28 }}
+                style={{ background: 'var(--primary)', borderColor: 'var(--primary)', fontSize: 11, height: 28, whiteSpace: 'nowrap' }}
               >
-                New Department
+                {selectedKey ? 'New' : 'New Department'}
               </Button>
             </div>
           </div>

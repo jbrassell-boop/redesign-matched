@@ -50,6 +50,20 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage();
+}
+else
+{
+    app.UseExceptionHandler(err => err.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        context.Response.ContentType = "application/json";
+        await context.Response.WriteAsync("{\"error\":\"An internal error occurred.\"}");
+    }));
+}
+
 app.UseCors("AllowClient");
 app.UseAuthentication();
 app.UseAuthorization();

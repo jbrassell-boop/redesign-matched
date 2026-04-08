@@ -96,7 +96,7 @@ export const DevelopmentListPage = () => {
       setItems(res.items);
       setTotalCount(res.totalCount);
       setStats(st);
-    } catch { /* empty */ }
+    } catch (err) { console.error('[DevelopmentList] loadList failed', err); }
     setLoading(false);
   }, [search, filterStatus, page]);
 
@@ -112,7 +112,7 @@ export const DevelopmentListPage = () => {
     try {
       const d = await getDevListDetail(id);
       setDetail(d);
-    } catch { /* empty */ }
+    } catch (err) { console.error('[DevelopmentList] loadDetail failed', err); message.error('Failed to load item details'); }
   };
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));

@@ -151,8 +151,8 @@ public class LoanersController(IConfiguration config) : ControllerBase
                    ISNULL(lt.sPurchaseOrder, '') AS sPurchaseOrder,
                    lt.sRepairClosed, lt.dtCreateDate,
                    ISNULL(r.sWorkOrderNumber, '') AS sWorkOrderNumber,
-                   ISNULL(sr.sSalesRepName, '') AS sSalesRepName,
-                   ISNULL(dm.sDeliveryMethodDesc, '') AS sDeliveryMethodDesc,
+                   ISNULL(sr.sRepFirst + ' ' + sr.sRepLast, '') AS sSalesRepName,
+                   ISNULL(dm.sDeliveryDesc, '') AS sDeliveryMethodDesc,
                    CASE
                        WHEN lt.sRepairClosed = 'D' THEN 'Declined'
                        WHEN lt.sDateIn IS NOT NULL THEN 'Returned'

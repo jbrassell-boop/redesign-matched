@@ -32,15 +32,43 @@ public class AuthController(IConfiguration config, JwtService jwtService) : Cont
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@username", request.Username);
 
-        await using var reader = await cmd.ExecuteReaderAsync();
+        string storedPassword;
+        string role;
 
-        if (!await reader.ReadAsync())
-            return Unauthorized(new { message = "Invalid credentials." });
+        await using (var reader = await cmd.ExecuteReaderAsync())
+        {
+            if (!await reader.ReadAsync())
+                return Unauthorized(new { message = "Invalid credentials." });
 
-        var storedPassword = reader["sUserPassword"]?.ToString() ?? "";
-        var role = (reader["sSupervisor"]?.ToString() == "1") ? "Admin" : "User";
+            storedPassword = reader["sUserPassword"]?.ToString() ?? "";
+            role = (reader["sSupervisor"]?.ToString() == "1") ? "Admin" : "User";
+        } // reader disposed here — connection is free for the UPDATE below
 
-        if (storedPassword != request.Password)
+        bool valid;
+        if (storedPassword.StartsWith("$2"))
+        {
+            // Already a BCrypt hash — verify normally
+            valid = BCrypt.Net.BCrypt.Verify(request.Password, storedPassword);
+        }
+        else
+        {
+            // Plaintext legacy password — fall back to direct comparison
+            valid = storedPassword == request.Password;
+            if (valid)
+            {
+                // Auto-upgrade: store a hash so next login uses BCrypt
+                var hash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                await using var updateCmd = new SqlCommand(
+                    "UPDATE tblUsers SET sUserPassword = @hash WHERE LOWER(sUserName) = LOWER(@user)",
+                    conn);
+                updateCmd.Parameters.AddWithValue("@hash", hash);
+                updateCmd.Parameters.AddWithValue("@user", request.Username);
+                updateCmd.CommandTimeout = 10;
+                await updateCmd.ExecuteNonQueryAsync();
+            }
+        }
+
+        if (!valid)
             return Unauthorized(new { message = "Invalid credentials." });
 
         var token = jwtService.GenerateToken(request.Username, role);

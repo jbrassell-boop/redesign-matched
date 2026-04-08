@@ -73,7 +73,7 @@ export const NewDepartmentModal = ({ open, onClose, onCreated, clientKey: preset
       if (place) {
         setForm(prev => ({ ...prev, city: place['place name'], state: place['state abbreviation'] }));
       }
-    } catch { /* silent */ }
+    } catch (err) { console.error('[NewDepartmentModal] zip lookup failed', err); }
   };
 
   useEffect(() => {

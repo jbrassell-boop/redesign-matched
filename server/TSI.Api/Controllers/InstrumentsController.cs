@@ -25,7 +25,7 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
 
         var where = new List<string>();
         if (!string.IsNullOrWhiteSpace(search))
-            where.Add("(r.sTranNumber LIKE @search OR c.sClientName1 LIKE @search OR d.sDepartmentName LIKE @search)");
+            where.Add("(r.sWorkOrderNumber LIKE @search OR c.sClientName1 LIKE @search OR d.sDepartmentName LIKE @search)");
         if (!string.IsNullOrWhiteSpace(statusFilter))
             where.Add("rs.sRepairStatus = @statusFilter");
 
@@ -40,8 +40,8 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
             """;
 
         var dataSql = $"""
-            SELECT r.lRepairKey, r.sTranNumber, c.sClientName1, d.sDepartmentName,
-                   r.dtDateReceived, r.dtDateDue,
+            SELECT r.lRepairKey, r.sWorkOrderNumber, c.sClientName1, d.sDepartmentName,
+                   r.dtDateIn, r.dtExpDelDate,
                    rs.sRepairStatus,
                    (SELECT COUNT(*) FROM tblRepairItemTran rit WHERE rit.lRepairKey = r.lRepairKey) AS ItemCount,
                    (SELECT ISNULL(SUM(rit2.dblRepairPrice), 0) FROM tblRepairItemTran rit2 WHERE rit2.lRepairKey = r.lRepairKey) AS TotalValue
@@ -50,7 +50,7 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             {whereClause}
-            ORDER BY r.dtDateReceived DESC
+            ORDER BY r.dtDateIn DESC
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
             """;
 
@@ -73,11 +73,11 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
         {
             items.Add(new InstrumentRepairListItem(
                 RepairKey: Convert.ToInt32(reader["lRepairKey"]),
-                OrderNumber: reader["sTranNumber"]?.ToString() ?? "",
+                OrderNumber: reader["sWorkOrderNumber"]?.ToString() ?? "",
                 ClientName: reader["sClientName1"]?.ToString() ?? "",
                 DepartmentName: reader["sDepartmentName"]?.ToString() ?? "",
-                DateReceived: (reader["dtDateReceived"] as DateTime?)?.ToString("yyyy-MM-dd"),
-                DateDue: (reader["dtDateDue"] as DateTime?)?.ToString("yyyy-MM-dd"),
+                DateReceived: (reader["dtDateIn"] as DateTime?)?.ToString("yyyy-MM-dd"),
+                DateDue: (reader["dtExpDelDate"] as DateTime?)?.ToString("yyyy-MM-dd"),
                 Status: reader["sRepairStatus"]?.ToString() ?? "",
                 ItemCount: Convert.ToInt32(reader["ItemCount"]),
                 TotalValue: Convert.ToDouble(reader["TotalValue"])
@@ -94,10 +94,10 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         const string sql = """
-            SELECT r.lRepairKey, r.sTranNumber, c.sClientName1, d.sDepartmentName,
-                   r.sPurchaseOrder, r.dtDateReceived, r.dtDateDue, r.dtDateCompleted,
+            SELECT r.lRepairKey, r.sWorkOrderNumber, c.sClientName1, d.sDepartmentName,
+                   r.sPurchaseOrder, r.dtDateIn, r.dtExpDelDate, r.dtDateOut,
                    rs.sRepairStatus,
-                   t.sTechFirst, t.sTechLast,
+                   t.sTechName,
                    r.mComments
             FROM tblRepair r
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
@@ -115,23 +115,21 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
         if (!await reader.ReadAsync())
             return NotFound(new { message = "Repair not found." });
 
-        var dateReceived = reader["dtDateReceived"] as DateTime?;
+        var dateReceived = reader["dtDateIn"] as DateTime?;
         var daysOpen = dateReceived.HasValue
             ? (int)Math.Round((DateTime.UtcNow - dateReceived.Value).TotalDays)
             : 0;
 
-        var techFirst = reader["sTechFirst"]?.ToString() ?? "";
-        var techLast = reader["sTechLast"]?.ToString() ?? "";
-        var techName = $"{techFirst} {techLast}".Trim();
+        var techName = reader["sTechName"]?.ToString() ?? "";
 
         var repairKey = Convert.ToInt32(reader["lRepairKey"]);
-        var orderNumber = reader["sTranNumber"]?.ToString() ?? "";
+        var orderNumber = reader["sWorkOrderNumber"]?.ToString() ?? "";
         var clientName = reader["sClientName1"]?.ToString() ?? "";
         var deptName = reader["sDepartmentName"]?.ToString() ?? "";
         var po = reader["sPurchaseOrder"]?.ToString();
         var dateReceivedStr = dateReceived?.ToString("yyyy-MM-dd");
-        var dateDueStr = (reader["dtDateDue"] as DateTime?)?.ToString("yyyy-MM-dd");
-        var dateCompletedStr = (reader["dtDateCompleted"] as DateTime?)?.ToString("yyyy-MM-dd");
+        var dateDueStr = (reader["dtExpDelDate"] as DateTime?)?.ToString("yyyy-MM-dd");
+        var dateCompletedStr = (reader["dtDateOut"] as DateTime?)?.ToString("yyyy-MM-dd");
         var status = reader["sRepairStatus"]?.ToString() ?? "";
         var notes = reader["mComments"]?.ToString();
 

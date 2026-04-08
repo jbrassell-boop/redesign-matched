@@ -294,7 +294,7 @@ export const EndoCartsPage = () => {
       const res = await getEndoCartScopeInventory({ search: scopeSearch || undefined, rigidOrFlexible: scopeTypeFilter || undefined, page: scopePage, pageSize: 50 });
       setScopeItems(res.items);
       setScopeTotal(res.totalCount);
-    } catch { /* silently handle */ }
+    } catch (err) { console.error('[EndoCarts] loadScopeInventory failed', err); }
     finally { setScopeLoading(false); }
   }, [scopeSearch, scopeTypeFilter, scopePage]);
 
@@ -309,7 +309,7 @@ export const EndoCartsPage = () => {
       const res = await getEndoCartServiceHistory({ search: serviceSearch || undefined, page: servicePage, pageSize: 50 });
       setServiceItems(res.items);
       setServiceTotal(res.totalCount);
-    } catch { /* silently handle */ }
+    } catch (err) { console.error('[EndoCarts] loadServiceHistory failed', err); }
     finally { setServiceLoading(false); }
   }, [serviceSearch, servicePage]);
 

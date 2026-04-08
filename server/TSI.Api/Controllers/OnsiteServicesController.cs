@@ -166,10 +166,12 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Generate next invoice number
+        await using var transaction = (SqlTransaction)await conn.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+
+        // Generate next invoice number inside the transaction to prevent duplicates
         await using var seqCmd = new SqlCommand(
-            "SELECT ISNULL(MAX(CAST(REPLACE(sInvoiceNumber, 'INV-', '') AS INT)), 4000) + 1 FROM tblOnsiteService WHERE sInvoiceNumber LIKE 'INV-%'",
-            conn);
+            "SELECT ISNULL(MAX(CAST(REPLACE(sInvoiceNumber, 'INV-', '') AS INT)), 4000) + 1 FROM tblOnsiteService WITH (UPDLOCK, HOLDLOCK) WHERE sInvoiceNumber LIKE 'INV-%'",
+            conn, transaction);
         seqCmd.CommandTimeout = 30;
 
         int nextNum;
@@ -194,7 +196,7 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
             SELECT SCOPE_IDENTITY();
             """;
 
-        await using var cmd = new SqlCommand(sql, conn);
+        await using var cmd = new SqlCommand(sql, conn, transaction);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@invoiceNum", invoiceNum);
         cmd.Parameters.AddWithValue("@clientKey", req.ClientKey);
@@ -210,10 +212,12 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
         try
         {
             var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+            await transaction.CommitAsync();
             return Ok(new { onsiteServiceKey = newKey, invoiceNum });
         }
         catch (SqlException ex)
         {
+            await transaction.RollbackAsync();
             return StatusCode(500, new { error = "Database error", detail = ex.Message });
         }
     }

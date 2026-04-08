@@ -200,7 +200,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
         var sql = """
             SELECT po.lSupplierPOKey,
                    ISNULL(po.sSupplierPONumber, '') AS sSupplierPONumber,
-                   ISNULL(s.sSupplierName, '') AS sSupplierName,
+                   ISNULL(s.sSupplierName1, '') AS sSupplierName1,
                    po.dtDateOfPO,
                    ISNULL(po.dblPOTotal, 0) AS dblPOTotal,
                    ISNULL(po.bCancelled, 0) AS bCancelled,
@@ -213,7 +213,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
             INNER JOIN tblInventorySize isz ON isz.lInventorySizeKey = ss.lInventorySizeKey
             LEFT JOIN tblSupplier s ON s.lSupplierKey = po.lSupplierKey
             WHERE isz.lInventoryKey = @inventoryKey
-            GROUP BY po.lSupplierPOKey, po.sSupplierPONumber, s.sSupplierName, po.dtDateOfPO, po.dblPOTotal, po.bCancelled
+            GROUP BY po.lSupplierPOKey, po.sSupplierPONumber, s.sSupplierName1, po.dtDateOfPO, po.dblPOTotal, po.bCancelled
             ORDER BY po.dtDateOfPO DESC
             """;
 
@@ -228,7 +228,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
             items.Add(new InventoryPurchaseOrder(
                 SupplierPOKey: Convert.ToInt32(reader["lSupplierPOKey"]),
                 PONumber: reader["sSupplierPONumber"]?.ToString() ?? "",
-                SupplierName: reader["sSupplierName"]?.ToString() ?? "",
+                SupplierName: reader["sSupplierName1"]?.ToString() ?? "",
                 PODate: reader["dtDateOfPO"] == DBNull.Value ? "" : Convert.ToDateTime(reader["dtDateOfPO"]).ToString("MM/dd/yyyy"),
                 POTotal: reader["dblPOTotal"] == DBNull.Value ? 0 : Convert.ToDouble(reader["dblPOTotal"]),
                 Cancelled: reader["bCancelled"] != DBNull.Value && Convert.ToBoolean(reader["bCancelled"]),
@@ -248,7 +248,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
 
         var sql = """
             SELECT ss.lSupplierSizesKey, ss.lSupplierKey,
-                   ISNULL(s.sSupplierName, '') AS sSupplierName,
+                   ISNULL(s.sSupplierName1, '') AS sSupplierName1,
                    ISNULL(isz.sSizeDescription, '') AS sSizeDescription,
                    ISNULL(ss.sSupplierPartNo, '') AS sSupplierPartNo,
                    ISNULL(ss.dblUnitCost, 0) AS dblUnitCost,
@@ -258,7 +258,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
             INNER JOIN tblInventorySize isz ON isz.lInventorySizeKey = ss.lInventorySizeKey
             LEFT JOIN tblSupplier s ON s.lSupplierKey = ss.lSupplierKey
             WHERE isz.lInventoryKey = @inventoryKey
-            ORDER BY s.sSupplierName, isz.sSizeDescription
+            ORDER BY s.sSupplierName1, isz.sSizeDescription
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
@@ -272,7 +272,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
             items.Add(new InventorySupplierItem(
                 SupplierSizesKey: Convert.ToInt32(reader["lSupplierSizesKey"]),
                 SupplierKey: Convert.ToInt32(reader["lSupplierKey"]),
-                SupplierName: reader["sSupplierName"]?.ToString() ?? "",
+                SupplierName: reader["sSupplierName1"]?.ToString() ?? "",
                 SizeDescription: reader["sSizeDescription"]?.ToString() ?? "",
                 PartNumber: reader["sSupplierPartNo"]?.ToString() ?? "",
                 UnitCost: Convert.ToDouble(reader["dblUnitCost"]),
@@ -387,22 +387,35 @@ public class InventoryController(IConfiguration config) : ControllerBase
             WHERE lInventorySizeKey = @sizeKey
             """;
 
-        await using var tranCmd = new SqlCommand(tranSql, conn);
-        tranCmd.CommandTimeout = 30;
-        tranCmd.Parameters.AddWithValue("@sizeKey", req.InventorySizeKey);
-        tranCmd.Parameters.AddWithValue("@qty", req.Quantity);
-        tranCmd.Parameters.AddWithValue("@lotNumber", (object?)req.LotNumber ?? DBNull.Value);
-        tranCmd.Parameters.AddWithValue("@binNumber", (object?)req.BinNumber ?? DBNull.Value);
-        tranCmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? (object)"Stock Receipt");
-        await tranCmd.ExecuteNonQueryAsync();
+        // Wrap the tran INSERT and level UPDATE atomically so a crash between
+        // the two statements cannot leave inventory counts out of sync
+        await using var transaction = (SqlTransaction)await conn.BeginTransactionAsync();
 
-        await using var updateCmd = new SqlCommand(updateSql, conn);
-        updateCmd.CommandTimeout = 30;
-        updateCmd.Parameters.AddWithValue("@qty", req.Quantity);
-        updateCmd.Parameters.AddWithValue("@binNumber", (object?)req.BinNumber ?? DBNull.Value);
-        updateCmd.Parameters.AddWithValue("@sizeKey", req.InventorySizeKey);
-        await updateCmd.ExecuteNonQueryAsync();
+        try
+        {
+            await using var tranCmd = new SqlCommand(tranSql, conn, transaction);
+            tranCmd.CommandTimeout = 30;
+            tranCmd.Parameters.AddWithValue("@sizeKey", req.InventorySizeKey);
+            tranCmd.Parameters.AddWithValue("@qty", req.Quantity);
+            tranCmd.Parameters.AddWithValue("@lotNumber", (object?)req.LotNumber ?? DBNull.Value);
+            tranCmd.Parameters.AddWithValue("@binNumber", (object?)req.BinNumber ?? DBNull.Value);
+            tranCmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? (object)"Stock Receipt");
+            await tranCmd.ExecuteNonQueryAsync();
 
-        return Ok(new { received = true });
+            await using var updateCmd = new SqlCommand(updateSql, conn, transaction);
+            updateCmd.CommandTimeout = 30;
+            updateCmd.Parameters.AddWithValue("@qty", req.Quantity);
+            updateCmd.Parameters.AddWithValue("@binNumber", (object?)req.BinNumber ?? DBNull.Value);
+            updateCmd.Parameters.AddWithValue("@sizeKey", req.InventorySizeKey);
+            await updateCmd.ExecuteNonQueryAsync();
+
+            await transaction.CommitAsync();
+            return Ok(new { received = true });
+        }
+        catch (SqlException ex)
+        {
+            await transaction.RollbackAsync();
+            return StatusCode(500, new { error = "Database error", detail = ex.Message });
+        }
     }
 }

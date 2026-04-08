@@ -72,7 +72,7 @@ export function loadLayout(): WorkspaceLayout {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) return JSON.parse(saved);
-  } catch { /* ignore */ }
+  } catch (err) { console.error('[widgetRegistry] loadLayout failed', err); }
   return { preset: 'processor', widgets: PRESETS.processor };
 }
 

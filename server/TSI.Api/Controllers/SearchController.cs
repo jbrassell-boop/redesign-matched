@@ -30,11 +30,13 @@ public class SearchController(IConfiguration config) : ControllerBase
             await using var cmd = conn.CreateCommand();
             cmd.CommandTimeout = 30;
             cmd.CommandText = @"
-                SELECT TOP (@limit) r.lRepairKey, r.sWorkOrderNumber, r.sSerialNumber,
+                SELECT TOP (@limit) r.lRepairKey, r.sWorkOrderNumber, s.sSerialNumber,
                        c.sClientName1
                 FROM tblRepair r
-                LEFT JOIN tblClient c ON c.lClientKey = r.lDistributorKey
-                WHERE r.sWorkOrderNumber LIKE @q OR r.sSerialNumber LIKE @q
+                LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+                LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+                LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+                WHERE r.sWorkOrderNumber LIKE @q OR s.sSerialNumber LIKE @q
                 ORDER BY r.lRepairKey DESC";
             cmd.Parameters.AddWithValue("@limit", limit);
             cmd.Parameters.AddWithValue("@q", searchTerm);

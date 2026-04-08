@@ -163,7 +163,7 @@ export const CommandPalette = () => {
             type: 'contract' as ResultType, title: r.title, subtitle: r.subtitle, path: '/contracts', key: r.key,
           }))});
         }
-      } catch { /* silent — show page results only */ }
+      } catch (err) { console.error('[CommandPalette] search failed', err); }
 
       setGroups(g);
       setSelectedIdx(0);

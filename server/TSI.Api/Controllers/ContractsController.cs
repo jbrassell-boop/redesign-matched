@@ -477,12 +477,12 @@ public class ContractsController(IConfiguration config) : ControllerBase
                 ISNULL(rl.sRepairLevel, '') AS sRepairLevel,
                 r.dtDateIn,
                 ISNULL(rs.sRepairStatus, '') AS sRepairStatus,
-                ISNULL(r.dblNetTotal, 0) AS dblNetTotal,
-                ISNULL(t.sLastName, '') AS sTechName
+                ISNULL(r.dblAmtRepair, 0) AS dblNetTotal,
+                ISNULL(t.sTechName, '') AS sTechName
             FROM tblRepair r
             INNER JOIN tblScope s ON r.lScopeKey = s.lScopeKey
             LEFT JOIN tblScopeType st ON s.lScopeTypeKey = st.lScopeTypeKey
-            LEFT JOIN tblRepairStatuses rs ON r.lRepairStatusKey = rs.lRepairStatusKey
+            LEFT JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
             LEFT JOIN tblRepairLevels rl ON r.lRepairLevelKey = rl.lRepairLevelKey
             LEFT JOIN tblTechnicians t ON r.lTechnicianKey = t.lTechnicianKey
             WHERE r.lContractKey = @contractKey
@@ -564,7 +564,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
             SELECT
                 n.lNoteKey,
                 n.dtNoteDate,
-                ISNULL(e.sFirstName + ' ' + e.sLastName, 'System') AS sAuthor,
+                ISNULL(e.sEmployeeFirst + ' ' + e.sEmployeeLast, 'System') AS sAuthor,
                 n.sNote
             FROM tblNotes n
             LEFT JOIN tblEmployee e ON n.lUserKey = e.lEmployeeKey

@@ -81,21 +81,14 @@ public class ReceivingController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Get "Received" status ID
+        // Get "Received" status ID (read-only lookup, outside the transaction)
         await using var statusCmd = new SqlCommand(
             "SELECT TOP 1 lRepairStatusID FROM tblRepairStatuses WHERE sRepairStatus = 'Received' ORDER BY lRepairStatusSortOrder", conn);
         statusCmd.CommandTimeout = 30;
         var statusObj = await statusCmd.ExecuteScalarAsync();
         var statusId = statusObj != null ? Convert.ToInt32(statusObj) : 1;
 
-        // Generate next WO number
-        await using var woCmd = new SqlCommand(
-            "SELECT ISNULL(MAX(CAST(sWorkOrderNumber AS INT)), 0) + 1 FROM tblRepair WHERE ISNUMERIC(sWorkOrderNumber) = 1", conn);
-        woCmd.CommandTimeout = 30;
-        var nextWo = Convert.ToInt64(await woCmd.ExecuteScalarAsync());
-        var woNumber = nextWo.ToString().PadLeft(7, '0');
-
-        // Look up or create scope record if serial provided
+        // Look up scope record if serial provided (read-only, outside the transaction)
         int? scopeKey = null;
         if (!string.IsNullOrWhiteSpace(request.SerialNumber))
         {
@@ -108,25 +101,46 @@ public class ReceivingController(IConfiguration config) : ControllerBase
                 scopeKey = Convert.ToInt32(existing);
         }
 
-        // Insert repair
-        var insertSql = """
-            INSERT INTO tblRepair (lDepartmentKey, lScopeKey, lRepairStatusID, sWorkOrderNumber,
-                                   sComplaintDesc, dtDateIn)
-            VALUES (@deptKey, @scopeKey, @statusId, @woNumber, @complaint, GETDATE());
-            SELECT SCOPE_IDENTITY();
-            """;
+        // Wrap WO number generation and INSERT in a SERIALIZABLE transaction
+        // to prevent duplicate work order numbers under concurrent requests
+        await using var transaction = (SqlTransaction)await conn.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
 
-        await using var insertCmd = new SqlCommand(insertSql, conn);
-        insertCmd.CommandTimeout = 30;
-        insertCmd.Parameters.AddWithValue("@deptKey", request.DepartmentKey);
-        insertCmd.Parameters.AddWithValue("@scopeKey", scopeKey.HasValue ? scopeKey.Value : DBNull.Value);
-        insertCmd.Parameters.AddWithValue("@statusId", statusId);
-        insertCmd.Parameters.AddWithValue("@woNumber", woNumber);
-        insertCmd.Parameters.AddWithValue("@complaint", request.ComplaintDesc ?? "");
+        try
+        {
+            // Generate next WO number inside the transaction
+            await using var woCmd = new SqlCommand(
+                "SELECT ISNULL(MAX(CAST(sWorkOrderNumber AS INT)), 0) + 1 FROM tblRepair WITH (UPDLOCK, HOLDLOCK) WHERE ISNUMERIC(sWorkOrderNumber) = 1",
+                conn, transaction);
+            woCmd.CommandTimeout = 30;
+            var nextWo = Convert.ToInt64(await woCmd.ExecuteScalarAsync());
+            var woNumber = nextWo.ToString().PadLeft(7, '0');
 
-        var newKey = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
+            // Insert repair
+            var insertSql = """
+                INSERT INTO tblRepair (lDepartmentKey, lScopeKey, lRepairStatusID, sWorkOrderNumber,
+                                       sComplaintDesc, dtDateIn)
+                VALUES (@deptKey, @scopeKey, @statusId, @woNumber, @complaint, GETDATE());
+                SELECT SCOPE_IDENTITY();
+                """;
 
-        return Ok(new ReceiveIntakeResponse(newKey, woNumber));
+            await using var insertCmd = new SqlCommand(insertSql, conn, transaction);
+            insertCmd.CommandTimeout = 30;
+            insertCmd.Parameters.AddWithValue("@deptKey", request.DepartmentKey);
+            insertCmd.Parameters.AddWithValue("@scopeKey", scopeKey.HasValue ? scopeKey.Value : DBNull.Value);
+            insertCmd.Parameters.AddWithValue("@statusId", statusId);
+            insertCmd.Parameters.AddWithValue("@woNumber", woNumber);
+            insertCmd.Parameters.AddWithValue("@complaint", request.ComplaintDesc ?? "");
+
+            var newKey = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
+            await transaction.CommitAsync();
+
+            return Ok(new ReceiveIntakeResponse(newKey, woNumber));
+        }
+        catch (SqlException ex)
+        {
+            await transaction.RollbackAsync();
+            return StatusCode(500, new { error = "Database error", detail = ex.Message });
+        }
     }
 
     /// <summary>
@@ -154,9 +168,9 @@ public class ReceivingController(IConfiguration config) : ControllerBase
         if (await reader.ReadAsync())
         {
             return Ok(new {
-                totalPending = Convert.ToInt32(reader["TotalPending"]),
-                overdue = Convert.ToInt32(reader["Overdue"]),
-                today = Convert.ToInt32(reader["Today"])
+                totalPending = reader["TotalPending"] == DBNull.Value ? 0 : Convert.ToInt32(reader["TotalPending"]),
+                overdue = reader["Overdue"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Overdue"]),
+                today = reader["Today"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Today"])
             });
         }
 
