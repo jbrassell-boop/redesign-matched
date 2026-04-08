@@ -48,6 +48,7 @@ export interface RepairsFilters {
   page: number;
   pageSize: number;
   statusFilter: string;
+  svcKey?: number;
 }
 
 // ── Line Items (Workflow) ──

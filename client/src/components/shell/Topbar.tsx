@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { NewOrderWizard } from './NewOrderWizard';
 import { useDensity } from '../../hooks/useDensity';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
+import type { ServiceLocationKey } from '../../hooks/useServiceLocation';
 
 interface TopbarProps {
   sidebarCollapsed: boolean;
@@ -24,6 +26,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
   const navigate = useNavigate();
   const { username, logout } = useAuth();
   const { density, toggle: toggleDensity } = useDensity();
+  const { locationKey, locations, setLocationKey } = useServiceLocation();
   const sidebarWidth = sidebarCollapsed ? 56 : 240;
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -161,19 +164,27 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
 
           {/* Service location */}
           <span style={{ whiteSpace: 'nowrap' }}>Service Location</span>
-          <select aria-label="Service location" style={{
-            height: 28,
-            padding: '0 8px',
-            borderRadius: 5,
-            border: '1px solid rgba(255,255,255,0.25)',
-            background: 'rgba(255,255,255,0.12)',
-            color: 'var(--card)',
-            fontSize: 12,
-            cursor: 'pointer',
-            outline: 'none',
-          }}>
-            <option value="1" style={{ color: 'var(--text)', background: 'var(--card)' }}>Upper Chichester</option>
-            <option value="2" style={{ color: 'var(--text)', background: 'var(--card)' }}>Nashville</option>
+          <select
+            aria-label="Service location"
+            value={locationKey}
+            onChange={e => setLocationKey(Number(e.target.value) as ServiceLocationKey)}
+            style={{
+              height: 28,
+              padding: '0 8px',
+              borderRadius: 5,
+              border: '1px solid rgba(255,255,255,0.25)',
+              background: 'rgba(255,255,255,0.12)',
+              color: 'var(--card)',
+              fontSize: 12,
+              cursor: 'pointer',
+              outline: 'none',
+            }}
+          >
+            {locations.map(loc => (
+              <option key={loc.key} value={loc.key} style={{ color: 'var(--text)', background: 'var(--card)' }}>
+                {loc.label}
+              </option>
+            ))}
           </select>
 
           {/* Density toggle */}

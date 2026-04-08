@@ -7,6 +7,7 @@ import { NewRepairModal } from './components/NewRepairModal';
 import type { RepairListItem } from './types';
 import { ExportButton } from '../../components/common/ExportButton';
 import { useKeyboardNav } from '../../hooks/useKeyboardNav';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 
 const REPAIR_EXPORT_COLS = [
   { key: 'wo', label: 'Work Order' },
@@ -40,6 +41,7 @@ export const RepairsPage = () => {
 
 const RepairsListView = () => {
   const navigate = useNavigate();
+  const { locationKey } = useServiceLocation();
   const [repairs, setRepairs] = useState<RepairListItem[]>([]);
   const [listLoading, setListLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -49,12 +51,12 @@ const RepairsListView = () => {
   const loadRepairs = useCallback(async (s: string) => {
     setListLoading(true);
     try {
-      const result = await getRepairs({ search: s, page: 1, pageSize: 100, statusFilter: 'all' });
+      const result = await getRepairs({ search: s, page: 1, pageSize: 100, statusFilter: 'all', svcKey: locationKey });
       setRepairs(result.repairs);
     } finally {
       setListLoading(false);
     }
-  }, []);
+  }, [locationKey]);
 
   useEffect(() => {
     const timer = setTimeout(() => loadRepairs(search), search ? 300 : 0);

@@ -18,7 +18,8 @@ public class RepairsController(IConfiguration config) : ControllerBase
         [FromQuery] string? search = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
-        [FromQuery] string? statusFilter = null)
+        [FromQuery] string? statusFilter = null,
+        [FromQuery] int? svcKey = null)
     {
         await using var conn = CreateConnection();
         await conn.OpenAsync();
@@ -28,6 +29,8 @@ public class RepairsController(IConfiguration config) : ControllerBase
             where.Add("(r.sWorkOrderNumber LIKE @search OR c.sClientName1 LIKE @search OR d.sDepartmentName LIKE @search OR st.sScopeTypeDesc LIKE @search OR s.sSerialNumber LIKE @search)");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all")
             where.Add("rs.sRepairStatus = @statusFilter");
+        if (svcKey.HasValue && svcKey.Value > 0)
+            where.Add("r.lServiceLocationKey = @svcKey");
 
         var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
 
@@ -67,12 +70,14 @@ public class RepairsController(IConfiguration config) : ControllerBase
         countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
+        if (svcKey.HasValue && svcKey.Value > 0) countCmd.Parameters.AddWithValue("@svcKey", svcKey.Value);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
+        if (svcKey.HasValue && svcKey.Value > 0) dataCmd.Parameters.AddWithValue("@svcKey", svcKey.Value);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
 

@@ -8,6 +8,7 @@ export const getRepairs = async (filters: RepairsFilters): Promise<RepairListRes
       page: filters.page,
       pageSize: filters.pageSize,
       statusFilter: filters.statusFilter !== 'all' ? filters.statusFilter : undefined,
+      svcKey: filters.svcKey,
     },
   });
   return data;
