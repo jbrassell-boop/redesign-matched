@@ -1,0 +1,116 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
+using System.Text.Json;
+using TSI.Api.Models;
+
+namespace TSI.Api.Controllers;
+
+[ApiController]
+[Route("api/field-verifier")]
+[AllowAnonymous]
+public class FieldVerifierController(IConfiguration config) : ControllerBase
+{
+    private static readonly JsonSerializerOptions JsonOpts = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = true
+    };
+
+    private string RegistryPath => config["FieldRegistryPath"]
+        ?? throw new InvalidOperationException("FieldRegistryPath not configured in appsettings.Development.json");
+
+    private SqlConnection CreateConnection() =>
+        new(config.GetConnectionString("DefaultConnection")!);
+
+    // GET /api/field-verifier/registry
+    [HttpGet("registry")]
+    public IActionResult GetRegistry()
+    {
+        var screens = new List<FieldRegistryScreen>();
+        var screenOrder = new[]
+        {
+            "dashboard", "clients", "departments", "repairs",
+            "inventory", "contracts", "onsite-services",
+            "product-sale", "financial", "suppliers", "scope-model"
+        };
+
+        foreach (var name in screenOrder)
+        {
+            var path = Path.Combine(RegistryPath, $"{name}.json");
+            if (!System.IO.File.Exists(path)) continue;
+
+            var json = System.IO.File.ReadAllText(path);
+            var screen = JsonSerializer.Deserialize<FieldRegistryScreen>(json, JsonOpts);
+            if (screen != null) screens.Add(screen);
+        }
+
+        return Ok(screens);
+    }
+
+    // POST /api/field-verifier/live-value
+    [HttpPost("live-value")]
+    public async Task<IActionResult> GetLiveValue([FromBody] LiveValueRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.SqlQuery))
+            return Ok(new LiveValueResponse("", "No SQL query provided"));
+
+        try
+        {
+            await using var conn = CreateConnection();
+            await conn.OpenAsync();
+            await using var cmd = new SqlCommand(request.SqlQuery, conn);
+            cmd.CommandTimeout = 15;
+            var result = await cmd.ExecuteScalarAsync();
+            var value = result == null || result == DBNull.Value ? "(null)" : result.ToString()!;
+            return Ok(new LiveValueResponse(value, ""));
+        }
+        catch (Exception ex)
+        {
+            return Ok(new LiveValueResponse("", ex.Message));
+        }
+    }
+
+    // PUT /api/field-verifier/field
+    [HttpPut("field")]
+    public IActionResult UpdateField([FromBody] FieldUpdateRequest request)
+    {
+        var path = Path.Combine(RegistryPath, $"{request.ScreenFile}.json");
+        if (!System.IO.File.Exists(path))
+            return NotFound($"Registry file not found: {request.ScreenFile}.json");
+
+        var json = System.IO.File.ReadAllText(path);
+        var screen = JsonSerializer.Deserialize<FieldRegistryScreen>(json, JsonOpts);
+        if (screen == null) return BadRequest("Could not parse registry file");
+
+        var field = screen.Fields.FirstOrDefault(f => f.Id == request.FieldId);
+        if (field == null) return NotFound($"Field not found: {request.FieldId}");
+
+        var updatedField = field with
+        {
+            Status = request.Status,
+            SqlQuery = request.SqlQuery,
+            SqlTable = request.SqlTable,
+            ApiEndpoint = request.ApiEndpoint,
+            ResponseProperty = request.ResponseProperty,
+            Notes = request.Notes,
+            VerifiedAt = DateTime.UtcNow.ToString("o"),
+            VerifiedBy = request.VerifiedBy
+        };
+
+        var updatedFields = screen.Fields
+            .Select(f => f.Id == request.FieldId ? updatedField : f)
+            .ToList();
+
+        var updatedScreen = screen with
+        {
+            LastUpdated = DateTime.UtcNow.ToString("o"),
+            Fields = updatedFields
+        };
+
+        var updatedJson = JsonSerializer.Serialize(updatedScreen, JsonOpts);
+        System.IO.File.WriteAllText(path, updatedJson);
+
+        return Ok(updatedField);
+    }
+}
