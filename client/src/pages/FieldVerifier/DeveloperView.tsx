@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Table, Select, Button, Tag, message } from 'antd';
 import { CopyOutlined, DownloadOutlined } from '@ant-design/icons';
-import type { ScreenRegistry } from './index';
+import type { ScreenRegistry } from '../../types/fieldRegistry';
 
 interface Props {
   screens: ScreenRegistry[];

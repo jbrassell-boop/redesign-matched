@@ -5,6 +5,7 @@ import { NewOrderWizard } from './NewOrderWizard';
 import { useDensity } from '../../hooks/useDensity';
 import { useServiceLocation } from '../../hooks/useServiceLocation';
 import type { ServiceLocationKey } from '../../hooks/useServiceLocation';
+import { useInspector } from '../../contexts/InspectorContext';
 
 interface TopbarProps {
   sidebarCollapsed: boolean;
@@ -27,6 +28,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
   const { username, logout } = useAuth();
   const { density, toggle: toggleDensity } = useDensity();
   const { locationKey, locations, setLocationKey } = useServiceLocation();
+  const { enabled: inspectorEnabled, toggle: toggleInspector } = useInspector();
   const sidebarWidth = sidebarCollapsed ? 56 : 240;
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -159,6 +161,34 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
               </div>
             )}
           </div>
+
+          {/* Inspect toggle */}
+          <button
+            onClick={toggleInspector}
+            title={inspectorEnabled ? 'Close Dev Inspector' : 'Open Dev Inspector'}
+            aria-pressed={inspectorEnabled}
+            style={{
+              height: 28,
+              padding: '0 10px',
+              borderRadius: 5,
+              border: inspectorEnabled ? '1px solid rgba(255,255,255,0.6)' : '1px solid rgba(255,255,255,0.25)',
+              background: inspectorEnabled ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
+              color: 'var(--card)',
+              fontSize: 11,
+              fontWeight: inspectorEnabled ? 700 : 400,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
+              fontFamily: 'inherit',
+              transition: 'all 0.15s',
+            }}
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12 }}>
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            Inspect
+          </button>
 
           <span style={{ opacity: 0.4 }}>|</span>
 

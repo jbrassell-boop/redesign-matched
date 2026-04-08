@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button, Input, Spin, Tag, message } from 'antd';
 import { CheckOutlined, CloseOutlined, EditOutlined, LeftOutlined, RightOutlined, TableOutlined, SearchOutlined, LinkOutlined } from '@ant-design/icons';
-import type { FieldEntry } from './index';
-
-const API = 'http://localhost:5000/api/field-verifier';
+import { FIELD_VERIFIER_API, type FieldEntry } from '../../types/fieldRegistry';
 
 interface Props {
   screenFile: string;
@@ -72,7 +70,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setLiveValue('');
     setLiveError('');
     try {
-      const res = await fetch(`${API}/live-value`, {
+      const res = await fetch(`${FIELD_VERIFIER_API}/live-value`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sqlQuery: sql }),
@@ -96,7 +94,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setShowPreview(true);
     try {
       // Run the actual sqlQuery — it already targets the exact column(s) for this field
-      const res = await fetch(`${API}/preview-rows`, {
+      const res = await fetch(`${FIELD_VERIFIER_API}/preview-rows`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sqlQuery: field.sqlQuery }),
@@ -119,7 +117,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setLoadingCols(true);
     setColResults([]);
     try {
-      const res = await fetch(`${API}/ai-search-columns`, {
+      const res = await fetch(`${FIELD_VERIFIER_API}/ai-search-columns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: colSearch, table: editSqlTable || null }),
@@ -150,7 +148,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setJoinError('');
     setShowJoin(true);
     try {
-      const res = await fetch(`${API}/build-join`, {
+      const res = await fetch(`${FIELD_VERIFIER_API}/build-join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -191,7 +189,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
       notes: updated.notes,
       verifiedBy: 'Joe',
     };
-    await fetch(`${API}/field`, {
+    await fetch(`${FIELD_VERIFIER_API}/field`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
