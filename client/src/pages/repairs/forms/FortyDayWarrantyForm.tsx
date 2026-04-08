@@ -144,11 +144,11 @@ export const FortyDayWarrantyForm = ({ repair, onClose }: Props) => {
           </ul>
 
           {/* NCP Callout */}
-          <div style={{ background: '#FEF2F2', border: '1.5px solid #FECACA', borderRadius: 4, padding: '7px 10px', display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 8 }}>
-            <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>&#9888;</span>
+          <div style={{ background: 'rgba(var(--danger-rgb), 0.08)', border: '1.5px solid rgba(var(--danger-rgb), 0.35)', borderRadius: 4, padding: '7px 10px', display: 'flex', alignItems: 'flex-start', gap: 8, marginTop: 8 }}>
+            <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>{'\u26A0'}</span>
             <div style={{ fontSize: 8.5, fontWeight: 700, color: 'var(--danger)', lineHeight: 1.5 }}>
               Codes 4 or 5 automatically trigger OM23-1 Non-Conforming Product (NCP) form
-              <span style={{ fontWeight: 400, color: '#7F1D1D', display: 'block', marginTop: 2, fontSize: 8 }}>
+              <span style={{ fontWeight: 400, color: 'var(--danger)', display: 'block', marginTop: 2, fontSize: 8 }}>
                 When either code 4 or code 5 is selected above, complete and attach form OM23-1 before returning this scope to service. Notify Lab Manager immediately.
               </span>
             </div>

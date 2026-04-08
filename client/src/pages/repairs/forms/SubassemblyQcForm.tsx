@@ -77,7 +77,7 @@ export const SubassemblyQcForm = ({ repair, lineItems, onClose }: Props) => {
           <Fld label="Work Order #" value={repair.wo} />
           <Fld label="Scope / Model" value={repair.scopeModel ?? repair.scopeType} span2 />
           <Fld label="Serial #" value={repair.serial} />
-          <Fld label="Complaint / Reason for Repair" value={repair.complaint} span2 h={20} />
+          <Fld label="Complaint / Reason for Repair" value={repair.complaint} span2 h={24} />
           <Fld label="Technician" value={repair.tech} />
           <Fld label="Date" value={dateStr} />
           <Fld label="QC Inspector" value={null} />
