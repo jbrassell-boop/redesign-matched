@@ -39,3 +39,8 @@ public record LiveValueResponse(
     string Value,
     string Error
 );
+
+public record PreviewRowsResponse(
+    List<string> Rows,
+    string Error
+);

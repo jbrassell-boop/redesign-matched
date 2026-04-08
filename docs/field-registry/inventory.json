@@ -2,11 +2,11 @@
   "screen": "Inventory",
   "lastUpdated": "",
   "fields": [
-    { "id": "inv_scope_type", "label": "Scope Type", "sqlTable": "tblScopeModel", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "scopeType", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_serial", "label": "Serial #", "sqlTable": "tblScope", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "serial", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_client", "label": "Client", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "client", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_location", "label": "Location", "sqlTable": "tblScope", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "location", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_status", "label": "Status", "sqlTable": "tblScope", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "status", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_cost", "label": "Cost", "sqlTable": "tblScope", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "cost", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+    { "id": "inv_item_desc", "label": "Item Description", "sqlTable": "tblInventory", "sqlQuery": "SELECT TOP 5 sItemDescription FROM tblInventory ORDER BY sItemDescription", "apiEndpoint": "GET /api/inventory", "responseProperty": "description", "status": "unverified", "notes": "Parts/supplies inventory — NOT scope instruments (those are in tblScope)", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "inv_current_level", "label": "Current Stock Level", "sqlTable": "tblInventory", "sqlQuery": "SELECT TOP 5 nLevelCurrent FROM tblInventory ORDER BY sItemDescription", "apiEndpoint": "GET /api/inventory", "responseProperty": "currentLevel", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "inv_min_level", "label": "Min Level", "sqlTable": "tblInventory", "sqlQuery": "SELECT TOP 5 nLevelMinimum FROM tblInventory ORDER BY sItemDescription", "apiEndpoint": "GET /api/inventory", "responseProperty": "minLevel", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "inv_max_level", "label": "Max Level", "sqlTable": "tblInventory", "sqlQuery": "SELECT TOP 5 nLevelMaximum FROM tblInventory ORDER BY sItemDescription", "apiEndpoint": "GET /api/inventory", "responseProperty": "maxLevel", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "inv_active", "label": "Active", "sqlTable": "tblInventory", "sqlQuery": "SELECT TOP 5 ISNULL(bActive, 0) AS bActive FROM tblInventory ORDER BY sItemDescription", "apiEndpoint": "GET /api/inventory", "responseProperty": "isActive", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "inv_low_stock", "label": "Low Stock Count", "sqlTable": "tblInventory", "sqlQuery": "SELECT COUNT(*) FROM tblInventory WHERE ISNULL(nLevelCurrent, 0) <= ISNULL(nLevelMinimum, 0) AND ISNULL(bActive, 0) = 1", "apiEndpoint": "GET /api/inventory", "responseProperty": "isLowStock", "status": "unverified", "notes": "Count of active items at or below minimum level", "verifiedAt": "", "verifiedBy": "" }
   ]
 }

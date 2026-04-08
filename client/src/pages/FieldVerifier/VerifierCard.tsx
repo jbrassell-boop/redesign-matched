@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button, Input, Spin, Tag, message } from 'antd';
-import { CheckOutlined, CloseOutlined, EditOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined, EditOutlined, LeftOutlined, RightOutlined, TableOutlined } from '@ant-design/icons';
 import type { FieldEntry } from './index';
 
 const API = 'http://localhost:5000/api/field-verifier';
@@ -21,6 +21,10 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
   const [editing, setEditing] = useState(false);
   const [flagNote, setFlagNote] = useState('');
   const [showFlagInput, setShowFlagInput] = useState(false);
+  const [previewRows, setPreviewRows] = useState<string[]>([]);
+  const [previewError, setPreviewError] = useState('');
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const [editSqlQuery, setEditSqlQuery] = useState(field.sqlQuery);
   const [editSqlTable, setEditSqlTable] = useState(field.sqlTable);
@@ -38,6 +42,9 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setShowFlagInput(false);
     setLiveValue('');
     setLiveError('');
+    setPreviewRows([]);
+    setPreviewError('');
+    setShowPreview(false);
     if (field.sqlQuery) fetchLiveValue(field.sqlQuery);
   }, [field.id]);
 
@@ -59,6 +66,28 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
       setLiveError('Failed to reach API');
     } finally {
       setLoadingValue(false);
+    }
+  }
+
+  async function fetchPreviewRows(sql: string) {
+    if (!sql) return;
+    setLoadingPreview(true);
+    setPreviewRows([]);
+    setPreviewError('');
+    setShowPreview(true);
+    try {
+      const res = await fetch(`${API}/preview-rows`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sqlQuery: sql }),
+      });
+      const data = await res.json();
+      if (data.error) setPreviewError(data.error);
+      else setPreviewRows(data.rows ?? []);
+    } catch {
+      setPreviewError('Failed to reach API');
+    } finally {
+      setLoadingPreview(false);
     }
   }
 
@@ -109,6 +138,8 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     message.success('Saved');
   }
 
+  const currentSql = editing ? editSqlQuery : field.sqlQuery;
+
   return (
     <div style={{ maxWidth: 680, margin: '0 auto' }}>
       {/* Navigation */}
@@ -150,10 +181,10 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
         </div>
 
         {/* Live Value */}
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 8 }}>
           <div style={{ fontSize: 11, color: '#8896AA', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
             Live Value
-            {field.sqlQuery && !editing && (
+            {currentSql && !editing && (
               <Button type="link" size="small" style={{ padding: '0 4px', fontSize: 11 }} onClick={() => fetchLiveValue(field.sqlQuery)}>
                 Refresh
               </Button>
@@ -169,6 +200,42 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
             <span style={{ color: '#8896AA', fontSize: 13 }}>
               {field.sqlQuery ? 'Click Refresh to load' : 'Add SQL query first'}
             </span>
+          )}
+        </div>
+
+        {/* Sample Data */}
+        <div style={{ marginBottom: 16 }}>
+          {currentSql && (
+            <Button
+              type="link"
+              size="small"
+              icon={<TableOutlined />}
+              style={{ padding: '0 0', fontSize: 11, color: '#2E74B5' }}
+              onClick={() => showPreview && previewRows.length > 0 ? setShowPreview(false) : fetchPreviewRows(editing ? editSqlQuery : field.sqlQuery)}
+              loading={loadingPreview}
+            >
+              {showPreview ? 'Hide sample data' : 'Show sample data'}
+            </Button>
+          )}
+          {showPreview && !loadingPreview && (
+            <div style={{ marginTop: 8, background: '#F0F7FF', border: '1px solid #BFD6F6', borderRadius: 4, padding: '8px 10px' }}>
+              {previewError ? (
+                <span style={{ color: '#B71234', fontSize: 12 }}>{previewError}</span>
+              ) : previewRows.length === 0 ? (
+                <span style={{ color: '#8896AA', fontSize: 12 }}>No rows returned</span>
+              ) : (
+                <>
+                  <div style={{ fontSize: 10, color: '#44697D', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                    Sample rows from DB
+                  </div>
+                  {previewRows.map((row, i) => (
+                    <div key={i} style={{ fontSize: 12, fontFamily: 'monospace', color: '#1A202C', padding: '2px 0', borderBottom: i < previewRows.length - 1 ? '1px solid #DDE6F5' : 'none' }}>
+                      {row}
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
           )}
         </div>
 
