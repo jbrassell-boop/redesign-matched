@@ -21,7 +21,8 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
   const [editing, setEditing] = useState(false);
   const [flagNote, setFlagNote] = useState('');
   const [showFlagInput, setShowFlagInput] = useState(false);
-  const [previewRows, setPreviewRows] = useState<string[]>([]);
+  const [previewColumns, setPreviewColumns] = useState<string[]>([]);
+  const [previewRows, setPreviewRows] = useState<string[][]>([]);
   const [previewError, setPreviewError] = useState('');
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -45,6 +46,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setShowFlagInput(false);
     setLiveValue('');
     setLiveError('');
+    setPreviewColumns([]);
     setPreviewRows([]);
     setPreviewError('');
     setShowPreview(false);
@@ -89,7 +91,10 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
       });
       const data = await res.json();
       if (data.error) setPreviewError(data.error);
-      else setPreviewRows(data.rows ?? []);
+      else {
+        setPreviewColumns(data.columns ?? []);
+        setPreviewRows(data.rows ?? []);
+      }
     } catch {
       setPreviewError('Failed to reach API');
     } finally {
@@ -251,21 +256,38 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
             </Button>
           )}
           {showPreview && !loadingPreview && (
-            <div style={{ marginTop: 8, background: '#F0F7FF', border: '1px solid #BFD6F6', borderRadius: 4, padding: '8px 10px' }}>
+            <div style={{ marginTop: 8, background: '#F0F7FF', border: '1px solid #BFD6F6', borderRadius: 4, padding: '8px 10px', overflowX: 'auto' }}>
               {previewError ? (
                 <span style={{ color: '#B71234', fontSize: 12 }}>{previewError}</span>
               ) : previewRows.length === 0 ? (
                 <span style={{ color: '#8896AA', fontSize: 12 }}>No rows returned</span>
               ) : (
                 <>
-                  <div style={{ fontSize: 10, color: '#44697D', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                  <div style={{ fontSize: 10, color: '#44697D', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
                     Sample rows from DB
                   </div>
-                  {previewRows.map((row, i) => (
-                    <div key={i} style={{ fontSize: 12, fontFamily: 'monospace', color: '#1A202C', padding: '2px 0', borderBottom: i < previewRows.length - 1 ? '1px solid #DDE6F5' : 'none' }}>
-                      {row}
-                    </div>
-                  ))}
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                    <thead>
+                      <tr>
+                        {previewColumns.map(col => (
+                          <th key={col} style={{ textAlign: 'left', padding: '3px 8px 3px 0', borderBottom: '2px solid #BFD6F6', color: '#00257A', fontFamily: 'monospace', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {previewRows.map((row, ri) => (
+                        <tr key={ri} style={{ background: ri % 2 === 0 ? 'transparent' : '#E8F0FC' }}>
+                          {row.map((cell, ci) => (
+                            <td key={ci} style={{ padding: '3px 8px 3px 0', color: cell === '(null)' ? '#8896AA' : '#1A202C', fontFamily: 'monospace', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              {cell}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </>
               )}
             </div>

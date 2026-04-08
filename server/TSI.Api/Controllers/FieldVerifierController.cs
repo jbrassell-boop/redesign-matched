@@ -152,7 +152,7 @@ public class FieldVerifierController(IConfiguration config) : ControllerBase
     public async Task<IActionResult> GetPreviewRows([FromBody] LiveValueRequest request)
     {
         if (string.IsNullOrWhiteSpace(request.SqlQuery))
-            return Ok(new PreviewRowsResponse([], "No SQL query provided"));
+            return Ok(new PreviewRowsResponse([], [], "No SQL query provided"));
 
         try
         {
@@ -162,20 +162,27 @@ public class FieldVerifierController(IConfiguration config) : ControllerBase
             cmd.CommandTimeout = 15;
             await using var reader = await cmd.ExecuteReaderAsync();
 
-            var rows = new List<string>();
-            while (await reader.ReadAsync() && rows.Count < 10)
+            var colCount = Math.Min(reader.FieldCount, 15);
+            var columns = Enumerable.Range(0, colCount)
+                .Select(i => reader.GetName(i))
+                .ToList();
+            if (reader.FieldCount > 15) columns.Add($"… +{reader.FieldCount - 15} more");
+
+            var rows = new List<List<string>>();
+            while (await reader.ReadAsync() && rows.Count < 5)
             {
-                var vals = new List<string>();
-                for (var i = 0; i < reader.FieldCount; i++)
-                    vals.Add(reader.IsDBNull(i) ? "(null)" : reader.GetValue(i)?.ToString() ?? "(null)");
-                rows.Add(string.Join(" | ", vals));
+                var vals = Enumerable.Range(0, colCount)
+                    .Select(i => reader.IsDBNull(i) ? "(null)" : reader.GetValue(i)?.ToString() ?? "(null)")
+                    .ToList();
+                if (reader.FieldCount > 15) vals.Add("…");
+                rows.Add(vals);
             }
 
-            return Ok(new PreviewRowsResponse(rows, ""));
+            return Ok(new PreviewRowsResponse(columns, rows, ""));
         }
         catch (Exception ex)
         {
-            return Ok(new PreviewRowsResponse([], ex.Message));
+            return Ok(new PreviewRowsResponse([], [], ex.Message));
         }
     }
 
