@@ -6,6 +6,7 @@ import type { EndoCartFilters, CatalogPart, CartModel, EndoCartScopeItem, EndoCa
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import { StatStrip } from '../../components/shared/StatStrip';
+import './EndoCartsPage.css';
 
 /* ── helpers ─────────────────────────────────────────────────── */
 const fmtMoney = (n: number) =>

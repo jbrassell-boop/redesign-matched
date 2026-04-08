@@ -9,6 +9,7 @@ import { ExportButton } from '../../components/common/ExportButton';
 import { useBulkSelect } from '../../components/common/useBulkSelect';
 import { StatStrip } from '../../components/shared/StatStrip';
 import type { StatChipDef } from '../../components/shared/StatStrip';
+import './LoanersPage.css';
 
 
 
@@ -677,7 +678,7 @@ export const LoanersPage = () => {
     <StatStrip
       chips={loanerChips}
       activeChip={statusFilter}
-      onChipClick={(id) => handleChipClick(id === 'all' ? 'All' : id)}
+      onChipClick={(id) => { if (id !== 'fillRate') handleChipClick(id === 'all' ? 'All' : id); }}
     />
   );
   /* ── Toolbar ─────────────────────────────────────────────── */

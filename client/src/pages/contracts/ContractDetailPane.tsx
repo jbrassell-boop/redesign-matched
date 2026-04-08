@@ -8,6 +8,7 @@ import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../compon
 import type { TabDef } from '../../components/shared';
 import { useAutosave } from '../../hooks/useAutosave';
 import { AutosaveIndicator } from '../../components/common/AutosaveIndicator';
+import './ContractDetailPane.css';
 
 const fmtDate = (d: string | null | undefined) => {
   if (!d) return '—';
