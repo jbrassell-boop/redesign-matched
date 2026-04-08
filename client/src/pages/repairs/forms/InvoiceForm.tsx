@@ -64,7 +64,7 @@ export const InvoiceForm = ({ repair, lineItems, onClose }: Props) => {
         </div>
 
         {/* Invoice Meta Strip */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--primary)', border: '2px solid var(--primary)', borderRadius: 4, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--primary)', border: '2px solid var(--primary)', borderRadius: 4, overflow: 'hidden' }}>
           <div style={{ background: '#F0F6FF', padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
             <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--primary)', letterSpacing: '0.06em' }}>Invoice #</span>
             <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{repair.invoiceNumber ?? '—'}</span>
@@ -74,8 +74,12 @@ export const InvoiceForm = ({ repair, lineItems, onClose }: Props) => {
             <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{today}</span>
           </div>
           <div style={{ background: '#fff', padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--primary)', letterSpacing: '0.06em' }}>Work Order #</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{repair.wo ?? '—'}</span>
+            <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--primary)', letterSpacing: '0.06em' }}>Due Date</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}></span>
+          </div>
+          <div style={{ background: '#fff', padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--primary)', letterSpacing: '0.06em' }}>Terms</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{repair.paymentTerms ?? ''}</span>
           </div>
         </div>
 
@@ -149,6 +153,30 @@ export const InvoiceForm = ({ repair, lineItems, onClose }: Props) => {
           <div style={{ flex: 1 }}>
             <div style={{ borderBottom: '1px solid #ccc', minHeight: 28 }} />
             <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 2 }}>Date</div>
+          </div>
+        </div>
+
+        {/* Remittance Stub */}
+        <div style={{ marginTop: 12, padding: '10px 14px', background: '#F9FAFB', border: '1px solid #ddd', borderRadius: 3 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--primary)', letterSpacing: '0.06em', marginBottom: 6, borderBottom: '1px solid #ccc', paddingBottom: 4 }}>
+            Remittance — Please Return With Payment
+          </div>
+          <div style={{ display: 'flex', gap: 24, fontSize: 10.5, color: '#333' }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 8.5, fontWeight: 700, color: '#666', textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 2 }}>Invoice #</div>
+              <div style={{ borderBottom: '1px solid #ccc', minHeight: 16 }}>{repair.invoiceNumber ?? ''}</div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 8.5, fontWeight: 700, color: '#666', textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 2 }}>Amount Enclosed</div>
+              <div style={{ borderBottom: '1px solid #ccc', minHeight: 16 }}></div>
+            </div>
+            <div style={{ flex: 2 }}>
+              <div style={{ fontSize: 8.5, fontWeight: 700, color: '#666', textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 2 }}>Account / PO Reference</div>
+              <div style={{ borderBottom: '1px solid #ccc', minHeight: 16 }}></div>
+            </div>
+          </div>
+          <div style={{ borderTop: '1.5px dashed #bbb', marginTop: 14, paddingTop: 4, fontSize: 8, color: 'var(--muted)', textAlign: 'center' as const, letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>
+            ✂ &nbsp; Detach and return with payment &nbsp; ✂
           </div>
         </div>
 
