@@ -12,7 +12,7 @@ const overlay: React.CSSProperties = {
   padding: '32px 16px', overflowY: 'auto',
 };
 const panel: React.CSSProperties = {
-  width: 660, background: 'var(--card)', borderRadius: 10,
+  width: 700, background: 'var(--card)', borderRadius: 10,
   boxShadow: '0 8px 40px rgba(0,0,0,0.22)', overflow: 'hidden', flexShrink: 0,
 };
 const modalHeader: React.CSSProperties = {
@@ -21,11 +21,11 @@ const modalHeader: React.CSSProperties = {
 };
 const modalTitle: React.CSSProperties = { fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' };
 const modalSub: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 2 };
-const modalBody: React.CSSProperties = { padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 16 };
-const sectionLbl: React.CSSProperties = {
+const modalBody: React.CSSProperties = { padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: 'calc(100vh - 180px)', overflowY: 'auto' };
+const catHdr: React.CSSProperties = {
   fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
   letterSpacing: '0.06em', color: 'var(--primary)',
-  borderBottom: '1px solid var(--border)', paddingBottom: 5, marginBottom: 10,
+  borderBottom: '1px solid var(--border)', paddingBottom: 5, marginBottom: 8,
 };
 const fieldLbl: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', fontWeight: 600, display: 'block', marginBottom: 3 };
 const closeBtnStyle: React.CSSProperties = {
@@ -37,6 +37,9 @@ const saveBtnStyle: React.CSSProperties = {
   height: 28, padding: '0 16px', border: 'none',
   borderRadius: 5, background: 'var(--primary)', color: '#fff',
   fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+};
+const cancelBtnStyle: React.CSSProperties = {
+  ...closeBtnStyle, border: '1px solid var(--border)', color: 'var(--muted)', background: 'var(--card)',
 };
 const modalFooter: React.CSSProperties = {
   padding: '12px 20px', borderTop: '1px solid var(--border)',
@@ -53,13 +56,12 @@ const angInput: React.CSSProperties = {
   border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '2px 4px',
   fontFamily: 'inherit',
 };
-const fiberGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 };
+const fiberGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 };
 const fiberInput: React.CSSProperties = {
   width: '100%', fontSize: 11, border: '1px solid var(--neutral-200)',
   borderRadius: 3, padding: '4px 6px', fontFamily: 'inherit', boxSizing: 'border-box' as const,
 };
-const pfGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px 20px' };
-const pfRow: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
+const pfRow: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3px 0' };
 const pfLabel: React.CSSProperties = { fontSize: 11, color: 'var(--text)' };
 const pfBtnRow: React.CSSProperties = { display: 'flex', gap: 3 };
 const textarea: React.CSSProperties = {
@@ -76,7 +78,7 @@ const PFBtn = ({ value, target, onClick }: { value?: string; target: 'P' | 'F'; 
     <button
       onClick={onClick}
       style={{
-        width: 30, height: 28, border: '1px solid var(--neutral-200)', borderRadius: 3,
+        width: 30, height: 26, border: '1px solid var(--neutral-200)', borderRadius: 3,
         fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
         background: active ? (target === 'P' ? 'var(--success)' : 'var(--danger)') : 'var(--card)',
         color: active ? '#fff' : 'var(--muted)',
@@ -106,9 +108,67 @@ const YNBtn = ({ value, target, onClick }: { value?: string; target: 'Y' | 'N'; 
   );
 };
 
-// ── D&I Modal ─────────────────────────────────────────────────────────────────
+// ── D&I P/F sections — mirrors DiFlexibleForm PF_CATEGORIES ──────────────────
 
 const ANG_DIRS = ['Up', 'Down', 'Left', 'Right'] as const;
+
+type PFKey = keyof RepairInspections;
+
+const DI_PF_SECTIONS: { cat: string; items: { key: PFKey; label: string }[] }[] = [
+  {
+    cat: 'Leak & Pressure',
+    items: [
+      { key: 'insLeakPF', label: 'Pressure Test / Leak Test' },
+      { key: 'insHotColdLeakPF', label: 'Hot/Cold Leak Test' },
+    ],
+  },
+  {
+    cat: 'Water & Channels',
+    items: [
+      { key: 'insAirWaterPF', label: 'Air/Water Flow' },
+      { key: 'insAuxWaterPF', label: 'Auxiliary Water' },
+      { key: 'insSuctionPF', label: 'Suction Channel' },
+      { key: 'insForcepChannelPF', label: 'Forcep Channel' },
+    ],
+  },
+  {
+    cat: 'Angulation',
+    items: [
+      { key: 'insAngulationPF', label: 'Angulation (U/D/L/R)' },
+    ],
+  },
+  {
+    cat: 'Scope Components',
+    items: [
+      { key: 'insInsertionTubePF', label: 'Insertion Tube' },
+      { key: 'insUniversalCordPF', label: 'Universal Cord' },
+      { key: 'insLightGuideConnectorPF', label: 'Light Guide Connector' },
+      { key: 'insDistalTipPF', label: 'Distal Tip' },
+      { key: 'insEyePiecePF', label: 'Eyepiece' },
+    ],
+  },
+  {
+    cat: 'Optics & Image',
+    items: [
+      { key: 'insImagePF', label: 'Image Quality' },
+      { key: 'insImageCentrationPF', label: 'Image Centration' },
+      { key: 'insFocalDistancePF', label: 'Focal Distance' },
+      { key: 'insFogPF', label: 'Fog' },
+      { key: 'insFiberLightTransPF', label: 'Fiber Light Transmission' },
+      { key: 'insLightFibersPF', label: 'Light Fibers' },
+      { key: 'insVisionPF', label: 'Vision' },
+    ],
+  },
+  {
+    cat: 'Sign-Off',
+    items: [
+      { key: 'insAlcoholWipePF', label: 'Alcohol Wipe' },
+      { key: 'insFinalPF', label: 'Final Approval' },
+    ],
+  },
+];
+
+// ── D&I Modal ─────────────────────────────────────────────────────────────────
 
 interface DiModalProps {
   data: RepairInspections;
@@ -118,166 +178,139 @@ interface DiModalProps {
   onClose: () => void;
 }
 
-const DiModal = ({ data, saving, onChange, onSave, onClose }: DiModalProps) => (
-  <div style={overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div style={panel}>
-      <div style={modalHeader}>
-        <div>
-          <div style={modalTitle}>D&amp;I Intake Inspection</div>
-          <div style={modalSub}>Disassembly &amp; Inspection — incoming condition</div>
+const DiModal = ({ data, saving, onChange, onSave, onClose }: DiModalProps) => {
+  const toggle = (key: PFKey, target: 'P' | 'F') =>
+    onChange({ [key]: (data[key] as string | undefined) === target ? '' : target } as Partial<RepairInspections>);
+
+  return (
+    <div style={overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={panel}>
+        <div style={modalHeader}>
+          <div>
+            <div style={modalTitle}>D&amp;I Intake Inspection</div>
+            <div style={modalSub}>Disassembly &amp; Inspection — incoming condition</div>
+          </div>
+          <button style={closeBtnStyle} onClick={onClose}>Close</button>
         </div>
-        <button style={closeBtnStyle} onClick={onClose}>Close</button>
-      </div>
 
-      <div style={modalBody}>
+        <div style={modalBody}>
 
-        {/* Scope Condition */}
-        <div>
-          <div style={sectionLbl}>Scope Condition</div>
-          <div style={{ display: 'flex', gap: 24 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={fieldLbl}>Scope Repairable</span>
-              <div style={{ display: 'flex', gap: 4 }}>
-                <YNBtn value={data.scopeRepairable} target="Y" onClick={() => onChange({ scopeRepairable: data.scopeRepairable === 'Y' ? '' : 'Y' })} />
-                <YNBtn value={data.scopeRepairable} target="N" onClick={() => onChange({ scopeRepairable: data.scopeRepairable === 'N' ? '' : 'N' })} />
+          {/* Scope Condition */}
+          <div>
+            <div style={catHdr}>Scope Condition</div>
+            <div style={{ display: 'flex', gap: 24 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={fieldLbl}>Scope Repairable</span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <YNBtn value={data.scopeRepairable} target="Y" onClick={() => onChange({ scopeRepairable: data.scopeRepairable === 'Y' ? '' : 'Y' })} />
+                  <YNBtn value={data.scopeRepairable} target="N" onClick={() => onChange({ scopeRepairable: data.scopeRepairable === 'N' ? '' : 'N' })} />
+                </div>
               </div>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={fieldLbl}>Scope Usable</span>
-              <div style={{ display: 'flex', gap: 4 }}>
-                <YNBtn value={data.scopeUsable} target="Y" onClick={() => onChange({ scopeUsable: data.scopeUsable === 'Y' ? '' : 'Y' })} />
-                <YNBtn value={data.scopeUsable} target="N" onClick={() => onChange({ scopeUsable: data.scopeUsable === 'N' ? '' : 'N' })} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <span style={fieldLbl}>Scope Usable</span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <YNBtn value={data.scopeUsable} target="Y" onClick={() => onChange({ scopeUsable: data.scopeUsable === 'Y' ? '' : 'Y' })} />
+                  <YNBtn value={data.scopeUsable} target="N" onClick={() => onChange({ scopeUsable: data.scopeUsable === 'N' ? '' : 'N' })} />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Angulation IN */}
-        <div>
-          <div style={sectionLbl}>Angulation — Incoming</div>
-          <table style={angTable}>
-            <thead>
-              <tr>
-                <th style={angThLeft}>Direction</th>
-                <th style={angTh}>In</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ANG_DIRS.map(dir => (
-                <tr key={dir}>
-                  <td style={angTd}>{dir}</td>
-                  <td style={angTdC}>
-                    <input
-                      value={(data[`angIn${dir}` as keyof RepairInspections] as string) ?? ''}
-                      onChange={e => onChange({ [`angIn${dir}`]: e.target.value } as Partial<RepairInspections>)}
-                      style={angInput}
-                    />
-                  </td>
+          {/* Angulation IN */}
+          <div>
+            <div style={catHdr}>Angulation — Incoming</div>
+            <table style={angTable}>
+              <thead>
+                <tr>
+                  <th style={angThLeft}>Direction</th>
+                  <th style={angTh}>In</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {ANG_DIRS.map(dir => (
+                  <tr key={dir}>
+                    <td style={angTd}>{dir}</td>
+                    <td style={angTdC}>
+                      <input
+                        value={(data[`angIn${dir}` as keyof RepairInspections] as string) ?? ''}
+                        onChange={e => onChange({ [`angIn${dir}`]: e.target.value } as Partial<RepairInspections>)}
+                        style={angInput}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-        {/* Fiber Readings */}
-        <div>
-          <div style={sectionLbl}>Fiber Readings</div>
-          <div style={fiberGrid}>
-            <div>
-              <span style={fieldLbl}>Broken Fibers In</span>
-              <input value={data.brokenFibersIn ?? ''} onChange={e => onChange({ brokenFibersIn: e.target.value })} style={fiberInput} />
-            </div>
-            <div>
-              <span style={fieldLbl}>Fiber Angle</span>
-              <input value={data.fiberAngle ?? ''} onChange={e => onChange({ fiberAngle: e.target.value })} style={fiberInput} />
-            </div>
-            <div>
-              <span style={fieldLbl}>Light Transmission</span>
-              <input value={data.fiberLightTrans ?? ''} onChange={e => onChange({ fiberLightTrans: e.target.value })} style={fiberInput} />
+          {/* Fiber Readings */}
+          <div>
+            <div style={catHdr}>Fiber Readings — Incoming</div>
+            <div style={fiberGrid}>
+              <div>
+                <span style={fieldLbl}>Broken Fibers In</span>
+                <input value={data.brokenFibersIn ?? ''} onChange={e => onChange({ brokenFibersIn: e.target.value })} style={fiberInput} />
+              </div>
+              <div>
+                <span style={fieldLbl}>Fiber Angle</span>
+                <input value={data.fiberAngle ?? ''} onChange={e => onChange({ fiberAngle: e.target.value })} style={fiberInput} />
+              </div>
+              <div>
+                <span style={fieldLbl}>Light Transmission</span>
+                <input value={data.fiberLightTrans ?? ''} onChange={e => onChange({ fiberLightTrans: e.target.value })} style={fiberInput} />
+              </div>
             </div>
           </div>
+
+          {/* P/F Line Items — mirrors form categories */}
+          {DI_PF_SECTIONS.map(section => (
+            <div key={section.cat}>
+              <div style={catHdr}>{section.cat}</div>
+              {section.items.map(f => (
+                <div key={f.key} style={pfRow}>
+                  <span style={pfLabel}>{f.label}</span>
+                  <div style={pfBtnRow}>
+                    <PFBtn value={data[f.key] as string | undefined} target="P" onClick={() => toggle(f.key, 'P')} />
+                    <PFBtn value={data[f.key] as string | undefined} target="F" onClick={() => toggle(f.key, 'F')} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+
+          {/* Comments */}
+          <div>
+            <div style={catHdr}>Comments</div>
+            <textarea
+              value={data.diInsComments ?? ''}
+              onChange={e => onChange({ diInsComments: e.target.value })}
+              placeholder="D&I inspection notes..."
+              style={textarea}
+            />
+          </div>
+
         </div>
 
-        {/* Comments */}
-        <div>
-          <div style={sectionLbl}>Comments</div>
-          <textarea
-            value={data.diInsComments ?? ''}
-            onChange={e => onChange({ diInsComments: e.target.value })}
-            placeholder="D&I inspection notes..."
-            style={textarea}
-          />
+        <div style={modalFooter}>
+          <button style={cancelBtnStyle} onClick={onClose}>Cancel</button>
+          <button style={{ ...saveBtnStyle, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }} onClick={onSave} disabled={saving}>
+            {saving ? 'Saving…' : 'Save D&I'}
+          </button>
         </div>
-
-      </div>
-
-      <div style={modalFooter}>
-        <button
-          style={{ ...closeBtnStyle, border: '1px solid var(--border)', color: 'var(--muted)', background: 'var(--card)' }}
-          onClick={onClose}
-        >
-          Cancel
-        </button>
-        <button
-          style={{ ...saveBtnStyle, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}
-          onClick={onSave}
-          disabled={saving}
-        >
-          {saving ? 'Saving…' : 'Save D&I'}
-        </button>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ── Post-Repair Modal ──────────────────────────────────────────────────────────
 
-const PF_FIELDS: { key: keyof RepairInspections; label: string }[] = [
-  { key: 'insImagePF', label: 'Image' },
-  { key: 'insLeakPF', label: 'Leak Test' },
-  { key: 'insFiberLightTransPF', label: 'Fiber Light Trans' },
-  { key: 'insAngulationPF', label: 'Angulation' },
-  { key: 'insFocalDistancePF', label: 'Focal Distance' },
-  { key: 'insImageCentrationPF', label: 'Image Centration' },
-  { key: 'insFogPF', label: 'Fog' },
-  { key: 'insHotColdLeakPF', label: 'Hot/Cold Leak' },
-  { key: 'insSuctionPF', label: 'Suction' },
-  { key: 'insForcepChannelPF', label: 'Forcep Channel' },
-  { key: 'insAirWaterPF', label: 'Air/Water' },
-  { key: 'insAuxWaterPF', label: 'Aux Water' },
-  { key: 'insVisionPF', label: 'Vision' },
-  { key: 'insInsertionTubePF', label: 'Insertion Tube' },
-  { key: 'insUniversalCordPF', label: 'Universal Cord' },
-  { key: 'insLightGuideConnectorPF', label: 'Light Guide Connector' },
-  { key: 'insDistalTipPF', label: 'Distal Tip' },
-  { key: 'insEyePiecePF', label: 'Eyepiece' },
-  { key: 'insLightFibersPF', label: 'Light Fibers' },
-  { key: 'insAlcoholWipePF', label: 'Alcohol Wipe' },
-  { key: 'insFinalPF', label: 'Final' },
-];
+const PostRepairModal = ({ data, saving, onChange, onSave, onClose }: DiModalProps) => {
+  const toggle = (key: PFKey, target: 'P' | 'F') =>
+    onChange({ [key]: (data[key] as string | undefined) === target ? '' : target } as Partial<RepairInspections>);
 
-interface PostRepairModalProps {
-  data: RepairInspections;
-  saving: boolean;
-  onChange: (patch: Partial<RepairInspections>) => void;
-  onSave: () => void;
-  onClose: () => void;
-}
-
-const PostRepairModal = ({ data, saving, onChange, onSave, onClose }: PostRepairModalProps) => {
-  const passCount = PF_FIELDS.filter(f => data[f.key] === 'P').length;
-
-  const markAllPass = () => {
-    const patch: Partial<RepairInspections> = {};
-    for (const f of PF_FIELDS) (patch as Record<string, string>)[f.key] = 'P';
-    onChange(patch);
-  };
-
-  const clearAll = () => {
-    const patch: Partial<RepairInspections> = {};
-    for (const f of PF_FIELDS) (patch as Record<string, string>)[f.key] = '';
-    onChange(patch);
-  };
+  const allPFKeys: PFKey[] = DI_PF_SECTIONS.flatMap(s => s.items.map(i => i.key));
+  const passCount = allPFKeys.filter(k => data[k] === 'P').length;
+  const failCount = allPFKeys.filter(k => data[k] === 'F').length;
 
   return (
     <div style={overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
@@ -285,7 +318,7 @@ const PostRepairModal = ({ data, saving, onChange, onSave, onClose }: PostRepair
         <div style={modalHeader}>
           <div>
             <div style={modalTitle}>Post-Repair Inspection</div>
-            <div style={modalSub}>Outgoing condition — pass/fail checkpoints</div>
+            <div style={modalSub}>Outgoing condition — verify repairs complete</div>
           </div>
           <button style={closeBtnStyle} onClick={onClose}>Close</button>
         </div>
@@ -294,7 +327,7 @@ const PostRepairModal = ({ data, saving, onChange, onSave, onClose }: PostRepair
 
           {/* Angulation OUT */}
           <div>
-            <div style={sectionLbl}>Angulation — Outgoing</div>
+            <div style={catHdr}>Angulation — Outgoing</div>
             <table style={angTable}>
               <thead>
                 <tr>
@@ -321,60 +354,44 @@ const PostRepairModal = ({ data, saving, onChange, onSave, onClose }: PostRepair
 
           {/* Broken Fibers Out */}
           <div>
-            <div style={sectionLbl}>Fiber Readings — Outgoing</div>
+            <div style={catHdr}>Fiber Readings — Outgoing</div>
             <div style={{ maxWidth: 240 }}>
               <span style={fieldLbl}>Broken Fibers Out</span>
               <input value={data.brokenFibersOut ?? ''} onChange={e => onChange({ brokenFibersOut: e.target.value })} style={fiberInput} />
             </div>
           </div>
 
-          {/* P/F Checkpoints */}
+          {/* P/F summary — same sections, verify each item was fixed */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-              <div style={sectionLbl}>Pass / Fail Checkpoints</div>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600 }}>{passCount}/{PF_FIELDS.length} Pass</span>
-                <button
-                  onClick={markAllPass}
-                  style={{ fontSize: 10, padding: '2px 8px', border: '1px solid var(--success)', borderRadius: 4, background: 'var(--card)', color: 'var(--success)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}
-                >
-                  Mark All Pass
-                </button>
-                <button
-                  onClick={clearAll}
-                  style={{ fontSize: 10, padding: '2px 8px', border: '1px solid var(--neutral-200)', borderRadius: 4, background: 'var(--card)', color: 'var(--muted)', cursor: 'pointer', fontFamily: 'inherit' }}
-                >
-                  Clear
-                </button>
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={catHdr}>Pass / Fail Verification</div>
+              <span style={{ fontSize: 11, color: failCount > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: 700 }}>
+                {passCount}P / {failCount}F
+              </span>
             </div>
-            <div style={pfGrid}>
-              {PF_FIELDS.map(f => (
-                <div key={f.key} style={pfRow}>
-                  <span style={pfLabel}>{f.label}</span>
-                  <div style={pfBtnRow}>
-                    <PFBtn value={data[f.key] as string | undefined} target="P" onClick={() => onChange({ [f.key]: data[f.key] === 'P' ? '' : 'P' } as Partial<RepairInspections>)} />
-                    <PFBtn value={data[f.key] as string | undefined} target="F" onClick={() => onChange({ [f.key]: data[f.key] === 'F' ? '' : 'F' } as Partial<RepairInspections>)} />
-                  </div>
+            {DI_PF_SECTIONS.map(section => (
+              <div key={section.cat} style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+                  {section.cat}
                 </div>
-              ))}
-            </div>
+                {section.items.map(f => (
+                  <div key={f.key} style={pfRow}>
+                    <span style={pfLabel}>{f.label}</span>
+                    <div style={pfBtnRow}>
+                      <PFBtn value={data[f.key] as string | undefined} target="P" onClick={() => toggle(f.key, 'P')} />
+                      <PFBtn value={data[f.key] as string | undefined} target="F" onClick={() => toggle(f.key, 'F')} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
           </div>
 
         </div>
 
         <div style={modalFooter}>
-          <button
-            style={{ ...closeBtnStyle, border: '1px solid var(--border)', color: 'var(--muted)', background: 'var(--card)' }}
-            onClick={onClose}
-          >
-            Cancel
-          </button>
-          <button
-            style={{ ...saveBtnStyle, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}
-            onClick={onSave}
-            disabled={saving}
-          >
+          <button style={cancelBtnStyle} onClick={onClose}>Cancel</button>
+          <button style={{ ...saveBtnStyle, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }} onClick={onSave} disabled={saving}>
             {saving ? 'Saving…' : 'Save Post-Repair'}
           </button>
         </div>
@@ -425,6 +442,8 @@ const SelectorCard = ({ title, subtitle, badge, badgeColor, onClick, icon }: Sel
 
 // ── Main Tab ──────────────────────────────────────────────────────────────────
 
+const ALL_PF_KEYS: PFKey[] = DI_PF_SECTIONS.flatMap(s => s.items.map(i => i.key));
+
 interface InspectionsTabProps {
   repairKey: number;
 }
@@ -465,10 +484,9 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
   if (loading) return <div style={{ padding: 24, color: 'var(--muted)', fontSize: 12 }}>Loading inspections...</div>;
   if (!data) return <div style={{ padding: 24, color: 'var(--muted)', fontSize: 12 }}>No inspection data</div>;
 
-  // Status badges
   const diDone = !!(data.scopeRepairable || data.scopeUsable || data.angInUp || data.angInDown || data.diInsComments);
-  const pfPassCount = PF_FIELDS.filter(f => data[f.key] === 'P').length;
-  const pfFailCount = PF_FIELDS.filter(f => data[f.key] === 'F').length;
+  const pfPassCount = ALL_PF_KEYS.filter(k => data[k] === 'P').length;
+  const pfFailCount = ALL_PF_KEYS.filter(k => data[k] === 'F').length;
   const postDone = pfPassCount + pfFailCount > 0;
 
   return (
@@ -480,7 +498,7 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
         <div style={{ display: 'flex', gap: 12 }}>
           <SelectorCard
             title="D&I Intake"
-            subtitle="Incoming condition, angulation, fiber readings"
+            subtitle="Scope condition, angulation, fiber readings, line items"
             badge={diDone ? 'Recorded' : 'Not started'}
             badgeColor={diDone ? 'var(--success)' : undefined}
             onClick={() => setDiOpen(true)}
@@ -495,7 +513,7 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
           />
           <SelectorCard
             title="Post-Repair"
-            subtitle="Outgoing angulation, pass/fail checkpoints"
+            subtitle="Outgoing angulation, pass/fail verification"
             badge={postDone ? `${pfPassCount}P / ${pfFailCount}F` : 'Not started'}
             badgeColor={postDone ? (pfFailCount > 0 ? 'var(--danger)' : 'var(--success)') : undefined}
             onClick={() => setPostOpen(true)}
