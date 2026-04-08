@@ -111,7 +111,7 @@ export const SuppliersPage = () => {
         }}>
           {/* Toolbar */}
           <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary-dark)' }}>Suppliers</span>
+            <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary-dark)', margin: 0 }}>Suppliers</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 11, color: 'var(--muted)' }} aria-live="polite">{suppliers.length} records</span>
               <ExportButton

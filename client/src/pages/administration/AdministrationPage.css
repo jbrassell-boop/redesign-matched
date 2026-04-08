@@ -1,0 +1,14 @@
+/* ── AdministrationPage styles ── */
+
+.adm-page { display: flex; flex-direction: column; height: calc(100vh - 64px); overflow: hidden; background: var(--bg); }
+.adm-category-pills { display: flex; gap: 8px; padding: 10px 16px; background: var(--card); border-bottom: 1px solid var(--border); }
+.adm-toolbar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--card); border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; flex-wrap: wrap; }
+.adm-table-area { flex: 1; overflow: auto; padding: 0 16px 16px; }
+.adm-form-label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+.adm-inline-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; }
+.adm-drawer-field-label { width: 160px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.adm-drawer-row { display: flex; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.adm-user-info-row { display: flex; padding: 5px 0; border-bottom: 1px solid var(--border); }
+.adm-user-info-label { width: 100px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; }
+.adm-modal-footer { display: flex; justify-content: flex-end; gap: 8px; }
+.adm-modal-body { display: flex; flex-direction: column; gap: 14px; padding: 8px 0; }

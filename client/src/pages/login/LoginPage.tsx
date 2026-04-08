@@ -99,8 +99,7 @@ export const LoginPage = () => {
                     fontFamily: 'inherit', color: 'var(--text)', outline: 'none',
                     boxSizing: 'border-box', transition: 'border-color .15s, box-shadow .15s',
                   }}
-                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(var(--primary-rgb), 0.1)'; }}
-                  onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-dk)'; e.currentTarget.style.boxShadow = 'none'; }}
+                  className="login-input"
                 />
               </div>
 
@@ -116,14 +115,7 @@ export const LoginPage = () => {
                   onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                   placeholder="Enter your password"
                   autoComplete="current-password"
-                  style={{
-                    width: '100%', height: 40, border: '1.5px solid var(--border-dk)',
-                    borderRadius: 6, padding: '0 14px', fontSize: 13,
-                    fontFamily: 'inherit', color: 'var(--text)', outline: 'none',
-                    boxSizing: 'border-box', transition: 'border-color .15s, box-shadow .15s',
-                  }}
-                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(var(--primary-rgb), 0.1)'; }}
-                  onBlur={e => { e.currentTarget.style.borderColor = 'var(--border-dk)'; e.currentTarget.style.boxShadow = 'none'; }}
+                  className="login-input"
                 />
               </div>
 

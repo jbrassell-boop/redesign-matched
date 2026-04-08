@@ -1,0 +1,61 @@
+/* ── FinancialPage styles ── */
+
+.fin-page { height: calc(100vh - 64px); overflow: hidden; display: flex; flex-direction: column; background: var(--bg); }
+
+/* Executive banner */
+.fin-exec-banner { padding: 12px 20px; background: var(--navy); border-bottom: 2px solid var(--primary); }
+.fin-exec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.fin-exec-title { font-size: 11px; font-weight: 800; color: rgba(255,255,255,.7); text-transform: uppercase; letter-spacing: .08em; }
+.fin-exec-date { font-size: 10px; color: rgba(255,255,255,.4); }
+.fin-exec-cards { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Exec cards */
+.fin-exec-card { background: var(--card); border-radius: 8px; padding: 14px 16px; flex: 1; min-width: 140px; border: 1px solid var(--neutral-200); display: flex; flex-direction: column; gap: 2px; }
+.fin-exec-card--clickable { cursor: pointer; }
+.fin-exec-card-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.fin-exec-subtext-muted { font-size: 10px; color: var(--muted); }
+.fin-exec-subtext-danger { font-size: 10px; color: var(--danger); font-weight: 600; }
+
+/* Exec value colours */
+.fin-val-navy { font-size: 22px; font-weight: 900; color: var(--navy); line-height: 1.1; }
+.fin-val-success { font-size: 22px; font-weight: 900; color: var(--success); line-height: 1.1; }
+.fin-val-primary { font-size: 22px; font-weight: 900; color: var(--primary); line-height: 1.1; }
+.fin-val-danger { font-size: 22px; font-weight: 900; color: var(--danger); line-height: 1.1; }
+
+/* Toolbar / panels */
+.fin-toolbar { padding: 12px 16px; border-bottom: 1px solid var(--neutral-200); background: var(--card); flex-shrink: 0; }
+.fin-pagination-footer { padding: 8px 16px; border-top: 1px solid var(--neutral-200); background: var(--card); flex-shrink: 0; display: flex; justify-content: flex-end; }
+.fin-full-scroll { flex: 1; overflow: auto; padding: 16px 20px; }
+.fin-detail-pane { flex: 1; overflow: hidden; display: flex; flex-direction: column; background: var(--card); }
+
+/* Table card */
+.fin-table-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.fin-table-card--shadow { box-shadow: 0 2px 16px rgba(var(--primary-rgb), 0.06); }
+
+/* Filter bar */
+.fin-filter-bar { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.fin-filter-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+.fin-filter-row { display: flex; gap: 8px; align-items: center; }
+.fin-switch-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.fin-switch-item { display: flex; gap: 5px; align-items: center; }
+.fin-switch-label { font-size: 11px; color: var(--text); }
+
+/* Summary stats */
+.fin-summary-flex { display: flex; gap: 8px; }
+.fin-summary-card { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; text-align: center; }
+.fin-summary-label { font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
+.fin-summary-value { font-size: 16px; font-weight: 800; }
+
+/* Generic layout helpers */
+.fin-flex-col-12 { display: flex; flex-direction: column; gap: 12px; }
+
+/* Empty / loading */
+.fin-empty { padding: 40px; text-align: center; color: var(--muted); font-size: 12px; }
+
+/* Payment rows */
+.fin-payment-row { padding: 10px 16px; border-bottom: 1px solid var(--neutral-100); background: var(--card); }
+
+/* Hold rows */
+.fin-hold-row-flex { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.fin-hold-badge { font-size: 10px; font-weight: 700; color: var(--danger); text-transform: uppercase; }
+.fin-hold-since { font-size: 10px; color: var(--muted); margin-top: 2px; }

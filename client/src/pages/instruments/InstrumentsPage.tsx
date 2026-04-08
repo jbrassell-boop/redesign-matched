@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import './InstrumentsPage.css';
 import { Input, Select, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import {
@@ -247,12 +248,12 @@ export const InstrumentsPage = () => {
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
 
   const paginationBar = (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 }}>
-      <span style={{ fontSize: 10, color: 'var(--muted)' }}>
+    <div className="inst-pagination-bar">
+      <span className="inst-pagination-count">
         {(activeTab === 'repairs' || activeTab === 'quotes') ? repairs.length : catalogItems.length} of {totalItems}
       </span>
       {totalPages > 1 && (
-        <div style={{ display: 'flex', gap: 3 }}>
+        <div className="inst-pagination-btns">
           <PgBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{'\u2039'}</PgBtn>
           {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
             const start = Math.max(1, Math.min(page - 2, totalPages - 4));
@@ -266,7 +267,7 @@ export const InstrumentsPage = () => {
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div className="inst-page">
       {/* Page tabs */}
       <TabBar
         tabs={TABS.map(t =>
@@ -280,41 +281,26 @@ export const InstrumentsPage = () => {
 
       {/* Stat strip — only for repairs/quotes tab */}
       {(activeTab === 'repairs' || activeTab === 'quotes') && (
-        <div style={{
-          display: 'flex',
-          borderBottom: '1px solid var(--border)',
-          background: 'var(--card)',
-          flexShrink: 0,
-          overflowX: 'auto',
-        }}>
+        <div className="inst-stat-strip">
           {STAT_CHIPS.map((chip, i) => (
             <div
               key={chip.key}
               onClick={() => chip.filter !== undefined ? handleChipClick(chip.filter) : handleChipClick()}
+              className="inst-stat-chip"
               style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 12px',
                 cursor: chip.filter !== undefined ? 'pointer' : 'default',
                 borderRight: i < STAT_CHIPS.length - 1 ? '1px solid var(--border)' : undefined,
                 background: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? 'var(--primary-light)' : undefined,
                 outline: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? '2.5px solid var(--navy)' : undefined,
                 outlineOffset: statusFilter === (chip.filter ?? '') && chip.filter !== undefined ? -2 : undefined,
-                transition: 'background 0.12s',
-                minWidth: 100,
               }}
             >
-              <div style={{
-                width: 28, height: 28, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: chip.iconBg, color: chip.iconColor, fontSize: 13, fontWeight: 700, flexShrink: 0,
-              }}>
+              <div className="inst-stat-chip-icon" style={{ background: chip.iconBg, color: chip.iconColor }}>
                 {chip.icon}
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 800, color: chip.valueColor, lineHeight: 1.2 }}>{getStatValue(chip.key)}</div>
-                <div style={{ fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{chip.label}</div>
+                <div className="inst-stat-chip-value" style={{ color: chip.valueColor }}>{getStatValue(chip.key)}</div>
+                <div className="inst-stat-chip-label">{chip.label}</div>
               </div>
             </div>
           ))}
@@ -335,7 +321,7 @@ export const InstrumentsPage = () => {
           overflow: 'hidden',
         }}>
           {/* Toolbar */}
-          <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div className="inst-panel-toolbar">
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
               <Input
                 prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
@@ -395,20 +381,20 @@ export const InstrumentsPage = () => {
             </div>
             {/* Count badge */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' }}>
+              <span className="inst-count-badge">
                 {totalItems.toLocaleString()} records
               </span>
             </div>
           </div>
 
           {/* List rows */}
-          <div style={{ flex: 1, overflow: 'auto' }}>
-            {loading && <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading...</div>}
+          <div className="inst-panel-list">
+            {loading && <div className="inst-empty">Loading...</div>}
             {!loading && (activeTab === 'repairs' || activeTab === 'quotes') && repairs.length === 0 && (
-              <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No records found</div>
+              <div className="inst-empty">No records found</div>
             )}
             {!loading && activeTab === 'catalog' && catalogItems.length === 0 && (
-              <div style={{ padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No records found</div>
+              <div className="inst-empty">No records found</div>
             )}
             {(activeTab === 'repairs' || activeTab === 'quotes') && repairs.map(renderRepairRow)}
             {activeTab === 'catalog' && catalogItems.map(renderCatalogRow)}
@@ -419,7 +405,7 @@ export const InstrumentsPage = () => {
 
         {/* Right panel — detail */}
         {repairDetailOpen && (
-          <section aria-label="Instrument repair details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+          <section aria-label="Instrument repair details" className="inst-detail-panel">
             <RepairDetailPane
               detail={repairDetail}
               loading={repairDetailLoading}
@@ -428,7 +414,7 @@ export const InstrumentsPage = () => {
           </section>
         )}
         {catalogDetailOpen && (
-          <section aria-label="Instrument catalog details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+          <section aria-label="Instrument catalog details" className="inst-detail-panel">
             <CatalogDetailPane
               detail={catalogDetail}
               loading={catalogDetailLoading}

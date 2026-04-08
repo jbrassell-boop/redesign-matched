@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
+import './RepairDetailPane.css';
 import { Spin, message, Popconfirm, Modal } from 'antd';
 import { useParams } from 'react-router-dom';
 import type { RepairDetail, RepairFull, RepairLineItem, RepairInspections } from './types';
@@ -85,40 +86,7 @@ const BASE_TABS: TabDef[] = [
   { key: 'statuslog',    label: 'Status Log' },
 ];
 
-// ── Extracted static styles (performance: avoid re-creating objects each render) ──
-const repairCockpitContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden' };
-const repairQuickActionBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 20px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
-const repairLegacyQuickActionBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', borderBottom: '1px solid var(--neutral-200)', background: 'var(--neutral-50)' };
-const repairDropdownMenuStyle: React.CSSProperties = {
-  position: 'absolute', top: '100%', left: 0, marginTop: 4,
-  background: 'var(--card)', border: '1px solid var(--neutral-200)',
-  borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-  minWidth: 220, maxHeight: 300, overflowY: 'auto', zIndex: 100,
-};
-const repairFormsDropdownStyle: React.CSSProperties = {
-  position: 'absolute', top: '100%', left: 0, marginTop: 4,
-  background: 'var(--card)', border: '1px solid var(--neutral-200)',
-  borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.12)',
-  minWidth: 240, zIndex: 100,
-};
-const repairFormsSectionHeaderStyle: React.CSSProperties = { padding: '6px 14px 4px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.06em', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' };
-const repairFormsSectionHeaderBorderTopStyle: React.CSSProperties = { ...repairFormsSectionHeaderStyle, borderTop: '1px solid var(--neutral-200)' };
-const repairMenuItemStyle: React.CSSProperties = { padding: '9px 14px', cursor: 'pointer', fontSize: 12, color: 'var(--text)', borderBottom: '1px solid var(--neutral-100)' };
-const repairMenuItemStyle12: React.CSSProperties = { ...repairMenuItemStyle, fontSize: 12 };
-const repairDropdownBtnStyle: React.CSSProperties = {
-  height: 30, padding: '0 14px', border: '1px solid var(--neutral-200)',
-  borderRadius: 5, background: 'var(--card)', color: 'var(--muted)',
-  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-  display: 'flex', alignItems: 'center', gap: 5,
-};
-const repairLegacyDropdownBtnStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', border: '1px solid var(--neutral-200)',
-  borderRadius: 5, background: 'var(--card)', color: 'var(--muted)',
-  fontSize: 12, fontWeight: 500, cursor: 'pointer', fontFamily: 'inherit',
-  display: 'flex', alignItems: 'center', gap: 5,
-};
-const repairFieldLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em', marginBottom: 4 };
-const repairCockpitTabBarStyle: React.CSSProperties = { background: 'var(--card)', borderBottom: '2px solid var(--border)', display: 'flex', padding: '0 16px', flexShrink: 0, overflowX: 'auto', gap: 2 };
+// styles moved to RepairDetailPane.css
 
 const COCKPIT_TABS = [
   { key: 'scope-in', label: 'Scope In', group: 'intake' },
@@ -397,7 +365,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
     }
 
     return (
-      <div style={repairCockpitContainerStyle}>
+      <div className="rdp-cockpit-container">
         <WorkflowPipeline currentStatus={fullRepair.status} />
 
         {/* Condensed header: summary line + collapsible details */}
@@ -437,7 +405,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         </div>
 
         {/* Quick action bar */}
-        <div style={repairQuickActionBarStyle}>
+        <div className="rdp-quick-action-bar">
           {hasNext && (
             <Popconfirm
               title="Advance workflow?"
@@ -460,14 +428,14 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             </Popconfirm>
           )}
           <div ref={statusMenuRef} style={{ position: 'relative' }}>
-            <button onClick={() => setStatusMenuOpen(!statusMenuOpen)} style={repairDropdownBtnStyle}>
+            <button onClick={() => setStatusMenuOpen(!statusMenuOpen)} className="rdp-dropdown-btn">
               Change Status
               <svg aria-hidden="true" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
             {statusMenuOpen && (
-              <div role="listbox" style={repairDropdownMenuStyle}>
+              <div role="listbox" className="rdp-dropdown-menu">
                 {statuses.map(s => (
                   <div key={s.statusId} onClick={() => confirmAndSetStatus(s.statusId)} role="option" aria-selected={s.statusId === currentStatusId} tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); confirmAndSetStatus(s.statusId); } }} style={{
                     padding: '8px 14px', cursor: 'pointer', fontSize: 12,
@@ -484,24 +452,22 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           </div>
           {/* Forms dropdown — cockpit */}
           <div ref={formsMenuRef} style={{ position: 'relative' }}>
-            <button onClick={() => setFormsMenuOpen(!formsMenuOpen)} style={repairDropdownBtnStyle}>
+            <button onClick={() => setFormsMenuOpen(!formsMenuOpen)} className="rdp-dropdown-btn">
               Forms
               <svg aria-hidden="true" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
             {formsMenuOpen && (
-              <div role="menu" style={repairFormsDropdownStyle}>
-                <div style={repairFormsSectionHeaderStyle}>Internal</div>
+              <div role="menu" className="rdp-forms-dropdown">
+                <div className="rdp-forms-section-header">Internal</div>
                 {formsForScope(INTERNAL_FORMS, fullRepair?.scopeType).map(item => (
-                  <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle}
-                  className="menu-item-hover"
+                  <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} className="rdp-menu-item menu-item-hover"
                   >{item.label}</div>
                 ))}
-                <div style={repairFormsSectionHeaderBorderTopStyle}>Customer-Facing</div>
+                <div className="rdp-forms-section-header--top">Customer-Facing</div>
                 {CUSTOMER_FORMS.map(item => (
-                  <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle}
-                  className="menu-item-hover"
+                  <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} className="rdp-menu-item menu-item-hover"
                   >{item.label}</div>
                 ))}
               </div>
@@ -531,7 +497,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         {activeForm === 'intake-label'    && <IntakeLabelForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
 
         {/* Tab bar */}
-        <div style={repairCockpitTabBarStyle}>
+        <div className="rdp-cockpit-tab-bar">
           {COCKPIT_TABS.map((t, i) => (
             <React.Fragment key={t.key}>
               {i > 0 && COCKPIT_TABS[i - 1].group !== t.group && (
@@ -600,13 +566,13 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
 
       {detail.complaint && (
         <div style={{ marginTop: 4 }}>
-          <div style={repairFieldLabelStyle}>Complaint / Description</div>
+          <div className="rdp-field-label">Complaint / Description</div>
           <div style={{ fontSize: 13, color: 'var(--text)', padding: '8px 10px', background: 'var(--neutral-50)', border: '1px solid var(--neutral-200)', borderRadius: 4, whiteSpace: 'pre-wrap' }}>{detail.complaint}</div>
         </div>
       )}
 
       <div style={{ marginTop: 8 }}>
-        <div style={repairFieldLabelStyle}>Notes</div>
+        <div className="rdp-field-label">Notes</div>
         <InlineEditor
           value={detail.notes ?? ''}
           onSave={handleNoteSave}
@@ -635,7 +601,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       <AlertBanner alerts={alerts} onDismiss={dismissAlert} />
 
       {/* Quick Actions Bar */}
-      <div style={repairLegacyQuickActionBarStyle}>
+      <div className="rdp-legacy-action-bar">
         {hasNext && (
           <Popconfirm
             title="Advance workflow?"
@@ -664,7 +630,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         <div ref={statusMenuRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setStatusMenuOpen(!statusMenuOpen)}
-            style={repairLegacyDropdownBtnStyle}
+            className="rdp-legacy-dropdown-btn"
           >
             Change Status
             <svg aria-hidden="true" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -672,7 +638,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             </svg>
           </button>
           {statusMenuOpen && (
-            <div style={{ ...repairDropdownMenuStyle, minWidth: 200 }}>
+            <div className="rdp-dropdown-menu" style={{ minWidth: 200 }}>
               {statuses.map(s => (
                 <div
                   key={s.statusId}
@@ -697,7 +663,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         <div ref={formsMenuRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setFormsMenuOpen(!formsMenuOpen)}
-            style={repairLegacyDropdownBtnStyle}
+            className="rdp-legacy-dropdown-btn"
           >
             Forms
             <svg aria-hidden="true" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -705,17 +671,15 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             </svg>
           </button>
           {formsMenuOpen && (
-            <div style={repairFormsDropdownStyle}>
-              <div style={repairFormsSectionHeaderStyle}>Internal</div>
+            <div className="rdp-forms-dropdown">
+              <div className="rdp-forms-section-header">Internal</div>
               {formsForScope(INTERNAL_FORMS, detail?.scopeType).map(item => (
-                <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle12}
-                className="menu-item-hover"
+                <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} className="rdp-menu-item menu-item-hover"
                 >{item.label}</div>
               ))}
-              <div style={repairFormsSectionHeaderBorderTopStyle}>Customer-Facing</div>
+              <div className="rdp-forms-section-header--top">Customer-Facing</div>
               {CUSTOMER_FORMS.map(item => (
-                <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle12}
-                className="menu-item-hover"
+                <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} className="rdp-menu-item menu-item-hover"
                 >{item.label}</div>
               ))}
             </div>

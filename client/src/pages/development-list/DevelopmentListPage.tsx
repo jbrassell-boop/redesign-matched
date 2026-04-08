@@ -121,7 +121,7 @@ export const DevelopmentListPage = () => {
     <div style={devPageContainerStyle}>
       {/* Toolbar */}
       <div style={devToolbarStyle}>
-        <span style={devToolbarLabelStyle}>Development Backlog</span>
+        <h2 style={{ ...devToolbarLabelStyle, margin: 0 }}>Development Backlog</h2>
       </div>
 
       {/* Filter Bar */}

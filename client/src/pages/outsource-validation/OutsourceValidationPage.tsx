@@ -7,6 +7,7 @@ import { ReceiveBackModal } from './ReceiveBackModal';
 import { ValidationChecklist } from './ValidationChecklist';
 import type { OutsourceListItem, OutsourceStats, OutsourceFilters } from './types';
 import { StatusBadge } from '../../components/shared';
+import './OutsourceValidationPage.css';
 
 interface StatChipProps {
   label: string;
@@ -18,25 +19,13 @@ interface StatChipProps {
 }
 
 const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon }: StatChipProps) => (
-  <div style={{
-    flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 10,
-    padding: '10px 16px',
-    borderRight: '1px solid var(--neutral-200)',
-    transition: 'background 0.12s',
-  }}>
-    <div style={{
-      width: 32, height: 32, borderRadius: 6, background: iconBg,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexShrink: 0, color: iconColor,
-    }}>
+  <div className="ovp-stat-chip">
+    <div className="ovp-stat-chip-icon" style={{ background: iconBg, color: iconColor }}>
       {icon}
     </div>
     <div>
-      <div style={{ fontSize: 16, fontWeight: 800, color: valueColor, lineHeight: 1.2 }}>{value}</div>
-      <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</div>
+      <div className="ovp-stat-chip-value" style={{ color: valueColor }}>{value}</div>
+      <div className="ovp-stat-chip-label">{label}</div>
     </div>
   </div>
 );
@@ -161,38 +150,13 @@ export const OutsourceValidationPage = () => {
     transition: 'all 0.1s',
   });
 
-  const thStyle: React.CSSProperties = {
-    background: 'var(--neutral-50)',
-    color: 'var(--neutral-500)',
-    fontWeight: 700,
-    padding: '8px 10px',
-    textAlign: 'left',
-    textTransform: 'uppercase',
-    letterSpacing: '0.04em',
-    fontSize: 11,
-    position: 'sticky',
-    top: 0,
-    zIndex: 2,
-    whiteSpace: 'nowrap',
-    borderRight: '1px solid rgba(var(--border-light-rgb), 0.3)',
-    borderBottom: '1px solid var(--neutral-200)',
-    userSelect: 'none',
-  };
-
-  const tdStyle: React.CSSProperties = {
-    padding: '6px 10px',
-    fontSize: 12,
-    borderBottom: '1px solid var(--border)',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  };
+  // styles moved to OutsourceValidationPage.css
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div className="ovp-page">
 
       {/* Stat Strip */}
-      <div style={{ display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
+      <div className="ovp-stat-strip">
         <StatChip label="Total Outsourced" value={statsLoading ? '\u2014' : (stats?.total ?? 0)} icon={<IconList />} iconColor="var(--navy)" iconBg="rgba(var(--navy-rgb), 0.13)" valueColor="var(--navy)" />
         <StatChip label="Outsource Spend" value={statsLoading ? '\u2014' : fmtMoneyShort(stats?.outsourceSpend ?? 0)} icon={<IconDollar />} iconColor="var(--danger)" iconBg="rgba(var(--danger-rgb), 0.13)" valueColor="var(--danger)" />
         <StatChip label="Avg Margin" value={statsLoading ? '\u2014' : `${stats?.avgMarginPct ?? 0}%`} icon={<IconTrend />} iconColor="var(--success)" iconBg="rgba(var(--success-rgb), 0.13)" valueColor="var(--success)" />
@@ -202,13 +166,9 @@ export const OutsourceValidationPage = () => {
       </div>
 
       {/* Toolbar */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-        background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)',
-        flexShrink: 0, flexWrap: 'wrap',
-      }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>Status</span>
-        <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden' }}>
+      <div className="ovp-toolbar">
+        <span className="ovp-filter-label">Status</span>
+        <div className="ovp-seg-group">
           {(['all', 'At Vendor', 'Returned', 'Pending Review', 'Validated', 'Flagged'] as const).map((v, i, arr) => (
             <button
               key={v}
@@ -223,30 +183,29 @@ export const OutsourceValidationPage = () => {
           ))}
         </div>
 
-        <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
+        <div className="ovp-sep" />
 
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>From</span>
+        <span className="ovp-filter-label">From</span>
         <input type="date" value={dateFrom} onChange={e => { setDateFrom(e.target.value); setPage(1); }}
           aria-label="Filter from date"
-          style={{ height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 120 }} />
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>To</span>
+          className="ovp-date-input" />
+        <span className="ovp-filter-label">To</span>
         <input type="date" value={dateTo} onChange={e => { setDateTo(e.target.value); setPage(1); }}
           aria-label="Filter to date"
-          style={{ height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', minWidth: 120 }} />
+          className="ovp-date-input" />
 
         <input type="text" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search WO#, serial, client, vendor..."
           aria-label="Search outsource validations"
+          className="ovp-search-input"
           style={{
-            marginLeft: 'auto', height: 30, width: 220, border: '1.5px solid var(--border-dk)',
-            borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none',
             background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
           }} />
       </div>
 
       {/* Data Table */}
-      <div style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+      <div className="ovp-table-area">
+        <table className="ovp-table">
           <thead>
             <tr>
               {[
@@ -263,7 +222,7 @@ export const OutsourceValidationPage = () => {
                 { label: 'Margin %', width: 65, align: 'right' as const },
                 { label: 'Status', width: 100 },
               ].map(col => (
-                <th key={col.label} style={{ ...thStyle, width: col.width, textAlign: col.align || 'left' }}>
+                <th key={col.label} className="ovp-th" style={{ width: col.width, textAlign: col.align || 'left' }}>
                   {col.label}
                 </th>
               ))}
@@ -271,9 +230,9 @@ export const OutsourceValidationPage = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={12} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>Loading...</td></tr>
+              <tr><td colSpan={12} className="ovp-empty-cell">Loading...</td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={12} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No outsourced repairs found.</td></tr>
+              <tr><td colSpan={12} className="ovp-empty-cell">No outsourced repairs found.</td></tr>
             ) : (
               items.map((item, idx) => {
                 const daysColor = item.daysOut > 30 ? 'var(--danger)' : item.daysOut > 14 ? 'var(--warning)' : 'var(--muted)';
@@ -284,18 +243,18 @@ export const OutsourceValidationPage = () => {
                     className="hover-row-light"
                     style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
                   >
-                    <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.wo}</span></td>
-                    <td style={tdStyle}>{item.serial}</td>
-                    <td style={tdStyle}>{item.scopeType}</td>
-                    <td style={tdStyle}>{item.clientName}</td>
-                    <td style={tdStyle}>{item.vendorName}</td>
-                    <td style={tdStyle}>{item.sentDate ?? '\u2014'}</td>
-                    <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 600, color: daysColor }}>{item.daysOut}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtMoney(item.vendorCost)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right' }}>{fmtMoney(item.tsiCharge)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: marginColor }}>{fmtMoney(item.marginDollar)}</td>
-                    <td style={{ ...tdStyle, textAlign: 'right', fontWeight: 700, color: marginColor }}>{item.marginPct}%</td>
-                    <td style={tdStyle}><StatusBadge status={item.status} /></td>
+                    <td className="ovp-td"><span className="ovp-wo-text">{item.wo}</span></td>
+                    <td className="ovp-td">{item.serial}</td>
+                    <td className="ovp-td">{item.scopeType}</td>
+                    <td className="ovp-td">{item.clientName}</td>
+                    <td className="ovp-td">{item.vendorName}</td>
+                    <td className="ovp-td">{item.sentDate ?? '\u2014'}</td>
+                    <td className="ovp-td" style={{ textAlign: 'center', fontWeight: 600, color: daysColor }}>{item.daysOut}</td>
+                    <td className="ovp-td" style={{ textAlign: 'right' }}>{fmtMoney(item.vendorCost)}</td>
+                    <td className="ovp-td" style={{ textAlign: 'right' }}>{fmtMoney(item.tsiCharge)}</td>
+                    <td className="ovp-td" style={{ textAlign: 'right', fontWeight: 700, color: marginColor }}>{fmtMoney(item.marginDollar)}</td>
+                    <td className="ovp-td" style={{ textAlign: 'right', fontWeight: 700, color: marginColor }}>{item.marginPct}%</td>
+                    <td className="ovp-td"><StatusBadge status={item.status} /></td>
                   </tr>
                   </Dropdown>
                 );
@@ -306,29 +265,25 @@ export const OutsourceValidationPage = () => {
       </div>
 
       {/* Table Footer */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '8px 16px', background: 'var(--neutral-50)',
-        borderTop: '1.5px solid var(--border-dk)', flexShrink: 0,
-        fontSize: 11, color: 'var(--muted)',
-      }}>
-        <span style={{ fontWeight: 500 }}>{totalCount.toLocaleString()} records</span>
-        <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+      <div className="ovp-footer">
+        <span className="ovp-record-count">{totalCount.toLocaleString()} records</span>
+        <div className="ovp-pag-btns">
           <button disabled={page <= 1} onClick={() => setPage(p => p - 1)}
-            style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: page <= 1 ? 'default' : 'pointer', opacity: page <= 1 ? 0.4 : 1, fontFamily: 'inherit' }}>
+            className="ovp-pag-btn" style={{ opacity: page <= 1 ? 0.4 : 1 }}>
             {'\u2039'}
           </button>
           {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
             const pg = i + 1;
             return (
               <button key={pg} onClick={() => setPage(pg)}
-                style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: page === pg ? 'var(--navy)' : 'var(--card)', color: page === pg ? 'var(--card)' : 'var(--label)', fontSize: 11, fontWeight: page === pg ? 600 : 400, cursor: 'pointer', fontFamily: 'inherit' }}>
+                className="ovp-pag-btn"
+                style={{ background: page === pg ? 'var(--navy)' : 'var(--card)', color: page === pg ? 'var(--card)' : 'var(--label)', fontWeight: page === pg ? 600 : 400 }}>
                 {pg}
               </button>
             );
           })}
           <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}
-            style={{ height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, background: 'var(--card)', fontSize: 11, color: 'var(--label)', cursor: page >= totalPages ? 'default' : 'pointer', opacity: page >= totalPages ? 0.4 : 1, fontFamily: 'inherit' }}>
+            className="ovp-pag-btn" style={{ opacity: page >= totalPages ? 0.4 : 1 }}>
             {'\u203A'}
           </button>
         </div>

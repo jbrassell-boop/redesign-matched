@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import './FinancialPage.css';
 import { Input, Select, Table, DatePicker, Switch, message } from 'antd';
 import { ExportButton } from '../../components/common/ExportButton';
 import { SearchOutlined } from '@ant-design/icons';
@@ -76,51 +77,7 @@ const STAT_CHIPS: {
   { key: 'rev',     label: 'Revenue MTD',       dotColor: 'var(--success)',  valueColor: 'var(--success)'  },
 ];
 
-// ── Extracted static styles (performance: avoid re-creating objects each render) ──
-const finPageContainerStyle: React.CSSProperties = { height: 'calc(100vh - 64px)', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--bg)' };
-const execBannerStyle: React.CSSProperties = {
-  padding: '12px 20px',
-  background: 'var(--navy)',
-  borderBottom: '2px solid var(--primary)',
-};
-const execCardStyle: React.CSSProperties = {
-  background: 'var(--card)', borderRadius: 8,
-  padding: '14px 16px', flex: 1, minWidth: 140,
-  border: '1px solid var(--neutral-200)',
-  display: 'flex', flexDirection: 'column', gap: 2,
-};
-const execCardLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em' };
-const summaryStatCardStyle: React.CSSProperties = { flex: 1, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' };
-const summaryStatLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' };
-const finFilterLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' };
-const finLoadingEmptyStyle: React.CSSProperties = { padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 };
-const finFilterBarStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 16px', display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap' };
-const finTableCardStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 12, overflow: 'hidden' };
-const finToolbarStyle: React.CSSProperties = { padding: '12px 16px', borderBottom: '1px solid var(--neutral-200)', background: 'var(--card)', flexShrink: 0 };
-const finPaginationFooterStyle: React.CSSProperties = { padding: '8px 16px', borderTop: '1px solid var(--neutral-200)', background: 'var(--card)', flexShrink: 0, display: 'flex', justifyContent: 'flex-end' };
-const finPaymentRowStyle: React.CSSProperties = { padding: '10px 16px', borderBottom: '1px solid var(--neutral-100)', background: 'var(--card)' };
-const execBannerHeaderStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 };
-const execBannerTitleStyle: React.CSSProperties = { fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: '.08em' };
-const execBannerDateStyle: React.CSSProperties = { fontSize: 10, color: 'rgba(255,255,255,.4)' };
-const execCardsRowStyle: React.CSSProperties = { display: 'flex', gap: 10, flexWrap: 'wrap' };
-const execValueLargeNavyStyle: React.CSSProperties = { fontSize: 22, fontWeight: 900, color: 'var(--navy)', lineHeight: 1.1 };
-const execValueLargeSuccessStyle: React.CSSProperties = { fontSize: 22, fontWeight: 900, color: 'var(--success)', lineHeight: 1.1 };
-const execValueLargePrimaryStyle: React.CSSProperties = { fontSize: 22, fontWeight: 900, color: 'var(--primary)', lineHeight: 1.1 };
-const execValueLargeDangerStyle: React.CSSProperties = { fontSize: 22, fontWeight: 900, color: 'var(--danger)', lineHeight: 1.1 };
-const execSubtextMutedStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
-const execSubtextDangerStyle: React.CSSProperties = { fontSize: 10, color: 'var(--danger)', fontWeight: 600 };
-const flexColGap12Style: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12 };
-const filterGap8Style: React.CSSProperties = { display: 'flex', gap: 8, alignItems: 'center' };
-const switchRowStyle: React.CSSProperties = { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' };
-const switchItemStyle: React.CSSProperties = { display: 'flex', gap: 5, alignItems: 'center' };
-const switchLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--text)' };
-const summaryStatFlexStyle: React.CSSProperties = { display: 'flex', gap: 8 };
-const summaryStatValueStyle: React.CSSProperties = { fontSize: 16, fontWeight: 800 };
-const fullWidthScrollPadStyle: React.CSSProperties = { flex: 1, overflow: 'auto', padding: '16px 20px' };
-const invoiceDetailPaneStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' };
-const holdOnHoldStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--danger)', textTransform: 'uppercase' };
-const holdSinceStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', marginTop: 2 };
-const holdRowFlexStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 };
+// styles moved to FinancialPage.css
 
 const INVOICE_EXPORT_COLS = [
   { key: 'invoiceNumber', label: 'Invoice #' },
@@ -280,48 +237,48 @@ export const FinancialPage = () => {
 
   // ─── Executive summary banner ───────────────────────────────────────────────
   const ExecBanner = () => (
-    <div style={execBannerStyle}>
-      <div style={execBannerHeaderStyle}>
-        <span style={execBannerTitleStyle}>
+    <div className="fin-exec-banner">
+      <div className="fin-exec-header">
+        <h2 className="fin-exec-title" style={{ margin: 0 }}>
           Financial Overview
-        </span>
-        <span style={execBannerDateStyle}>
+        </h2>
+        <span className="fin-exec-date">
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
         </span>
       </div>
-      <div style={execCardsRowStyle}>
+      <div className="fin-exec-cards">
         {/* Outstanding A/R */}
-        <div style={execCardStyle}>
-          <div style={execCardLabelStyle}>Outstanding A/R</div>
-          <div style={execValueLargeNavyStyle}>
+        <div className="fin-exec-card">
+          <div className="fin-exec-card-label">Outstanding A/R</div>
+          <div className="fin-val-navy">
             {stats ? fmt$(stats.outstandingAR) : '\u2014'}
           </div>
         </div>
         {/* Revenue MTD */}
-        <div style={execCardStyle}>
-          <div style={execCardLabelStyle}>Revenue MTD</div>
-          <div style={execValueLargeSuccessStyle}>
+        <div className="fin-exec-card">
+          <div className="fin-exec-card-label">Revenue MTD</div>
+          <div className="fin-val-success">
             {stats ? fmt$(stats.revenueMTD) : '\u2014'}
           </div>
         </div>
         {/* DSO */}
-        <div style={execCardStyle}>
-          <div style={execCardLabelStyle}>Days Sales Outstanding</div>
-          <div style={execValueLargePrimaryStyle}>
+        <div className="fin-exec-card">
+          <div className="fin-exec-card-label">Days Sales Outstanding</div>
+          <div className="fin-val-primary">
             {stats ? stats.dso + 'd' : '\u2014'}
           </div>
-          {stats && <div style={execSubtextMutedStyle}>Avg {stats.avgDaysToPay}d to pay</div>}
+          {stats && <div className="fin-exec-subtext-muted">Avg {stats.avgDaysToPay}d to pay</div>}
         </div>
         {/* Overdue */}
-        <div style={{ ...execCardStyle, cursor: 'pointer' }}
+        <div className="fin-exec-card fin-exec-card--clickable"
           onClick={() => handleTabChange('outstanding')}
         >
-          <div style={execCardLabelStyle}>Overdue Invoices</div>
-          <div style={execValueLargeDangerStyle}>
+          <div className="fin-exec-card-label">Overdue Invoices</div>
+          <div className="fin-val-danger">
             {stats ? stats.overdueCount : '\u2014'}
           </div>
           {stats && stats.overdueCount > 0 && (
-            <div style={execSubtextDangerStyle}>Requires attention</div>
+            <div className="fin-exec-subtext-danger">Requires attention</div>
           )}
         </div>
       </div>
@@ -356,7 +313,7 @@ export const FinancialPage = () => {
   const isListTab = activeTab === 'outstanding' || activeTab === 'drafts' || activeTab === 'payments' || activeTab === 'hold';
 
   return (
-    <div style={finPageContainerStyle}>
+    <div className="fin-page">
       {/* Subnav tabs */}
       <TabBar tabs={TABS} activeKey={activeTab} onChange={handleTabChange} />
 
@@ -378,7 +335,7 @@ export const FinancialPage = () => {
             willChange: 'width',
           }}>
             {/* Toolbar */}
-            <div style={finToolbarStyle}>
+            <div className="fin-toolbar">
               {/* Stat strip — only in list tabs */}
               <FinStatStrip />
 
@@ -432,7 +389,7 @@ export const FinancialPage = () => {
 
             {/* Pagination for paginated tabs */}
             {(activeTab === 'outstanding' || activeTab === 'drafts') && invoiceTotal > pageSize && (
-              <div style={finPaginationFooterStyle}>
+              <div className="fin-pagination-footer">
                 <span style={{ fontSize: 11, color: 'var(--muted)' }}>
                   {invoiceTotal.toLocaleString()} total invoices
                 </span>
@@ -442,7 +399,7 @@ export const FinancialPage = () => {
 
           {/* Right: inline detail pane */}
           {detailOpen && (
-            <div style={invoiceDetailPaneStyle}>
+            <div className="fin-detail-pane">
               <FinancialDetailPane
                 detail={selectedInvoice}
                 loading={detailLoading}
@@ -454,13 +411,13 @@ export const FinancialPage = () => {
         </div>
       ) : (
         /* Non-split tabs: scrollable full-width */
-        <div style={fullWidthScrollPadStyle}>
+        <div className="fin-full-scroll">
           {/* Stat strip for non-list tabs */}
           <FinStatStrip />
 
           {/* GL Accounts */}
           {activeTab === 'gl' && (
-            <div style={{ ...finTableCardStyle, boxShadow: '0 2px 16px rgba(var(--primary-rgb), 0.06)' }}>
+            <div className="fin-table-card fin-table-card--shadow">
               <Table
                 dataSource={glAccounts}
                 columns={glColumns}
@@ -475,11 +432,11 @@ export const FinancialPage = () => {
 
           {/* At Risk Tab */}
           {activeTab === 'atrisk' && (
-            <div style={flexColGap12Style}>
+            <div className="fin-flex-col-12">
               {/* Filter bar */}
-              <div style={finFilterBarStyle}>
-                <div style={filterGap8Style}>
-                  <span style={finFilterLabelStyle}>From</span>
+              <div className="fin-filter-bar">
+                <div className="fin-filter-row">
+                  <span className="fin-filter-label">From</span>
                   <DatePicker
                     value={dayjs(atRiskDateFrom)}
                     onChange={(d) => d && setAtRiskDateFrom(d.format('YYYY-MM-DD'))}
@@ -487,8 +444,8 @@ export const FinancialPage = () => {
                     aria-label="At-risk from month"
                   />
                 </div>
-                <div style={filterGap8Style}>
-                  <span style={finFilterLabelStyle}>To</span>
+                <div className="fin-filter-row">
+                  <span className="fin-filter-label">To</span>
                   <DatePicker
                     value={dayjs(atRiskDateTo)}
                     onChange={(d) => d && setAtRiskDateTo(d.format('YYYY-MM-DD'))}
@@ -496,8 +453,8 @@ export const FinancialPage = () => {
                     aria-label="At-risk to month"
                   />
                 </div>
-                <div style={filterGap8Style}>
-                  <span style={finFilterLabelStyle}>Min Repairs</span>
+                <div className="fin-filter-row">
+                  <span className="fin-filter-label">Min Repairs</span>
                   <Select
                     value={atRiskMinInvoices}
                     onChange={setAtRiskMinInvoices}
@@ -507,7 +464,7 @@ export const FinancialPage = () => {
                     aria-label="Minimum repairs"
                   />
                 </div>
-                <div style={switchRowStyle}>
+                <div className="fin-switch-row">
                   {[
                     { key: 'includeLabor' as const, label: 'Labor' },
                     { key: 'includeMaterial' as const, label: 'Material' },
@@ -515,36 +472,36 @@ export const FinancialPage = () => {
                     { key: 'includeShipping' as const, label: 'Shipping' },
                     { key: 'includeCommissions' as const, label: 'Commissions' },
                   ].map(f => (
-                    <div key={f.key} style={switchItemStyle}>
+                    <div key={f.key} className="fin-switch-item">
                       <Switch
                         size="small"
                         aria-label={`Include ${f.label}`}
                         checked={atRiskFilters[f.key]}
                         onChange={(v) => setAtRiskFilters(prev => ({ ...prev, [f.key]: v }))}
                       />
-                      <span style={switchLabelStyle}>{f.label}</span>
+                      <span className="fin-switch-label">{f.label}</span>
                     </div>
                   ))}
                 </div>
               </div>
               {/* Summary stats */}
               {atRiskItems.length > 0 && (
-                <div style={summaryStatFlexStyle}>
+                <div className="fin-summary-flex">
                   {[
                     { label: 'Departments', value: atRiskItems.length, color: 'var(--navy)' },
                     { label: 'Total Revenue', value: '$' + atRiskItems.reduce((s, r) => s + r.revenue, 0).toLocaleString('en-US', { maximumFractionDigits: 0 }), color: 'var(--success)' },
                     { label: 'Total Expenses', value: '$' + atRiskItems.reduce((s, r) => s + r.totalExpenses, 0).toLocaleString('en-US', { maximumFractionDigits: 0 }), color: 'var(--warning)' },
                     { label: 'At Risk (< 40%)', value: atRiskItems.filter(r => r.marginPct < 40).length, color: 'var(--danger)' },
                   ].map(s => (
-                    <div key={s.label} style={summaryStatCardStyle}>
-                      <div style={{ ...summaryStatValueStyle, color: s.color }}>{s.value}</div>
-                      <div style={summaryStatLabelStyle}>{s.label}</div>
+                    <div key={s.label} className="fin-summary-card">
+                      <div className="fin-summary-value" style={{ color: s.color }}>{s.value}</div>
+                      <div className="fin-summary-label">{s.label}</div>
                     </div>
                   ))}
                 </div>
               )}
               {/* Table */}
-              <div style={finTableCardStyle}>
+              <div className="fin-table-card">
                 <Table<AtRiskItem>
                   dataSource={atRiskItems}
                   rowKey="departmentKey"
@@ -573,11 +530,11 @@ export const FinancialPage = () => {
 
           {/* Trending Tab */}
           {activeTab === 'trending' && (
-            <div style={flexColGap12Style}>
+            <div className="fin-flex-col-12">
               {/* Filter bar */}
-              <div style={finFilterBarStyle}>
-                <div style={filterGap8Style}>
-                  <span style={finFilterLabelStyle}>From</span>
+              <div className="fin-filter-bar">
+                <div className="fin-filter-row">
+                  <span className="fin-filter-label">From</span>
                   <DatePicker
                     value={dayjs(trendDateFrom)}
                     onChange={(d) => d && setTrendDateFrom(d.format('YYYY-MM-DD'))}
@@ -585,8 +542,8 @@ export const FinancialPage = () => {
                     aria-label="Trending from month"
                   />
                 </div>
-                <div style={filterGap8Style}>
-                  <span style={finFilterLabelStyle}>To</span>
+                <div className="fin-filter-row">
+                  <span className="fin-filter-label">To</span>
                   <DatePicker
                     value={dayjs(trendDateTo)}
                     onChange={(d) => d && setTrendDateTo(d.format('YYYY-MM-DD'))}
@@ -597,22 +554,22 @@ export const FinancialPage = () => {
               </div>
               {/* Summary stats */}
               {trendingItems.length > 0 && (
-                <div style={summaryStatFlexStyle}>
+                <div className="fin-summary-flex">
                   {[
                     { label: 'Months', value: trendingItems.length, color: 'var(--navy)' },
                     { label: 'Total Revenue', value: '$' + trendingItems.reduce((s, t) => s + Number(t.revenue), 0).toLocaleString('en-US', { maximumFractionDigits: 0 }), color: 'var(--success)' },
                     { label: 'Total Repairs', value: trendingItems.reduce((s, t) => s + t.repairCount, 0), color: 'var(--primary)' },
                     { label: 'Avg Margin %', value: trendingItems.length > 0 ? Math.round(trendingItems.reduce((s, t) => s + Number(t.marginPct), 0) / trendingItems.length) + '%' : '\u2014', color: 'var(--warning)' },
                   ].map(s => (
-                    <div key={s.label} style={summaryStatCardStyle}>
-                      <div style={{ ...summaryStatValueStyle, color: s.color }}>{s.value}</div>
-                      <div style={summaryStatLabelStyle}>{s.label}</div>
+                    <div key={s.label} className="fin-summary-card">
+                      <div className="fin-summary-value" style={{ color: s.color }}>{s.value}</div>
+                      <div className="fin-summary-label">{s.label}</div>
                     </div>
                   ))}
                 </div>
               )}
               {/* Table */}
-              <div style={finTableCardStyle}>
+              <div className="fin-table-card">
                 <Table<TrendingItem>
                   dataSource={trendingItems}
                   rowKey="month"
@@ -654,10 +611,10 @@ function renderInvoiceRows(
   isDraft: boolean,
 ) {
   if (loading) {
-    return <div style={finLoadingEmptyStyle}>Loading...</div>;
+    return <div className="fin-empty">Loading...</div>;
   }
   if (invoices.length === 0) {
-    return <div style={finLoadingEmptyStyle}>No invoices found</div>;
+    return <div className="fin-empty">No invoices found</div>;
   }
   return (
     <>
@@ -728,19 +685,17 @@ function renderInvoiceRows(
 
 function renderPaymentRows(payments: InvoicePaymentItem[], loading: boolean) {
   if (loading) {
-    return <div style={finLoadingEmptyStyle}>Loading...</div>;
+    return <div className="fin-empty">Loading...</div>;
   }
   if (payments.length === 0) {
-    return <div style={finLoadingEmptyStyle}>No payments found</div>;
+    return <div className="fin-empty">No payments found</div>;
   }
   return (
     <>
       {payments.map(p => (
         <div
           key={p.paymentId}
-          style={{
-            ...finPaymentRowStyle,
-          }}
+          className="fin-payment-row"
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
@@ -760,21 +715,19 @@ function renderPaymentRows(payments: InvoicePaymentItem[], loading: boolean) {
 
 function renderHoldRows(holds: ClientOnHold[], loading: boolean) {
   if (loading) {
-    return <div style={finLoadingEmptyStyle}>Loading...</div>;
+    return <div className="fin-empty">Loading...</div>;
   }
   if (holds.length === 0) {
-    return <div style={finLoadingEmptyStyle}>No clients on hold</div>;
+    return <div className="fin-empty">No clients on hold</div>;
   }
   return (
     <>
       {holds.map(h => (
         <div
           key={h.clientKey}
-          style={{
-            ...finPaymentRowStyle,
-          }}
+          className="fin-payment-row"
         >
-          <div style={holdRowFlexStyle}>
+          <div className="fin-hold-row-flex">
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{h.clientName}</div>
               <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{h.departmentName}</div>
@@ -783,8 +736,8 @@ function renderHoldRows(holds: ClientOnHold[], loading: boolean) {
               )}
             </div>
             <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div style={holdOnHoldStyle}>On Hold</div>
-              <div style={holdSinceStyle}>Since {fmtDate(h.onHoldDate)}</div>
+              <div className="fin-hold-badge">On Hold</div>
+              <div className="fin-hold-since">Since {fmtDate(h.onHoldDate)}</div>
             </div>
           </div>
         </div>

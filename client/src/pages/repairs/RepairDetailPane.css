@@ -1,0 +1,22 @@
+/* ── RepairDetailPane styles ── */
+
+.rdp-cockpit-container { display: flex; flex-direction: column; height: calc(100vh - 64px); overflow: hidden; }
+.rdp-quick-action-bar { display: flex; align-items: center; gap: 10px; padding: 8px 20px; background: var(--neutral-50); border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; }
+.rdp-legacy-action-bar { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-bottom: 1px solid var(--neutral-200); background: var(--neutral-50); }
+
+/* Dropdown menus */
+.rdp-dropdown-menu { position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--card); border: 1px solid var(--neutral-200); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); min-width: 220px; max-height: 300px; overflow-y: auto; z-index: 100; }
+.rdp-forms-dropdown { position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--card); border: 1px solid var(--neutral-200); border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); min-width: 240px; z-index: 100; }
+.rdp-forms-section-header { padding: 6px 14px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: .06em; background: var(--neutral-50); border-bottom: 1px solid var(--neutral-200); }
+.rdp-forms-section-header--top { padding: 6px 14px 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: .06em; background: var(--neutral-50); border-bottom: 1px solid var(--neutral-200); border-top: 1px solid var(--neutral-200); }
+.rdp-menu-item { padding: 9px 14px; cursor: pointer; font-size: 12px; color: var(--text); border-bottom: 1px solid var(--neutral-100); }
+
+/* Buttons */
+.rdp-dropdown-btn { height: 30px; padding: 0 14px; border: 1px solid var(--neutral-200); border-radius: 5px; background: var(--card); color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 5px; }
+.rdp-legacy-dropdown-btn { height: 32px; padding: 0 14px; border: 1px solid var(--neutral-200); border-radius: 5px; background: var(--card); color: var(--muted); font-size: 12px; font-weight: 500; cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 5px; }
+
+/* Field label */
+.rdp-field-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 4px; }
+
+/* Cockpit tab bar */
+.rdp-cockpit-tab-bar { background: var(--card); border-bottom: 2px solid var(--border); display: flex; padding: 0 16px; flex-shrink: 0; overflow-x: auto; gap: 2px; }

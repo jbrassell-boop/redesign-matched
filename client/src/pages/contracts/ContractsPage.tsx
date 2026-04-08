@@ -79,9 +79,9 @@ export const ContractsPage = () => {
               background: 'var(--neutral-50)',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
             }}>
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--navy)' }}>
+              <h2 style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--navy)', margin: 0 }}>
                 Contracts
-              </span>
+              </h2>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 10, color: 'var(--muted)' }} aria-live="polite">{contracts.length} records</span>
                 <ExportButton data={contracts as unknown as Record<string, unknown>[]} columns={CONTRACT_EXPORT_COLS} filename="contracts-export" sheetName="Contracts" />

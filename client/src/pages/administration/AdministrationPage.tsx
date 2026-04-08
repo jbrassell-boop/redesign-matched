@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import './AdministrationPage.css';
 import { Table, Input, Select, Drawer, Button, Modal, Switch, message } from 'antd';
 import {
   UserOutlined, DollarOutlined, SettingOutlined,
@@ -69,19 +70,7 @@ const tabs: AdminTabDef[] = [
   { key: 'salestax', label: 'Sales Tax Config', icon: <PercentageOutlined />, category: 'hr-finance' },
 ];
 
-// ── Extracted static styles (performance: avoid re-creating objects each render) ──
-const adminPageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
-const adminCategoryPillsStyle: React.CSSProperties = { display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--border)' };
-const adminToolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' };
-const adminTableAreaStyle: React.CSSProperties = { flex: 1, overflow: 'auto', padding: '0 16px 16px' };
-const adminFormLabelStyle: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 };
-const adminInlineLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' };
-const adminDrawerFieldLabelStyle: React.CSSProperties = { width: 160, fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
-const adminDrawerRowStyle: React.CSSProperties = { display: 'flex', padding: '8px 0', borderBottom: '1px solid var(--border)' };
-const adminUserInfoRowStyle: React.CSSProperties = { display: 'flex', padding: '5px 0', borderBottom: '1px solid var(--border)' };
-const adminUserInfoLabelStyle: React.CSSProperties = { width: 100, fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' };
-const adminModalFooterStyle: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', gap: 8 };
-const adminModalBodyStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 14, padding: '8px 0' };
+// styles moved to AdministrationPage.css
 
 export function AdministrationPage() {
   const [activeCategory, setActiveCategory] = useState('users-security');
@@ -685,12 +674,12 @@ export function AdministrationPage() {
   ] : [];
 
   return (
-    <section aria-label="Administration" style={adminPageContainerStyle}>
+    <section aria-label="Administration" className="adm-page">
       {/* Stat Strip */}
       <StatStrip chips={statChips} loading={!stats} />
 
       {/* Category Pills */}
-      <div style={adminCategoryPillsStyle}>
+      <div className="adm-category-pills">
         {categories.map(c => (
           <button
             key={c.key}
@@ -719,7 +708,7 @@ export function AdministrationPage() {
       />
 
       {/* Toolbar */}
-      <div style={adminToolbarStyle}>
+      <div className="adm-toolbar">
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--muted)' }} />}
           placeholder={`Search ${visibleTabs.find(t => t.key === activeTab)?.label || ''}...`}
@@ -776,7 +765,7 @@ export function AdministrationPage() {
       </div>
 
       {/* Table Area */}
-      <div style={adminTableAreaStyle}>
+      <div className="adm-table-area">
         {renderTabContent()}
       </div>
 
@@ -788,7 +777,7 @@ export function AdministrationPage() {
         width={600}
         styles={{ header: { background: 'var(--primary-dark)', color: 'var(--card)' }, body: { padding: 0 } }}
         footer={editingUser ? (
-          <div style={adminModalFooterStyle}>
+          <div className="adm-modal-footer">
             <Button onClick={() => setDrawerOpen(false)}>Cancel</Button>
             <Button type="primary" loading={userSaving} onClick={saveUser} style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>
               Save Changes
@@ -800,15 +789,15 @@ export function AdministrationPage() {
           /* User edit form */
           <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <label style={adminFormLabelStyle}>Full Name</label>
+              <label className="adm-form-label">Full Name</label>
               <Input aria-label="Full Name" value={userEditName} onChange={e => setUserEditName(e.target.value)} style={{ fontSize: 12 }} />
             </div>
             <div>
-              <label style={adminFormLabelStyle}>Email Address</label>
+              <label className="adm-form-label">Email Address</label>
               <Input aria-label="Email Address" value={userEditEmail} onChange={e => setUserEditEmail(e.target.value)} style={{ fontSize: 12 }} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <label style={adminInlineLabelStyle}>Active</label>
+              <label className="adm-inline-label">Active</label>
               <Switch aria-label="Active" checked={userEditActive} onChange={setUserEditActive} />
             </div>
             {/* Read-only info */}
@@ -818,8 +807,8 @@ export function AdministrationPage() {
                 { label: 'Location', value: editingUser.location },
                 { label: 'Last Login', value: editingUser.lastLogin ? new Date(editingUser.lastLogin).toLocaleDateString() : '—' },
               ].map(f => (
-                <div key={f.label} style={adminUserInfoRowStyle}>
-                  <span style={adminUserInfoLabelStyle}>{f.label}</span>
+                <div key={f.label} className="adm-user-info-row">
+                  <span className="adm-user-info-label">{f.label}</span>
                   <span style={{ fontSize: 12, color: 'var(--neutral-900)' }}>{f.value || '—'}</span>
                 </div>
               ))}
@@ -829,8 +818,8 @@ export function AdministrationPage() {
           /* Generic JSON drawer for non-user records */
           <div style={{ padding: 20 }}>
             {Object.entries(drawerRecord).map(([k, v]) => (
-              <div key={k} style={adminDrawerRowStyle}>
-                <span style={adminDrawerFieldLabelStyle}>
+              <div key={k} className="adm-drawer-row">
+                <span className="adm-drawer-field-label">
                   {k.replace(/([A-Z])/g, ' $1').trim()}
                 </span>
                 <span style={{ flex: 1, fontSize: 13, color: 'var(--neutral-900)' }}>
@@ -848,20 +837,20 @@ export function AdministrationPage() {
         open={reasonModalOpen}
         onCancel={() => setReasonModalOpen(false)}
         footer={
-          <div style={adminModalFooterStyle}>
+          <div className="adm-modal-footer">
             <Button onClick={() => setReasonModalOpen(false)}>Cancel</Button>
             <Button type="primary" loading={reasonSaving} onClick={saveReason} style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>Save</Button>
           </div>
         }
         width={420}
       >
-        <div style={adminModalBodyStyle}>
+        <div className="adm-modal-body">
           <div>
-            <label style={adminFormLabelStyle}>Reason Text</label>
+            <label className="adm-form-label">Reason Text</label>
             <Input aria-label="Reason Text" value={reasonText} onChange={e => setReasonText(e.target.value)} placeholder="Enter repair reason..." style={{ fontSize: 12 }} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <label style={adminInlineLabelStyle}>Active</label>
+            <label className="adm-inline-label">Active</label>
             <Switch aria-label="Active" checked={reasonActive} onChange={setReasonActive} />
           </div>
         </div>
@@ -873,20 +862,20 @@ export function AdministrationPage() {
         open={statusModalOpen}
         onCancel={() => setStatusModalOpen(false)}
         footer={
-          <div style={adminModalFooterStyle}>
+          <div className="adm-modal-footer">
             <Button onClick={() => setStatusModalOpen(false)}>Cancel</Button>
             <Button type="primary" loading={statusSaving} onClick={saveStatus} style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>Save</Button>
           </div>
         }
         width={420}
       >
-        <div style={adminModalBodyStyle}>
+        <div className="adm-modal-body">
           <div>
-            <label style={adminFormLabelStyle}>Status Name</label>
+            <label className="adm-form-label">Status Name</label>
             <Input aria-label="Status Name" value={statusText} onChange={e => setStatusText(e.target.value)} placeholder="Enter status name..." style={{ fontSize: 12 }} />
           </div>
           <div>
-            <label style={adminFormLabelStyle}>Sort Order</label>
+            <label className="adm-form-label">Sort Order</label>
             <Input aria-label="Sort Order" type="number" value={statusSortOrder} onChange={e => setStatusSortOrder(e.target.value)} placeholder="e.g. 10" style={{ width: 120, fontSize: 12 }} />
           </div>
         </div>

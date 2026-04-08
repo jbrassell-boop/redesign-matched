@@ -84,9 +84,9 @@ export const ExecutiveKpi = () => {
     }}>
       {/* Title row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: '.08em' }}>
+        <h2 style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: '.08em', margin: 0 }}>
           Executive Dashboard
-        </span>
+        </h2>
         <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
         </span>

@@ -18,6 +18,7 @@
   font-size: 16px;
   font-weight: 800;
   color: var(--primary-dark);
+  margin: 0;
 }
 
 .workspace-toolbar__greeting {

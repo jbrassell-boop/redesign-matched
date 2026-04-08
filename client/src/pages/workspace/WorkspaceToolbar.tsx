@@ -15,7 +15,7 @@ const getGreeting = () => {
 export const WorkspaceToolbar = ({ preset, editing, onPresetChange, onToggleEdit }: WorkspaceToolbarProps) => (
   <div className="workspace-toolbar">
     <div className="workspace-toolbar__left">
-      <span className="workspace-toolbar__title">My Workspace</span>
+      <h2 className="workspace-toolbar__title">My Workspace</h2>
       <span className="workspace-toolbar__greeting">{getGreeting()}</span>
     </div>
     <div className="workspace-toolbar__right">

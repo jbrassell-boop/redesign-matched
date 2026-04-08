@@ -92,7 +92,7 @@ export const InventoryPage = () => {
           overflow: 'hidden',
         }}>
           <div style={{ padding: '6px 10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--navy)' }}>Inventory</span>
+            <h2 style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--navy)', margin: 0 }}>Inventory</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 10, color: 'var(--muted)' }} aria-live="polite">{totalCount} items</span>
               <ExportButton data={items as unknown as Record<string, unknown>[]} columns={INVENTORY_EXPORT_COLS} filename="inventory-export" sheetName="Inventory" />

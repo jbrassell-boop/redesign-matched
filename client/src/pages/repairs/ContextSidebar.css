@@ -27,7 +27,7 @@
   text-align: left;
   font-weight: 600;
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: 3px 4px;
@@ -39,7 +39,7 @@
   border-bottom: 1px solid var(--neutral-100);
 }
 .context-sidebar__field-label {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   font-weight: 600;
 }

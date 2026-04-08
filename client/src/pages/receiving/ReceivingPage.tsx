@@ -3,6 +3,7 @@ import { getPendingArrivals, getReceivingStats } from '../../api/receiving';
 import { ReceivingList } from './ReceivingList';
 import { ReceivingDetailPane } from './ReceivingDetailPane';
 import type { PendingArrival, ReceivingStats } from './types';
+import './ReceivingPage.css';
 
 export const ReceivingPage = () => {
   const [arrivals, setArrivals] = useState<PendingArrival[]>([]);
@@ -47,44 +48,24 @@ export const ReceivingPage = () => {
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div className="recv-page">
       {/* Stat strip */}
-      <div style={{
-        display: 'flex', gap: 0, borderBottom: '1px solid var(--neutral-200)',
-        background: 'var(--card)', flexShrink: 0,
-      }}>
+      <div className="recv-stat-strip">
         {statChips.map(chip => (
-          <div key={chip.label} style={{
-            flex: 1, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
-            borderRight: '1px solid var(--neutral-100)',
-          }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: 6, background: chip.bg,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: chip.color, fontSize: 13, fontWeight: 700,
-            }}>{chip.value}</div>
-            <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              {chip.label}
-            </span>
+          <div key={chip.label} className="recv-stat-chip">
+            <div className="recv-stat-chip-icon" style={{ background: chip.bg, color: chip.color }}>{chip.value}</div>
+            <span className="recv-stat-chip-label">{chip.label}</span>
           </div>
         ))}
       </div>
 
       {/* Split layout */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div className="recv-split">
         {/* Left panel */}
-        <aside aria-label="Pending arrivals list" style={{
-          width: 320, flexShrink: 0,
-          borderRight: '1px solid var(--neutral-200)',
-          background: 'var(--card)',
-          display: 'flex', flexDirection: 'column',
-        }}>
-          <div style={{
-            padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary-dark)' }}>Pending Arrivals</span>
-            <span style={{ fontSize: 11, color: 'var(--muted)' }} aria-live="polite">{arrivals.length} records</span>
+        <aside aria-label="Pending arrivals list" className="recv-aside">
+          <div className="recv-aside-header">
+            <h2 className="recv-aside-title">Pending Arrivals</h2>
+            <span className="recv-aside-count" aria-live="polite">{arrivals.length} records</span>
           </div>
           <ReceivingList
             arrivals={arrivals}
@@ -97,7 +78,7 @@ export const ReceivingPage = () => {
         </aside>
 
         {/* Right panel */}
-        <section aria-label="Arrival details" style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
+        <section aria-label="Arrival details" className="recv-main">
           <ReceivingDetailPane
             arrival={selectedArrival}
             loading={false}
