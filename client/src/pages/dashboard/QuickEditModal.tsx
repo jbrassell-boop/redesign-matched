@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Modal, Select, Input, Button, message } from 'antd';
 import apiClient from '../../api/client';
 import type { DashboardRepair } from './types';
@@ -21,6 +22,7 @@ interface QuickEditModalProps {
 }
 
 export const QuickEditModal = ({ open, record, onClose, onSaved }: QuickEditModalProps) => {
+  const navigate = useNavigate();
   const [statuses, setStatuses] = useState<RepairStatusOption[]>([]);
   const [techs, setTechs] = useState<TechnicianOption[]>([]);
   const [statusId, setStatusId] = useState<number | undefined>();
@@ -95,7 +97,7 @@ export const QuickEditModal = ({ open, record, onClose, onSaved }: QuickEditModa
             style={{ borderColor: 'var(--navy)', color: 'var(--navy)' }}
             onClick={() => {
               onClose();
-              window.location.href = `/repairs/${record.repairKey}`;
+              navigate(`/repairs/${record.repairKey}`);
             }}
           >
             Open Full Cockpit

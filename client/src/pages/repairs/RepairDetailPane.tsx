@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
-import { Spin, message, Popconfirm } from 'antd';
+import { Spin, message, Popconfirm, Modal } from 'antd';
 import { useParams } from 'react-router-dom';
 import type { RepairDetail, RepairFull, RepairLineItem, RepairInspections } from './types';
 import { DiInspectionForm } from './forms/DiInspectionForm';
@@ -268,28 +268,43 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       return;
     }
     if (nextId === 0) {
-      // Shipping stage — prompt for tracking number
-      const tracking = window.prompt('Enter tracking number (or leave blank to skip):');
-      if (tracking === null) return; // cancelled
-      if (tracking.trim()) {
-        try {
-          await patchRepairHeader(rk, { inboundTracking: tracking.trim() });
-        } catch {
-          message.error('Failed to save tracking number');
-        }
-      }
-      // Auto-create draft invoice
-      try {
-        const inv = await createDraftInvoice(rk);
-        message.success(`Draft invoice #${inv.invoiceKey} created`);
-      } catch {
-        // Invoice creation is optional — don't block the workflow
-      }
-      message.info('Workflow complete — repair shipped and invoiced');
-      onStatusChanged?.(rk);
-      if (isCockpit && resolvedKey) {
-        getRepairFull(resolvedKey).then(setFullRepair).catch(() => { message.error('Failed to reload repair'); });
-      }
+      // Shipping stage — modal for tracking number
+      let trackingValue = '';
+      Modal.confirm({
+        title: 'Ship Repair',
+        content: (
+          <div style={{ marginTop: 8 }}>
+            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--label)' }}>Tracking Number (optional)</label>
+            <input
+              autoFocus
+              placeholder="Enter tracking number"
+              onChange={e => { trackingValue = e.target.value; }}
+              style={{ width: '100%', marginTop: 4, padding: '6px 8px', fontSize: 13, border: '1px solid var(--border)', borderRadius: 4 }}
+            />
+          </div>
+        ),
+        okText: 'Ship & Invoice',
+        onOk: async () => {
+          if (trackingValue.trim()) {
+            try {
+              await patchRepairHeader(rk, { inboundTracking: trackingValue.trim() });
+            } catch {
+              message.error('Failed to save tracking number');
+            }
+          }
+          try {
+            const inv = await createDraftInvoice(rk);
+            message.success(`Draft invoice #${inv.invoiceKey} created`);
+          } catch {
+            message.warning('Could not create draft invoice — you may need to create it manually');
+          }
+          message.info('Workflow complete — repair shipped and invoiced');
+          onStatusChanged?.(rk);
+          if (isCockpit && resolvedKey) {
+            getRepairFull(resolvedKey).then(setFullRepair).catch(() => { message.error('Failed to reload repair'); });
+          }
+        },
+      });
       return;
     }
     try {
@@ -322,9 +337,12 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
 
   const confirmAndSetStatus = useCallback((statusId: number) => {
     const name = statuses.find(s => s.statusId === statusId)?.statusName ?? '';
-    if (window.confirm(`Change status to "${name}"?`)) {
-      handleSetStatus(statusId);
-    }
+    Modal.confirm({
+      title: 'Change Status',
+      content: `Change status to "${name}"?`,
+      okText: 'Change',
+      onOk: () => handleSetStatus(statusId),
+    });
   }, [statuses, handleSetStatus]);
 
   const handleNoteSave = useCallback(async (notes: string) => {

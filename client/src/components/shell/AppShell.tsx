@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { CommandPalette } from './CommandPalette';
+import { ErrorBoundary } from '../common/ErrorBoundary';
 
 const getInitialCollapsed = () => {
   const pref = localStorage.getItem('tsi_sidebarCollapsed');
@@ -34,7 +35,9 @@ export const AppShell = () => {
       }}>
         <Topbar sidebarCollapsed={collapsed} />
         <main role="main" id="main-content" style={{ flex: 1, overflow: 'auto', background: 'var(--bg)', marginTop: 64 }}>
-          <Outlet />
+          <ErrorBoundary>
+            <Outlet />
+          </ErrorBoundary>
         </main>
       </div>
       <CommandPalette />

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Spin } from 'antd';
+import { Spin, Modal, message } from 'antd';
 import type { ClientFull, ClientKpis } from './types';
 import type { TabDef } from '../../components/shared';
 import { TabBar } from '../../components/shared';
@@ -100,26 +100,40 @@ export const ClientDetailPane = ({ clientKey, onClientDeleted }: ClientDetailPan
   }, [autosaveHandleChange]);
 
   // Deactivate / Delete
-  const handleToggleActive = useCallback(async () => {
+  const handleToggleActive = useCallback(() => {
     if (!ck || !client) return;
-    if (!confirm(`Deactivate ${client.name}?`)) return;
-    await deactivateClient(ck);
-    const fullData = await getClientFull(ck);
-    setClient(fullData);
+    Modal.confirm({
+      title: 'Deactivate Client',
+      content: `Deactivate ${client.name}?`,
+      okText: 'Deactivate',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        await deactivateClient(ck);
+        const fullData = await getClientFull(ck);
+        setClient(fullData);
+      },
+    });
   }, [ck, client]);
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     if (!ck || !client) return;
-    if (!confirm(`Permanently delete ${client.name}? This cannot be undone.`)) return;
-    try {
-      await deleteClient(ck);
-      onClientDeleted?.();
-    } catch (err: unknown) {
-      const msg = err && typeof err === 'object' && 'response' in err
-        ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
-        : 'Delete failed';
-      alert(msg);
-    }
+    Modal.confirm({
+      title: 'Delete Client',
+      content: `Permanently delete ${client.name}? This cannot be undone.`,
+      okText: 'Delete',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        try {
+          await deleteClient(ck);
+          onClientDeleted?.();
+        } catch (err: unknown) {
+          const msg = err && typeof err === 'object' && 'response' in err
+            ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+            : 'Delete failed';
+          message.error(msg ?? 'Delete failed');
+        }
+      },
+    });
   }, [ck, client, onClientDeleted]);
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;

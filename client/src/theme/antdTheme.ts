@@ -26,7 +26,7 @@ const tsiTheme: ThemeConfig = {
     colorTextBase: COLORS.textBase,
     colorBorder: COLORS.border,
     fontFamily: "'Inter', sans-serif",
-    fontSize: 13,          // Match TSI --text-base / --text-sm
+    fontSize: 13,          // Match TSI --text-sm (compact density)
     borderRadius: 6,
     borderRadiusLG: 8,
     borderRadiusSM: 4,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Spin } from 'antd';
+import { Spin, Modal } from 'antd';
 import type { DepartmentFull, DeptKpis } from './types';
 import type { TabDef } from '../../components/shared';
 import { TabBar } from '../../components/shared';
@@ -115,10 +115,17 @@ export const DepartmentDetailPane = ({ deptKey }: DepartmentDetailPaneProps) => 
   const handleToggleActive = useCallback(async () => {
     if (!dk || !dept) return;
     const action = dept.isActive ? 'Deactivate' : 'Activate';
-    if (!confirm(`${action} ${dept.name}?`)) return;
-    await updateDepartment(dk, { isActive: !dept.isActive } as Partial<DepartmentFull>);
-    const fullData = await getDepartmentFull(dk);
-    setDept(fullData);
+    Modal.confirm({
+      title: `${action} Department`,
+      content: `${action} ${dept.name}?`,
+      okText: action,
+      okButtonProps: action === 'Deactivate' ? { danger: true } : undefined,
+      onOk: async () => {
+        await updateDepartment(dk, { isActive: !dept.isActive } as Partial<DepartmentFull>);
+        const fullData = await getDepartmentFull(dk);
+        setDept(fullData);
+      },
+    });
   }, [dk, dept]);
 
   // Scope drawer

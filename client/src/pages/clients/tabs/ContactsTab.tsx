@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Spin } from 'antd';
+import { Spin, Modal } from 'antd';
 import { getClientContacts, addClientContact, updateClientContact, setClientPrimaryContact, deleteClientContact } from '../../../api/clients';
 import type { ClientContact } from '../types';
 
@@ -49,10 +49,17 @@ export const ContactsTab = ({ clientKey }: ContactsTabProps) => {
     setPrimaryKey(contactKey);
   };
 
-  const handleDelete = async (contactKey: number) => {
-    if (!confirm('Delete this contact?')) return;
-    await deleteClientContact(clientKey, contactKey);
-    reload();
+  const handleDelete = (contactKey: number) => {
+    Modal.confirm({
+      title: 'Delete Contact',
+      content: 'Delete this contact?',
+      okText: 'Delete',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        await deleteClientContact(clientKey, contactKey);
+        reload();
+      },
+    });
   };
 
   const handleRowClick = (c: ClientContact) => {

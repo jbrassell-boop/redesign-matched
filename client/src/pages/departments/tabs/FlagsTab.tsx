@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Spin } from 'antd';
+import { Spin, Modal } from 'antd';
 import { getDeptFlags, addDeptFlag, updateDeptFlag, deleteDeptFlag } from '../../../api/departments';
 import type { ClientFlag } from '../../clients/types';
 
@@ -59,10 +59,17 @@ export const FlagsTab = ({ deptKey }: FlagsTabProps) => {
     reload();
   };
 
-  const handleDelete = async (flagKey: number) => {
-    if (!confirm('Delete this flag?')) return;
-    await deleteDeptFlag(deptKey, flagKey);
-    reload();
+  const handleDelete = (flagKey: number) => {
+    Modal.confirm({
+      title: 'Delete Flag',
+      content: 'Delete this flag?',
+      okText: 'Delete',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        await deleteDeptFlag(deptKey, flagKey);
+        reload();
+      },
+    });
   };
 
   const handleRowClick = (f: ClientFlag) => {

@@ -66,14 +66,20 @@ export const RepairsList = ({ repairs, loading, selectedKey, search, onSearchCha
             itemCount={repairs.length}
             itemSize={64}
             width="100%"
+            outerElementType="div"
+            innerElementType={(props: React.HTMLAttributes<HTMLDivElement>) => <div role="listbox" aria-label="Repairs list" {...props} />}
           >
             {({ index, style }) => {
               const r = repairs[index];
               return (
                 <div style={style} key={r.repairKey}>
                   <div
+                    role="option"
+                    aria-selected={selectedKey === r.repairKey}
+                    tabIndex={0}
                     onClick={() => onSelect(r)}
                     onDoubleClick={() => onDoubleClick?.(r)}
+                    onKeyDown={e => { if (e.key === 'Enter') onSelect(r); if (e.key === 'Enter' && e.ctrlKey) onDoubleClick?.(r); }}
                     style={{
                       padding: '8px 12px',
                       borderBottom: '1px solid var(--neutral-200)',
