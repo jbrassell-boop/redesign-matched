@@ -56,14 +56,7 @@ const dtTextareaStyle: React.CSSProperties = {
   background: 'var(--card)', padding: '6px 7px', fontSize: 11, color: 'var(--label)', lineHeight: 1.4,
   resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box',
 };
-const dtAngBtnGroupStyle: React.CSSProperties = { display: 'flex', gap: 3 };
-const dtAngSmallBtnStyle: React.CSSProperties = {
-  height: 20, padding: '0 7px', fontSize: 9, fontWeight: 600,
-  background: 'var(--card)', color: 'var(--navy)', border: '1px solid var(--border)',
-  borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit',
-};
-const dtThreeColGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5, marginBottom: 6 };
-const dtEmptyFieldStyle: React.CSSProperties = { color: 'var(--muted)', fontStyle: 'italic', fontSize: 10 };
+
 const dtCommentPlaceholderStyle: React.CSSProperties = {
   minHeight: 44, border: '1px solid var(--neutral-200)', borderRadius: 3,
   background: 'var(--card)', padding: '6px 7px', fontSize: 10,
@@ -286,37 +279,6 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
         prefillTranKey={amendTranKey}
       />
 
-      {/* Angulation IN */}
-      <div style={dtCardStyle}>
-        <div style={dtSectionHdFlexStyle}>
-          <span>Angulation IN</span>
-          <div style={dtAngBtnGroupStyle}>
-            {(['Reset', 'Override'] as const).map(lbl => (
-              <button key={lbl}
-                onClick={() => message.info(`${lbl} angulation — use Inspections tab`)}
-                style={dtAngSmallBtnStyle}>
-                {lbl}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div style={dtFormPadStyle}>
-          <div style={dtThreeColGridStyle}>
-            {(['UP', 'DOWN', 'RIGHT', 'LEFT', 'Epoxy', 'Size'] as const).map(lbl => (
-              <div key={lbl}>
-                <div style={lblStyle}>{lbl}</div>
-                <div style={fieldStyle}>
-                  <span style={dtEmptyFieldStyle}>—</span>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div>
-            <div style={lblStyle}>Max Charge</div>
-            <div style={fieldStyle}><span style={dtEmptyFieldStyle}>—</span></div>
-          </div>
-        </div>
-      </div>
 
       {/* Outsource */}
       <div style={dtCardStyle}>
