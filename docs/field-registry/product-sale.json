@@ -1,0 +1,12 @@
+{
+  "screen": "Product Sale",
+  "lastUpdated": "",
+  "fields": [
+    { "id": "ps_client", "label": "Client", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/product-sales", "responseProperty": "client", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "ps_product", "label": "Product", "sqlTable": "tblProductSale", "sqlQuery": "", "apiEndpoint": "GET /api/product-sales", "responseProperty": "product", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "ps_qty", "label": "Quantity", "sqlTable": "tblProductSale", "sqlQuery": "", "apiEndpoint": "GET /api/product-sales", "responseProperty": "qty", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "ps_price", "label": "Unit Price", "sqlTable": "tblProductSale", "sqlQuery": "", "apiEndpoint": "GET /api/product-sales", "responseProperty": "price", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "ps_total", "label": "Total", "sqlTable": "tblProductSale", "sqlQuery": "", "apiEndpoint": "GET /api/product-sales", "responseProperty": "total", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "ps_date", "label": "Sale Date", "sqlTable": "tblProductSale", "sqlQuery": "", "apiEndpoint": "GET /api/product-sales", "responseProperty": "saleDate", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+  ]
+}

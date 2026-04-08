@@ -1,0 +1,12 @@
+{
+  "screen": "Onsite Services",
+  "lastUpdated": "",
+  "fields": [
+    { "id": "onsite_client", "label": "Client", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/onsite-services", "responseProperty": "client", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "onsite_dept", "label": "Department", "sqlTable": "tblDepartment", "sqlQuery": "", "apiEndpoint": "GET /api/onsite-services", "responseProperty": "dept", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "onsite_tech", "label": "Tech", "sqlTable": "tblOnsiteService", "sqlQuery": "", "apiEndpoint": "GET /api/onsite-services", "responseProperty": "tech", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "onsite_date", "label": "Service Date", "sqlTable": "tblOnsiteService", "sqlQuery": "", "apiEndpoint": "GET /api/onsite-services", "responseProperty": "serviceDate", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "onsite_total", "label": "Total Cost", "sqlTable": "tblOnsiteService", "sqlQuery": "", "apiEndpoint": "GET /api/onsite-services", "responseProperty": "totalCost", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "onsite_status", "label": "Status", "sqlTable": "tblOnsiteService", "sqlQuery": "", "apiEndpoint": "GET /api/onsite-services", "responseProperty": "status", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+  ]
+}

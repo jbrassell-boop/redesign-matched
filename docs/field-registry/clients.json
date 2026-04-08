@@ -1,0 +1,16 @@
+{
+  "screen": "Clients",
+  "lastUpdated": "",
+  "fields": [
+    { "id": "clients_name", "label": "Client Name", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/clients", "responseProperty": "clientName", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "clients_city", "label": "City", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/clients", "responseProperty": "city", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "clients_state", "label": "State", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/clients", "responseProperty": "state", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "clients_zip", "label": "Zip", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/clients", "responseProperty": "zip", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "clients_active", "label": "Active", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/clients", "responseProperty": "active", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "clients_credit_limit", "label": "Credit Limit", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/clients/{id}", "responseProperty": "creditLimit", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "clients_terms", "label": "Terms", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/clients/{id}", "responseProperty": "terms", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "clients_portal_months", "label": "Portal Months", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/clients/{id}", "responseProperty": "portalMonths", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "clients_discount", "label": "Discount %", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/clients/{id}", "responseProperty": "discount", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "clients_markup", "label": "Markup %", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/clients/{id}", "responseProperty": "markup", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+  ]
+}

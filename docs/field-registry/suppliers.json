@@ -1,0 +1,11 @@
+{
+  "screen": "Suppliers",
+  "lastUpdated": "",
+  "fields": [
+    { "id": "sup_name", "label": "Supplier Name", "sqlTable": "tblSupplier", "sqlQuery": "", "apiEndpoint": "GET /api/suppliers", "responseProperty": "supplierName", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "sup_contact", "label": "Contact", "sqlTable": "tblSupplier", "sqlQuery": "", "apiEndpoint": "GET /api/suppliers", "responseProperty": "contact", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "sup_phone", "label": "Phone", "sqlTable": "tblSupplier", "sqlQuery": "", "apiEndpoint": "GET /api/suppliers", "responseProperty": "phone", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "sup_email", "label": "Email", "sqlTable": "tblSupplier", "sqlQuery": "", "apiEndpoint": "GET /api/suppliers", "responseProperty": "email", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "sup_active", "label": "Active", "sqlTable": "tblSupplier", "sqlQuery": "", "apiEndpoint": "GET /api/suppliers", "responseProperty": "active", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+  ]
+}

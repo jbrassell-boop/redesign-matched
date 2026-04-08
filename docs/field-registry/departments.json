@@ -1,0 +1,12 @@
+{
+  "screen": "Departments",
+  "lastUpdated": "",
+  "fields": [
+    { "id": "dept_name", "label": "Department Name", "sqlTable": "tblDepartment", "sqlQuery": "", "apiEndpoint": "GET /api/departments", "responseProperty": "deptName", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dept_client", "label": "Client", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/departments", "responseProperty": "clientName", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dept_address", "label": "Address", "sqlTable": "tblDepartment", "sqlQuery": "", "apiEndpoint": "GET /api/departments/{id}", "responseProperty": "address", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dept_contact", "label": "Contact Name", "sqlTable": "tblDepartment", "sqlQuery": "", "apiEndpoint": "GET /api/departments/{id}", "responseProperty": "contactName", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dept_phone", "label": "Phone", "sqlTable": "tblDepartment", "sqlQuery": "", "apiEndpoint": "GET /api/departments/{id}", "responseProperty": "phone", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dept_service_location", "label": "Service Location", "sqlTable": "tblDepartment", "sqlQuery": "", "apiEndpoint": "GET /api/departments/{id}", "responseProperty": "serviceLocation", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+  ]
+}

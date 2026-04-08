@@ -1,0 +1,12 @@
+{
+  "screen": "Contracts",
+  "lastUpdated": "",
+  "fields": [
+    { "id": "contract_number", "label": "Contract #", "sqlTable": "tblContract", "sqlQuery": "", "apiEndpoint": "GET /api/contracts", "responseProperty": "contractNumber", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "contract_client", "label": "Client", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/contracts", "responseProperty": "client", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "contract_start_date", "label": "Start Date", "sqlTable": "tblContract", "sqlQuery": "", "apiEndpoint": "GET /api/contracts", "responseProperty": "startDate", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "contract_end_date", "label": "End Date", "sqlTable": "tblContract", "sqlQuery": "", "apiEndpoint": "GET /api/contracts", "responseProperty": "endDate", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "contract_amount", "label": "Amount", "sqlTable": "tblContract", "sqlQuery": "", "apiEndpoint": "GET /api/contracts", "responseProperty": "amount", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "contract_status", "label": "Status", "sqlTable": "tblContract", "sqlQuery": "", "apiEndpoint": "GET /api/contracts", "responseProperty": "status", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+  ]
+}

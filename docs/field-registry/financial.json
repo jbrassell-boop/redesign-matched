@@ -1,0 +1,12 @@
+{
+  "screen": "Financial",
+  "lastUpdated": "",
+  "fields": [
+    { "id": "fin_invoice_number", "label": "Invoice #", "sqlTable": "tblInvoice", "sqlQuery": "", "apiEndpoint": "GET /api/financial", "responseProperty": "invoiceNumber", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "fin_client", "label": "Client", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/financial", "responseProperty": "client", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "fin_amount", "label": "Amount", "sqlTable": "tblInvoice", "sqlQuery": "", "apiEndpoint": "GET /api/financial", "responseProperty": "amount", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "fin_status", "label": "Status", "sqlTable": "tblInvoice", "sqlQuery": "", "apiEndpoint": "GET /api/financial", "responseProperty": "status", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "fin_date", "label": "Invoice Date", "sqlTable": "tblInvoice", "sqlQuery": "", "apiEndpoint": "GET /api/financial", "responseProperty": "invoiceDate", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "fin_paid_date", "label": "Paid Date", "sqlTable": "tblInvoice", "sqlQuery": "", "apiEndpoint": "GET /api/financial", "responseProperty": "paidDate", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+  ]
+}

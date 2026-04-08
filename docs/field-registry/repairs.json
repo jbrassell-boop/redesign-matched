@@ -1,0 +1,17 @@
+{
+  "screen": "Repairs",
+  "lastUpdated": "",
+  "fields": [
+    { "id": "repair_wo", "label": "Work Order #", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/repairs", "responseProperty": "wo", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "repair_client", "label": "Client", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/repairs", "responseProperty": "client", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "repair_dept", "label": "Department", "sqlTable": "tblDepartment", "sqlQuery": "", "apiEndpoint": "GET /api/repairs", "responseProperty": "dept", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "repair_scope_type", "label": "Scope Type", "sqlTable": "tblScopeModel", "sqlQuery": "", "apiEndpoint": "GET /api/repairs", "responseProperty": "scopeType", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "repair_serial", "label": "Serial #", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/repairs", "responseProperty": "serial", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "repair_date_in", "label": "Date In", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/repairs", "responseProperty": "dateIn", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "repair_status", "label": "Status", "sqlTable": "tblRepairStatuses", "sqlQuery": "", "apiEndpoint": "GET /api/repairs", "responseProperty": "status", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "repair_tech", "label": "Tech", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/repairs", "responseProperty": "tech", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "repair_amount_approved", "label": "Amount Approved", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/repairs/{id}", "responseProperty": "amountApproved", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "repair_days_in", "label": "Days In", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/repairs", "responseProperty": "daysIn", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "repair_is_urgent", "label": "Urgent Flag", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/repairs", "responseProperty": "isUrgent", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+  ]
+}

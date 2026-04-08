@@ -1,0 +1,18 @@
+{
+  "screen": "Dashboard",
+  "lastUpdated": "",
+  "fields": [
+    { "id": "dash_open_repairs", "label": "Open Repairs", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/dashboard/stats", "responseProperty": "openRepairs", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dash_urgent_repairs", "label": "Urgent Repairs", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/dashboard/stats", "responseProperty": "urgentRepairs", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dash_pending_qc", "label": "Pending QC", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/dashboard/stats", "responseProperty": "pendingQC", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dash_pending_ship", "label": "Pending Ship", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/dashboard/stats", "responseProperty": "pendingShip", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dash_completed_today", "label": "Completed Today", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/dashboard/stats", "responseProperty": "completedToday", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dash_received_today", "label": "Received Today", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/dashboard/stats", "responseProperty": "receivedToday", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dash_expiring_contracts", "label": "Expiring Contracts (90 days)", "sqlTable": "tblContract", "sqlQuery": "", "apiEndpoint": "GET /api/dashboard/stats", "responseProperty": "expiringContracts", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dash_repairs_list_wo", "label": "Repair List — WO#", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/dashboard/repairs", "responseProperty": "wo", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dash_repairs_list_client", "label": "Repair List — Client", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/dashboard/repairs", "responseProperty": "client", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dash_repairs_list_status", "label": "Repair List — Status", "sqlTable": "tblRepairStatuses", "sqlQuery": "", "apiEndpoint": "GET /api/dashboard/repairs", "responseProperty": "status", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dash_repairs_list_days_in", "label": "Repair List — Days In", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/dashboard/repairs", "responseProperty": "daysIn", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "dash_repairs_list_tech", "label": "Repair List — Tech", "sqlTable": "tblRepair", "sqlQuery": "", "apiEndpoint": "GET /api/dashboard/repairs", "responseProperty": "tech", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+  ]
+}
