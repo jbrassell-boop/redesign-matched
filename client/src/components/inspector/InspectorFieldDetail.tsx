@@ -1,5 +1,5 @@
 // client/src/components/inspector/InspectorFieldDetail.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button, Spin, Tag } from 'antd';
 import { TableOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { FIELD_VERIFIER_API, type FieldEntry } from '../../types/fieldRegistry';
@@ -20,17 +20,7 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
 
-  // Auto-fetch live value when field changes
-  useEffect(() => {
-    setLiveValue('');
-    setLiveError('');
-    setPreviewColumns([]);
-    setPreviewRows([]);
-    setShowPreview(false);
-    if (field.sqlQuery) fetchLiveValue();
-  }, [field.id]);
-
-  async function fetchLiveValue() {
+  const fetchLiveValue = useCallback(async () => {
     setLoadingValue(true);
     try {
       const res = await fetch(`${FIELD_VERIFIER_API}/live-value`, {
@@ -46,9 +36,20 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
     } finally {
       setLoadingValue(false);
     }
-  }
+  }, [field.sqlQuery]);
+
+  // Auto-fetch live value when field changes
+  useEffect(() => {
+    setLiveValue('');
+    setLiveError('');
+    setPreviewColumns([]);
+    setPreviewRows([]);
+    setShowPreview(false);
+    if (field.sqlQuery) fetchLiveValue();
+  }, [field.id, fetchLiveValue]);
 
   async function fetchPreviewRows() {
+    setPreviewError('');
     setLoadingPreview(true);
     setShowPreview(true);
     try {
