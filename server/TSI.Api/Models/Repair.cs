@@ -217,7 +217,17 @@ public record PatchRepairHeaderRequest(
 );
 
 // ── Repair Item Catalog ──
-public record RepairCatalogItem(int ItemKey, string ItemCode, string Description, decimal DefaultPrice);
+public record RepairCatalogItem(
+    int ItemKey,
+    string ItemCode,
+    string Description,
+    decimal DefaultPrice,
+    string RigidOrFlexible,
+    string PartOrLabor,
+    int? MinutesTech1,
+    int? MinutesTech2,
+    int? MinutesTech3
+);
 
 // ── Amendments ──
 public record AmendmentItem(

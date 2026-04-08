@@ -33,10 +33,15 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
 
   if (!open) return null;
 
+  const RF_MAP: Record<string, string> = { Flexible: 'F', Rigid: 'R', Camera: 'C' };
+
   const filtered = catalog.filter(i => {
     if (search && !i.description.toLowerCase().includes(search.toLowerCase()) && !i.itemCode.toLowerCase().includes(search.toLowerCase()))
       return false;
-    // Type filter would use a category field — for now show all
+    if (typeFilter !== 'all') {
+      const code = RF_MAP[typeFilter];
+      if (i.rigidOrFlexible && i.rigidOrFlexible !== code) return false;
+    }
     return true;
   });
 
@@ -173,6 +178,11 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
                   <input type="checkbox" checked={isSelected} readOnly style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--primary)' }} />
                   <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--navy)', minWidth: 60 }}>{item.itemCode}</span>
                   <span style={{ flex: 1, fontSize: 12, color: 'var(--label)' }}>{item.description}</span>
+                  {item.minutesTech1 != null && (
+                    <span style={{ fontSize: 10, color: 'var(--muted)', minWidth: 44, textAlign: 'right' }} title="Est. minutes (T1/T2/T3)">
+                      {item.minutesTech1}m
+                    </span>
+                  )}
                   <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', minWidth: 60, textAlign: 'right' }}>
                     {item.defaultPrice > 0 ? fmt$(item.defaultPrice) : '—'}
                   </span>

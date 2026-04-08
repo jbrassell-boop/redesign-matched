@@ -192,6 +192,11 @@ export interface RepairCatalogItem {
   itemCode: string;
   description: string;
   defaultPrice: number;
+  rigidOrFlexible: string;  // 'R' | 'F' | 'C' | ''
+  partOrLabor: string;       // 'P' | 'L' | ''
+  minutesTech1: number | null;
+  minutesTech2: number | null;
+  minutesTech3: number | null;
 }
 
 // ── Amendments ──

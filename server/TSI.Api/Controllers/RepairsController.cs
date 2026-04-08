@@ -889,20 +889,49 @@ public class RepairsController(IConfiguration config) : ControllerBase
 
         const string sql = """
             SELECT ri.lRepairItemKey,
-                   ISNULL(ri.sProblemID, '') AS sProblemID,
-                   ISNULL(ri.sItemDescription, '') AS sItemDescription,
-                   ISNULL(pd.dblRepairPrice, 0) AS dblDefaultPrice
+                   ISNULL(ri.sProblemID, '')          AS sProblemID,
+                   ISNULL(ri.sItemDescription, '')     AS sItemDescription,
+                   ISNULL(ri.sRigidOrFlexible, '')     AS sRigidOrFlexible,
+                   ISNULL(ri.sPartOrLabor, '')         AS sPartOrLabor,
+                   ISNULL(pd.dblRepairPrice, 0)        AS dblDefaultPrice,
+                   ISNULL(td1.lMinutes, ri.tMinutesTech1) AS lMinutesTech1,
+                   ISNULL(td2.lMinutes, ri.tMinutesTech2) AS lMinutesTech2,
+                   ISNULL(td3.lMinutes, ri.tMinutesTech3) AS lMinutesTech3
             FROM tblRepairItem ri
-            OUTER APPLY (
-                SELECT c.lPricingCategoryKey
+            -- Resolve this repair's scope type and client pricing category
+            CROSS APPLY (
+                SELECT ISNULL(st.lScopeTypeKey, 0)    AS lScopeTypeKey,
+                       ISNULL(st.sRigidOrFlexible, '') AS sScopeRF,
+                       c.lPricingCategoryKey
                 FROM tblRepair r
-                JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-                JOIN tblClient c ON c.lClientKey = d.lClientKey
+                JOIN tblScope      s  ON s.lScopeKey      = r.lScopeKey
+                JOIN tblScopeType  st ON st.lScopeTypeKey = s.lScopeTypeKey
+                JOIN tblDepartment d  ON d.lDepartmentKey = r.lDepartmentKey
+                JOIN tblClient     c  ON c.lClientKey     = d.lClientKey
                 WHERE r.lRepairKey = @repairKey
-            ) pricing
-            LEFT JOIN tblPricingDetail pd ON pd.lRepairItemKey = ri.lRepairItemKey
-                AND pd.lPricingCategoryKey = pricing.lPricingCategoryKey
+            ) scope
+            LEFT JOIN tblPricingDetail pd
+                   ON pd.lRepairItemKey       = ri.lRepairItemKey
+                  AND pd.lPricingCategoryKey  = scope.lPricingCategoryKey
+            -- Per-model repair item configuration (for tech-time overrides)
+            LEFT JOIN tblScopeTypeRepairItems stri
+                   ON stri.lRepairItemKey = ri.lRepairItemKey
+                  AND stri.lScopeTypeKey  = scope.lScopeTypeKey
+            LEFT JOIN tblScopeTypeRepairItemTechDetails td1
+                   ON td1.lScopeTypeRepairItemKey = stri.lScopeTypeRepairItemKey AND td1.lTechLevel = 1
+            LEFT JOIN tblScopeTypeRepairItemTechDetails td2
+                   ON td2.lScopeTypeRepairItemKey = stri.lScopeTypeRepairItemKey AND td2.lTechLevel = 2
+            LEFT JOIN tblScopeTypeRepairItemTechDetails td3
+                   ON td3.lScopeTypeRepairItemKey = stri.lScopeTypeRepairItemKey AND td3.lTechLevel = 3
             WHERE ISNULL(ri.bActive, 1) = 1
+              AND (
+                  -- Explicitly configured for this scope model
+                  stri.lScopeTypeRepairItemKey IS NOT NULL
+                  -- OR universal item (no rigid/flexible category restriction)
+                  OR ISNULL(ri.sRigidOrFlexible, '') = ''
+                  -- OR item matches this scope's rigid/flexible category
+                  OR ri.sRigidOrFlexible = scope.sScopeRF
+              )
             ORDER BY ri.sItemDescription
             """;
 
@@ -918,7 +947,12 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 ItemKey: Convert.ToInt32(reader["lRepairItemKey"]),
                 ItemCode: reader["sProblemID"].ToString()!,
                 Description: reader["sItemDescription"].ToString()!,
-                DefaultPrice: Convert.ToDecimal(reader["dblDefaultPrice"])
+                DefaultPrice: Convert.ToDecimal(reader["dblDefaultPrice"]),
+                RigidOrFlexible: reader["sRigidOrFlexible"].ToString()!,
+                PartOrLabor: reader["sPartOrLabor"].ToString()!,
+                MinutesTech1: reader["lMinutesTech1"] == DBNull.Value ? null : Convert.ToInt32(reader["lMinutesTech1"]),
+                MinutesTech2: reader["lMinutesTech2"] == DBNull.Value ? null : Convert.ToInt32(reader["lMinutesTech2"]),
+                MinutesTech3: reader["lMinutesTech3"] == DBNull.Value ? null : Convert.ToInt32(reader["lMinutesTech3"])
             ));
         }
         return Ok(items);
