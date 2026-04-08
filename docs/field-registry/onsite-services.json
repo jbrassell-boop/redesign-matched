@@ -1,12 +1,78 @@
 {
   "screen": "Onsite Services",
-  "lastUpdated": "",
+  "lastUpdated": "2026-04-08T17:56:57.4412255Z",
   "fields": [
-    { "id": "onsite_client", "label": "Client", "sqlTable": "tblClient", "sqlQuery": "SELECT TOP 5 c.sClientName1 FROM tblSiteServices ss LEFT JOIN tblDepartment d ON d.lDepartmentKey = ss.lDepartmentKey LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey ORDER BY ss.lSiteServiceKey DESC", "apiEndpoint": "GET /api/onsite-services", "responseProperty": "client", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "onsite_dept", "label": "Department", "sqlTable": "tblDepartment", "sqlQuery": "SELECT TOP 5 d.sDepartmentName FROM tblSiteServices ss LEFT JOIN tblDepartment d ON d.lDepartmentKey = ss.lDepartmentKey ORDER BY ss.lSiteServiceKey DESC", "apiEndpoint": "GET /api/onsite-services", "responseProperty": "dept", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "onsite_tech", "label": "Tech", "sqlTable": "tblTechnicians", "sqlQuery": "SELECT TOP 5 t.sTechName FROM tblSiteServices ss LEFT JOIN tblTechnicians t ON t.lTechnicianKey = ss.lTechnicianKey ORDER BY ss.lSiteServiceKey DESC", "apiEndpoint": "GET /api/onsite-services", "responseProperty": "tech", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "onsite_date", "label": "Service Date", "sqlTable": "tblSiteServices", "sqlQuery": "SELECT TOP 5 CONVERT(VARCHAR, dtOnsiteDate, 101) AS ServiceDate FROM tblSiteServices ORDER BY lSiteServiceKey DESC", "apiEndpoint": "GET /api/onsite-services", "responseProperty": "serviceDate", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "onsite_total", "label": "Total Billed", "sqlTable": "tblSiteServices", "sqlQuery": "SELECT TOP 5 ISNULL(nInvoiceAmount, 0) AS TotalBilled FROM tblSiteServices ORDER BY lSiteServiceKey DESC", "apiEndpoint": "GET /api/onsite-services", "responseProperty": "totalBilled", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "onsite_status", "label": "Status", "sqlTable": "tblSiteServices", "sqlQuery": "SELECT TOP 5 CASE WHEN dtVoidDate IS NOT NULL THEN 'Voided' WHEN dtInvoiceDate IS NOT NULL THEN 'Invoiced' ELSE 'Draft' END AS Status FROM tblSiteServices ORDER BY lSiteServiceKey DESC", "apiEndpoint": "GET /api/onsite-services", "responseProperty": "status", "status": "unverified", "notes": "Derived from void/invoice date logic", "verifiedAt": "", "verifiedBy": "" }
+    {
+      "id": "onsite_client",
+      "label": "Client",
+      "sqlTable": "tblClient",
+      "sqlQuery": "SELECT TOP 5 c.sClientName1 FROM tblSiteServices ss LEFT JOIN tblDepartment d ON d.lDepartmentKey = ss.lDepartmentKey LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey ORDER BY ss.lSiteServiceKey DESC",
+      "apiEndpoint": "GET /api/onsite-services",
+      "responseProperty": "client",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:47.0760908Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "onsite_dept",
+      "label": "Department",
+      "sqlTable": "tblDepartment",
+      "sqlQuery": "SELECT TOP 5 d.sDepartmentName FROM tblSiteServices ss LEFT JOIN tblDepartment d ON d.lDepartmentKey = ss.lDepartmentKey ORDER BY ss.lSiteServiceKey DESC",
+      "apiEndpoint": "GET /api/onsite-services",
+      "responseProperty": "dept",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:48.8091313Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "onsite_tech",
+      "label": "Tech",
+      "sqlTable": "tblTechnicians",
+      "sqlQuery": "SELECT TOP 5 t.sTechName FROM tblSiteServices ss LEFT JOIN tblTechnicians t ON t.lTechnicianKey = ss.lTechnicianKey ORDER BY ss.lSiteServiceKey DESC",
+      "apiEndpoint": "GET /api/onsite-services",
+      "responseProperty": "tech",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:52.0116594Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "onsite_date",
+      "label": "Service Date",
+      "sqlTable": "tblSiteServices",
+      "sqlQuery": "SELECT TOP 5 CONVERT(VARCHAR, dtOnsiteDate, 101) AS ServiceDate FROM tblSiteServices ORDER BY lSiteServiceKey DESC",
+      "apiEndpoint": "GET /api/onsite-services",
+      "responseProperty": "serviceDate",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:54.2161330Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "onsite_total",
+      "label": "Total Billed",
+      "sqlTable": "tblSiteServices",
+      "sqlQuery": "SELECT TOP 5 ISNULL(nInvoiceAmount, 0) AS TotalBilled FROM tblSiteServices ORDER BY lSiteServiceKey DESC",
+      "apiEndpoint": "GET /api/onsite-services",
+      "responseProperty": "totalBilled",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:55.4136490Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "onsite_status",
+      "label": "Status",
+      "sqlTable": "tblSiteServices",
+      "sqlQuery": "SELECT TOP 5 CASE WHEN dtVoidDate IS NOT NULL THEN \u0027Voided\u0027 WHEN dtInvoiceDate IS NOT NULL THEN \u0027Invoiced\u0027 ELSE \u0027Draft\u0027 END AS Status FROM tblSiteServices ORDER BY lSiteServiceKey DESC",
+      "apiEndpoint": "GET /api/onsite-services",
+      "responseProperty": "status",
+      "status": "confirmed",
+      "notes": "Derived from void/invoice date logic",
+      "verifiedAt": "2026-04-08T17:56:57.4412162Z",
+      "verifiedBy": "Joe"
+    }
   ]
 }

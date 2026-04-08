@@ -62,3 +62,16 @@ public record ColumnMatch(
     string DataType,
     string SampleValue
 );
+
+public record BuildJoinRequest(
+    string TableName,
+    string CurrentSql,
+    string FieldLabel
+);
+
+public record BuildJoinResponse(
+    string Sql,
+    List<string> Columns,
+    List<List<string>> Rows,
+    string Error
+);

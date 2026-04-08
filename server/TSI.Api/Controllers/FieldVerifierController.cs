@@ -230,7 +230,19 @@ public class FieldVerifierController(IConfiguration config) : ControllerBase
 
             var responseText = await response.Content.ReadAsStringAsync();
             using var doc = JsonDocument.Parse(responseText);
-            var text = doc.RootElement.GetProperty("content")[0].GetProperty("text").GetString() ?? "[]";
+            var root = doc.RootElement;
+
+            // Surface API errors (auth, rate limit, etc.)
+            if (root.TryGetProperty("error", out var errEl))
+            {
+                var errMsg = errEl.TryGetProperty("message", out var m) ? m.GetString() : errEl.ToString();
+                return Ok(new { columns = new List<ColumnMatch>(), error = $"Anthropic API error: {errMsg}" });
+            }
+
+            if (!root.TryGetProperty("content", out var contentEl))
+                return Ok(new { columns = new List<ColumnMatch>(), error = $"Unexpected response: {responseText[..Math.Min(responseText.Length, 200)]}" });
+
+            var text = contentEl[0].GetProperty("text").GetString() ?? "[]";
 
             var jsonStart = text.IndexOf('[');
             var jsonEnd = text.LastIndexOf(']');
@@ -279,6 +291,162 @@ public class FieldVerifierController(IConfiguration config) : ControllerBase
         catch (Exception ex)
         {
             return Ok(new { columns = new List<ColumnMatch>(), error = ex.Message });
+        }
+    }
+
+    // POST /api/field-verifier/build-join
+    [HttpPost("build-join")]
+    public async Task<IActionResult> BuildJoin([FromBody] BuildJoinRequest request)
+    {
+        var apiKey = config["Anthropic:ApiKey"]
+            ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return Ok(new BuildJoinResponse("", [], [], "Anthropic:ApiKey not configured"));
+
+        try
+        {
+            await using var conn = CreateConnection();
+            await conn.OpenAsync();
+
+            // Get all tbl* table names so Claude knows what's available
+            await using var tablesCmd = new SqlCommand(
+                "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME LIKE 'tbl%' ORDER BY TABLE_NAME",
+                conn);
+            tablesCmd.CommandTimeout = 10;
+            await using var tablesReader = await tablesCmd.ExecuteReaderAsync();
+            var tables = new List<string>();
+            while (await tablesReader.ReadAsync()) tables.Add(tablesReader.GetString(0));
+            await tablesReader.CloseAsync();
+
+            // Get columns of the source table
+            await using var colCmd = new SqlCommand(
+                "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @table ORDER BY ORDINAL_POSITION",
+                conn);
+            colCmd.Parameters.AddWithValue("@table", request.TableName);
+            colCmd.CommandTimeout = 10;
+            await using var colReader = await colCmd.ExecuteReaderAsync();
+            var sourceColumns = new List<string>();
+            while (await colReader.ReadAsync())
+                sourceColumns.Add($"{colReader.GetString(0)} ({colReader.GetString(1)})");
+            await colReader.CloseAsync();
+
+            // Try to infer linked table name from FK column pattern (lXxxKey -> tblXxx)
+            // Extract FK column names from the current SQL
+            var fkCols = sourceColumns
+                .Where(c => c.StartsWith("l") && c.Contains("Key"))
+                .Select(c => c.Split(' ')[0])
+                .ToList();
+
+            // For each FK col, try to find the linked table by stripping l prefix + Key suffix
+            var linkedTableColumns = new Dictionary<string, List<string>>();
+            foreach (var fkCol in fkCols.Take(5))
+            {
+                var stripped = fkCol.Length > 4 ? fkCol[1..^3] : fkCol; // strip l prefix and Key suffix
+                var candidates = tables.Where(t =>
+                    t.Equals($"tbl{stripped}", StringComparison.OrdinalIgnoreCase) ||
+                    t.Equals($"tbl{stripped}s", StringComparison.OrdinalIgnoreCase)).ToList();
+
+                foreach (var candidate in candidates)
+                {
+                    await using var linkedColCmd = new SqlCommand(
+                        "SELECT COLUMN_NAME, DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @t ORDER BY ORDINAL_POSITION",
+                        conn);
+                    linkedColCmd.Parameters.AddWithValue("@t", candidate);
+                    linkedColCmd.CommandTimeout = 5;
+                    await using var linkedColReader = await linkedColCmd.ExecuteReaderAsync();
+                    var cols = new List<string>();
+                    while (await linkedColReader.ReadAsync())
+                        cols.Add($"{linkedColReader.GetString(0)} ({linkedColReader.GetString(1)})");
+                    if (cols.Count > 0) linkedTableColumns[candidate] = cols;
+                }
+            }
+
+            var linkedTablesInfo = linkedTableColumns.Count > 0
+                ? string.Join("\n", linkedTableColumns.Select(kv =>
+                    $"  {kv.Key}: {string.Join(", ", kv.Value.Take(20))}"))
+                : "  (could not infer — use all available tables list above)";
+
+            var prompt = $"""
+                You are writing SQL for WinScope, a medical device repair management system.
+
+                Field: "{request.FieldLabel}"
+                Source table: {request.TableName}
+                Current SQL (returns a FK number, not the display value): {request.CurrentSql}
+
+                Source table columns (use ONLY these — do not invent columns):
+                {string.Join(", ", sourceColumns.Take(40))}
+
+                Likely linked tables and their ACTUAL columns (use ONLY these column names):
+                {linkedTablesInfo}
+
+                All available tables: {string.Join(", ", tables)}
+
+                WinScope rules:
+                - lXxxKey = FK that references tblXxx.lXxxKey
+                - s prefix = string/name field (human readable)
+                - dbl prefix = decimal/money
+                - n prefix = integer/numeric
+
+                Write a SELECT TOP 5 query joining the source table to the correct linked table to return the human-readable display value (not the FK number). Use ONLY column names listed above. Include ORDER BY. Return ONLY raw SQL, no markdown.
+                """;
+
+            using var http = new HttpClient();
+            http.DefaultRequestHeaders.Add("x-api-key", apiKey);
+            http.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
+            http.Timeout = TimeSpan.FromSeconds(20);
+
+            var reqBody = JsonSerializer.Serialize(new
+            {
+                model = "claude-haiku-4-5-20251001",
+                max_tokens = 512,
+                messages = new[] { new { role = "user", content = prompt } }
+            });
+
+            var httpResp = await http.PostAsync(
+                "https://api.anthropic.com/v1/messages",
+                new StringContent(reqBody, System.Text.Encoding.UTF8, "application/json"));
+
+            var respText = await httpResp.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(respText);
+            var root = doc.RootElement;
+
+            if (root.TryGetProperty("error", out var errEl))
+            {
+                var errMsg = errEl.TryGetProperty("message", out var m) ? m.GetString() : errEl.ToString();
+                return Ok(new BuildJoinResponse("", [], [], $"Anthropic error: {errMsg}"));
+            }
+
+            var sql = root.GetProperty("content")[0].GetProperty("text").GetString()?.Trim() ?? "";
+
+            // Strip markdown code fences if present
+            if (sql.StartsWith("```"))
+            {
+                var lines = sql.Split('\n').ToList();
+                lines = lines.Skip(1).TakeWhile(l => !l.TrimStart().StartsWith("```")).ToList();
+                sql = string.Join("\n", lines).Trim();
+            }
+
+            // Run the generated SQL and return preview rows
+            await using var previewCmd = new SqlCommand(sql, conn);
+            previewCmd.CommandTimeout = 10;
+            await using var previewReader = await previewCmd.ExecuteReaderAsync();
+
+            var colCount = Math.Min(previewReader.FieldCount, 10);
+            var columns = Enumerable.Range(0, colCount).Select(i => previewReader.GetName(i)).ToList();
+            var rows = new List<List<string>>();
+            while (await previewReader.ReadAsync() && rows.Count < 5)
+            {
+                rows.Add(Enumerable.Range(0, colCount)
+                    .Select(i => previewReader.IsDBNull(i) ? "(null)" : previewReader.GetValue(i)?.ToString() ?? "(null)")
+                    .ToList());
+            }
+
+            return Ok(new BuildJoinResponse(sql, columns, rows, ""));
+        }
+        catch (Exception ex)
+        {
+            return Ok(new BuildJoinResponse("", [], [], ex.Message));
         }
     }
 

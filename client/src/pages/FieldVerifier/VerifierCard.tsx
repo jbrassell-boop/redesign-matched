@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button, Input, Spin, Tag, message } from 'antd';
-import { CheckOutlined, CloseOutlined, EditOutlined, LeftOutlined, RightOutlined, TableOutlined, SearchOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined, EditOutlined, LeftOutlined, RightOutlined, TableOutlined, SearchOutlined, LinkOutlined } from '@ant-design/icons';
 import type { FieldEntry } from './index';
 
 const API = 'http://localhost:5000/api/field-verifier';
@@ -29,6 +29,12 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
   const [colSearch, setColSearch] = useState('');
   const [colResults, setColResults] = useState<{ tableName: string; columnName: string; dataType: string; sampleValue: string }[]>([]);
   const [loadingCols, setLoadingCols] = useState(false);
+  const [joinSql, setJoinSql] = useState('');
+  const [joinColumns, setJoinColumns] = useState<string[]>([]);
+  const [joinRows, setJoinRows] = useState<string[][]>([]);
+  const [joinError, setJoinError] = useState('');
+  const [loadingJoin, setLoadingJoin] = useState(false);
+  const [showJoin, setShowJoin] = useState(false);
 
   const [editSqlQuery, setEditSqlQuery] = useState(field.sqlQuery);
   const [editSqlTable, setEditSqlTable] = useState(field.sqlTable);
@@ -52,6 +58,11 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setShowPreview(false);
     setColSearch('');
     setColResults([]);
+    setJoinSql('');
+    setJoinColumns([]);
+    setJoinRows([]);
+    setJoinError('');
+    setShowJoin(false);
     if (field.sqlQuery) fetchLiveValue(field.sqlQuery);
   }, [field.id]);
 
@@ -77,17 +88,18 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
   }
 
   async function fetchPreviewRows() {
-    if (!field.sqlTable) return;
+    if (!field.sqlQuery) return;
     setLoadingPreview(true);
+    setPreviewColumns([]);
     setPreviewRows([]);
     setPreviewError('');
     setShowPreview(true);
     try {
-      const previewSql = `SELECT TOP 5 * FROM ${field.sqlTable}`;
+      // Run the actual sqlQuery — it already targets the exact column(s) for this field
       const res = await fetch(`${API}/preview-rows`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sqlQuery: previewSql }),
+        body: JSON.stringify({ sqlQuery: field.sqlQuery }),
       });
       const data = await res.json();
       if (data.error) setPreviewError(data.error);
@@ -128,6 +140,42 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setColResults([]);
     setColSearch('');
     message.success(`Using ${match.tableName}.${match.columnName}`);
+  }
+
+  async function buildJoin() {
+    setLoadingJoin(true);
+    setJoinSql('');
+    setJoinColumns([]);
+    setJoinRows([]);
+    setJoinError('');
+    setShowJoin(true);
+    try {
+      const res = await fetch(`${API}/build-join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tableName: field.sqlTable,
+          currentSql: field.sqlQuery,
+          fieldLabel: field.label,
+        }),
+      });
+      const data = await res.json();
+      if (data.error) { setJoinError(data.error); return; }
+      setJoinSql(data.sql);
+      setJoinColumns(data.columns ?? []);
+      setJoinRows(data.rows ?? []);
+    } catch {
+      setJoinError('Failed to reach API');
+    } finally {
+      setLoadingJoin(false);
+    }
+  }
+
+  async function useJoinSql() {
+    await updateField({ sqlQuery: joinSql });
+    setShowJoin(false);
+    fetchLiveValue(joinSql);
+    message.success('SQL updated — live value refreshed');
   }
 
   async function updateField(patch: Partial<FieldEntry>) {
@@ -241,6 +289,79 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
             </span>
           )}
         </div>
+
+        {/* Build JOIN */}
+        {!editing && field.sqlQuery && (
+          <div style={{ marginBottom: 12 }}>
+            <Button
+              icon={<LinkOutlined />}
+              size="small"
+              style={{ background: '#FFF7E6', borderColor: '#F6AD55', color: '#744210', fontSize: 11 }}
+              onClick={showJoin ? () => setShowJoin(false) : buildJoin}
+              loading={loadingJoin}
+            >
+              {showJoin ? 'Hide JOIN result' : 'Build JOIN — show real value'}
+            </Button>
+
+            {showJoin && !loadingJoin && (
+              <div style={{ marginTop: 8, background: '#FFFBEB', border: '1px solid #F6AD55', borderRadius: 6, padding: 12 }}>
+                {joinError ? (
+                  <div style={{ color: '#B71234', fontSize: 12 }}>{joinError}</div>
+                ) : (
+                  <>
+                    <div style={{ fontSize: 10, color: '#744210', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                      AI-generated JOIN SQL
+                    </div>
+                    <pre style={{ background: '#FEF3C7', padding: 8, borderRadius: 4, fontSize: 11, margin: '0 0 8px', whiteSpace: 'pre-wrap', color: '#1A202C' }}>
+                      {joinSql}
+                    </pre>
+                    {joinRows.length > 0 && (
+                      <>
+                        <div style={{ fontSize: 10, color: '#744210', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+                          Live result from production DB
+                        </div>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11, marginBottom: 10 }}>
+                          <thead>
+                            <tr>
+                              {joinColumns.map(col => (
+                                <th key={col} style={{ textAlign: 'left', padding: '2px 8px 2px 0', borderBottom: '2px solid #F6AD55', color: '#744210', fontFamily: 'monospace', fontWeight: 700 }}>
+                                  {col}
+                                </th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {joinRows.map((row, ri) => (
+                              <tr key={ri}>
+                                {row.map((cell, ci) => (
+                                  <td key={ci} style={{ padding: '2px 8px 2px 0', fontFamily: 'monospace', color: cell === '(null)' ? '#8896AA' : '#1A202C' }}>
+                                    {cell}
+                                  </td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </>
+                    )}
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <Button
+                        type="primary"
+                        size="small"
+                        icon={<CheckOutlined />}
+                        style={{ background: '#D97706', borderColor: '#D97706' }}
+                        onClick={useJoinSql}
+                      >
+                        Looks right — use this SQL
+                      </Button>
+                      <Button size="small" onClick={() => setShowJoin(false)}>Dismiss</Button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Sample Data */}
         <div style={{ marginBottom: 16 }}>

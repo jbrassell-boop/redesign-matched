@@ -1,12 +1,78 @@
 {
   "screen": "Financial",
-  "lastUpdated": "",
+  "lastUpdated": "2026-04-08T18:00:35.3756039Z",
   "fields": [
-    { "id": "fin_invoice_number", "label": "Invoice #", "sqlTable": "tblInvoice", "sqlQuery": "SELECT TOP 5 sTranNumber FROM tblInvoice ORDER BY dtTranDate DESC", "apiEndpoint": "GET /api/financial", "responseProperty": "invoiceNumber", "status": "unverified", "notes": "Column is sTranNumber in tblInvoice", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "fin_client", "label": "Client (Bill To Name)", "sqlTable": "tblInvoice", "sqlQuery": "SELECT TOP 5 sBillName1 FROM tblInvoice ORDER BY dtTranDate DESC", "apiEndpoint": "GET /api/financial", "responseProperty": "clientName", "status": "unverified", "notes": "Stored as sBillName1 directly on tblInvoice (denormalized)", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "fin_amount", "label": "Invoice Amount", "sqlTable": "tblInvoice", "sqlQuery": "SELECT TOP 5 ISNULL(dblTranAmount, 0) AS Amount FROM tblInvoice ORDER BY dtTranDate DESC", "apiEndpoint": "GET /api/financial", "responseProperty": "amount", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "fin_status", "label": "Export Status", "sqlTable": "tblInvoice", "sqlQuery": "SELECT TOP 5 ISNULL(sExported, '') AS ExportStatus FROM tblInvoice ORDER BY dtTranDate DESC", "apiEndpoint": "GET /api/financial", "responseProperty": "status", "status": "unverified", "notes": "sExported: empty = not exported (Draft), non-empty = exported to GP", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "fin_date", "label": "Invoice Date", "sqlTable": "tblInvoice", "sqlQuery": "SELECT TOP 5 CONVERT(VARCHAR, dtTranDate, 101) AS InvoiceDate FROM tblInvoice ORDER BY dtTranDate DESC", "apiEndpoint": "GET /api/financial", "responseProperty": "invoiceDate", "status": "unverified", "notes": "Column is dtTranDate", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "fin_due_date", "label": "Due Date", "sqlTable": "tblInvoice", "sqlQuery": "SELECT TOP 5 CONVERT(VARCHAR, dtDueDate, 101) AS DueDate FROM tblInvoice ORDER BY dtTranDate DESC", "apiEndpoint": "GET /api/financial", "responseProperty": "dueDate", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+    {
+      "id": "fin_invoice_number",
+      "label": "Invoice #",
+      "sqlTable": "tblInvoice",
+      "sqlQuery": "SELECT TOP 5 sTranNumber FROM tblInvoice ORDER BY dtTranDate DESC",
+      "apiEndpoint": "GET /api/financial",
+      "responseProperty": "invoiceNumber",
+      "status": "confirmed",
+      "notes": "Column is sTranNumber in tblInvoice",
+      "verifiedAt": "2026-04-08T18:00:23.1753515Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "fin_client",
+      "label": "Client (Bill To Name)",
+      "sqlTable": "tblInvoice",
+      "sqlQuery": "SELECT TOP 5 sBillName1 FROM tblInvoice ORDER BY dtTranDate DESC",
+      "apiEndpoint": "GET /api/financial",
+      "responseProperty": "clientName",
+      "status": "confirmed",
+      "notes": "Stored as sBillName1 directly on tblInvoice (denormalized)",
+      "verifiedAt": "2026-04-08T18:00:26.0527880Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "fin_amount",
+      "label": "Invoice Amount",
+      "sqlTable": "tblInvoice",
+      "sqlQuery": "SELECT TOP 5 ISNULL(dblTranAmount, 0) AS Amount FROM tblInvoice ORDER BY dtTranDate DESC",
+      "apiEndpoint": "GET /api/financial",
+      "responseProperty": "amount",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T18:00:27.8274437Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "fin_status",
+      "label": "Export Status",
+      "sqlTable": "tblInvoice",
+      "sqlQuery": "SELECT TOP 5 ISNULL(sExported, \u0027\u0027) AS ExportStatus FROM tblInvoice ORDER BY dtTranDate DESC",
+      "apiEndpoint": "GET /api/financial",
+      "responseProperty": "status",
+      "status": "confirmed",
+      "notes": "sExported: empty = not exported (Draft), non-empty = exported to GP",
+      "verifiedAt": "2026-04-08T18:00:31.6928586Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "fin_date",
+      "label": "Invoice Date",
+      "sqlTable": "tblInvoice",
+      "sqlQuery": "SELECT TOP 5 CONVERT(VARCHAR, dtTranDate, 101) AS InvoiceDate FROM tblInvoice ORDER BY dtTranDate DESC",
+      "apiEndpoint": "GET /api/financial",
+      "responseProperty": "invoiceDate",
+      "status": "confirmed",
+      "notes": "Column is dtTranDate",
+      "verifiedAt": "2026-04-08T18:00:33.6715921Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "fin_due_date",
+      "label": "Due Date",
+      "sqlTable": "tblInvoice",
+      "sqlQuery": "SELECT TOP 5 CONVERT(VARCHAR, dtDueDate, 101) AS DueDate FROM tblInvoice ORDER BY dtTranDate DESC",
+      "apiEndpoint": "GET /api/financial",
+      "responseProperty": "dueDate",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T18:00:35.3755954Z",
+      "verifiedBy": "Joe"
+    }
   ]
 }

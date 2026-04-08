@@ -1,11 +1,66 @@
 {
   "screen": "Scope Model",
-  "lastUpdated": "",
+  "lastUpdated": "2026-04-08T18:02:00.9845849Z",
   "fields": [
-    { "id": "sm_scope_type", "label": "Scope Type Description", "sqlTable": "tblScopeType", "sqlQuery": "SELECT TOP 5 sScopeTypeDesc FROM tblScopeType ORDER BY sScopeTypeDesc", "apiEndpoint": "GET /api/scope-models", "responseProperty": "scopeType", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "sm_manufacturer", "label": "Manufacturer", "sqlTable": "tblManufacturers", "sqlQuery": "SELECT TOP 5 m.sManufacturer FROM tblScopeType st LEFT JOIN tblManufacturers m ON m.lManufacturerKey = st.lManufacturerKey ORDER BY st.sScopeTypeDesc", "apiEndpoint": "GET /api/scope-models", "responseProperty": "manufacturer", "status": "unverified", "notes": "VERIFY: lManufacturerKey join column name on tblScopeType", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "sm_model", "label": "Model / Type ID", "sqlTable": "tblScopeType", "sqlQuery": "SELECT TOP 5 sTypeID FROM tblScopeType ORDER BY sScopeTypeDesc", "apiEndpoint": "GET /api/scope-models", "responseProperty": "model", "status": "unverified", "notes": "sTypeID is the model identifier on tblScopeType", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "sm_category", "label": "Category", "sqlTable": "tblScopeTypeCategories", "sqlQuery": "SELECT TOP 5 stc.sScopeTypeCategory FROM tblScopeType st LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey ORDER BY st.sScopeTypeDesc", "apiEndpoint": "GET /api/scope-models", "responseProperty": "category", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "sm_active", "label": "Active", "sqlTable": "tblScopeType", "sqlQuery": "SELECT TOP 5 ISNULL(bActive, 1) AS Active FROM tblScopeType ORDER BY sScopeTypeDesc", "apiEndpoint": "GET /api/scope-models", "responseProperty": "active", "status": "unverified", "notes": "Default is 1 (active) per controller", "verifiedAt": "", "verifiedBy": "" }
+    {
+      "id": "sm_scope_type",
+      "label": "Scope Type Description",
+      "sqlTable": "tblScopeType",
+      "sqlQuery": "SELECT TOP 5 lScopeTypeCatKey FROM tblScopeType ORDER BY 1",
+      "apiEndpoint": "GET /api/scope-models",
+      "responseProperty": "scopeType",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T18:01:25.8449063Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "sm_manufacturer",
+      "label": "Manufacturer",
+      "sqlTable": "tblManufacturers",
+      "sqlQuery": "SELECT TOP 5 m.sManufacturer FROM tblScopeType st LEFT JOIN tblManufacturers m ON m.lManufacturerKey = st.lManufacturerKey ORDER BY st.sScopeTypeDesc",
+      "apiEndpoint": "GET /api/scope-models",
+      "responseProperty": "manufacturer",
+      "status": "confirmed",
+      "notes": "VERIFY: lManufacturerKey join column name on tblScopeType",
+      "verifiedAt": "2026-04-08T18:01:27.1149617Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "sm_model",
+      "label": "Model / Type ID",
+      "sqlTable": "tblScopeType",
+      "sqlQuery": "SELECT TOP 5 sScopeTypeDesc FROM tblScopeType ORDER BY 1",
+      "apiEndpoint": "GET /api/scope-models",
+      "responseProperty": "model",
+      "status": "confirmed",
+      "notes": "sTypeID is the model identifier on tblScopeType",
+      "verifiedAt": "2026-04-08T18:01:56.5414694Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "sm_category",
+      "label": "Category",
+      "sqlTable": "tblScopeTypeCategories",
+      "sqlQuery": "SELECT TOP 5 stc.sScopeTypeCategory FROM tblScopeType st LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey ORDER BY st.sScopeTypeDesc",
+      "apiEndpoint": "GET /api/scope-models",
+      "responseProperty": "category",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T18:01:59.7792308Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "sm_active",
+      "label": "Active",
+      "sqlTable": "tblScopeType",
+      "sqlQuery": "SELECT TOP 5 ISNULL(bActive, 1) AS Active FROM tblScopeType ORDER BY sScopeTypeDesc",
+      "apiEndpoint": "GET /api/scope-models",
+      "responseProperty": "active",
+      "status": "confirmed",
+      "notes": "Default is 1 (active) per controller",
+      "verifiedAt": "2026-04-08T18:02:00.9845768Z",
+      "verifiedBy": "Joe"
+    }
   ]
 }

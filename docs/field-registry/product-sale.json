@@ -1,12 +1,78 @@
 {
   "screen": "Product Sale",
-  "lastUpdated": "",
+  "lastUpdated": "2026-04-08T18:00:18.0575519Z",
   "fields": [
-    { "id": "ps_client", "label": "Client", "sqlTable": "tblClient", "sqlQuery": "SELECT TOP 5 c.sClientName1 FROM tblProductSales ps LEFT JOIN tblClient c ON c.lClientKey = ps.lClientKey ORDER BY ps.dtOrderDate DESC", "apiEndpoint": "GET /api/product-sales", "responseProperty": "clientName", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "ps_product", "label": "Product / Item Description", "sqlTable": "tblProductSaleInvoiceDetail", "sqlQuery": "SELECT TOP 5 sItemDescription FROM tblProductSaleInvoiceDetail ORDER BY lProductSalesKey DESC", "apiEndpoint": "GET /api/product-sales/{id}", "responseProperty": "itemDescription", "status": "unverified", "notes": "Line items in tblProductSaleInvoiceDetail, not the header tblProductSales", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "ps_qty", "label": "Quantity", "sqlTable": "tblProductSaleInvoiceDetail", "sqlQuery": "SELECT TOP 5 lQty FROM tblProductSaleInvoiceDetail ORDER BY lProductSalesKey DESC", "apiEndpoint": "GET /api/product-sales/{id}", "responseProperty": "quantity", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "ps_price", "label": "Unit Price", "sqlTable": "tblProductSaleInvoiceDetail", "sqlQuery": "SELECT TOP 5 nUnitPrice FROM tblProductSaleInvoiceDetail ORDER BY lProductSalesKey DESC", "apiEndpoint": "GET /api/product-sales/{id}", "responseProperty": "unitPrice", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "ps_total", "label": "Order Total", "sqlTable": "tblProductSales", "sqlQuery": "SELECT TOP 5 ISNULL(nTotalAmount, 0) AS Total FROM tblProductSales ORDER BY dtOrderDate DESC", "apiEndpoint": "GET /api/product-sales", "responseProperty": "total", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "ps_date", "label": "Order Date", "sqlTable": "tblProductSales", "sqlQuery": "SELECT TOP 5 CONVERT(VARCHAR, dtOrderDate, 101) AS OrderDate FROM tblProductSales ORDER BY dtOrderDate DESC", "apiEndpoint": "GET /api/product-sales", "responseProperty": "orderDate", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+    {
+      "id": "ps_client",
+      "label": "Client",
+      "sqlTable": "tblClient",
+      "sqlQuery": "SELECT TOP 5 c.sClientName1 FROM tblProductSales ps LEFT JOIN tblClient c ON c.lClientKey = ps.lClientKey ORDER BY ps.dtOrderDate DESC",
+      "apiEndpoint": "GET /api/product-sales",
+      "responseProperty": "clientName",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:57:01.8907331Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "ps_product",
+      "label": "Product / Item Description",
+      "sqlTable": "tblProductSaleInvoiceDetail",
+      "sqlQuery": "SELECT TOP 5 sItemDescription FROM tblProductSaleInvoiceDetail ORDER BY lProductSalesKey DESC",
+      "apiEndpoint": "GET /api/product-sales/{id}",
+      "responseProperty": "itemDescription",
+      "status": "confirmed",
+      "notes": "Line items in tblProductSaleInvoiceDetail, not the header tblProductSales",
+      "verifiedAt": "2026-04-08T17:57:03.8828751Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "ps_qty",
+      "label": "Quantity",
+      "sqlTable": "tblProductSaleInvoiceDetail",
+      "sqlQuery": "SELECT TOP 5 lQty FROM tblProductSaleInvoiceDetail ORDER BY lProductSalesKey DESC",
+      "apiEndpoint": "GET /api/product-sales/{id}",
+      "responseProperty": "quantity",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:57:05.4703214Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "ps_price",
+      "label": "Unit Price",
+      "sqlTable": "tblProductSales",
+      "sqlQuery": "SELECT TOP 5 lInventoryPricingListKey FROM tblProductSales ORDER BY 1",
+      "apiEndpoint": "GET /api/product-sales/{id}",
+      "responseProperty": "unitPrice",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:59:35.1503404Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "ps_total",
+      "label": "Order Total",
+      "sqlTable": "tblProductSales",
+      "sqlQuery": "SELECT TOP 5 ISNULL(nTotalAmount, 0) AS Total FROM tblProductSales ORDER BY dtOrderDate DESC",
+      "apiEndpoint": "GET /api/product-sales",
+      "responseProperty": "total",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:58:23.3579211Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "ps_date",
+      "label": "Order Date",
+      "sqlTable": "tblProductSales",
+      "sqlQuery": "SELECT TOP 5 CONVERT(VARCHAR, dtOrderDate, 101) AS OrderDate FROM tblProductSales ORDER BY dtOrderDate DESC",
+      "apiEndpoint": "GET /api/product-sales",
+      "responseProperty": "orderDate",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T18:00:18.0575428Z",
+      "verifiedBy": "Joe"
+    }
   ]
 }

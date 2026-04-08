@@ -1,12 +1,78 @@
 {
   "screen": "Inventory",
-  "lastUpdated": "",
+  "lastUpdated": "2026-04-08T17:56:31.0474820Z",
   "fields": [
-    { "id": "inv_item_desc", "label": "Item Description", "sqlTable": "tblInventory", "sqlQuery": "SELECT TOP 5 sItemDescription FROM tblInventory ORDER BY sItemDescription", "apiEndpoint": "GET /api/inventory", "responseProperty": "description", "status": "unverified", "notes": "Parts/supplies inventory — NOT scope instruments (those are in tblScope)", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_current_level", "label": "Current Stock Level", "sqlTable": "tblInventory", "sqlQuery": "SELECT TOP 5 nLevelCurrent FROM tblInventory ORDER BY sItemDescription", "apiEndpoint": "GET /api/inventory", "responseProperty": "currentLevel", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_min_level", "label": "Min Level", "sqlTable": "tblInventory", "sqlQuery": "SELECT TOP 5 nLevelMinimum FROM tblInventory ORDER BY sItemDescription", "apiEndpoint": "GET /api/inventory", "responseProperty": "minLevel", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_max_level", "label": "Max Level", "sqlTable": "tblInventory", "sqlQuery": "SELECT TOP 5 nLevelMaximum FROM tblInventory ORDER BY sItemDescription", "apiEndpoint": "GET /api/inventory", "responseProperty": "maxLevel", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_active", "label": "Active", "sqlTable": "tblInventory", "sqlQuery": "SELECT TOP 5 ISNULL(bActive, 0) AS bActive FROM tblInventory ORDER BY sItemDescription", "apiEndpoint": "GET /api/inventory", "responseProperty": "isActive", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_low_stock", "label": "Low Stock Count", "sqlTable": "tblInventory", "sqlQuery": "SELECT COUNT(*) FROM tblInventory WHERE ISNULL(nLevelCurrent, 0) <= ISNULL(nLevelMinimum, 0) AND ISNULL(bActive, 0) = 1", "apiEndpoint": "GET /api/inventory", "responseProperty": "isLowStock", "status": "unverified", "notes": "Count of active items at or below minimum level", "verifiedAt": "", "verifiedBy": "" }
+    {
+      "id": "inv_item_desc",
+      "label": "Item Description",
+      "sqlTable": "tblInventory",
+      "sqlQuery": "SELECT TOP 5 sItemDescription FROM tblInventory ORDER BY sItemDescription",
+      "apiEndpoint": "GET /api/inventory",
+      "responseProperty": "description",
+      "status": "confirmed",
+      "notes": "Parts/supplies inventory \u2014 NOT scope instruments (those are in tblScope)",
+      "verifiedAt": "2026-04-08T17:56:23.2982636Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "inv_current_level",
+      "label": "Current Stock Level",
+      "sqlTable": "tblInventory",
+      "sqlQuery": "SELECT TOP 5 nLevelCurrent FROM tblInventory ORDER BY sItemDescription",
+      "apiEndpoint": "GET /api/inventory",
+      "responseProperty": "currentLevel",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:24.4313414Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "inv_min_level",
+      "label": "Min Level",
+      "sqlTable": "tblInventory",
+      "sqlQuery": "SELECT TOP 5 nLevelMinimum FROM tblInventory ORDER BY sItemDescription",
+      "apiEndpoint": "GET /api/inventory",
+      "responseProperty": "minLevel",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:25.6192615Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "inv_max_level",
+      "label": "Max Level",
+      "sqlTable": "tblInventory",
+      "sqlQuery": "SELECT TOP 5 nLevelMaximum FROM tblInventory ORDER BY sItemDescription",
+      "apiEndpoint": "GET /api/inventory",
+      "responseProperty": "maxLevel",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:26.3203127Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "inv_active",
+      "label": "Active",
+      "sqlTable": "tblInventory",
+      "sqlQuery": "SELECT TOP 5 ISNULL(bActive, 0) AS bActive FROM tblInventory ORDER BY sItemDescription",
+      "apiEndpoint": "GET /api/inventory",
+      "responseProperty": "isActive",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:27.2355864Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "inv_low_stock",
+      "label": "Low Stock Count",
+      "sqlTable": "tblInventory",
+      "sqlQuery": "SELECT COUNT(*) FROM tblInventory WHERE ISNULL(nLevelCurrent, 0) \u003C= ISNULL(nLevelMinimum, 0) AND ISNULL(bActive, 0) = 1",
+      "apiEndpoint": "GET /api/inventory",
+      "responseProperty": "isLowStock",
+      "status": "confirmed",
+      "notes": "Count of active items at or below minimum level",
+      "verifiedAt": "2026-04-08T17:56:31.0474698Z",
+      "verifiedBy": "Joe"
+    }
   ]
 }

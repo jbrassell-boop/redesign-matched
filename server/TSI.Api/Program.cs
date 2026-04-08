@@ -41,6 +41,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowClient", policy =>
         policy.WithOrigins(
             "http://localhost:5173",
+            "http://localhost:5176",
             builder.Configuration["ClientOrigin"] ?? "https://placeholder.azurestaticapps.net"
         )
         .AllowAnyMethod()

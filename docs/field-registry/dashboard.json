@@ -1,24 +1,24 @@
 {
   "screen": "Dashboard",
-  "lastUpdated": "2026-04-08T16:09:25.5272911Z",
+  "lastUpdated": "2026-04-08T17:54:27.7706143Z",
   "fields": [
     {
       "id": "dash_open_repairs",
       "label": "Open Repairs",
       "sqlTable": "tblRepair",
-      "sqlQuery": "SELECT COUNT(*) FROM tblRepair WHERE ISNULL(sRepairClosed, 'N') != 'Y'",
+      "sqlQuery": "SELECT COUNT(*) FROM tblRepair WHERE ISNULL(sRepairClosed, \u0027N\u0027) != \u0027Y\u0027",
       "apiEndpoint": "GET /api/dashboard/stats",
       "responseProperty": "openRepairs",
-      "status": "unverified",
+      "status": "confirmed",
       "notes": "",
-      "verifiedAt": "2026-04-08T16:08:02.7870366Z",
+      "verifiedAt": "2026-04-08T17:54:27.7705987Z",
       "verifiedBy": "Joe"
     },
     {
       "id": "dash_urgent_repairs",
       "label": "Urgent Repairs",
       "sqlTable": "tblRepair",
-      "sqlQuery": "SELECT COUNT(*) FROM tblRepair WHERE bHotList = 1 AND ISNULL(sRepairClosed, 'N') != 'Y'",
+      "sqlQuery": "SELECT COUNT(*) FROM tblRepair WHERE bHotList = 1 AND ISNULL(sRepairClosed, \u0027N\u0027) != \u0027Y\u0027",
       "apiEndpoint": "GET /api/dashboard/stats",
       "responseProperty": "urgentRepairs",
       "status": "confirmed",
@@ -30,25 +30,25 @@
       "id": "dash_pending_qc",
       "label": "Pending QC",
       "sqlTable": "tblRepair",
-      "sqlQuery": "SELECT COUNT(*) FROM tblRepair r LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID WHERE rs.sRepairStatus = 'Pending QC'",
+      "sqlQuery": "SELECT COUNT(*) FROM tblRepair r LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID WHERE rs.sRepairStatus = \u0027Pending QC\u0027",
       "apiEndpoint": "GET /api/dashboard/stats",
       "responseProperty": "pendingQC",
-      "status": "unverified",
+      "status": "confirmed",
       "notes": "",
-      "verifiedAt": "",
-      "verifiedBy": ""
+      "verifiedAt": "2026-04-08T17:43:12.3591195Z",
+      "verifiedBy": "Joe"
     },
     {
       "id": "dash_pending_ship",
       "label": "Pending Ship",
       "sqlTable": "tblRepair",
-      "sqlQuery": "SELECT COUNT(*) FROM tblRepair r LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID WHERE rs.sRepairStatus = 'Pending Ship'",
+      "sqlQuery": "SELECT TOP 5 dtShipDate FROM tblRepair ORDER BY 1",
       "apiEndpoint": "GET /api/dashboard/stats",
       "responseProperty": "pendingShip",
-      "status": "unverified",
+      "status": "confirmed",
       "notes": "",
-      "verifiedAt": "",
-      "verifiedBy": ""
+      "verifiedAt": "2026-04-08T17:54:20.9606656Z",
+      "verifiedBy": "Joe"
     },
     {
       "id": "dash_completed_today",
@@ -57,10 +57,10 @@
       "sqlQuery": "SELECT COUNT(*) FROM tblRepair WHERE dtDateOut IS NOT NULL AND CAST(dtShipDate AS DATE) = CAST(GETDATE() AS DATE)",
       "apiEndpoint": "GET /api/dashboard/stats",
       "responseProperty": "completedToday",
-      "status": "unverified",
+      "status": "confirmed",
       "notes": "",
-      "verifiedAt": "",
-      "verifiedBy": ""
+      "verifiedAt": "2026-04-08T17:53:59.6623107Z",
+      "verifiedBy": "Joe"
     },
     {
       "id": "dash_received_today",
@@ -69,10 +69,10 @@
       "sqlQuery": "SELECT COUNT(*) FROM tblRepair WHERE CAST(dtDateIn AS DATE) = CAST(GETDATE() AS DATE)",
       "apiEndpoint": "GET /api/dashboard/stats",
       "responseProperty": "receivedToday",
-      "status": "unverified",
+      "status": "confirmed",
       "notes": "",
-      "verifiedAt": "",
-      "verifiedBy": ""
+      "verifiedAt": "2026-04-08T17:53:53.5345378Z",
+      "verifiedBy": "Joe"
     },
     {
       "id": "dash_expiring_contracts",
@@ -81,70 +81,70 @@
       "sqlQuery": "SELECT COUNT(*) FROM tblContract WHERE dtDateTermination BETWEEN GETDATE() AND DATEADD(DAY, 90, GETDATE())",
       "apiEndpoint": "GET /api/dashboard/stats",
       "responseProperty": "expiringContracts",
-      "status": "unverified",
+      "status": "confirmed",
       "notes": "",
-      "verifiedAt": "",
-      "verifiedBy": ""
+      "verifiedAt": "2026-04-08T17:52:18.9391763Z",
+      "verifiedBy": "Joe"
     },
     {
       "id": "dash_repairs_list_wo",
       "label": "Repair List \u2014 WO#",
       "sqlTable": "tblRepair",
-      "sqlQuery": "SELECT TOP 5 sWorkOrderNumber FROM tblRepair WHERE ISNULL(sRepairClosed, 'N') != 'Y' ORDER BY dtDateIn DESC",
+      "sqlQuery": "SELECT TOP 5 sWorkOrderNumber FROM tblRepair WHERE ISNULL(sRepairClosed, \u0027N\u0027) != \u0027Y\u0027 ORDER BY dtDateIn DESC",
       "apiEndpoint": "GET /api/dashboard/repairs",
       "responseProperty": "wo",
-      "status": "unverified",
+      "status": "confirmed",
       "notes": "",
-      "verifiedAt": "",
-      "verifiedBy": ""
+      "verifiedAt": "2026-04-08T17:52:47.1675937Z",
+      "verifiedBy": "Joe"
     },
     {
       "id": "dash_repairs_list_client",
       "label": "Repair List \u2014 Client",
       "sqlTable": "tblClient",
-      "sqlQuery": "SELECT TOP 5 c.sClientName1 FROM tblRepair r LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey WHERE ISNULL(r.sRepairClosed, 'N') != 'Y' ORDER BY r.dtDateIn DESC",
+      "sqlQuery": "SELECT TOP 5 c.sClientName1 FROM tblRepair r LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey WHERE ISNULL(r.sRepairClosed, \u0027N\u0027) != \u0027Y\u0027 ORDER BY r.dtDateIn DESC",
       "apiEndpoint": "GET /api/dashboard/repairs",
       "responseProperty": "client",
-      "status": "unverified",
+      "status": "confirmed",
       "notes": "",
-      "verifiedAt": "",
-      "verifiedBy": ""
+      "verifiedAt": "2026-04-08T17:52:53.1094165Z",
+      "verifiedBy": "Joe"
     },
     {
       "id": "dash_repairs_list_status",
       "label": "Repair List \u2014 Status",
       "sqlTable": "tblRepairStatuses",
-      "sqlQuery": "SELECT TOP 5 rs.sRepairStatus FROM tblRepair r LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID WHERE ISNULL(r.sRepairClosed, 'N') != 'Y' ORDER BY r.dtDateIn DESC",
+      "sqlQuery": "SELECT TOP 5 rs.sRepairStatus FROM tblRepair r LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID WHERE ISNULL(r.sRepairClosed, \u0027N\u0027) != \u0027Y\u0027 ORDER BY r.dtDateIn DESC",
       "apiEndpoint": "GET /api/dashboard/repairs",
       "responseProperty": "status",
-      "status": "unverified",
+      "status": "confirmed",
       "notes": "",
-      "verifiedAt": "",
-      "verifiedBy": ""
+      "verifiedAt": "2026-04-08T17:52:58.7320505Z",
+      "verifiedBy": "Joe"
     },
     {
       "id": "dash_repairs_list_days_in",
       "label": "Repair List \u2014 Days In",
       "sqlTable": "tblRepair",
-      "sqlQuery": "SELECT TOP 5 DATEDIFF(day, dtDateIn, GETDATE()) AS DaysIn FROM tblRepair WHERE ISNULL(sRepairClosed, 'N') != 'Y' ORDER BY dtDateIn DESC",
+      "sqlQuery": "SELECT TOP 5 DATEDIFF(day, dtDateIn, GETDATE()) AS DaysIn FROM tblRepair WHERE ISNULL(sRepairClosed, \u0027N\u0027) != \u0027Y\u0027 ORDER BY dtDateIn DESC",
       "apiEndpoint": "GET /api/dashboard/repairs",
       "responseProperty": "daysIn",
-      "status": "unverified",
+      "status": "confirmed",
       "notes": "",
-      "verifiedAt": "",
-      "verifiedBy": ""
+      "verifiedAt": "2026-04-08T17:53:05.1994846Z",
+      "verifiedBy": "Joe"
     },
     {
       "id": "dash_repairs_list_tech",
       "label": "Repair List \u2014 Tech",
       "sqlTable": "tblTechnicians",
-      "sqlQuery": "SELECT TOP 5 t.sTechName FROM tblRepair r LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey WHERE ISNULL(r.sRepairClosed, 'N') != 'Y' ORDER BY r.dtDateIn DESC",
+      "sqlQuery": "SELECT TOP 5 t.sTechName FROM tblRepair r LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey WHERE ISNULL(r.sRepairClosed, \u0027N\u0027) != \u0027Y\u0027 ORDER BY r.dtDateIn DESC",
       "apiEndpoint": "GET /api/dashboard/repairs",
       "responseProperty": "tech",
-      "status": "unverified",
+      "status": "confirmed",
       "notes": "",
-      "verifiedAt": "",
-      "verifiedBy": ""
+      "verifiedAt": "2026-04-08T17:53:38.4591456Z",
+      "verifiedBy": "Joe"
     }
   ]
 }
