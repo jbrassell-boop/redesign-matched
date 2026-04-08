@@ -1,3 +1,4 @@
+import React from 'react';
 import './print.css';
 import type { RepairFull, RepairInspections, RepairLineItem } from '../types';
 
