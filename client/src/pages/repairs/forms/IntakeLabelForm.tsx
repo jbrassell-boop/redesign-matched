@@ -45,7 +45,7 @@ export const IntakeLabelForm = ({ repair, onClose }: Props) => (
       {/* Barcode — Code 39 monospace representation */}
       <div style={{ marginTop: 'auto', textAlign: 'center' }}>
         <div style={{ fontFamily: 'monospace', fontSize: 28, lineHeight: 1, letterSpacing: 2 }}>*{repair.wo ?? ''}*</div>
-        <div style={{ fontSize: 7.5, color: '#555', letterSpacing: '0.08em', marginTop: 1 }}>{repair.wo ?? ''}</div>
+        <div style={{ fontSize: 7.5, color: '#555', letterSpacing: '0.08em', marginTop: 1 }}>{repair.wo ? `${repair.wo} · OM04-1` : 'OM04-1'}</div>
       </div>
     </div>
   </div>

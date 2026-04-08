@@ -86,12 +86,18 @@ export const InvoiceForm = ({ repair, lineItems, onClose }: Props) => {
         {/* Reference Fields */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '6px 12px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <span style={fl}>Work Order #</span>
+            <div style={fv}>{repair.wo ?? ''}</div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <span style={fl}>Serial #</span>
             <div style={fv}>{repair.serial ?? ''}</div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <span style={fl}>Service Date</span>
             <div style={fv}>{repair.dateIn ? new Date(repair.dateIn).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : ''}</div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1, gridColumn: 'span 2' }}>
             <span style={fl}>Client / Account</span>
@@ -134,6 +140,20 @@ export const InvoiceForm = ({ repair, lineItems, onClose }: Props) => {
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
           <table style={{ width: 260, borderCollapse: 'collapse' }}>
             <tbody>
+              <tr>
+                <td colSpan={2} style={{ padding: '2px 8px', fontSize: 9, textAlign: 'right' }}>Subtotal</td>
+                <td style={{ padding: '2px 8px', fontSize: 9, textAlign: 'right', borderLeft: '1px solid #ddd' }}>
+                  ${total.toFixed(2)}
+                </td>
+              </tr>
+              <tr>
+                <td colSpan={2} style={{ padding: '2px 8px', fontSize: 9, textAlign: 'right' }}>Shipping</td>
+                <td style={{ padding: '2px 8px', fontSize: 9, textAlign: 'right', borderLeft: '1px solid #ddd' }}>$</td>
+              </tr>
+              <tr>
+                <td colSpan={2} style={{ padding: '2px 8px', fontSize: 9, textAlign: 'right' }}>Tax</td>
+                <td style={{ padding: '2px 8px', fontSize: 9, textAlign: 'right', borderLeft: '1px solid #ddd' }}>$</td>
+              </tr>
               <tr style={{ borderTop: '2px solid var(--primary)', background: '#F0F6FF' }}>
                 <td style={{ padding: '4px 8px', fontSize: 13, fontWeight: 800, textAlign: 'right', width: 140, color: '#555' }}>Amount Due</td>
                 <td style={{ padding: '4px 8px', fontSize: 13, fontWeight: 800, textAlign: 'right' }}>
@@ -154,6 +174,12 @@ export const InvoiceForm = ({ repair, lineItems, onClose }: Props) => {
             <div style={{ borderBottom: '1px solid #ccc', minHeight: 28 }} />
             <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 2 }}>Date</div>
           </div>
+        </div>
+
+        {/* Payment Notes */}
+        <div style={{ fontSize: 8, color: 'var(--muted)', marginTop: 8, lineHeight: 1.5, padding: '6px 0', borderTop: '1px solid #eee' }}>
+          Payment due within 30 days of invoice date. Please include invoice number on your remittance.
+          Make checks payable to <strong>Total Scope Inc.</strong> ACH/Wire transfer available upon request.
         </div>
 
         {/* Remittance Stub */}
