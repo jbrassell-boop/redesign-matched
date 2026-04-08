@@ -1,3 +1,4 @@
+import React from 'react';
 import './print.css';
 import type { RepairFull } from '../types';
 
@@ -125,7 +126,7 @@ export const BiRigidForm = ({ repair, onClose }: Props) => (
         </thead>
         <tbody>
           {REPAIR_ITEMS.map((item, i) => (
-            <tr key={item} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+            <tr key={item} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : '#fff' }}>
               <td style={{ ...tdC, textAlign: 'center' }}><span style={cbBox} /></td>
               <td style={tdC}>{item}</td>
               <td style={{ ...tdC, textAlign: 'center' }}><span style={costField} /></td>
@@ -148,7 +149,7 @@ export const BiRigidForm = ({ repair, onClose }: Props) => (
         </thead>
         <tbody>
           {REPAIR_ITEMS.map((item, i) => (
-            <tr key={item} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+            <tr key={item} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : '#fff' }}>
               <td style={{ ...tdC, textAlign: 'center' }}><span style={cbBox} /></td>
               <td style={tdC}>{item}</td>
               <td style={{ ...tdC, textAlign: 'center' }}><span style={costField} /></td>
@@ -170,24 +171,24 @@ export const BiRigidForm = ({ repair, onClose }: Props) => (
         </thead>
         <tbody>
           {INSPECTION_GROUPS.map(g => (
-            <>
-              <tr key={g.cat}>
-                <td colSpan={3} style={{ padding: '2px 6px', fontSize: 8, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #ddd', background: '#E8F0FE' }}>{g.cat}</td>
+            <React.Fragment key={g.cat}>
+              <tr>
+                <td colSpan={3} style={{ padding: '2px 6px', fontSize: 8, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #ddd', background: 'var(--primary-light)' }}>{g.cat}</td>
               </tr>
               {g.items.map((item, i) => (
-                <tr key={item} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+                <tr key={item} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : '#fff' }}>
                   <td style={tdC}>{item}</td>
                   <td style={{ ...tdC, textAlign: 'center' }}><span style={pfBtnP}>P</span></td>
                   <td style={{ ...tdC, textAlign: 'center' }}><span style={pfBtnF}>F</span></td>
                 </tr>
               ))}
-            </>
+            </React.Fragment>
           ))}
         </tbody>
       </table>
 
       {/* Leak / Autoclave Tests */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 16px', border: '1px solid #ddd', borderRadius: 3, padding: '6px 10px', background: '#F9FAFB', marginBottom: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 16px', border: '1px solid #ddd', borderRadius: 3, padding: '6px 10px', background: 'var(--neutral-50)', marginBottom: 6 }}>
         {[['Hot Leak Test'], ['Cold Leak Test'], ['Autoclave Test']].map(([label]) => (
           <div key={label} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             <span style={fl}>{label}</span>
@@ -200,7 +201,7 @@ export const BiRigidForm = ({ repair, onClose }: Props) => (
 
       {/* QC Sign-Off */}
       <Bar>QC Sign-Off</Bar>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px 10px', border: '1px solid #ddd', borderRadius: 3, padding: '8px 10px', background: '#F9FAFB', marginBottom: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px 10px', border: '1px solid #ddd', borderRadius: 3, padding: '8px 10px', background: 'var(--neutral-50)', marginBottom: 6 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={fl}>Commercial QC</span>
           <div style={{ display: 'flex', gap: 6, padding: '2px 0' }}>

@@ -1,3 +1,4 @@
+import React from 'react';
 import './print.css';
 import type { RepairFull } from '../types';
 
@@ -12,7 +13,7 @@ const costField: React.CSSProperties = { borderBottom: '1px solid #aaa', minWidt
 const sigMini: React.CSSProperties = { borderBottom: '1px solid #aaa', minWidth: 90, display: 'inline-block', height: 12, verticalAlign: 'middle' };
 const pfBtnP: React.CSSProperties = { display: 'inline-block', width: 20, height: 13, border: '1px solid var(--success)', borderRadius: 2, textAlign: 'center', lineHeight: '13px', fontSize: 7, fontWeight: 700, color: 'var(--success)', margin: '0 1px' };
 const pfBtnF: React.CSSProperties = { display: 'inline-block', width: 20, height: 13, border: '1px solid var(--danger)', borderRadius: 2, textAlign: 'center', lineHeight: '13px', fontSize: 7, fontWeight: 700, color: 'var(--danger)', margin: '0 1px' };
-const pfBtnNA: React.CSSProperties = { display: 'inline-block', width: 24, height: 13, border: '1px solid #aaa', borderRadius: 2, textAlign: 'center', lineHeight: '13px', fontSize: 7, fontWeight: 700, color: '#666', margin: '0 1px' };
+const pfBtnNA: React.CSSProperties = { display: 'inline-block', width: 24, height: 13, border: '1px solid #aaa', borderRadius: 2, textAlign: 'center', lineHeight: '13px', fontSize: 7, fontWeight: 700, color: 'var(--muted)', margin: '0 1px' };
 
 const pageStyle: React.CSSProperties = {
   width: '8.5in', minHeight: '11in', background: '#fff', padding: '0.4in',
@@ -136,7 +137,7 @@ export const BiCameraForm = ({ repair, onClose }: Props) => (
         </thead>
         <tbody>
           {REPAIR_ITEMS.map((item, i) => (
-            <tr key={item} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+            <tr key={item} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : '#fff' }}>
               <td style={{ ...tdC, textAlign: 'center' }}><span style={cbBox} /></td>
               <td style={tdC}>{item}</td>
               <td style={{ ...tdC, textAlign: 'center' }}><span style={costField} /></td>
@@ -159,7 +160,7 @@ export const BiCameraForm = ({ repair, onClose }: Props) => (
         </thead>
         <tbody>
           {REPAIR_ITEMS.map((item, i) => (
-            <tr key={item} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+            <tr key={item} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : '#fff' }}>
               <td style={{ ...tdC, textAlign: 'center' }}><span style={cbBox} /></td>
               <td style={tdC}>{item}</td>
               <td style={{ ...tdC, textAlign: 'center' }}><span style={costField} /></td>
@@ -190,7 +191,7 @@ export const BiCameraForm = ({ repair, onClose }: Props) => (
         </thead>
         <tbody>
           {CAMERA_TESTS.map((item, i) => (
-            <tr key={item} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+            <tr key={item} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : '#fff' }}>
               <td style={tdC}>{item}</td>
               <td style={{ ...tdC, textAlign: 'center' }}><span style={pfBtnP}>Y</span></td>
               <td style={{ ...tdC, textAlign: 'center' }}><span style={pfBtnF}>N</span></td>
@@ -213,7 +214,7 @@ export const BiCameraForm = ({ repair, onClose }: Props) => (
         </thead>
         <tbody>
           {COUPLER_TESTS.map((item, i) => (
-            <tr key={item} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+            <tr key={item} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : '#fff' }}>
               <td style={tdC}>{item}</td>
               <td style={{ ...tdC, textAlign: 'center' }}><span style={pfBtnP}>Y</span></td>
               <td style={{ ...tdC, textAlign: 'center' }}><span style={pfBtnF}>N</span></td>
@@ -225,7 +226,7 @@ export const BiCameraForm = ({ repair, onClose }: Props) => (
 
       {/* QC Sign-Off */}
       <Bar>QC Sign-Off</Bar>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px 10px', border: '1px solid #ddd', borderRadius: 3, padding: '8px 10px', background: '#F9FAFB', marginBottom: 6 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px 10px', border: '1px solid #ddd', borderRadius: 3, padding: '8px 10px', background: 'var(--neutral-50)', marginBottom: 6 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <span style={fl}>Date</span>
           <div style={{ borderBottom: '1px solid #ccc', minHeight: 16, marginTop: 2 }}></div>
