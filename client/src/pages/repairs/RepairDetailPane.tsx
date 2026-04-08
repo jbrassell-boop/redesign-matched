@@ -124,13 +124,19 @@ const COCKPIT_TABS = [
 ] as const;
 
 const INTERNAL_FORMS = [
-  { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)', title: 'Camera endoscope disassembly & inspection form' },
-  { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)', title: 'Flexible endoscope disassembly & inspection form' },
-  { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)', title: 'Flexible endoscope diagnostic disassembly & inspection form' },
-  { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)', title: 'Rigid endoscope disassembly & inspection form' },
+  { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)', title: 'Camera endoscope disassembly & inspection form', types: ['Camera'] },
+  { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)', title: 'Flexible endoscope disassembly & inspection form', types: ['Flexible'] },
+  { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)', title: 'Flexible endoscope diagnostic disassembly & inspection form', types: ['Flexible'] },
+  { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)', title: 'Rigid endoscope disassembly & inspection form', types: ['Rigid'] },
   { key: 'amendment'      as const, label: 'Amendment (OM07-9)', title: 'Repair order amendment form' },
   { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)', title: 'Customer update communication slip' },
 ];
+
+/** Filter forms by scope type — forms without a `types` array are always shown */
+function formsForScope<T extends { types?: string[] }>(forms: T[], scopeType: string | undefined): T[] {
+  const cat = (scopeType ?? '').toLowerCase();
+  return forms.filter(f => !f.types || f.types.some(t => t.toLowerCase() === cat));
+}
 
 const CUSTOMER_FORMS = [
   { key: 'requisition'          as const, label: 'Requisition (OM07-2)', title: 'Customer repair requisition form' },
@@ -444,7 +450,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             {formsMenuOpen && (
               <div role="menu" style={repairFormsDropdownStyle}>
                 <div style={repairFormsSectionHeaderStyle}>Internal</div>
-                {INTERNAL_FORMS.map(item => (
+                {formsForScope(INTERNAL_FORMS, fullRepair?.scopeType).map(item => (
                   <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle}
                   onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = ''; }}
@@ -652,7 +658,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           {formsMenuOpen && (
             <div style={repairFormsDropdownStyle}>
               <div style={repairFormsSectionHeaderStyle}>Internal</div>
-              {INTERNAL_FORMS.map(item => (
+              {formsForScope(INTERNAL_FORMS, detail?.scopeType).map(item => (
                 <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle12}
                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
                 onMouseLeave={e => { e.currentTarget.style.background = ''; }}
