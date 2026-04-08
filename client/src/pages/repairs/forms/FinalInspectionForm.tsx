@@ -51,7 +51,6 @@ const ACCESSORY_FIELDS: { label: string; field: keyof RepairFull }[] = [
 const sb: React.CSSProperties = { background: 'var(--primary)', color: '#fff', fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 6px' };
 const fl: React.CSSProperties = { fontSize: 7, fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.04em' };
 const fv: React.CSSProperties = { borderBottom: '1px solid #ccc', fontSize: 9, padding: '0 2px', minHeight: 13 };
-const th: React.CSSProperties = { background: 'var(--primary)', color: '#fff', fontSize: 7, fontWeight: 700, textTransform: 'uppercase', padding: '2px 4px', textAlign: 'left' };
 const td: React.CSSProperties = { padding: '1px 4px', fontSize: 8.5, borderBottom: '1px solid #eee', verticalAlign: 'middle' };
 const pfBtnBase: React.CSSProperties = { display: 'inline-block', width: 20, height: 12, borderRadius: 2, textAlign: 'center', lineHeight: '12px', fontSize: 7, fontWeight: 700 };
 const cbChecked: React.CSSProperties = { display: 'inline-block', width: 9, height: 9, background: 'var(--primary)', borderRadius: 1, color: '#fff', textAlign: 'center', lineHeight: '9px', fontSize: 7, fontWeight: 700 };
