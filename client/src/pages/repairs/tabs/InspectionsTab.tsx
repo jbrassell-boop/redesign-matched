@@ -101,17 +101,6 @@ const NaBtn = ({ active, onClick }: { active: boolean; onClick: () => void }) =>
   }}>N/A</button>
 );
 
-const YNBtn = ({ value, target, onClick }: { value?: string; target: 'Y' | 'N'; onClick: () => void }) => {
-  const active = value === target;
-  return (
-    <button onClick={onClick} style={{
-      width: 34, height: 28, border: '1px solid var(--neutral-200)', borderRadius: 3,
-      fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-      background: active ? (target === 'Y' ? 'var(--success)' : 'var(--danger)') : 'var(--card)',
-      color: active ? '#fff' : 'var(--muted)',
-    }}>{target}</button>
-  );
-};
 
 // ── PF row helper ─────────────────────────────────────────────────────────────
 
