@@ -40,7 +40,7 @@ export const CockpitHeader = ({
       <div className="cockpit-header__actions">
         {hasNextStage && (
           <button className="cockpit-header__btn cockpit-header__btn--primary" onClick={onNextStage}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}>
               <polyline points="9 18 15 12 9 6" />
             </svg>
             {nextStageName ?? 'Next Stage'}

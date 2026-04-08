@@ -5,6 +5,7 @@ import { InventoryList } from './InventoryList';
 import { InventoryDetailPane } from './InventoryDetailPane';
 import type { InventoryListItem, InventoryDetail, InventoryStats } from './types';
 import { ExportButton } from '../../components/common/ExportButton';
+import { StatStrip } from '../../components/shared/StatStrip';
 
 const INVENTORY_EXPORT_COLS = [
   { key: 'description', label: 'Description' },
@@ -69,95 +70,13 @@ export const InventoryPage = () => {
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
       {/* Global Stat Strip */}
       {stats && (
-        <div style={{
-          display: 'flex',
-          background: 'var(--card)',
-          borderBottom: '1px solid var(--border)',
-          flexShrink: 0,
-        }}>
-          {[
-            {
-              value: stats.totalCount,
-              label: 'TOTAL ITEMS',
-              iconBg: `rgba(var(--primary-rgb), 0.13)`,
-              iconColor: 'var(--primary)',
-              valueColor: 'var(--navy)',
-            },
-            {
-              value: stats.activeCount,
-              label: 'ACTIVE',
-              iconBg: `rgba(var(--success-rgb), 0.13)`,
-              iconColor: 'var(--success)',
-              valueColor: 'var(--success)',
-            },
-            {
-              value: stats.inactiveCount,
-              label: 'INACTIVE',
-              iconBg: `rgba(var(--muted-rgb), 0.13)`,
-              iconColor: 'var(--muted)',
-              valueColor: 'var(--muted)',
-            },
-            {
-              value: stats.lowStockCount,
-              label: 'LOW STOCK',
-              iconBg: `rgba(var(--amber-rgb), 0.13)`,
-              iconColor: 'var(--amber)',
-              valueColor: 'var(--amber)',
-            },
-            {
-              value: 0,
-              label: 'OPEN POs',
-              iconBg: `rgba(var(--navy-rgb), 0.13)`,
-              iconColor: 'var(--navy)',
-              valueColor: 'var(--navy)',
-            },
-          ].map((chip, idx, arr) => (
-            <div
-              key={chip.label}
-              style={{
-                flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '8px 14px',
-                borderRight: idx < arr.length - 1 ? '1px solid var(--border)' : 'none',
-              }}
-            >
-              <div style={{
-                width: 24,
-                height: 24,
-                borderRadius: 4,
-                background: chip.iconBg,
-                color: chip.iconColor,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}>
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 12, height: 12 }}>
-                  <path d="M2 4.5L8 1.5l6 3v7l-6 3-6-3z" />
-                  <path d="M2 4.5L8 7.5l6-3" />
-                  <line x1="8" y1="7.5" x2="8" y2="14.5" />
-                </svg>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <span style={{ fontSize: 16, fontWeight: 800, color: chip.valueColor, lineHeight: 1 }}>
-                  {chip.value}
-                </span>
-                <span style={{
-                  fontSize: 9,
-                  fontWeight: 700,
-                  color: 'var(--muted)',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
-                  whiteSpace: 'nowrap',
-                }}>
-                  {chip.label}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <StatStrip chips={[
+          { id: 'total',    label: 'Total Items', value: stats.totalCount,    color: 'navy'  },
+          { id: 'active',   label: 'Active',      value: stats.activeCount,   color: 'green' },
+          { id: 'inactive', label: 'Inactive',    value: stats.inactiveCount, color: 'muted' },
+          { id: 'lowStock', label: 'Low Stock',   value: stats.lowStockCount, color: 'amber', state: stats.lowStockCount > 0 ? 'warn' : 'normal' },
+          { id: 'openPos',  label: 'Open POs',    value: 0,                   color: 'navy'  },
+        ]} />
       )}
 
       {/* Split layout */}
@@ -185,7 +104,7 @@ export const InventoryPage = () => {
                   display: 'flex', alignItems: 'center', gap: 3,
                 }}
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={9} height={9}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={9} height={9}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                 Draft PO
               </button>
             </div>

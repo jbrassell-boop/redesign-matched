@@ -321,14 +321,6 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
     padding: '10px 12px', border: '1.5px solid var(--neutral-200)',
     borderRadius: 6, cursor: 'pointer', transition: 'all 0.1s',
   };
-  const onHover = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.currentTarget.style.borderColor = 'var(--primary)';
-    e.currentTarget.style.background = 'var(--primary-light)';
-  };
-  const onLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-    e.currentTarget.style.borderColor = 'var(--neutral-200)';
-    e.currentTarget.style.background = '';
-  };
 
   // ── Breadcrumb chip ──
   const Chip = ({ label, value, extra, onChangeStep }: { label: string; value: string; extra?: string; onChangeStep: number }) => (
@@ -396,7 +388,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                 {filteredClients.length === 0
                   ? <div style={wizEmptyStyle}>No clients found</div>
                   : filteredClients.map(c => (
-                    <div key={c.clientKey} onClick={() => handleSelectClient(c)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectClient(c); } }} style={cardStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
+                    <div key={c.clientKey} onClick={() => handleSelectClient(c)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectClient(c); } }} style={cardStyle} className="wizard-card">
                       <div style={wizCardNameStyle}>{c.name}</div>
                       <div style={wizCardSubStyle}>
                         {c.city}{c.state ? `, ${c.state}` : ''}
@@ -417,7 +409,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                 {filteredDepts.length === 0
                   ? <div style={wizEmptyStyle}>No departments found</div>
                   : filteredDepts.map(d => (
-                    <div key={d.departmentKey} onClick={() => handleSelectDept(d)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectDept(d); } }} style={cardStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
+                    <div key={d.departmentKey} onClick={() => handleSelectDept(d)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectDept(d); } }} style={cardStyle} className="wizard-card">
                       <div style={wizCardNameStyle}>{d.name}</div>
                     </div>
                   ))}
@@ -439,7 +431,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                   : filteredScopes.length === 0
                   ? <div style={wizScopeEmptyNoSearchStyle}>No scopes matching &quot;{scopeSearch}&quot;</div>
                   : filteredScopes.map(s => (
-                    <div key={s.scopeKey} onClick={() => handleSelectScope(s)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectScope(s); } }} style={cardStyle} onMouseEnter={onHover} onMouseLeave={onLeave}>
+                    <div key={s.scopeKey} onClick={() => handleSelectScope(s)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSelectScope(s); } }} style={cardStyle} className="wizard-card">
                       <div style={wizCardNameStyle}>SN# {s.serialNumber || '\u2014'}</div>
                       <div style={wizCardSubStyle}>
                         {s.model || '\u2014'}{s.manufacturer ? ` \u00b7 ${s.manufacturer}` : ''}{s.type ? ` \u00b7 ${TYPE_LABELS[s.type] || s.type}` : ''}
@@ -488,8 +480,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                             background: newScopeTypeKey === t.scopeTypeKey ? 'var(--primary-light)' : '',
                             fontWeight: newScopeTypeKey === t.scopeTypeKey ? 700 : 400,
                           }}
-                          onMouseEnter={e => { if (newScopeTypeKey !== t.scopeTypeKey) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                          onMouseLeave={e => { if (newScopeTypeKey !== t.scopeTypeKey) e.currentTarget.style.background = ''; }}
+                          className={newScopeTypeKey === t.scopeTypeKey ? 'selected' : 'menu-item-hover'}
                         >
                           <span>{t.description}</span>
                           {t.manufacturer && <span style={wizModelMfgStyle}>{t.manufacturer}</span>}
@@ -569,7 +560,7 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
                   justifyContent: 'center', gap: 6, opacity: creating ? 0.7 : 1,
                 }}
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 15, height: 15 }}>
                   <path d="M12 5v14M5 12h14" />
                 </svg>
                 {creating ? 'Creating...' : 'Create Order'}
@@ -585,20 +576,20 @@ export const NewOrderWizard = ({ open, onClose, orderType, title }: Props) => {
 const WizardIcon = ({ type }: { type: string }) => {
   if (type === 'endocart') {
     return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={wizIconStyle}>
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={wizIconStyle}>
         <rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a4 4 0 0 0-8 0v2" /><line x1="12" y1="11" x2="12" y2="15" />
       </svg>
     );
   }
   if (type === 'repair' || type === 'instrument') {
     return (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={wizIconStyle}>
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={wizIconStyle}>
         <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
       </svg>
     );
   }
   return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={wizIconStyle}>
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={wizIconStyle}>
       <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
       <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
     </svg>

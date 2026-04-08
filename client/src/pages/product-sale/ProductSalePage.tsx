@@ -290,8 +290,7 @@ export const ProductSalePage = () => {
                     borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
                     transition: 'background 0.1s',
                   }}
-                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
+                  className={isSelected ? 'selected' : 'hover-row'}
                 >
                   <div style={listItemInvoiceStyle}>
                     <div style={listItemNameStyle}>{item.invoiceNumber || '\u2014'}</div>

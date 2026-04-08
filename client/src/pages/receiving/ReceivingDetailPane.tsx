@@ -150,8 +150,7 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
                   key={c.clientKey}
                   onClick={() => handleSelectClient(c)}
                   style={cardStyle}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--neutral-200)'; }}
+                  className="receiving-field-hover" 
                 >
                   <div style={clientCardNameStyle}>{c.name}</div>
                   <div style={clientCardCityStyle}>{c.city}{c.state ? `, ${c.state}` : ''}</div>
@@ -230,7 +229,7 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
               opacity: (!selectedDept || !serial.trim() || submitting) ? 0.5 : 1,
             }}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={svgIconStyle}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={svgIconStyle}>
               <polyline points="20 6 9 17 4 12" />
             </svg>
             {submitting ? 'Creating...' : 'Create Work Order'}
@@ -251,7 +250,7 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
           onClick={startWalkin}
           style={emptyBtnStyle}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={svgSmallStyle}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={svgSmallStyle}>
             <path d="M12 5v14M5 12h14" />
           </svg>
           Walk-in / No Match
@@ -299,7 +298,7 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
           onClick={startWalkin}
           style={newWalkinBtnStyle}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={svgSmallStyle}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={svgSmallStyle}>
             <path d="M12 5v14M5 12h14" />
           </svg>
           New Walk-in

@@ -59,7 +59,7 @@ export const TechniciansTab = ({ deptKey }: TechniciansTabProps) => {
     return (
       <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
         <div style={{ marginBottom: 8, fontSize: 28 }}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"
             style={{ width: 36, height: 36, margin: '0 auto', display: 'block', color: 'var(--neutral-300)' }}>
             <circle cx="12" cy="8" r="4" />
             <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />

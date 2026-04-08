@@ -136,8 +136,7 @@ export const InlineEditor = memo(({
         maxWidth: '100%',
         fontSize: 12,
       }}
-      onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-light)'; if (hasValue) e.currentTarget.style.color = 'var(--text)'; }}
-      onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = hasValue ? 'var(--danger)' : 'var(--neutral-200)'; }}
+      className={`inline-editor-clear${hasValue ? ' has-value' : ''}`}
     >
       {hasValue ? value : placeholder}
     </span>

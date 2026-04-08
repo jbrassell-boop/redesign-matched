@@ -5,6 +5,7 @@ import { getEndoCartScopeInventory, getEndoCartServiceHistory } from '../../api/
 import type { EndoCartFilters, CatalogPart, CartModel, EndoCartScopeItem, EndoCartServiceHistoryItem } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
+import { StatStrip } from '../../components/shared/StatStrip';
 
 /* ── helpers ─────────────────────────────────────────────────── */
 const fmtMoney = (n: number) =>
@@ -30,41 +31,10 @@ const Badge = ({ text, style }: { text: string; style: { bg: string; border: str
   <span style={{ ...badgeInnerStyle, background: style.bg, border: `1px solid ${style.border}`, color: style.color }}>{text}</span>
 );
 
-/* ── Stat Chip ───────────────────────────────────────────────── */
-const StatChip = ({ label, value, iconBg, iconColor, valueColor, icon, active, onClick }: {
-  label: string; value: string | number; iconBg: string; iconColor: string; valueColor: string;
-  icon: React.ReactNode; active?: boolean; onClick?: () => void;
-}) => (
-  <div
-    onClick={onClick}
-    role={onClick ? 'button' : undefined}
-    tabIndex={onClick ? 0 : undefined}
-    onKeyDown={onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
-    aria-pressed={onClick ? active : undefined}
-    style={{
-      flex: 1, display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', cursor: onClick ? 'pointer' : 'default',
-      borderRight: '1px solid var(--border)', transition: 'background 0.12s',
-      background: active ? 'var(--primary-light)' : 'var(--card)',
-      outline: active ? '2.5px solid var(--navy)' : 'none', outlineOffset: active ? -2 : 0,
-    }}
-  >
-    <span style={{ ...statChipIconBoxStyle, background: iconBg, color: iconColor }}>{icon}</span>
-    <span style={statChipTextColStyle}>
-      <span style={{ fontSize: 16, fontWeight: 800, letterSpacing: -0.3, lineHeight: 1.1, color: valueColor }}>{value}</span>
-      <span style={statChipLabelStyle}>{label}</span>
-    </span>
-  </div>
-);
 
 /* ── SVG Icons ───────────────────────────────────────────────── */
-const IconFile = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><rect x="2" y="2" width="12" height="12" rx="2" /><path d="M5 5h6M5 8h6M5 11h4" /></svg>;
-const IconPen = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><path d="M11 2.5a1.5 1.5 0 0 1 2.12 0l.38.38a1.5 1.5 0 0 1 0 2.12L6 12.5 2.5 13.5 3.5 10z" /></svg>;
-const IconChat = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><path d="M14 3H2v8h5l3 3v-3h4z" /></svg>;
-const IconCheck = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><circle cx="8" cy="8" r="5.5" /><polyline points="5.5 8 7 10 10.5 6" /></svg>;
-const IconDollar = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><line x1="8" y1="1.5" x2="8" y2="14.5" /><path d="M11 4.5H6.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H5" /></svg>;
-const IconTrend = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={icon14Style}><polyline points="14 4 9 9 6 6 2 12" /><polyline points="10 4 14 4 14 8" /></svg>;
-const IconSearch = () => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={icon13Style}><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>;
-const IconExpand = ({ open }: { open: boolean }) => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 12, height: 12, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}><polyline points="6 4 10 8 6 12" /></svg>;
+const IconSearch = () => <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={icon13Style}><circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" /></svg>;
+const IconExpand = ({ open }: { open: boolean }) => <svg aria-hidden="true" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 12, height: 12, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }}><polyline points="6 4 10 8 6 12" /></svg>;
 
 /* ── Segmented Control ───────────────────────────────────────── */
 const SegmentedControl = ({ items, value, onChange }: { items: { label: string; value: string }[]; value: string; onChange: (v: string) => void }) => (
@@ -142,21 +112,16 @@ const bomTableWrapStyle: React.CSSProperties = { margin: '-10px -12px', padding:
 const bomTableInnerStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 11 };
 const bomFooterRowStyle: React.CSSProperties = { fontWeight: 700, background: 'var(--neutral-50)' };
 const bomFooterTdStyle: React.CSSProperties = { padding: '5px 8px', textAlign: 'right' };
-const statStripBarStyle: React.CSSProperties = { display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--border)', flexShrink: 0, overflowX: 'auto' };
 const splitFlexStyle: React.CSSProperties = { display: 'flex', flex: 1, overflow: 'hidden' };
 const pagerBtnsStyle: React.CSSProperties = { display: 'flex', gap: 3, alignItems: 'center' };
 const rightPanelStyle: React.CSSProperties = { width: 520, minWidth: 520, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--card)' };
 const pagerSpanStyle: React.CSSProperties = { fontSize: 11, padding: '0 8px' };
 const detailFooterTextStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
 const docEmptyTitleStyle: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--muted)' };
-const icon14Style: React.CSSProperties = { width: 14, height: 14 };
 const icon13Style: React.CSSProperties = { width: 13, height: 13 };
 const icon12Style: React.CSSProperties = { width: 12, height: 12 };
 const segmentedContainerStyle: React.CSSProperties = { display: 'inline-flex', border: '1.5px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden' };
 const badgeInnerStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', padding: '2px 8px', borderRadius: 10, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap' };
-const statChipIconBoxStyle: React.CSSProperties = { width: 24, height: 24, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 };
-const statChipTextColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column' };
-const statChipLabelStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.2, whiteSpace: 'nowrap' };
 const sectionCardOuterStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden', flexShrink: 0 };
 const sectionCardHeadStyle: React.CSSProperties = { background: 'var(--neutral-50)', padding: '6px 12px', fontSize: 10, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' };
 const sectionCardBodyStyle: React.CSSProperties = { padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 };
@@ -416,7 +381,7 @@ export const EndoCartsPage = () => {
         {/* Documents pane */}
         {drawerTab === 'docs' && (
           <div style={docEmptyStyle}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--border-dk)" strokeWidth="1.5" style={docIconStyle}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14,2 14,8 20,8" /></svg>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="var(--border-dk)" strokeWidth="1.5" style={docIconStyle}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14,2 14,8 20,8" /></svg>
             <div style={docEmptyTitleStyle}>No documents attached</div>
             <div style={{ fontSize: 11 }}>Quotes, specs, and supporting documents will appear here.</div>
           </div>
@@ -452,19 +417,26 @@ export const EndoCartsPage = () => {
             overflow: 'hidden',
           }}>
             {/* Stat Strip */}
-            <div style={statStripBarStyle}>
-              <StatChip label="Total Quotes" value={stats.total} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconFile />} active={chipFilter === ''} onClick={() => { setChipFilter(''); setPage(1); }} />
-              <StatChip label="Draft" value={stats.draft} iconBg="rgba(var(--amber-rgb), 0.13)" iconColor="var(--warning)" valueColor="var(--warning)" icon={<IconPen />} active={chipFilter === 'Draft'} onClick={() => { setChipFilter(f => f === 'Draft' ? '' : 'Draft'); setPage(1); }} />
-              <StatChip label="Quoted" value={stats.quoted} iconBg="rgba(var(--primary-rgb), 0.12)" iconColor="var(--primary)" valueColor="var(--primary)" icon={<IconChat />} active={chipFilter === 'Quoted'} onClick={() => { setChipFilter(f => f === 'Quoted' ? '' : 'Quoted'); setPage(1); }} />
-              <StatChip label="Approved" value={stats.approved} iconBg="rgba(var(--success-rgb), 0.12)" iconColor="var(--success)" valueColor="var(--success)" icon={<IconCheck />} active={chipFilter === 'Approved'} onClick={() => { setChipFilter(f => f === 'Approved' ? '' : 'Approved'); setPage(1); }} />
-              <StatChip label="Billed" value={stats.billed} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconDollar />} active={chipFilter === 'Billed'} onClick={() => { setChipFilter(f => f === 'Billed' ? '' : 'Billed'); setPage(1); }} />
-              <StatChip label="Pipeline Value" value={fmtMoneyShort(stats.pipelineValue)} iconBg="rgba(var(--navy-rgb), 0.12)" iconColor="var(--navy)" valueColor="var(--navy)" icon={<IconTrend />} />
-            </div>
-
+            <StatStrip
+              chips={[
+                { id: 'all',           label: 'Total Quotes',   value: stats.total,                        color: 'navy'  },
+                { id: 'Draft',         label: 'Draft',          value: stats.draft,                        color: 'amber' },
+                { id: 'Quoted',        label: 'Quoted',         value: stats.quoted,                       color: 'blue'  },
+                { id: 'Approved',      label: 'Approved',       value: stats.approved,                     color: 'green' },
+                { id: 'Billed',        label: 'Billed',         value: stats.billed,                       color: 'navy'  },
+                { id: 'pipelineValue', label: 'Pipeline Value', value: fmtMoneyShort(stats.pipelineValue), color: 'navy'  },
+              ]}
+              activeChip={chipFilter === '' ? 'all' : chipFilter}
+              onChipClick={(id) => {
+                if (id === 'pipelineValue') return;
+                setChipFilter(id === 'all' ? '' : id);
+                setPage(1);
+              }}
+            />
             {/* Toolbar */}
             <div style={endoToolbarStyle}>
               <button style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
                 New Quote
               </button>
               <div style={endoSeparatorStyle} />
@@ -511,8 +483,7 @@ export const EndoCartsPage = () => {
                       key={q.lQuoteKey}
                       style={rowStyle(idx, false, q.lQuoteKey === selectedKey)}
                       onClick={() => openDetail(q.lQuoteKey)}
-                      onMouseEnter={e => { if (q.lQuoteKey !== selectedKey) (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                      onMouseLeave={e => { if (q.lQuoteKey !== selectedKey) (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)'; }}
+                      className={q.lQuoteKey === selectedKey ? 'selected' : 'hover-row-light'}
                     >
                       <td style={cellStyle}><span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{q.quoteNum}</span></td>
                       <td style={cellStyle}>{q.clientName}</td>
@@ -573,7 +544,7 @@ export const EndoCartsPage = () => {
         <div style={endoTabFlexStyle}>
           <div style={endoToolbarStyle}>
             <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               Add Component
             </button>
             <div style={endoSeparatorStyle} />
@@ -626,7 +597,7 @@ export const EndoCartsPage = () => {
         <div style={endoTabFlexStyle}>
           <div style={endoToolbarStyle}>
             <button disabled style={{ height: 30, padding: '0 14px', border: 'none', borderRadius: 5, background: 'var(--navy)', color: 'var(--card)', fontSize: 11, fontWeight: 600, fontFamily: 'inherit', cursor: 'not-allowed', opacity: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={icon12Style}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New Model
             </button>
             <div style={searchWrapStyle}>

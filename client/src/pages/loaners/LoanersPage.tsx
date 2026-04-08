@@ -7,6 +7,8 @@ import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../compon
 import type { TabDef } from '../../components/shared';
 import { ExportButton } from '../../components/common/ExportButton';
 import { useBulkSelect } from '../../components/common/useBulkSelect';
+import { StatStrip } from '../../components/shared/StatStrip';
+import type { StatChipDef } from '../../components/shared/StatStrip';
 
 
 
@@ -22,42 +24,9 @@ const DaysChip = ({ days, status }: { days: number; status: string }) => {
   );
 };
 
-/* ── Stat Chip ───────────────────────────────────────────────── */
-interface StatChipProps {
-  label: string; value: string | number; iconBg: string; iconColor: string; valueColor: string;
-  active: boolean; onClick: () => void;
-  icon: React.ReactNode;
-}
-const StatChip = ({ label, value, iconBg, iconColor, valueColor, active, onClick, icon }: StatChipProps) => (
-  <div
-    onClick={onClick}
-    role="button"
-    tabIndex={0}
-    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } }}
-    aria-pressed={active}
-    style={{
-      flex: 1, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-      borderRadius: 8, transition: 'background 0.12s, outline-color 0.12s',
-      background: active ? 'var(--primary-light)' : 'var(--card)',
-      outline: active ? '2.5px solid var(--navy)' : '2.5px solid transparent',
-      outlineOffset: -2,
-    }}
-  >
-    <span style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: iconBg, color: iconColor }}>
-      {icon}
-    </span>
-    <span style={{ display: 'flex', flexDirection: 'column' }}>
-      <span style={{ fontSize: 18, fontWeight: 800, color: valueColor, lineHeight: 1.2 }}>{value}</span>
-      <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
-    </span>
-  </div>
-);
-
-
 
 // ── Extracted static styles (performance: avoid re-creating objects each render) ──
 const loanerPageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
-const loanerStatStripStyle: React.CSSProperties = { display: 'flex', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' };
 const loanerToolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap', flexShrink: 0 };
 const loanerSubToolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' };
 const loanerSeparatorStyle: React.CSSProperties = { width: 1, height: 22, background: 'var(--border-dk)' };
@@ -139,12 +108,6 @@ const MAIN_COLS = [
 ];
 
 /* ── SVG Icons ───────────────────────────────────────────────── */
-const IconTotal = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><rect x="2" y="2" width="12" height="12" rx="2" /><path d="M5 5h6M5 8h6M5 11h4" /></svg>;
-const IconOut = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><path d="M10 2l4 4-4 4" /><path d="M2 8h12" /></svg>;
-const IconOverdue = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><circle cx="8" cy="8" r="5.5" /><path d="M8 5v3.5l2.5 1.5" /></svg>;
-const IconReturned = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><polyline points="12 5 7 11 4 8" /></svg>;
-const IconDeclined = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><circle cx="8" cy="8" r="5.5" /><path d="M10 6L6 10M6 6l4 4" /></svg>;
-const IconFillRate = () => <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14 }}><polyline points="2 12 6 6 10 9 14 3" /></svg>;
 
 const LOANER_EXPORT_COLS = [
   { key: 'workOrder', label: 'Work Order' },
@@ -221,9 +184,8 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
               <tr
                 key={item.loanerTranKey}
                 onClick={() => onRowClick(item)}
+                className="hover-row-light"
                 style={{ cursor: 'pointer', background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}
               >
                 <td style={activeTdStyle}><span style={woLinkStyle}>{item.workOrder || '\u2014'}</span></td>
                 <td style={activeTdStyle}>{item.scopeType || '\u2014'}</td>
@@ -294,9 +256,8 @@ const ScopeNeedsTab = () => {
             ) : items.map((item, idx) => (
               <tr
                 key={`${item.scopeType}-${item.deptName}-${idx}`}
+                className="hover-row-light"
                 style={{ background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}
               >
                 <td style={needsTdStyle}><span style={scopeTypeNameStyle}>{item.scopeType}</span></td>
                 <td style={needsTdStyle}>{item.clientName || '\u2014'}</td>
@@ -588,9 +549,8 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                           onClick={() => handleAction(req.repairKey, 'fulfill')}
                           disabled={actionLoading === req.repairKey}
                           title="Fulfill"
+                          className="loaner-accept-btn"
                           style={fulfillBtnStyle}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(var(--success-rgb), 0.2)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(var(--success-rgb), 0.1)'; }}
                         >
                           <CheckCircleOutlined style={{ fontSize: 14 }} />
                         </button>
@@ -598,9 +558,8 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                           onClick={() => handleAction(req.repairKey, 'decline')}
                           disabled={actionLoading === req.repairKey}
                           title="Decline"
+                          className="loaner-decline-btn"
                           style={declineBtnStyle}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(var(--danger-rgb), 0.2)'; }}
-                          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(var(--danger-rgb), 0.1)'; }}
                         >
                           <CloseCircleOutlined style={{ fontSize: 14 }} />
                         </button>
@@ -705,18 +664,22 @@ export const LoanersPage = () => {
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-  /* ── Stat Strip ──────────────────────────────────────────── */
+  /* ── Stat Strip ──────────────────────────────────────── */
+  const loanerChips: StatChipDef[] = [
+    { id: 'All',      label: 'Total',     value: stats?.total ?? 0,           color: 'navy'  },
+    { id: 'Out',      label: 'Out',       value: stats?.out ?? 0,             color: 'blue'  },
+    { id: 'Overdue',  label: 'Overdue',   value: stats?.overdue ?? 0,         color: 'red',   state: (stats?.overdue ?? 0) > 0 ? 'warn' : 'normal' },
+    { id: 'Returned', label: 'Returned',  value: stats?.returned ?? 0,        color: 'green' },
+    { id: 'Declined', label: 'Declined',  value: stats?.declined ?? 0,        color: 'amber' },
+    { id: 'fillRate', label: 'Fill Rate', value: `${stats?.fillRate ?? 0}%`, color: 'green' },
+  ];
   const statStrip = (
-    <div style={loanerStatStripStyle}>
-      <StatChip label="Total" value={stats?.total ?? 0} iconBg="rgba(var(--navy-rgb), 0.10)" iconColor="var(--navy)" valueColor="var(--navy)" active={statusFilter === 'All'} onClick={() => handleChipClick('All')} icon={<IconTotal />} />
-      <StatChip label="Out" value={stats?.out ?? 0} iconBg="rgba(var(--primary-rgb), 0.10)" iconColor="var(--primary)" valueColor="var(--primary)" active={statusFilter === 'Out'} onClick={() => handleChipClick('Out')} icon={<IconOut />} />
-      <StatChip label="Overdue" value={stats?.overdue ?? 0} iconBg="rgba(var(--danger-rgb), 0.10)" iconColor="var(--danger)" valueColor="var(--danger)" active={statusFilter === 'Overdue'} onClick={() => handleChipClick('Overdue')} icon={<IconOverdue />} />
-      <StatChip label="Returned" value={stats?.returned ?? 0} iconBg="rgba(var(--success-rgb), 0.10)" iconColor="var(--success)" valueColor="var(--success)" active={statusFilter === 'Returned'} onClick={() => handleChipClick('Returned')} icon={<IconReturned />} />
-      <StatChip label="Declined" value={stats?.declined ?? 0} iconBg="rgba(var(--amber-rgb), 0.10)" iconColor="var(--amber)" valueColor="var(--amber)" active={statusFilter === 'Declined'} onClick={() => handleChipClick('Declined')} icon={<IconDeclined />} />
-      <StatChip label="Fill Rate" value={`${stats?.fillRate ?? 0}%`} iconBg="rgba(var(--success-rgb), 0.10)" iconColor="var(--success)" valueColor="var(--success)" active={false} onClick={() => {}} icon={<IconFillRate />} />
-    </div>
+    <StatStrip
+      chips={loanerChips}
+      activeChip={statusFilter}
+      onChipClick={(id) => handleChipClick(id === 'all' ? 'All' : id)}
+    />
   );
-
   /* ── Toolbar ─────────────────────────────────────────────── */
   const toolbar = (
     <div style={loanerToolbarStyle}>
@@ -804,8 +767,7 @@ export const LoanersPage = () => {
                   background: isDetailSelected ? 'var(--primary-light)' : selected ? 'rgba(var(--primary-rgb), 0.06)' : idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)',
                   borderLeft: isDetailSelected ? '3px solid var(--primary)' : '3px solid transparent',
                 }}
-                onMouseEnter={e => { if (!isDetailSelected) (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                onMouseLeave={e => { if (!isDetailSelected) (e.currentTarget as HTMLTableRowElement).style.background = selected ? 'rgba(var(--primary-rgb), 0.06)' : idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)'; }}
+                className={isDetailSelected ? 'selected' : 'hover-row-light'}
               >
                 <td style={{ ...tdStyle, textAlign: 'center', padding: '6px' }} onClick={e => e.stopPropagation()}>
                   <input

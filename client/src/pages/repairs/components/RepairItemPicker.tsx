@@ -168,8 +168,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
                     background: isSelected ? 'rgba(var(--primary-rgb), 0.06)' : 'var(--card)',
                     borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
                   }}
-                  onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                  onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
+                  className={isSelected ? 'selected' : 'hover-row'}
                 >
                   <input type="checkbox" checked={isSelected} readOnly style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--primary)' }} />
                   <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--navy)', minWidth: 60 }}>{item.itemCode}</span>

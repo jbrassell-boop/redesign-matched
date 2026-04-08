@@ -57,10 +57,7 @@ export const PurchaseOrdersTab = ({ inventoryKey }: Props) => {
               const statusLabel = po.cancelled ? 'Cancelled' : isFullyReceived ? 'Closed' : 'Open';
               const statusColor = po.cancelled ? 'var(--danger)' : isFullyReceived ? 'var(--muted)' : 'var(--success)';
               return (
-                <tr key={po.supplierPOKey} style={{ cursor: 'pointer' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = ''; }}
-                >
+                <tr key={po.supplierPOKey} className="hover-row-light" style={{ cursor: 'pointer' }}>
                   <td style={tdStyle}>
                     <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 800, color: 'var(--navy)' }}>{po.poNumber || '\u2014'}</span>
                   </td>

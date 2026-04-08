@@ -50,10 +50,7 @@ export const RepairItemsTab = ({ scopeTypeKey }: Props) => {
           </thead>
           <tbody>
             {items.map(item => (
-              <tr key={item.scopeTypeRepairItemKey} style={{ cursor: 'pointer' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = ''; }}
-              >
+              <tr key={item.scopeTypeRepairItemKey} className="hover-row-light" style={{ cursor: 'pointer' }}>
                 <td style={tdStyle}>{item.itemDescription || '\u2014'}</td>
                 <td style={{ ...tdStyle, textAlign: 'center', fontFamily: 'monospace', fontWeight: 600 }}>{item.minutesL3 != null ? `${item.minutesL3}m` : '\u2014'}</td>
                 <td style={{ ...tdStyle, textAlign: 'center', fontFamily: 'monospace', fontWeight: 600 }}>{item.minutesL2 != null ? `${item.minutesL2}m` : '\u2014'}</td>

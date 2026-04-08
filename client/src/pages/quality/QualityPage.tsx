@@ -49,8 +49,7 @@ const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon, active, o
       outlineOffset: active ? -2 : undefined,
       transition: 'background 0.12s',
     }}
-    onMouseEnter={e => { if (clickable && !active) (e.currentTarget as HTMLDivElement).style.background = 'var(--bg)'; }}
-    onMouseLeave={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = ''; }}
+    className={active ? 'active' : clickable ? 'tab-card-hover' : undefined}
   >
     <div style={{ ...iconBgBaseStyle, background: iconBg, color: iconColor }}>
       {icon}
@@ -65,37 +64,37 @@ const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon, active, o
 // ── SVG Icons ─────────────────────────────────────────────────────────────────
 
 const IconShield = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
   </svg>
 );
 const IconCheck = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
 const IconCheckDouble = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
     <polyline points="22 4 12 14.01 9 11.01" />
   </svg>
 );
 const IconWarn = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
     <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
     <line x1="12" y1="9" x2="12" y2="13" />
     <line x1="12" y1="17" x2="12.01" y2="17" />
   </svg>
 );
 const IconX = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
     <circle cx="12" cy="12" r="10" />
     <line x1="15" y1="9" x2="9" y2="15" />
     <line x1="9" y1="9" x2="15" y2="15" />
   </svg>
 );
 const IconDollar = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
     <line x1="12" y1="1" x2="12" y2="23" />
     <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
   </svg>
@@ -532,8 +531,7 @@ export const QualityPage = () => {
                         background: idx % 2 === 1 ? 'var(--row-alt)' : undefined,
                         cursor: 'pointer',
                       }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
+                      className="hover-row-light" 
                     >
                       <td style={tdCellStyle}>
                         <span style={woLinkStyle}>
@@ -628,7 +626,7 @@ export const QualityPage = () => {
               onClick={() => setNcrModalOpen(true)}
               style={newBtnStyle}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={12} height={12}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={12} height={12}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New NCR
             </button>
             <div style={separatorStyle} />
@@ -666,8 +664,7 @@ export const QualityPage = () => {
                 ) : ncrItems.map((item, idx) => (
                   <tr key={item.isoComplaintKey}
                     style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
+                    className="hover-row-light" 
                   >
                     <td style={tdCellStyle}>
                       <span style={navyBoldStyle}>{item.ncrNumber}</span>
@@ -728,7 +725,7 @@ export const QualityPage = () => {
               onClick={() => setCapaModalOpen(true)}
               style={newBtnStyle}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={12} height={12}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={12} height={12}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
               New CAPA
             </button>
             <div style={separatorStyle} />
@@ -811,8 +808,7 @@ export const QualityPage = () => {
                 ) : reworkItems.map((item, idx) => (
                   <tr key={item.repairKey}
                     style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : undefined, cursor: 'pointer' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
+                    className="hover-row-light" 
                   >
                     <td style={tdCellStyle}>
                       <span style={navyBoldStyle}>{item.reworkNumber}</span>
@@ -958,8 +954,7 @@ export const QualityPage = () => {
                 { title: 'Cost of Poor Quality', desc: 'COPQ trends including rework and scrap costs', icon: <IconDollar /> },
               ].map(report => (
                 <div key={report.title} style={reportCardBaseStyle}
-                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 8px rgba(var(--navy-rgb), 0.1)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = ''; }}
+                  className="quality-card-hover" 
                 >
                   <div style={reportIconWrapStyle}>
                     <div style={reportIconBoxStyle}>

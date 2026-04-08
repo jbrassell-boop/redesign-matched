@@ -112,14 +112,7 @@ export const InventoryList = ({
                   : 'var(--card)',
                 transition: 'background 0.1s',
               }}
-              onMouseEnter={e => {
-                if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = 'var(--primary-light)';
-              }}
-              onMouseLeave={e => {
-                if (!isSelected)
-                  (e.currentTarget as HTMLDivElement).style.background =
-                    item.isLowStock ? 'var(--amber-subtle)' : 'var(--card)';
-              }}
+              className={isSelected ? 'selected' : 'hover-row-light'}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
                 {/* Stock dot */}

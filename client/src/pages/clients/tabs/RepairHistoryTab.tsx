@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Spin } from 'antd';
 import { getClientRepairs, getClientKpis } from '../../../api/clients';
 import { StatusBadge } from '../../../components/shared';
+import { StatStrip } from '../../../components/shared/StatStrip';
 import type { ClientRepairItem, ClientKpis } from '../types';
 
 interface RepairHistoryTabProps {
@@ -38,81 +39,69 @@ export const RepairHistoryTab = ({ clientKey }: RepairHistoryTabProps) => {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div style={{ padding: 16 }}>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
       {kpis && (
-        <div style={{
-          display: 'flex', gap: 16, marginBottom: 16, flexWrap: 'wrap',
-        }}>
-          <KpiCard label="Total Repairs" value={kpis.totalRepairs.toLocaleString()} color="var(--navy)" />
-          <KpiCard label="Open" value={kpis.openRepairs.toLocaleString()} color="var(--amber)" />
-          <KpiCard label="Avg TAT" value={`${kpis.avgTat.toFixed(1)} days`} color="var(--primary)" />
-          <KpiCard label="Revenue" value={`$${kpis.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`} color="var(--success)" />
-        </div>
+        <StatStrip chips={[
+          { id: 'total',   label: 'Total Repairs', value: kpis.totalRepairs,                                                                                          color: 'navy'  },
+          { id: 'open',    label: 'Open',           value: kpis.openRepairs,                                                                                          color: 'amber', state: kpis.openRepairs > 0 ? 'warn' : 'normal' },
+          { id: 'avgTat',  label: 'Avg TAT',        value: `${kpis.avgTat.toFixed(1)} days`,                                                                         color: 'blue'  },
+          { id: 'revenue', label: 'Revenue',         value: `$${kpis.totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`, color: 'green' },
+        ]} />
       )}
-
-      <div style={{ border: '1px solid var(--neutral-200)', borderRadius: 6, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-          <thead>
-            <tr style={{ background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' }}>
-              <th style={thStyle}>WO#</th>
-              <th style={thStyle}>Date In</th>
-              <th style={thStyle}>Status</th>
-              <th style={thStyle}>Department</th>
-              <th style={thStyle}>Scope Type</th>
-              <th style={thStyle}>Serial</th>
-              <th style={{ ...thStyle, textAlign: 'right' }}>TAT</th>
-              <th style={{ ...thStyle, textAlign: 'right' }}>Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {repairs.map((r, i) => (
-              <tr key={r.repairKey} style={{
-                borderBottom: i < repairs.length - 1 ? '1px solid var(--neutral-200)' : undefined,
-                background: i % 2 === 1 ? 'var(--neutral-50)' : undefined,
-              }}>
-                <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>
-                  {r.workOrderNumber || '\u2014'}
-                </td>
-                <td style={tdStyle}>{r.dateIn ? new Date(r.dateIn).toLocaleDateString() : '\u2014'}</td>
-                <td style={tdStyle}><StatusBadge status={r.status} /></td>
-                <td style={tdStyle}>{r.department || '\u2014'}</td>
-                <td style={tdStyle}>{r.scopeType || '\u2014'}</td>
-                <td style={tdStyle}>{r.serial || '\u2014'}</td>
-                <td style={{ ...tdStyle, textAlign: 'right' }}>{r.tat != null ? `${r.tat}d` : '\u2014'}</td>
-                <td style={{ ...tdStyle, textAlign: 'right' }}>{r.amount != null ? `$${r.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '\u2014'}</td>
+      <div style={{ padding: 16 }}>
+        <div style={{ border: '1px solid var(--neutral-200)', borderRadius: 6, overflow: 'hidden' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)' }}>
+                <th style={thStyle}>WO#</th>
+                <th style={thStyle}>Date In</th>
+                <th style={thStyle}>Status</th>
+                <th style={thStyle}>Department</th>
+                <th style={thStyle}>Scope Type</th>
+                <th style={thStyle}>Serial</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>TAT</th>
+                <th style={{ ...thStyle, textAlign: 'right' }}>Amount</th>
               </tr>
-            ))}
-            {repairs.length === 0 && (
-              <tr><td colSpan={8} style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No repair history.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {totalPages > 1 && (
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12, fontSize: 12 }}>
-          <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={pageBtnStyle}>Prev</button>
-          <span style={{ padding: '4px 8px', color: 'var(--muted)' }}>Page {page} of {totalPages}</span>
-          <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={pageBtnStyle}>Next</button>
+            </thead>
+            <tbody>
+              {repairs.map((r, i) => (
+                <tr key={r.repairKey} style={{
+                  borderBottom: i < repairs.length - 1 ? '1px solid var(--neutral-200)' : undefined,
+                  background: i % 2 === 1 ? 'var(--neutral-50)' : undefined,
+                }}>
+                  <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}>
+                    {r.workOrderNumber || '—'}
+                  </td>
+                  <td style={tdStyle}>{r.dateIn ? new Date(r.dateIn).toLocaleDateString() : '—'}</td>
+                  <td style={tdStyle}><StatusBadge status={r.status} /></td>
+                  <td style={tdStyle}>{r.department || '—'}</td>
+                  <td style={tdStyle}>{r.scopeType || '—'}</td>
+                  <td style={tdStyle}>{r.serial || '—'}</td>
+                  <td style={{ ...tdStyle, textAlign: 'right' }}>{r.tat != null ? `${r.tat}d` : '—'}</td>
+                  <td style={{ ...tdStyle, textAlign: 'right' }}>{r.amount != null ? `$${r.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : '—'}</td>
+                </tr>
+              ))}
+              {repairs.length === 0 && (
+                <tr><td colSpan={8} style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No repair history.</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+
+        {totalPages > 1 && (
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 12, fontSize: 12 }}>
+            <button disabled={page <= 1} onClick={() => setPage(p => p - 1)} style={pageBtnStyle}>Prev</button>
+            <span style={{ padding: '4px 8px', color: 'var(--muted)' }}>Page {page} of {totalPages}</span>
+            <button disabled={page >= totalPages} onClick={() => setPage(p => p + 1)} style={pageBtnStyle}>Next</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
 
-const KpiCard = ({ label, value, color }: { label: string; value: string; color: string }) => (
-  <div style={{
-    flex: 1, minWidth: 120, padding: '10px 14px',
-    border: '1px solid var(--neutral-200)', borderRadius: 6,
-    background: 'var(--card)',
-  }}>
-    <div style={{ fontSize: 18, fontWeight: 800, color }}>{value}</div>
-    <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.04em' }}>{label}</div>
-  </div>
-);
-
 const thStyle: React.CSSProperties = {
-  padding: '8px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700,
+  padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700,
   textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em',
 };
 

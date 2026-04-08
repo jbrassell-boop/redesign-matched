@@ -452,7 +452,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                 fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', gap: 5,
               }}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 11, height: 11 }}>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 11, height: 11 }}>
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
                 {nextStatusName ?? 'Next Stage'}
@@ -462,7 +462,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           <div ref={statusMenuRef} style={{ position: 'relative' }}>
             <button onClick={() => setStatusMenuOpen(!statusMenuOpen)} style={repairDropdownBtnStyle}>
               Change Status
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg aria-hidden="true" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
@@ -476,8 +476,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                     background: s.statusId === currentStatusId ? 'var(--primary-light)' : undefined,
                     borderBottom: '1px solid var(--neutral-100)',
                   }}
-                  onMouseEnter={e => { if (s.statusId !== currentStatusId) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                  onMouseLeave={e => { if (s.statusId !== currentStatusId) e.currentTarget.style.background = ''; }}
+                  className={s.statusId === currentStatusId ? 'selected' : 'menu-item-hover'}
                   >{s.statusName}</div>
                 ))}
               </div>
@@ -487,7 +486,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           <div ref={formsMenuRef} style={{ position: 'relative' }}>
             <button onClick={() => setFormsMenuOpen(!formsMenuOpen)} style={repairDropdownBtnStyle}>
               Forms
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <svg aria-hidden="true" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="6 9 12 15 18 9" />
               </svg>
             </button>
@@ -496,15 +495,13 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                 <div style={repairFormsSectionHeaderStyle}>Internal</div>
                 {formsForScope(INTERNAL_FORMS, fullRepair?.scopeType).map(item => (
                   <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = ''; }}
+                  className="menu-item-hover"
                   >{item.label}</div>
                 ))}
                 <div style={repairFormsSectionHeaderBorderTopStyle}>Customer-Facing</div>
                 {CUSTOMER_FORMS.map(item => (
                   <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = ''; }}
+                  className="menu-item-hover"
                   >{item.label}</div>
                 ))}
               </div>
@@ -655,7 +652,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                 display: 'flex', alignItems: 'center', gap: 4,
               }}
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}>
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 13, height: 13 }}>
                 <polyline points="9 18 15 12 9 6" />
               </svg>
               {nextStatusName ?? 'Next Stage'}
@@ -670,7 +667,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             style={repairLegacyDropdownBtnStyle}
           >
             Change Status
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg aria-hidden="true" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
@@ -687,8 +684,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
                     background: s.statusId === detail.statusId ? 'var(--primary-light)' : undefined,
                     borderBottom: '1px solid var(--neutral-100)',
                   }}
-                  onMouseEnter={e => { if (s.statusId !== detail.statusId) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                  onMouseLeave={e => { if (s.statusId !== detail.statusId) e.currentTarget.style.background = ''; }}
+                  className={s.statusId === detail.statusId ? 'selected' : 'menu-item-hover'}
                 >
                   {s.statusName}
                 </div>
@@ -704,7 +700,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             style={repairLegacyDropdownBtnStyle}
           >
             Forms
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg aria-hidden="true" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
@@ -713,15 +709,13 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
               <div style={repairFormsSectionHeaderStyle}>Internal</div>
               {formsForScope(INTERNAL_FORMS, detail?.scopeType).map(item => (
                 <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle12}
-                onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = ''; }}
+                className="menu-item-hover"
                 >{item.label}</div>
               ))}
               <div style={repairFormsSectionHeaderBorderTopStyle}>Customer-Facing</div>
               {CUSTOMER_FORMS.map(item => (
                 <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} style={repairMenuItemStyle12}
-                onMouseEnter={e => { e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = ''; }}
+                className="menu-item-hover"
                 >{item.label}</div>
               ))}
             </div>

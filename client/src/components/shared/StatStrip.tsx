@@ -8,7 +8,7 @@ export type ChipState = 'normal' | 'warn' | 'alert';
 export interface StatChipDef {
   id: string;
   label: string;
-  value: number | null;
+  value: string | number | null;
   color: ChipColor;
   state?: ChipState;
   tooltip?: string;
@@ -54,7 +54,9 @@ export const StatStrip = memo(({ chips, loading, activeChip, onChipClick }: Stat
               <Skeleton.Input size="small" active style={skeletonStyle} />
             ) : (
               <div className={`stat-chip__value stat-chip__val--${chip.color}`}>
-                {chip.value != null ? chip.value.toLocaleString() : '\u2014'}
+                {chip.value != null
+                  ? (typeof chip.value === 'number' ? chip.value.toLocaleString() : chip.value)
+                  : '\u2014'}
               </div>
             )}
             <div className="stat-chip__label">{chip.label}</div>

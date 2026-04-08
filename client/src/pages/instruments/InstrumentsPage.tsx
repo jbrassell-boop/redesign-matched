@@ -197,8 +197,7 @@ export const InstrumentsPage = () => {
           borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
           transition: 'background 0.1s',
         }}
-        onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-        onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
+        className={isSelected ? 'selected' : 'hover-row'}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>{item.orderNumber}</div>
@@ -228,8 +227,7 @@ export const InstrumentsPage = () => {
           borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
           transition: 'background 0.1s',
         }}
-        onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-        onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
+        className={isSelected ? 'selected' : 'hover-row'}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)', flex: 1, marginRight: 8 }}>{item.itemDescription}</div>

@@ -51,10 +51,7 @@ export const SuppliersTab = ({ inventoryKey }: Props) => {
           </thead>
           <tbody>
             {items.map(item => (
-              <tr key={item.supplierSizesKey} style={{ cursor: 'pointer' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = ''; }}
-              >
+              <tr key={item.supplierSizesKey} className="hover-row-light" style={{ cursor: 'pointer' }}>
                 <td style={{ ...tdStyle, fontWeight: 600 }}>{item.supplierName || '\u2014'}</td>
                 <td style={tdStyle}>{item.sizeDescription || '\u2014'}</td>
                 <td style={tdStyle}>

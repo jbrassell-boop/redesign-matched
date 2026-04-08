@@ -47,8 +47,6 @@ const dtActionBtnBaseStyle: React.CSSProperties = {
   fontSize: 11, fontWeight: 600, cursor: 'pointer',
   fontFamily: 'inherit', border: 'none',
 };
-const dtMainGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '340px 1fr', gap: 12, alignItems: 'start' };
-const dtLeftSidebarStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 8 };
 const dtCardStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' };
 const dtSectionHdFlexStyle: React.CSSProperties = { ...sectionHd, display: 'flex', justifyContent: 'space-between', alignItems: 'center' };
 const dtFormPadStyle: React.CSSProperties = { padding: '8px 12px' };
@@ -77,20 +75,6 @@ const dtNotesBoxStyle: React.CSSProperties = {
 };
 const dtNotesLabelStyle: React.CSSProperties = { fontSize: 8, fontWeight: 700, color: 'var(--navy)', marginBottom: 1 };
 const dtNotesTextStyle: React.CSSProperties = { fontSize: 10, color: 'var(--label)' };
-const dtRightColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 8 };
-const dtComplaintBannerStyle: React.CSSProperties = {
-  background: 'var(--card)',
-  border: '1px solid var(--border)',
-  borderLeft: '4px solid var(--primary)',
-  borderRadius: '0 6px 6px 0',
-  padding: '8px 12px',
-};
-const dtComplaintRowStyle: React.CSSProperties = { display: 'flex', gap: 14, alignItems: 'flex-start' };
-const dtComplaintLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 3 };
-const dtComplaintTextStyle: React.CSSProperties = { fontSize: 12, color: 'var(--label)', lineHeight: 1.5 };
-const dtComplaintEmptyStyle: React.CSSProperties = { color: 'var(--muted)', fontStyle: 'italic' };
-const dtSideFieldLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase' };
-const dtSideFieldValueStyle: React.CSSProperties = { fontSize: 11, color: 'var(--label)', fontWeight: 600 };
 const dtFlagsBannerStyle: React.CSSProperties = {
   background: 'var(--amber-light)',
   border: '1px solid var(--amber-border)',
@@ -220,189 +204,155 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
         ))}
       </div>
 
-      {/* Main 2-col */}
-      <div style={dtMainGridStyle}>
-
-        {/* LEFT sidebar */}
-        <div style={dtLeftSidebarStyle}>
-
-          {/* Complaint form — editable */}
-          <div style={dtCardStyle}>
-            <div style={dtSectionHdFlexStyle}>
-              <span>Customer Complaint</span>
-              <AutosaveIndicator status={detailsStatus} />
+      {/* Customer Complaint — editable */}
+      <div style={dtCardStyle}>
+        <div style={dtSectionHdFlexStyle}>
+          <span>Customer Complaint</span>
+          <AutosaveIndicator status={detailsStatus} />
+        </div>
+        <div style={dtFormPadStyle}>
+          <div style={dtTwoColGridStyle}>
+            <div>
+              <div style={lblStyle}>Repair Reason</div>
+              <select
+                style={{ ...fieldStyle, width: '100%', appearance: 'auto', fontFamily: 'inherit' }}
+                value={repairReason}
+                onChange={e => { setRepairReason(e.target.value); detailsChange('repairReason', e.target.value || undefined); }}
+              >
+                <option value="">—</option>
+                {repairReasons.map(r => <option key={r.key} value={r.name}>{r.name}</option>)}
+              </select>
             </div>
-            <div style={dtFormPadStyle}>
-              <div style={dtTwoColGridStyle}>
-                <div>
-                  <div style={lblStyle}>Repair Reason</div>
-                  <select
-                    style={{ ...fieldStyle, width: '100%', appearance: 'auto', fontFamily: 'inherit' }}
-                    value={repairReason}
-                    onChange={e => { setRepairReason(e.target.value); detailsChange('repairReason', e.target.value || undefined); }}
-                  >
-                    <option value="">—</option>
-                    {repairReasons.map(r => <option key={r.key} value={r.name}>{r.name}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <div style={lblStyle}>PS Level</div>
-                  <select
-                    style={{ ...fieldStyle, width: '100%', appearance: 'auto', fontFamily: 'inherit' }}
-                    value={psLevel}
-                    onChange={e => { setPsLevel(e.target.value); detailsChange('psLevel', e.target.value || undefined); }}
-                  >
-                    <option value="">—</option>
-                    {['PS1', 'PS2', 'PS3', 'PS4', 'PS5'].map(v => <option key={v} value={v}>{v}</option>)}
-                  </select>
-                </div>
-              </div>
-              <textarea
-                style={dtTextareaStyle}
-                value={complaint}
-                onChange={e => { setComplaint(e.target.value); detailsChange('complaint', e.target.value || undefined); }}
-                placeholder="No complaint recorded"
-                aria-label="Customer complaint"
-              />
+            <div>
+              <div style={lblStyle}>PS Level</div>
+              <select
+                style={{ ...fieldStyle, width: '100%', appearance: 'auto', fontFamily: 'inherit' }}
+                value={psLevel}
+                onChange={e => { setPsLevel(e.target.value); detailsChange('psLevel', e.target.value || undefined); }}
+              >
+                <option value="">—</option>
+                {['PS1', 'PS2', 'PS3', 'PS4', 'PS5'].map(v => <option key={v} value={v}>{v}</option>)}
+              </select>
             </div>
           </div>
+          <textarea
+            style={dtTextareaStyle}
+            value={complaint}
+            onChange={e => { setComplaint(e.target.value); detailsChange('complaint', e.target.value || undefined); }}
+            placeholder="No complaint recorded"
+            aria-label="Customer complaint"
+          />
+        </div>
+      </div>
 
-          {/* Angulation IN */}
-          <div style={dtCardStyle}>
-            <div style={dtSectionHdFlexStyle}>
-              <span>Angulation IN</span>
-              <div style={dtAngBtnGroupStyle}>
-                {(['Reset', 'Override'] as const).map(lbl => (
-                  <button key={lbl}
-                    onClick={() => message.info(`${lbl} angulation — use Inspections tab`)}
-                    style={dtAngSmallBtnStyle}>
-                    {lbl}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div style={dtFormPadStyle}>
-              <div style={dtThreeColGridStyle}>
-                {(['UP', 'DOWN', 'RIGHT', 'LEFT', 'Epoxy', 'Size'] as const).map(lbl => (
-                  <div key={lbl}>
-                    <div style={lblStyle}>{lbl}</div>
-                    <div style={fieldStyle}>
-                      <span style={dtEmptyFieldStyle}>—</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div style={lblStyle}>Max Charge</div>
-                <div style={fieldStyle}><span style={dtEmptyFieldStyle}>—</span></div>
-              </div>
-            </div>
+      {/* Flags banner — only if flags exist or repair is urgent */}
+      {(repair.isUrgent || flags.length > 0) && (
+        <div style={dtFlagsBannerStyle}>
+          <div style={dtFlagsLabelStyle}>
+            Flags
           </div>
+          <div style={dtFlagsRowStyle}>
+            {repair.isUrgent && (
+              <span style={dtRushBadgeStyle}>
+                ⚑ Rush
+              </span>
+            )}
+            {flags.map((f) => (
+              <span key={f.flagKey} style={dtFlagBadgeStyle}>
+                ⚑ {f.flag}
+              </span>
+            ))}
+          </div>
+          <div style={dtFlagsReviewStyle}>
+            Review before proceeding
+          </div>
+        </div>
+      )}
 
-          {/* Outsource */}
-          <div style={dtCardStyle}>
-            <div style={sectionHd}>Outsource</div>
-            <div style={dtFormPadStyle}>
-              <div style={dtOutsourceGridStyle}>
-                {[
-                  { label: 'Vendor', value: repair.outsourceVendor },
-                  { label: 'Cost',   value: repair.outsourceCost != null ? `$${repair.outsourceCost}` : null },
-                ].map(({ label, value }) => (
-                  <div key={label}>
-                    <div style={lblStyle}>{label}</div>
-                    <div style={fieldStyle}>{value || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>—</span>}</div>
-                  </div>
-                ))}
-                <div style={{ gridColumn: '1 / -1' }}>
-                  <div style={lblStyle}>Tracking</div>
-                  <div style={fieldStyle}>{repair.outsourceTracking || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>—</span>}</div>
+      {/* Repair items table — full width */}
+      <RepairItemsTable
+        repairKey={repair.repairKey}
+        items={items}
+        onItemsChanged={loadItems}
+        onOpenAmendments={handleOpenAmendments}
+        hasAmendments={hasAmendments}
+      />
+      <AmendmentModal
+        repairKey={repair.repairKey}
+        repair={repair}
+        open={amendOpen}
+        onClose={() => setAmendOpen(false)}
+        onAmendmentCreated={() => { loadItems(); setAmendOpen(false); }}
+        prefillTranKey={amendTranKey}
+      />
+
+      {/* Angulation IN */}
+      <div style={dtCardStyle}>
+        <div style={dtSectionHdFlexStyle}>
+          <span>Angulation IN</span>
+          <div style={dtAngBtnGroupStyle}>
+            {(['Reset', 'Override'] as const).map(lbl => (
+              <button key={lbl}
+                onClick={() => message.info(`${lbl} angulation — use Inspections tab`)}
+                style={dtAngSmallBtnStyle}>
+                {lbl}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={dtFormPadStyle}>
+          <div style={dtThreeColGridStyle}>
+            {(['UP', 'DOWN', 'RIGHT', 'LEFT', 'Epoxy', 'Size'] as const).map(lbl => (
+              <div key={lbl}>
+                <div style={lblStyle}>{lbl}</div>
+                <div style={fieldStyle}>
+                  <span style={dtEmptyFieldStyle}>—</span>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
+          <div>
+            <div style={lblStyle}>Max Charge</div>
+            <div style={fieldStyle}><span style={dtEmptyFieldStyle}>—</span></div>
+          </div>
+        </div>
+      </div>
 
-          {/* Comments */}
-          <div style={dtCardStyle}>
-            <div style={sectionHd}>Comments</div>
-            <div style={dtFormPadStyle}>
-              <div style={dtCommentPlaceholderStyle}>
-                Add a comment…
+      {/* Outsource */}
+      <div style={dtCardStyle}>
+        <div style={sectionHd}>Outsource</div>
+        <div style={dtFormPadStyle}>
+          <div style={dtOutsourceGridStyle}>
+            {[
+              { label: 'Vendor', value: repair.outsourceVendor },
+              { label: 'Cost',   value: repair.outsourceCost != null ? `$${repair.outsourceCost}` : null },
+            ].map(({ label, value }) => (
+              <div key={label}>
+                <div style={lblStyle}>{label}</div>
+                <div style={fieldStyle}>{value || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>—</span>}</div>
               </div>
-              {repair.notes && (
-                <div style={dtNotesBoxStyle}>
-                  <div style={dtNotesLabelStyle}>Notes</div>
-                  <div style={dtNotesTextStyle}>{repair.notes}</div>
-                </div>
-              )}
+            ))}
+            <div style={{ gridColumn: '1 / -1' }}>
+              <div style={lblStyle}>Tracking</div>
+              <div style={fieldStyle}>{repair.outsourceTracking || <span style={{ color: 'var(--muted)', fontStyle: 'italic' }}>—</span>}</div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* RIGHT: complaint banner + flags + items table */}
-        <div style={dtRightColStyle}>
-
-          {/* Complaint banner */}
-          <div style={dtComplaintBannerStyle}>
-            <div style={dtComplaintRowStyle}>
-              <div style={{ flex: 1 }}>
-                <div style={dtComplaintLabelStyle}>
-                  Customer Complaint
-                </div>
-                <div style={dtComplaintTextStyle}>
-                  {repair.complaint || <span style={dtComplaintEmptyStyle}>No complaint recorded</span>}
-                </div>
-              </div>
-              <div style={{ flexShrink: 0 }}>
-                <div style={dtSideFieldLabelStyle}>Reason</div>
-                <div style={dtSideFieldValueStyle}>{repair.repairReason || '—'}</div>
-              </div>
-              <div style={{ flexShrink: 0 }}>
-                <div style={dtSideFieldLabelStyle}>PS Level</div>
-                <div style={dtSideFieldValueStyle}>{repair.psLevel || '—'}</div>
-              </div>
-            </div>
+      {/* Comments */}
+      <div style={dtCardStyle}>
+        <div style={sectionHd}>Comments</div>
+        <div style={dtFormPadStyle}>
+          <div style={dtCommentPlaceholderStyle}>
+            Add a comment…
           </div>
-
-          {/* Flags banner — only if flags exist or repair is urgent */}
-          {(repair.isUrgent || flags.length > 0) && (
-            <div style={dtFlagsBannerStyle}>
-              <div style={dtFlagsLabelStyle}>
-                Flags
-              </div>
-              <div style={dtFlagsRowStyle}>
-                {repair.isUrgent && (
-                  <span style={dtRushBadgeStyle}>
-                    ⚑ Rush
-                  </span>
-                )}
-                {flags.map((f) => (
-                  <span key={f.flagKey} style={dtFlagBadgeStyle}>
-                    ⚑ {f.flag}
-                  </span>
-                ))}
-              </div>
-              <div style={dtFlagsReviewStyle}>
-                Review before proceeding
-              </div>
+          {repair.notes && (
+            <div style={dtNotesBoxStyle}>
+              <div style={dtNotesLabelStyle}>Notes</div>
+              <div style={dtNotesTextStyle}>{repair.notes}</div>
             </div>
           )}
-
-          {/* Repair items table */}
-          <RepairItemsTable
-            repairKey={repair.repairKey}
-            items={items}
-            onItemsChanged={loadItems}
-            onOpenAmendments={handleOpenAmendments}
-            hasAmendments={hasAmendments}
-          />
-          <AmendmentModal
-            repairKey={repair.repairKey}
-            repair={repair}
-            open={amendOpen}
-            onClose={() => setAmendOpen(false)}
-            onAmendmentCreated={() => { loadItems(); setAmendOpen(false); }}
-            prefillTranKey={amendTranKey}
-          />
         </div>
       </div>
 

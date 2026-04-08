@@ -49,8 +49,7 @@ const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon, active, o
       outlineOffset: active ? -2 : undefined,
       transition: 'background 0.12s',
     }}
-    onMouseEnter={e => { if (clickable && !active) (e.currentTarget as HTMLDivElement).style.background = 'var(--bg)'; }}
-    onMouseLeave={e => { if (!active) (e.currentTarget as HTMLDivElement).style.background = ''; }}
+    className={active ? 'active' : clickable ? 'tab-card-hover' : undefined}
   >
     <div style={{
       width: 32, height: 32, borderRadius: 6, background: iconBg,
@@ -67,33 +66,33 @@ const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon, active, o
 );
 
 const IconGrid = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
     <path d="M3 9h18M9 21V9" /><rect x="3" y="3" width="18" height="18" rx="2" />
   </svg>
 );
 const IconSend = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
     <path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" />
   </svg>
 );
 const IconCheck = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
     <polyline points="20 6 9 17 4 12" />
   </svg>
 );
 const IconEdit = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
     <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
   </svg>
 );
 const IconX = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
     <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
   </svg>
 );
 const IconDollar = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={14} height={14}>
     <line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
   </svg>
 );
@@ -262,7 +261,7 @@ export const OnsiteServicesPage = () => {
             display: 'flex', alignItems: 'center', gap: 5,
           }}
         >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={13} height={13}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={13} height={13}>
             <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
           </svg>
           New Visit
@@ -368,8 +367,7 @@ export const OnsiteServicesPage = () => {
                       borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
                       transition: 'background 0.1s',
                     }}
-                    onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                    onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
+                    className={isSelected ? 'selected' : 'hover-row'}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>{item.invoiceNum}</div>

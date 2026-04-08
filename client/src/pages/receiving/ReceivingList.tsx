@@ -57,8 +57,7 @@ export const ReceivingList = ({ arrivals, loading, selectedKey, search, onSearch
               background: selected ? 'rgba(var(--amber-rgb), 0.08)' : undefined,
               transition: 'background 0.1s',
             }}
-            onMouseEnter={e => { if (!selected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-            onMouseLeave={e => { if (!selected) e.currentTarget.style.background = ''; }}
+            className={selected ? 'selected' : 'hover-row'}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>{a.clientName || 'Unknown'}</div>

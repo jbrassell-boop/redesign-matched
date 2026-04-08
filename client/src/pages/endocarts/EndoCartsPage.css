@@ -1,0 +1,106 @@
+/* ── EndoCartsPage styles ─────────────────────────────────────────
+   Extracted from inline styles. Uses CSS custom properties from
+   theme/tokens.css. One-off/dynamic styles stay inline.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Page container */
+.ec-page           { display: flex; flex-direction: column; height: calc(100vh - 64px); overflow: hidden; background: var(--bg); }
+.ec-tab-flex       { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.ec-split-flex     { display: flex; flex: 1; overflow: hidden; }
+
+/* Toolbar */
+.ec-toolbar        { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--card); border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; flex-wrap: wrap; }
+.ec-separator      { width: 1px; height: 22px; background: var(--border-dk); flex-shrink: 0; }
+.ec-filter-label   { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; white-space: nowrap; letter-spacing: 0.04em; }
+
+/* Stat strip */
+.ec-stat-strip     { display: flex; background: var(--card); border-bottom: 1px solid var(--border); flex-shrink: 0; overflow-x: auto; }
+
+/* Segmented control */
+.ec-segmented      { display: inline-flex; border: 1.5px solid var(--border-dk); border-radius: 6px; overflow: hidden; }
+
+/* Search */
+.ec-search-wrap    { position: relative; margin-left: auto; }
+.ec-search-icon    { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+.ec-search-input   { height: 30px; width: 200px; border: 1.5px solid var(--border-dk); border-radius: 6px; padding: 0 10px 0 30px; font-size: 11px; font-family: inherit; outline: none; background: var(--card); }
+
+/* Table area */
+.ec-table-bg       { flex: 1; overflow: auto; background: var(--card); }
+.ec-table-fixed    { width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+/* Table header */
+.ec-th             { background: var(--neutral-50); color: var(--neutral-500); font-weight: 700; padding: 9px 10px; text-align: left; text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--neutral-200); }
+
+/* Table cells */
+.ec-td             { padding: 7px 10px; font-size: 12px; border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ec-td--center     { text-align: center; }
+.ec-td--right-bold { text-align: right; font-weight: 700; }
+.ec-td--navy-bold  { font-weight: 700; color: var(--navy); }
+.ec-td--right-600  { text-align: right; font-weight: 600; }
+
+/* Footer / pagination */
+.ec-footer         { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; background: var(--neutral-50); border-top: 1.5px solid var(--border-dk); flex-shrink: 0; font-size: 11px; color: var(--muted); }
+.ec-pager-btns     { display: flex; gap: 3px; align-items: center; }
+.ec-pager-btn      { height: 36px; min-width: 36px; padding: 0 6px; border: 1px solid var(--border-dk); border-radius: 4px; background: var(--card); font-size: 11px; cursor: pointer; font-family: inherit; }
+.ec-pager-span     { font-size: 11px; padding: 0 8px; }
+
+/* No records */
+.ec-no-records     { text-align: center; padding: 30px; color: var(--muted); }
+
+/* BOM table (inside detail pane) */
+.ec-bom-th         { background: var(--neutral-50); padding: 5px 8px; font-size: 11px; font-weight: 600; color: var(--neutral-500); text-transform: uppercase; letter-spacing: 0.04em; text-align: left; border-bottom: 1px solid var(--neutral-200); }
+.ec-bom-th--center { text-align: center; }
+.ec-bom-th--right  { text-align: right; }
+.ec-bom-td         { padding: 5px 8px; border-bottom: 1px solid var(--border); }
+.ec-bom-td--center { text-align: center; }
+.ec-bom-td--right  { text-align: right; }
+.ec-bom-footer-row { font-weight: 700; background: var(--neutral-50); }
+.ec-bom-footer-td  { padding: 5px 8px; text-align: right; }
+.ec-bom-table-wrap { margin: -10px -12px; padding: 0; }
+.ec-bom-table      { width: 100%; border-collapse: collapse; font-size: 11px; }
+
+/* BOM expand (models tab) */
+.ec-bom-exp-th        { background: var(--primary-light); padding: 4px 8px; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; text-align: left; }
+.ec-bom-exp-th--center{ text-align: center; }
+.ec-bom-exp-th--right { text-align: right; }
+.ec-bom-exp-td        { padding: 4px 8px; border-bottom: 1px solid var(--border); }
+.ec-bom-exp-td--center{ text-align: center; }
+.ec-bom-exp-td--right { text-align: right; }
+.ec-bom-exp-container { padding: 8px 16px 12px 32px; background: var(--neutral-50); }
+.ec-bom-exp-table     { width: 100%; border-collapse: collapse; font-size: 11px; }
+.ec-expand-bom-btn    { height: 36px; min-width: 36px; padding: 0 10px; font-size: 11px; border-radius: 4px; border: none; cursor: pointer; font-family: inherit; font-weight: 600; background: var(--primary-light); color: var(--primary); display: inline-flex; align-items: center; gap: 4px; }
+
+/* Badge */
+.ec-badge          { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+
+/* Stat chip */
+.ec-chip-icon      { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.ec-chip-text-col  { display: flex; flex-direction: column; }
+.ec-chip-label     { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.2px; white-space: nowrap; }
+
+/* Detail pane (right panel) */
+.ec-right-panel    { width: 520px; min-width: 520px; display: flex; flex-direction: column; overflow: hidden; background: var(--card); }
+.ec-detail-pane    { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.ec-detail-close-row { display: flex; align-items: center; justify-content: flex-end; padding: 6px 12px; border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; }
+.ec-detail-close-btn { background: none; border: none; cursor: pointer; font-size: 18px; color: var(--muted); line-height: 1; padding: 0 4px; }
+.ec-detail-scroll  { flex: 1; overflow: auto; }
+.ec-detail-footer  { padding: 10px 18px; border-top: 1.5px solid var(--border-dk); background: var(--neutral-50); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.ec-detail-footer-text { font-size: 11px; color: var(--muted); }
+.ec-detail-empty   { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; color: var(--muted); text-align: center; gap: 8px; }
+.ec-detail-empty-title { font-size: 13px; font-weight: 600; color: var(--muted); }
+
+/* Overview pane inside detail */
+.ec-overview-pane  { padding: 14px 18px; display: flex; flex-direction: column; gap: 12px; }
+
+/* Section card */
+.ec-section-outer  { background: var(--card); border: 1px solid var(--border-dk); border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+.ec-section-head   { background: var(--neutral-50); padding: 6px 12px; font-size: 11px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--border); }
+.ec-section-body   { padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
+
+/* Notes text */
+.ec-notes-text     { font-size: 12px; color: var(--text); line-height: 1.5; }
+
+/* Misc */
+.ec-icon-14        { width: 14px; height: 14px; }
+.ec-icon-13        { width: 13px; height: 13px; }
+.ec-icon-12        { width: 12px; height: 12px; }

@@ -498,9 +498,7 @@ const RepairItemRow = ({ item, fmt, tdStyle, onDelete, onOpenAmendments, onPatch
   const [commentDraft, setCommentDraft] = useState(item.comments);
 
   return (
-    <tr style={{ cursor: 'default' }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-hover-bg)')}
-      onMouseLeave={e => (e.currentTarget.style.background = '')}>
+    <tr className="repair-items-add-btn" style={{ cursor: 'default' }}>
       <td style={{ ...tdStyle, textAlign: 'center' }}>
         {approvalDot(item.approved)}
       </td>

@@ -48,10 +48,7 @@ export const MaxChargesTab = ({ scopeTypeKey }: Props) => {
           </thead>
           <tbody>
             {items.map(item => (
-              <tr key={item.departmentKey} style={{ cursor: 'pointer' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = ''; }}
-              >
+              <tr key={item.departmentKey} className="hover-row-light" style={{ cursor: 'pointer' }}>
                 <td style={tdStyle}>{item.clientName || '\u2014'}</td>
                 <td style={tdStyle}>{item.departmentName || '\u2014'}</td>
                 <td style={{ ...tdStyle, textAlign: 'right', fontFamily: 'monospace', fontWeight: 700, color: 'var(--navy)' }}>

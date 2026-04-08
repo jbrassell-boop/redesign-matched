@@ -87,7 +87,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0, marginTop: 1,
               }}>
-                <svg width="9" height="9" viewBox="0 0 12 12" fill="none">
+                <svg aria-hidden="true" width="9" height="9" viewBox="0 0 12 12" fill="none">
                   <polyline points="2,6 5,9 10,3" stroke="var(--card)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>

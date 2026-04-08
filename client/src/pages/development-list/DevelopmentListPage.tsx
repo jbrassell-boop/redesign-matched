@@ -200,8 +200,7 @@ export const DevelopmentListPage = () => {
                           background: isSelected ? 'var(--warning-bg)' : idx % 2 === 1 ? 'var(--row-alt)' : undefined,
                           borderLeft: isSelected ? '2px solid var(--amber)' : '2px solid transparent',
                         }}
-                        onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                        onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLTableRowElement).style.background = idx % 2 === 1 ? 'var(--row-alt)' : ''; }}
+                        className={isSelected ? 'selected' : 'hover-row-light'}
                       >
                         <td style={devTdIdStyle}>{item.toDoId}</td>
                         <td style={devTdTitleStyle}>{item.title}</td>
@@ -239,7 +238,7 @@ export const DevelopmentListPage = () => {
         <div style={devRightPanelStyle}>
           {!detail ? (
             <div style={devEmptyDetailStyle}>
-              <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={devSvgOpacityStyle}>
+              <svg aria-hidden="true" width={40} height={40} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} style={devSvgOpacityStyle}>
                 <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
               </svg>
               <p style={devEmptyTextStyle}>Select an item to view details</p>

@@ -1,0 +1,119 @@
+/* ── ContractDetailPane styles ────────────────────────────────────
+   Extracted from inline styles. Uses CSS custom properties from
+   theme/tokens.css. One-off positional/dynamic styles stay inline.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Layout */
+.cdp-container        { display: flex; flex-direction: column; height: 100%; }
+.cdp-loading-center   { display: flex; justify-content: center; padding: 40px; }
+.cdp-empty-select     { padding: 40px; text-align: center; color: var(--muted); font-size: 13px; }
+
+/* Stat Strip */
+.cdp-stat-strip       { display: flex; background: var(--card); border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; }
+.cdp-stat-chip        { display: flex; align-items: center; gap: 8px; flex: 1; padding: 8px 12px; border-right: 1px solid var(--neutral-200); }
+.cdp-stat-chip__icon  { width: 28px; height: 28px; border-radius: 6px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.cdp-stat-chip__value { font-size: 15px; font-weight: 800; color: var(--navy); line-height: 1.1; }
+.cdp-stat-chip__label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); white-space: nowrap; }
+
+/* Header actions */
+.cdp-header-actions   { display: flex; gap: 6px; }
+.cdp-action-btn       {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 32px; padding: 0 12px; font-size: 12px; font-weight: 500;
+  background: var(--card); border: 1px solid var(--neutral-200);
+  border-radius: 6px; cursor: pointer; color: var(--text);
+}
+.cdp-action-btn__icon { width: 13px; height: 13px; }
+
+/* Panel (card) */
+.cdp-panel            { border: 1px solid var(--neutral-200); border-radius: 8px; overflow: hidden; box-shadow: var(--shadow-card); }
+.cdp-panel-head       {
+  background: var(--neutral-50); padding: 7px 12px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+  color: var(--navy); border-bottom: 1px solid var(--neutral-200);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cdp-panel-body       { padding: 12px 14px; }
+.cdp-panel-body--lg   { padding: 16px 14px; }
+
+/* Tab wrappers */
+.cdp-tab-pad          { padding: 10px 14px; }
+.cdp-tab-pad-flex     { padding: 10px 14px; display: flex; flex-direction: column; gap: 10px; }
+
+/* Table */
+.cdp-table-scroll     { padding: 0; max-height: 500px; overflow-y: auto; }
+.cdp-table-scroll--sm { padding: 0; max-height: 400px; overflow-y: auto; }
+.cdp-table            { width: 100%; border-collapse: collapse; }
+.cdp-th               {
+  padding: 6px 10px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.05em; color: var(--navy); border-bottom: 1px solid var(--neutral-200);
+  text-align: left; background: var(--neutral-50); white-space: nowrap;
+}
+.cdp-td               { padding: 7px 10px; font-size: 12px; border-bottom: 1px solid var(--neutral-200); color: var(--text); }
+.cdp-td--link         { font-weight: 600; color: var(--primary); }
+.cdp-td--right        { text-align: right; }
+.cdp-td--right-bold   { text-align: right; font-weight: 600; }
+
+/* Empty / spinner states */
+.cdp-spinner          { padding: 24px; text-align: center; }
+.cdp-empty            { padding: 30px; text-align: center; color: var(--muted); font-size: 12px; font-style: italic; }
+.cdp-inline-icon      { display: inline-flex; align-items: center; }
+
+/* Mini stat strip (inside tab panels) */
+.cdp-mini-strip       { display: flex; gap: 8px; margin-bottom: 10px; }
+.cdp-mini-card        { flex: 1; background: var(--card); border: 1px solid var(--neutral-200); border-radius: 8px; padding: 8px 12px; text-align: center; }
+.cdp-mini-label       { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
+
+/* Form label (used in amendment form) */
+.cdp-form-label       { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+.cdp-form-grid        { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
+.cdp-form-actions     { display: flex; justify-content: flex-end; gap: 8px; }
+.cdp-amend-form       { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.cdp-amend-cancel-btn { padding: 5px 14px; font-size: 12px; border: 1px solid var(--border); border-radius: 5px; background: var(--card); cursor: pointer; color: var(--text); }
+.cdp-amend-save-btn   { padding: 5px 14px; font-size: 12px; border: none; border-radius: 5px; background: var(--primary); color: var(--card); cursor: pointer; font-weight: 600; }
+.cdp-new-amend-btn    { padding: 2px 10px; font-size: 11px; font-weight: 600; border: 1px solid var(--primary); border-radius: 4px; background: rgba(var(--primary-rgb), 0.07); color: var(--primary); cursor: pointer; }
+.cdp-close-btn        { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 13px; }
+
+/* Health bar */
+.cdp-health-center    { padding: 12px 14px; text-align: center; }
+.cdp-health-row       { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.cdp-health-label     { width: 90px; flex-shrink: 0; font-size: 11px; font-weight: 600; color: var(--muted); }
+.cdp-health-bar-bg    { flex: 1; height: 6px; background: var(--neutral-200); border-radius: 3px; overflow: hidden; }
+.cdp-health-value     { width: 70px; text-align: right; font-size: 11px; font-weight: 700; color: var(--text); }
+
+/* Address */
+.cdp-no-address       { color: var(--muted); font-size: 12px; font-style: italic; }
+
+/* Notes block */
+.cdp-notes-block      { margin-top: 10px; font-size: 13px; color: var(--text); line-height: 1.5; border-top: 1px solid var(--neutral-200); padding-top: 10px; }
+.cdp-notes-body       { padding: 12px 14px; font-size: 13px; color: var(--text); line-height: 1.5; }
+
+/* Badges */
+.cdp-badge-plan       { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; background: rgba(var(--primary-rgb), 0.1); border: 1px solid rgba(var(--primary-rgb), 0.3); color: var(--primary); }
+.cdp-badge-risk       { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; background: rgba(var(--amber-rgb), 0.1); border: 1px solid rgba(var(--amber-rgb), 0.3); color: var(--warning); }
+.cdp-badge-tax        { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 9999px; background: var(--neutral-100); border: 1px solid var(--neutral-200); color: var(--muted); }
+.cdp-specs-badges     { display: flex; gap: 12px; margin-top: 4px; }
+
+/* Specs layout */
+.cdp-specs-wrap       { padding: 14px 16px; }
+.cdp-specs-cols       { display: flex; gap: 12px; }
+.cdp-specs-col        { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+
+/* Report card */
+.cdp-metric-strip     { display: flex; gap: 8px; flex-wrap: wrap; }
+.cdp-metric-card      { flex: 1 1 140px; padding: 12px 14px; border: 1px solid var(--neutral-200); border-radius: 8px; background: var(--card); text-align: center; }
+.cdp-metric-label     { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--muted); letter-spacing: 0.04em; margin-bottom: 4px; }
+
+/* Expense placeholder */
+.cdp-expense-ph       { padding: 48px 24px; text-align: center; color: var(--muted); }
+.cdp-expense-title    { font-weight: 600; font-size: 14px; color: var(--navy); margin-bottom: 6px; }
+.cdp-expense-desc     { font-size: 12px; line-height: 1.6; max-width: 300px; margin: 0 auto; }
+
+/* Inline editable input */
+.cdp-edit-input {
+  font-size: 12px; color: var(--text); background: var(--card);
+  border: 1px solid var(--neutral-200); border-radius: 4px;
+  padding: 4px 8px; font-family: inherit; outline: none;
+  width: 100%; box-sizing: border-box;
+}
+.cdp-edit-field       { display: flex; flex-direction: column; gap: 2px; padding: 3px 0; }

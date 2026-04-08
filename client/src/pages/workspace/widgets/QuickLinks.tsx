@@ -31,8 +31,7 @@ export const QuickLinks = () => {
               color: link.color, fontSize: 12, fontWeight: 700,
               cursor: 'pointer', transition: 'opacity 0.15s',
             }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '0.8'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.opacity = '1'; }}
+            className="quick-link-btn"
           >
             {link.label}
           </button>

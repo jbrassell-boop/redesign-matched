@@ -179,8 +179,7 @@ export const ClientsPage = () => {
                         height: '100%',
                         boxSizing: 'border-box',
                       }}
-                      onMouseEnter={e => { if (c.clientKey !== selectedKey) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                      onMouseLeave={e => { if (c.clientKey !== selectedKey) e.currentTarget.style.background = 'var(--card)'; }}
+                      className={c.clientKey === selectedKey ? 'selected' : 'hover-row'}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>

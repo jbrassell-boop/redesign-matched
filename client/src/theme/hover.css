@@ -1,0 +1,95 @@
+/*
+ * Shared hover utility classes.
+ * Replaces all onMouseEnter/onMouseLeave inline style mutations.
+ * Each class uses :not(.selected) so selected rows are never overridden.
+ */
+
+/* ── List / sidebar card rows ───────────────────────────────────────────── */
+/* Used in: ClientsPage, DepartmentsPage, AcquisitionsPage, FinancialPage,
+   InstrumentsPage, ReceivingList, OnsiteServicesPage, ProductSalePage,
+   RepairItemPicker                                                          */
+.hover-row:not(.selected):hover {
+  background: var(--neutral-50) !important;
+}
+
+/* ── Table rows with primary-light hover ────────────────────────────────── */
+/* Used in: DevelopmentListPage, EndoCartsPage, LoanersPage, QualityPage,
+   OutsourceValidationPage, ScopeModelPage, OnsiteServiceDetailDrawer,
+   MaxChargesTab, RepairItemsTab, ScopesTab, SuppliersTab, PurchaseOrdersTab,
+   InventoryList, RepairItemsTable                                           */
+.hover-row-light:not(.selected):hover {
+  background: var(--primary-light) !important;
+}
+
+/* ── Dropdown / context-menu items ─────────────────────────────────────── */
+/* Used in: Topbar, RepairDetailPane (status + forms menus), ContextMenu,
+   NewOrderWizard model picker                                               */
+.menu-item-hover:not(.selected):hover {
+  background: var(--neutral-50) !important;
+}
+
+/* ── Wizard card (border + bg change) ──────────────────────────────────── */
+/* Used in: NewOrderWizard client/dept/scope cards                          */
+.wizard-card:hover {
+  border-color: var(--primary) !important;
+  background: var(--primary-light) !important;
+}
+
+/* ── Context-menu item (transparent base, neutral-50 hover) ────────────── */
+/* Used in: ContextMenu.tsx                                                  */
+.context-menu-item:not(.disabled):hover {
+  background: var(--neutral-50) !important;
+}
+
+/* ── ExportButton ───────────────────────────────────────────────────────── */
+.export-btn:hover {
+  background: var(--bg) !important;
+  border-color: var(--navy) !important;
+  color: var(--navy) !important;
+}
+
+/* ── InlineEditor clear span ────────────────────────────────────────────── */
+.inline-editor-clear:hover {
+  background: var(--primary-light) !important;
+}
+.inline-editor-clear.has-value:hover {
+  color: var(--text) !important;
+}
+
+/* ── Loaner action buttons (success/danger tinted) ──────────────────────── */
+.loaner-accept-btn:hover {
+  background: rgba(var(--success-rgb), 0.2) !important;
+}
+.loaner-decline-btn:hover {
+  background: rgba(var(--danger-rgb), 0.2) !important;
+}
+
+/* ── Quality card box-shadow hover ─────────────────────────────────────── */
+.quality-card-hover:hover {
+  box-shadow: 0 2px 8px rgba(var(--navy-rgb), 0.1) !important;
+}
+
+/* ── ReceivingDetailPane border-color hover ─────────────────────────────── */
+.receiving-field-hover:hover {
+  border-color: var(--primary) !important;
+}
+
+/* ── OnsiteServicesPage / QualityPage tab card (clickable + not active) ── */
+.tab-card-hover:not(.active):hover {
+  background: var(--bg) !important;
+}
+
+/* ── QuickLinks opacity ─────────────────────────────────────────────────── */
+.quick-link-btn:hover {
+  opacity: 0.8 !important;
+}
+
+/* ── ScopesTab card (primary-light base, hover keeps primary-light) ───── */
+.scope-card-hover:hover {
+  background: var(--primary-light) !important;
+}
+
+/* ── RepairItemsTable add-row button ───────────────────────────────────── */
+.repair-items-add-btn:hover {
+  background: var(--primary-hover-bg) !important;
+}

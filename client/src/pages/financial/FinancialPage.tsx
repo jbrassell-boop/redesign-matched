@@ -16,6 +16,7 @@ import {
 import { FinancialDetailPane } from './FinancialDetailPane';
 import { TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
+import { StatStrip as SharedStatStrip } from '../../components/shared/StatStrip';
 import type {
   InvoiceListItem,
   InvoicePaymentItem,
@@ -108,9 +109,6 @@ const execValueLargePrimaryStyle: React.CSSProperties = { fontSize: 22, fontWeig
 const execValueLargeDangerStyle: React.CSSProperties = { fontSize: 22, fontWeight: 900, color: 'var(--danger)', lineHeight: 1.1 };
 const execSubtextMutedStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
 const execSubtextDangerStyle: React.CSSProperties = { fontSize: 10, color: 'var(--danger)', fontWeight: 600 };
-const statStripWrapStyle: React.CSSProperties = { display: 'flex', marginBottom: 16, borderRadius: 10, border: '1px solid var(--border)', overflow: 'hidden', background: 'var(--card)' };
-const statDotBaseStyle: React.CSSProperties = { width: 10, height: 10, borderRadius: 3, flexShrink: 0 };
-const statLabelMutedStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap' };
 const flexColGap12Style: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12 };
 const filterGap8Style: React.CSSProperties = { display: 'flex', gap: 8, alignItems: 'center' };
 const switchRowStyle: React.CSSProperties = { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' };
@@ -331,39 +329,29 @@ export const FinancialPage = () => {
   );
 
   // ─── Stat strip (colored dot squares) ───────────────────────────────────────
-  const StatStrip = () => (
-    <div style={statStripWrapStyle}>
-      {STAT_CHIPS.map((chip, i) => (
-        <div
-          key={chip.key}
-          onClick={() => chip.tab && handleTabChange(chip.tab)}
-          style={{
-            flex: 1,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '10px 12px',
-            cursor: chip.tab ? 'pointer' : 'default',
-            borderRight: i < STAT_CHIPS.length - 1 ? '1px solid var(--border)' : undefined,
-            background: chip.tab === activeTab ? 'var(--primary-light)' : undefined,
-            outline: chip.tab === activeTab ? '2.5px solid var(--navy)' : undefined,
-            outlineOffset: chip.tab === activeTab ? -2 : undefined,
-            transition: 'background 0.12s',
-          }}
-        >
-          {/* Colored dot square replacing emoji icon */}
-          <div style={{ ...statDotBaseStyle, background: chip.dotColor }} />
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 800, color: chip.valueColor, lineHeight: 1.2 }}>
-              {getStatValue(chip.key)}
-            </div>
-            <div style={statLabelMutedStyle}>{chip.label}</div>
-          </div>
-        </div>
-      ))}
-    </div>
+  // ─── Stat strip ───────────────────────────────────────────────────────────────────────────
+  const finStatChips = STAT_CHIPS.map(chip => ({
+    id: chip.tab ?? chip.key,
+    label: chip.label,
+    value: getStatValue(chip.key),
+    color: (
+      chip.dotColor === 'var(--danger)'  ? 'red'   :
+      chip.dotColor === 'var(--success)' ? 'green' :
+      chip.dotColor === 'var(--amber)'   ? 'amber' :
+      chip.dotColor === 'var(--primary)' ? 'blue'  :
+      'muted'
+    ) as import('../../components/shared/StatStrip').ChipColor,
+  }));
+  const FinStatStrip = () => (
+    <SharedStatStrip
+      chips={finStatChips}
+      activeChip={activeTab}
+      onChipClick={(id) => {
+        const chip = STAT_CHIPS.find(c => (c.tab ?? c.key) === id);
+        if (chip?.tab) handleTabChange(chip.tab);
+      }}
+    />
   );
-
   // ─── Main content area (list + optional inline detail) ─────────────────────
   const isListTab = activeTab === 'outstanding' || activeTab === 'drafts' || activeTab === 'payments' || activeTab === 'hold';
 
@@ -392,7 +380,7 @@ export const FinancialPage = () => {
             {/* Toolbar */}
             <div style={finToolbarStyle}>
               {/* Stat strip — only in list tabs */}
-              <StatStrip />
+              <FinStatStrip />
 
               {/* Filter row */}
               {showFilters && (
@@ -468,7 +456,7 @@ export const FinancialPage = () => {
         /* Non-split tabs: scrollable full-width */
         <div style={fullWidthScrollPadStyle}>
           {/* Stat strip for non-list tabs */}
-          <StatStrip />
+          <FinStatStrip />
 
           {/* GL Accounts */}
           {activeTab === 'gl' && (
@@ -689,8 +677,7 @@ function renderInvoiceRows(
               borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
               transition: 'background 0.1s',
             }}
-            onMouseEnter={e => { if (!isSelected) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-            onMouseLeave={e => { if (!isSelected) e.currentTarget.style.background = 'var(--card)'; }}
+            className={isSelected ? 'selected' : 'hover-row'}
           >
             {detailOpen ? (
               /* Compact layout when pane is open */

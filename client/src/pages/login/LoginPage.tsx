@@ -158,7 +158,7 @@ export const LoginPage = () => {
               padding: '3px 10px', borderRadius: 4,
               background: 'var(--info-bg)', border: '1px solid var(--badge-blue-border)',
             }}>
-              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth={2.5}>
+              <svg aria-hidden="true" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth={2.5}>
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
               <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--primary)', letterSpacing: '.03em' }}>ISO 13485:2016</span>

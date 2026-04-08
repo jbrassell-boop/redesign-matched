@@ -160,7 +160,7 @@ export const OnsiteServiceDetailDrawer = ({ open, serviceKey, onClose, onUpdated
                   cursor: submitting ? 'default' : 'pointer',
                 }}
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={13} height={13}>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={13} height={13}>
                   <path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4 20-7z" />
                 </svg>
                 {submitting ? 'Submitting...' : 'Submit for Invoicing'}
@@ -279,10 +279,7 @@ const TraysTab = ({ trays, loading }: { trays: OnsiteServiceTray[]; loading: boo
           </thead>
           <tbody>
             {trays.map(tray => (
-              <tr key={tray.trayKey}
-                onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = 'var(--primary-light)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = ''; }}
-              >
+              <tr key={tray.trayKey} className="hover-row-light">
                 <td style={tdStyle}>{tray.trayNumber}</td>
                 <td style={trayTdBoldStyle}>{tray.trayName || `Tray ${tray.trayNumber}`}</td>
                 <td style={trayTdCenterBoldStyle}>{tray.instrumentsCount}</td>

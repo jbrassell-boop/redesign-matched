@@ -173,8 +173,7 @@ export const DepartmentsPage = () => {
                         height: '100%',
                         boxSizing: 'border-box',
                       }}
-                      onMouseEnter={e => { if (d.deptKey !== selectedKey) e.currentTarget.style.background = 'var(--neutral-50)'; }}
-                      onMouseLeave={e => { if (d.deptKey !== selectedKey) e.currentTarget.style.background = 'var(--card)'; }}
+                      className={d.deptKey === selectedKey ? 'selected' : 'hover-row'}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>

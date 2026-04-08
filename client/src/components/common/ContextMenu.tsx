@@ -88,13 +88,7 @@ export const ContextMenu = memo(function ContextMenu({ items, position, onClose 
             transition: 'background 0.08s',
             whiteSpace: 'nowrap',
           }}
-          onMouseEnter={e => {
-            if (!item.disabled)
-              (e.currentTarget as HTMLDivElement).style.background = 'var(--neutral-50)';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLDivElement).style.background = 'transparent';
-          }}
+          className={item.disabled ? 'disabled' : 'context-menu-item'}
         >
           {item.label}
         </div>

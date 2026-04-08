@@ -108,8 +108,7 @@ export const ReceiveInventoryTab = () => {
                   borderLeft: isSelected ? '2px solid var(--amber)' : '2px solid transparent',
                   transition: 'background 0.1s',
                 }}
-                onMouseEnter={e => { if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = 'var(--primary-light)'; }}
-                onMouseLeave={e => { if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = 'var(--card)'; }}
+                className={isSelected ? 'selected' : 'hover-row-light'}
               >
                 <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>{item.description}</div>
                 <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{item.sizeDescription || 'Default size'}</div>
@@ -128,7 +127,7 @@ export const ReceiveInventoryTab = () => {
       <div style={{ flex: 1, padding: '20px 24px', overflow: 'auto' }}>
         {!selected ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--muted)', gap: 8 }}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={40} height={40} style={{ opacity: 0.3 }}>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={40} height={40} style={{ opacity: 0.3 }}>
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />

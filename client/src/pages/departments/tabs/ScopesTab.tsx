@@ -120,8 +120,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
                 border: '1px solid var(--neutral-200)', borderRadius: 6,
                 cursor: 'pointer', transition: 'background 0.1s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary-light)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'var(--card)'; }}
+              className="scope-card-hover"
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 {/* Type badge */}
@@ -155,7 +154,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
                   <div style={{ fontSize: 10, color: 'var(--muted)' }}>{s.manufacturer || ''}</div>
                   <div style={{ fontSize: 10, color: 'var(--muted)' }}>{s.category || ''}</div>
                 </div>
-                <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" style={{ width: 14, height: 14, opacity: 0.4 }}>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" style={{ width: 14, height: 14, opacity: 0.4 }}>
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </div>
