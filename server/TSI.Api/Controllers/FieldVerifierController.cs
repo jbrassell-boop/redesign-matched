@@ -71,6 +71,82 @@ public class FieldVerifierController(IConfiguration config) : ControllerBase
         }
     }
 
+    // POST /api/field-verifier/search-columns
+    [HttpPost("search-columns")]
+    public async Task<IActionResult> SearchColumns([FromBody] ColumnSearchRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.SearchTerm))
+            return Ok(new List<ColumnMatch>());
+
+        // Split search term into keywords and build LIKE conditions
+        var keywords = request.SearchTerm
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(k => k.Trim())
+            .Where(k => k.Length > 1)
+            .ToList();
+
+        if (keywords.Count == 0) return Ok(new List<ColumnMatch>());
+
+        var likeConditions = keywords.Select((_, i) => $"COLUMN_NAME LIKE @kw{i}").ToList();
+        var whereClause = $"({string.Join(" OR ", likeConditions)})";
+        if (!string.IsNullOrWhiteSpace(request.Table))
+            whereClause += " AND TABLE_NAME = @table";
+        else
+            whereClause += " AND TABLE_NAME LIKE 'tbl%'";
+
+        var columnSql = $"""
+            SELECT TOP 30 TABLE_NAME, COLUMN_NAME, DATA_TYPE
+            FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE {whereClause}
+            ORDER BY TABLE_NAME, COLUMN_NAME
+            """;
+
+        try
+        {
+            await using var conn = CreateConnection();
+            await conn.OpenAsync();
+            await using var cmd = new SqlCommand(columnSql, conn);
+            cmd.CommandTimeout = 15;
+            for (var i = 0; i < keywords.Count; i++)
+                cmd.Parameters.AddWithValue($"@kw{i}", $"%{keywords[i]}%");
+            if (!string.IsNullOrWhiteSpace(request.Table))
+                cmd.Parameters.AddWithValue("@table", request.Table);
+
+            await using var reader = await cmd.ExecuteReaderAsync();
+            var columns = new List<(string Table, string Column, string Type)>();
+            while (await reader.ReadAsync())
+                columns.Add((reader.GetString(0), reader.GetString(1), reader.GetString(2)));
+            await reader.CloseAsync();
+
+            // Fetch sample value for each column
+            var results = new List<ColumnMatch>();
+            foreach (var (table, column, type) in columns)
+            {
+                try
+                {
+                    await using var sampleCmd = new SqlCommand(
+                        $"SELECT TOP 1 [{column}] FROM [{table}] WHERE [{column}] IS NOT NULL",
+                        conn);
+                    sampleCmd.CommandTimeout = 5;
+                    var sample = await sampleCmd.ExecuteScalarAsync();
+                    var sampleStr = sample == null || sample == DBNull.Value ? "(null)" : sample.ToString()!;
+                    if (sampleStr.Length > 60) sampleStr = sampleStr[..60] + "…";
+                    results.Add(new ColumnMatch(table, column, type, sampleStr));
+                }
+                catch
+                {
+                    results.Add(new ColumnMatch(table, column, type, "(error reading sample)"));
+                }
+            }
+
+            return Ok(results);
+        }
+        catch (Exception ex)
+        {
+            return Ok(new List<ColumnMatch> { new("", "", "", $"Error: {ex.Message}") });
+        }
+    }
+
     // POST /api/field-verifier/preview-rows
     [HttpPost("preview-rows")]
     public async Task<IActionResult> GetPreviewRows([FromBody] LiveValueRequest request)

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button, Input, Spin, Tag, message } from 'antd';
-import { CheckOutlined, CloseOutlined, EditOutlined, LeftOutlined, RightOutlined, TableOutlined } from '@ant-design/icons';
+import { CheckOutlined, CloseOutlined, EditOutlined, LeftOutlined, RightOutlined, TableOutlined, SearchOutlined } from '@ant-design/icons';
 import type { FieldEntry } from './index';
 
 const API = 'http://localhost:5000/api/field-verifier';
@@ -25,6 +25,9 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
   const [previewError, setPreviewError] = useState('');
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [colSearch, setColSearch] = useState('');
+  const [colResults, setColResults] = useState<{ tableName: string; columnName: string; dataType: string; sampleValue: string }[]>([]);
+  const [loadingCols, setLoadingCols] = useState(false);
 
   const [editSqlQuery, setEditSqlQuery] = useState(field.sqlQuery);
   const [editSqlTable, setEditSqlTable] = useState(field.sqlTable);
@@ -45,6 +48,8 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setPreviewRows([]);
     setPreviewError('');
     setShowPreview(false);
+    setColSearch('');
+    setColResults([]);
     if (field.sqlQuery) fetchLiveValue(field.sqlQuery);
   }, [field.id]);
 
@@ -90,6 +95,33 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     } finally {
       setLoadingPreview(false);
     }
+  }
+
+  async function searchColumns() {
+    if (!colSearch.trim()) return;
+    setLoadingCols(true);
+    setColResults([]);
+    try {
+      const res = await fetch(`${API}/search-columns`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ searchTerm: colSearch, table: editSqlTable || null }),
+      });
+      const data = await res.json();
+      setColResults(data);
+    } catch {
+      message.error('Failed to search columns');
+    } finally {
+      setLoadingCols(false);
+    }
+  }
+
+  function useColumn(match: { tableName: string; columnName: string }) {
+    setEditSqlTable(match.tableName);
+    setEditSqlQuery(`SELECT TOP 5 ${match.columnName} FROM ${match.tableName} ORDER BY 1`);
+    setColResults([]);
+    setColSearch('');
+    message.success(`Using ${match.tableName}.${match.columnName}`);
   }
 
   async function updateField(patch: Partial<FieldEntry>) {
@@ -239,6 +271,50 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
             </div>
           )}
         </div>
+
+        {/* Column search (edit mode) */}
+        {editing && (
+          <div style={{ marginBottom: 16, padding: 12, background: '#F8FAFF', border: '1px solid #DDE6F5', borderRadius: 6 }}>
+            <div style={{ fontSize: 11, color: '#44697D', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+              Search DB columns by keyword
+            </div>
+            <Input.Search
+              placeholder='e.g. "estimated delivery" or "ship date"'
+              value={colSearch}
+              onChange={e => setColSearch(e.target.value)}
+              onSearch={searchColumns}
+              enterButton={<><SearchOutlined /> Search</>}
+              loading={loadingCols}
+              size="small"
+            />
+            {colSearch && editSqlTable && (
+              <div style={{ fontSize: 11, color: '#8896AA', marginTop: 4 }}>
+                Searching in <strong>{editSqlTable}</strong> — clear SQL Table field to search all tables
+              </div>
+            )}
+            {colResults.length > 0 && (
+              <div style={{ marginTop: 8, maxHeight: 220, overflowY: 'auto' }}>
+                {colResults.map((r, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0', borderBottom: '1px solid #EEF2F8' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: 12, color: '#00257A', fontWeight: 600 }}>{r.columnName}</span>
+                      <span style={{ fontSize: 11, color: '#8896AA', marginLeft: 6 }}>{r.tableName} · {r.dataType}</span>
+                      <div style={{ fontSize: 11, color: '#4A5568', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        Sample: {r.sampleValue}
+                      </div>
+                    </div>
+                    <Button size="small" type="primary" ghost style={{ flexShrink: 0, fontSize: 11 }} onClick={() => useColumn(r)}>
+                      Use
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            {!loadingCols && colResults.length === 0 && colSearch && (
+              <div style={{ fontSize: 11, color: '#8896AA', marginTop: 6 }}>No matches yet — press Search</div>
+            )}
+          </div>
+        )}
 
         {/* Edit form extras */}
         {editing && (

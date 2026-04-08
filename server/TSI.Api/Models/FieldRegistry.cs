@@ -44,3 +44,15 @@ public record PreviewRowsResponse(
     List<string> Rows,
     string Error
 );
+
+public record ColumnSearchRequest(
+    string SearchTerm,
+    string? Table
+);
+
+public record ColumnMatch(
+    string TableName,
+    string ColumnName,
+    string DataType,
+    string SampleValue
+);
