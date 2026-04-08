@@ -41,7 +41,9 @@ public class AuthController(IConfiguration config, JwtService jwtService) : Cont
                 return Unauthorized(new { message = "Invalid credentials." });
 
             storedPassword = reader["sUserPassword"]?.ToString() ?? "";
-            role = (reader["sSupervisor"]?.ToString() == "1") ? "Admin" : "User";
+            var isSupervisor = reader["sSupervisor"]?.ToString()?.Trim();
+            role = (isSupervisor == "1" || isSupervisor?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
+                ? "Admin" : "User";
         } // reader disposed here — connection is free for the UPDATE below
 
         bool valid;

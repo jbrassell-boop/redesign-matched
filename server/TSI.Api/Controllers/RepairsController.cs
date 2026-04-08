@@ -117,6 +117,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
                    ISNULL(rs.sRepairStatus, '') AS sRepairStatus,
                    ISNULL(s.sSerialNumber, '') AS sSerialNumber,
                    ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
+                   ISNULL(stc.sScopeTypeCategory, '') AS sScopeTypeCategory,
                    ISNULL(c.sClientName1, '') AS sClientName1,
                    c.lClientKey,
                    ISNULL(d.sDepartmentName, '') AS sDepartmentName,
@@ -126,6 +127,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey
@@ -153,7 +155,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
             ClientKey: reader["lClientKey"]?.ToString() ?? "",
             Dept: reader["sDepartmentName"]?.ToString() ?? "",
             DeptKey: reader["lDepartmentKey"] == DBNull.Value ? 0 : Convert.ToInt32(reader["lDepartmentKey"]),
-            ScopeType: reader["sScopeTypeDesc"]?.ToString() ?? "",
+            ScopeType: reader["sScopeTypeCategory"]?.ToString() is { Length: > 0 } cat ? cat : reader["sScopeTypeDesc"]?.ToString() ?? "",
             Serial: reader["sSerialNumber"]?.ToString() ?? "",
             DaysIn: reader["DaysIn"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DaysIn"]),
             Status: reader["sRepairStatus"]?.ToString() ?? "",
