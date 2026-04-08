@@ -1,387 +1,267 @@
 import './print.css';
-import type { RepairFull } from '../types';
+import type { RepairFull, RepairInspections, RepairLineItem } from '../types';
 
 interface Props {
   repair: RepairFull;
+  inspections?: RepairInspections | null;
+  lineItems?: RepairLineItem[];
   onClose: () => void;
 }
 
-// ── Styles matching OM10-2 exactly ──
-const sectionBar: React.CSSProperties = {
-  background: 'var(--primary)',
-  color: 'var(--card)',
-  fontSize: 9,
-  fontWeight: 700,
-  textTransform: 'uppercase',
-  letterSpacing: '0.06em',
-  padding: '4px 10px',
-  marginTop: 6,
-};
-
-const fl: React.CSSProperties = {
-  fontSize: 8.5,
-  fontWeight: 700,
-  textTransform: 'uppercase',
-  color: 'var(--print-muted)',
-  letterSpacing: '0.04em',
-};
-
-const fv: React.CSSProperties = {
-  borderBottom: '1px solid var(--print-check-border)',
-  minHeight: 16,
-  fontSize: 11,
-  padding: '1px 2px',
-};
-
-const pfTableTh: React.CSSProperties = {
-  background: 'var(--primary)',
-  color: 'var(--card)',
-  fontSize: 8.5,
-  fontWeight: 700,
-  textTransform: 'uppercase',
-  padding: '4px 8px',
-  textAlign: 'left',
-  letterSpacing: '0.04em',
-};
-
-const pfTableTd: React.CSSProperties = {
-  padding: '3px 8px',
-  fontSize: 10.5,
-  borderBottom: '1px solid var(--print-border-lt)',
-  verticalAlign: 'middle',
-};
-
-const pfBtnBase: React.CSSProperties = {
-  display: 'inline-block',
-  width: 28,
-  height: 16,
-  border: '1px solid var(--print-placeholder)',
-  borderRadius: 2,
-  textAlign: 'center',
-  lineHeight: '16px',
-  fontSize: 9,
-  fontWeight: 700,
-  margin: '0 1px',
-};
-
-const pfP: React.CSSProperties = { ...pfBtnBase, borderColor: 'var(--success)', color: 'var(--success)' };
-const pfF: React.CSSProperties = { ...pfBtnBase, borderColor: 'var(--danger)', color: 'var(--danger)' };
-const pfNA: React.CSSProperties = { ...pfBtnBase };
-
-const FUNCTIONAL_TESTS = [
-  '1. Leak Test — Immersion',
-  '2. Bending Section — All 4 Directions',
-  '3. Bending Lock',
-  '4. Channel Patency — Biopsy / Suction',
-  '5. Air / Water Function',
-  '6. Suction Function',
-  '7. Image Quality / Clarity',
-  '8. Light Transmission',
-  '9. Distal Tip / Insertion Tube Integrity',
-  '10. Umbilical / Control Body Integrity',
-  '11. Electrical Safety / Isolation',
+// ── Flex endoscope inspection categories (from HTML final inspection) ──
+const INSPECTION_CATEGORIES: { name: string; items: { label: string; field: keyof RepairInspections }[] }[] = [
+  { name: 'LEAK & PRESSURE TESTING', items: [
+    { label: 'Leak Test — Immersion', field: 'insLeakPF' },
+    { label: 'Hot / Cold Leak Test', field: 'insHotColdLeakPF' },
+    { label: 'Air / Water System', field: 'insAirWaterPF' },
+    { label: 'Suction Channel', field: 'insSuctionPF' },
+    { label: 'Forcep / Biopsy Channel', field: 'insForcepChannelPF' },
+    { label: 'Aux Water Channel', field: 'insAuxWaterPF' },
+  ]},
+  { name: 'IMAGE & OPTICS', items: [
+    { label: 'Image Clarity & Focus', field: 'insImagePF' },
+    { label: 'Image Centration', field: 'insImageCentrationPF' },
+    { label: 'Focal Distance', field: 'insFocalDistancePF' },
+    { label: 'Light Transmission', field: 'insFiberLightTransPF' },
+    { label: 'Vision / Field of View', field: 'insVisionPF' },
+    { label: 'Eye Piece', field: 'insEyePiecePF' },
+    { label: 'Light Fibers', field: 'insLightFibersPF' },
+  ]},
+  { name: 'ANGULATION & MECHANICAL', items: [
+    { label: 'Angulation — All 4 Directions', field: 'insAngulationPF' },
+    { label: 'Insertion Tube Integrity', field: 'insInsertionTubePF' },
+    { label: 'Alcohol Wipe / External', field: 'insAlcoholWipePF' },
+    { label: 'Fog Test', field: 'insFogPF' },
+  ]},
 ];
 
-const SCOPE_INCLUDES = [
-  'Biopsy Cap',
-  'Water Bottle',
-  'Suction Valve',
-  'Air / Water Valve',
-  'Light Connector Cap',
-  'Carrying / Storage Case',
-  'Original Equipment Manual',
+const ACCESSORY_FIELDS: { label: string; field: keyof RepairFull }[] = [
+  { label: 'ETO Cap', field: 'includesETOCap' },
+  { label: 'CO₂ Cap', field: 'includesCO2Cap' },
+  { label: 'Air/Water Valve', field: 'includesAirWaterValve' },
+  { label: 'Suction Valve', field: 'includesSuctionValve' },
+  { label: 'Waterproof Cap', field: 'includesWaterProofCap' },
+  { label: 'Hood', field: 'includesHood' },
+  { label: 'Light Post Adapter', field: 'includesLightPostAdapter' },
+  { label: 'Box', field: 'includesBox' },
+  { label: 'Case', field: 'includesCase' },
 ];
 
-const REPAIRS_PERFORMED = [
-  'Bending Section Replacement',
-  'Insertion Tube Replacement',
-  'Distal Tip Rebuild',
-  'Control Body Rebuild',
-  'Air / Water Valve Replacement',
-  'Suction Valve Replacement',
-  'Biopsy Valve Replacement',
-  'Channel Cleaning / Repair',
-  'Image Chip / CCD Replacement',
-  'Fiber Bundle Replacement',
-  'Light Guide Replacement',
-  'Umbilical Replacement',
-  'Leak Test / Pressure Test',
-  'Angulation Adjustment',
-  'Cleaning & Cosmetic Restoration',
-  'Connector Service',
-  'Bending Rubber Replacement',
-  'Scope Recoating / Reskin',
-  'Elevator Repair / Replacement',
-  'Full Overhaul',
-  'Other: ___________________',
-];
+// ── Compact styles ──
+const sb: React.CSSProperties = { background: 'var(--primary)', color: '#fff', fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 6px' };
+const fl: React.CSSProperties = { fontSize: 7, fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.04em' };
+const fv: React.CSSProperties = { borderBottom: '1px solid #ccc', fontSize: 9, padding: '0 2px', minHeight: 13 };
+const th: React.CSSProperties = { background: 'var(--primary)', color: '#fff', fontSize: 7, fontWeight: 700, textTransform: 'uppercase', padding: '2px 4px', textAlign: 'left' };
+const td: React.CSSProperties = { padding: '1px 4px', fontSize: 8.5, borderBottom: '1px solid #eee', verticalAlign: 'middle' };
+const pfBtnBase: React.CSSProperties = { display: 'inline-block', width: 20, height: 12, borderRadius: 2, textAlign: 'center', lineHeight: '12px', fontSize: 7, fontWeight: 700 };
+const cbChecked: React.CSSProperties = { display: 'inline-block', width: 9, height: 9, background: 'var(--primary)', borderRadius: 1, color: '#fff', textAlign: 'center', lineHeight: '9px', fontSize: 7, fontWeight: 700 };
 
-const cbBox: React.CSSProperties = {
-  content: '',
-  display: 'inline-block',
-  width: 11,
-  height: 11,
-  border: '1px solid var(--print-placeholder)',
-  borderRadius: 2,
-  flexShrink: 0,
-};
+const em = '—';
 
-// ── Extracted static styles ──
-const overlayStyle: React.CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 1100,
-  background: 'rgba(0,0,0,0.5)',
-  display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-  padding: '24px 16px', overflowY: 'auto',
-};
-const actionBarStyle: React.CSSProperties = {
-  position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200,
-};
-const printBtnStyle: React.CSSProperties = {
-  height: 32, padding: '0 16px', border: 'none', borderRadius: 5,
-  background: 'var(--primary)', color: 'var(--card)',
-  fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-};
-const closeBtnStyle: React.CSSProperties = {
-  height: 32, padding: '0 14px', border: '1px solid var(--print-border)', borderRadius: 5,
-  background: 'var(--card)', color: 'var(--print-muted)',
-  fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-};
-const printPageStyle: React.CSSProperties = {
-  width: '8.5in',
-  minHeight: '11in',
-  background: 'var(--card)',
-  padding: '0.5in',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 8,
-  fontFamily: "'Inter', Arial, sans-serif",
-  fontSize: 11,
-  color: 'var(--print-text)',
-  boxSizing: 'border-box',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.18)',
-};
-const headerRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 };
-const logoStyle: React.CSSProperties = { fontWeight: 800, fontSize: 16, color: 'var(--navy)' };
-const primaryLetterStyle: React.CSSProperties = { color: 'var(--primary)' };
-const headerRightStyle: React.CSSProperties = { textAlign: 'right' };
-const headerTitleStyle: React.CSSProperties = { fontSize: 15, fontWeight: 800, color: 'var(--navy)' };
-const headerSubtitleStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 };
-const headerFormCodeStyle: React.CSSProperties = { fontSize: 10, color: 'var(--print-light)', marginTop: 2 };
-const sectionBarNoMargin: React.CSSProperties = { ...sectionBar, marginTop: 0 };
-const scopeInfoGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px 12px', padding: '6px 0 2px' };
-const fieldColSpan2Style: React.CSSProperties = { gridColumn: 'span 2', display: 'flex', flexDirection: 'column', gap: 1 };
-const fieldColStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1 };
-const funcTestTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', marginTop: 4 };
-const pfTableThCenter: React.CSSProperties = { ...pfTableTh, textAlign: 'center', width: 42 };
-const pfTableTdCenter: React.CSSProperties = { ...pfTableTd, textAlign: 'center' };
-const twoColGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 4 };
-const sectionBarMt6: React.CSSProperties = { ...sectionBar, marginTop: 6 };
-const brokenFiberGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'auto 1fr 1fr', gap: '4px 12px', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid var(--print-border-xlt)' };
-const brokenFiberLabelStyle: React.CSSProperties = { fontSize: 9.5, fontWeight: 700, color: 'var(--print-muted)', whiteSpace: 'nowrap' };
-const brokenFiberCellStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-check-border)', minHeight: 16, fontSize: 10.5 };
-const brokenFiberNoteStyle: React.CSSProperties = { marginTop: 4, fontSize: 8.5, color: 'var(--print-muted)' };
-const scopeIncludesListStyle: React.CSSProperties = { listStyle: 'none', padding: 0, margin: '4px 0 0' };
-const scopeIncludeItemStyle: React.CSSProperties = { padding: '3px 0', fontSize: 10.5, borderBottom: '1px solid var(--print-border-xlt)', display: 'flex', alignItems: 'center', gap: 8 };
-const repairsPerformedGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 20px', marginTop: 4 };
-const repairPerformedItemStyle: React.CSSProperties = { padding: '2px 0', fontSize: 10, borderBottom: '1px solid var(--print-border-xlt)', display: 'flex', alignItems: 'center', gap: 6 };
-const resultFooterStyle: React.CSSProperties = {
-  display: 'flex', gap: 0, border: '2px solid var(--primary)', borderRadius: 4,
-  overflow: 'hidden', marginTop: 10,
-};
-const resultSectionStyle: React.CSSProperties = { flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, borderRight: '2px solid var(--primary)' };
-const resultSectionLastStyle: React.CSSProperties = { flex: 1, padding: '8px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 };
-const resultLabelStyle: React.CSSProperties = { fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase', color: 'var(--print-muted)', letterSpacing: '0.05em' };
-const resultOptionsRowStyle: React.CSSProperties = { display: 'flex', gap: 16 };
-const resultOptionStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700 };
-const radioCircleStyle: React.CSSProperties = { width: 16, height: 16, border: '1.5px solid var(--print-check-border)', borderRadius: '50%', flexShrink: 0 };
-const sigBlockRowStyle: React.CSSProperties = { display: 'flex', gap: 20, marginTop: 8 };
-const sigFieldStyle: React.CSSProperties = { flex: 1, display: 'flex', flexDirection: 'column', gap: 2 };
-const sigFieldDateStyle: React.CSSProperties = { flex: 1, maxWidth: 140, display: 'flex', flexDirection: 'column', gap: 2 };
-const sigLineStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-check-border)', minHeight: 28 };
-const sigLabelStyle: React.CSSProperties = { fontSize: 8.5, color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 };
-const formFooterStyle: React.CSSProperties = {
-  marginTop: 'auto',
-  paddingTop: 8,
-  borderTop: '1px solid var(--print-border)',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  fontSize: 8,
-  color: 'var(--print-footer)',
-};
+function PF({ value }: { value?: string }) {
+  const v = (value ?? '').toUpperCase().trim();
+  if (v === 'P') return <span style={{ ...pfBtnBase, background: '#16a34a', color: '#fff' }}>P</span>;
+  if (v === 'F') return <span style={{ ...pfBtnBase, background: '#dc2626', color: '#fff' }}>F</span>;
+  return <span style={{ ...pfBtnBase, background: '#f3f4f6', color: '#aaa' }}>—</span>;
+}
 
-export const FinalInspectionForm = ({ repair, onClose }: Props) => {
+export const FinalInspectionForm = ({ repair, inspections, lineItems, onClose }: Props) => {
   const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+  const ins = inspections ?? {} as RepairInspections;
+  const approvedItems = (lineItems ?? []).filter(li => li.approved === 'Y');
+  const scopeUsable = (ins.scopeUsable ?? '').toUpperCase().trim();
+  const finalPF = (ins.insFinalPF ?? '').toUpperCase().trim();
+  // Split categories into 2 columns for compact layout
+  const catMid = Math.ceil(INSPECTION_CATEGORIES.length / 2);
+  const included = ACCESSORY_FIELDS.filter(a => !!(repair[a.field]));
+
+  const radio = (active: boolean): React.CSSProperties => ({
+    width: 12, height: 12, borderRadius: '50%', flexShrink: 0,
+    ...(active ? { background: 'var(--primary)', border: '1.5px solid var(--primary)' } : { border: '1.5px solid #ccc' }),
+  });
+
+  // g = gap between sections
+  const g = 6;
 
   return (
-    <div
-      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-      style={overlayStyle}
-    >
-      {/* Action bar */}
-      <div className="no-print" style={actionBarStyle}>
-        <button onClick={() => window.print()} style={printBtnStyle}>Print</button>
-        <button onClick={onClose} style={closeBtnStyle}>Close</button>
+    <div onClick={e => { if (e.target === e.currentTarget) onClose(); }} style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px 16px', overflowY: 'auto' }}>
+      <div className="no-print" style={{ position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200 }}>
+        <button onClick={() => window.print()} style={{ height: 32, padding: '0 16px', border: 'none', borderRadius: 5, background: 'var(--primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Print</button>
+        <button onClick={onClose} style={{ height: 32, padding: '0 14px', border: '1px solid #ddd', borderRadius: 5, background: '#fff', color: '#888', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
       </div>
 
-      {/* Printable page */}
-      <div className="print-form" style={printPageStyle}>
-        {/* ── Form Header ── */}
-        <div style={headerRowStyle}>
-          <div style={logoStyle}>
-            <span style={primaryLetterStyle}>T</span>otal <span style={primaryLetterStyle}>S</span>cope <span style={primaryLetterStyle}>I</span>nc.
-          </div>
-          <div style={headerRightStyle}>
-            <div style={headerTitleStyle}>Final Inspection Report</div>
-            <div style={headerSubtitleStyle}>Flexible Endoscope</div>
-            <div style={headerFormCodeStyle}>OM10-2</div>
+      <div className="print-form" style={{ width: '8.5in', height: '11in', background: '#fff', padding: '0.4in', fontFamily: "'Inter', Arial, sans-serif", fontSize: 9, color: '#222', boxSizing: 'border-box', boxShadow: '0 4px 24px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: g }}>
+          <img src="/logo-horizontal.jpg" alt="Total Scope, Inc." style={{ height: 44 }} />
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#1B3A5C' }}>Final Inspection Report</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--primary)' }}>Flexible Endoscope</div>
+            <div style={{ fontSize: 8, color: '#aaa' }}>OM10-2</div>
           </div>
         </div>
 
-        {/* ── Scope Information ── */}
-        <div style={sectionBarNoMargin}>Scope Information</div>
-        <div style={scopeInfoGridStyle}>
-          <div style={fieldColSpan2Style}>
-            <span style={fl}>Client / Facility</span>
-            <div style={fv}>{repair.client ?? ''}</div>
-          </div>
-          <div style={fieldColStyle}>
-            <span style={fl}>Date</span>
-            <div style={fv}>{today}</div>
-          </div>
-          <div style={fieldColStyle}>
-            <span style={fl}>Work Order #</span>
-            <div style={fv}>{repair.wo ?? ''}</div>
-          </div>
-          <div style={fieldColStyle}>
-            <span style={fl}>Serial #</span>
-            <div style={fv}>{repair.serial ?? ''}</div>
-          </div>
-          <div style={fieldColStyle}>
-            <span style={fl}>Scope Model</span>
-            <div style={fv}>{repair.scopeModel ?? repair.scopeType ?? ''}</div>
+        {/* Scope Information */}
+        <div style={sb}>Scope Information</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '3px 8px', padding: '3px 0', marginBottom: g }}>
+          <div><span style={fl}>Client / Facility</span><div style={fv}>{repair.client ?? em}</div></div>
+          <div><span style={fl}>Work Order #</span><div style={fv}>{repair.wo ?? em}</div></div>
+          <div><span style={fl}>Serial #</span><div style={fv}>{repair.serial ?? em}</div></div>
+          <div><span style={fl}>Date</span><div style={fv}>{repair.dateOut ?? today}</div></div>
+          <div><span style={fl}>Scope Model</span><div style={fv}>{repair.scopeModel ?? repair.scopeType ?? em}</div></div>
+          <div><span style={fl}>Purchase Order</span><div style={fv}>{repair.purchaseOrder ?? em}</div></div>
+          <div><span style={fl}>Repair Reason</span><div style={fv}>{repair.repairReason ?? em}</div></div>
+          <div><span style={fl}>Repair Category</span><div style={fv}>{repair.repairReason ?? em}</div></div>
+          <div style={{ gridColumn: 'span 4' }}><span style={fl}>Ship To</span><div style={fv}>{[repair.shipName, repair.shipAddr1, [repair.shipCity, repair.shipState, repair.shipZip].filter(Boolean).join(', ')].filter(Boolean).join(' — ') || em}</div></div>
+        </div>
+
+        {/* Patient Safety + Scope Includes row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '4px 8px', background: '#f7f9fc', border: '1px solid #dde3ee', borderRadius: 3, marginBottom: g }}>
+          <span style={{ fontSize: 7.5, fontWeight: 700, color: '#1B3A5C', textTransform: 'uppercase', letterSpacing: '.04em' }}>Patient Safety</span>
+          <span style={{ padding: '2px 10px', borderRadius: 3, fontSize: 9, fontWeight: 700, background: '#fef2f2', color: '#991b1b', border: '1px solid #fca5a5' }}>{repair.psLevel || 'N/A'}</span>
+          <span style={{ fontSize: 11, color: '#5A6F8A' }}>&rarr;</span>
+          <span style={{ padding: '2px 10px', borderRadius: 3, fontSize: 9, fontWeight: 700, background: scopeUsable === 'Y' ? '#f0fdf4' : '#fef2f2', color: scopeUsable === 'Y' ? '#166534' : '#991b1b', border: scopeUsable === 'Y' ? '1px solid #bbf7d0' : '1px solid #fca5a5' }}>{scopeUsable === 'Y' ? 'USABLE' : scopeUsable === 'N' ? 'UNUSABLE' : 'Pending'}</span>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 7.5, fontWeight: 700, color: '#1B3A5C', textTransform: 'uppercase', letterSpacing: '.04em' }}>Includes</span>
+            {included.length > 0 ? included.map(a => (
+              <span key={a.field} style={{ fontSize: 8, display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+                <span style={cbChecked}>✓</span>{a.label}
+              </span>
+            )) : <span style={{ fontSize: 8, color: '#888' }}>None</span>}
           </div>
         </div>
 
-        {/* ── Functional Tests ── */}
-        <div style={sectionBarNoMargin}>Functional Tests</div>
-        <table style={funcTestTableStyle}>
-          <thead>
-            <tr>
-              <th style={pfTableTh}>Test Item</th>
-              <th style={pfTableThCenter}>Pass</th>
-              <th style={pfTableThCenter}>Fail</th>
-              <th style={pfTableThCenter}>N/A</th>
-            </tr>
-          </thead>
-          <tbody>
-            {FUNCTIONAL_TESTS.map((test, i) => (
-              <tr key={i} style={{ background: i % 2 === 1 ? 'var(--bg)' : 'var(--card)' }}>
-                <td style={pfTableTd}>{test}</td>
-                <td style={pfTableTdCenter}><span style={pfP}>P</span></td>
-                <td style={pfTableTdCenter}><span style={pfF}>F</span></td>
-                <td style={pfTableTdCenter}><span style={pfNA}>N/A</span></td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* ── Two-column: Broken Fibers + Scope Includes ── */}
-        <div style={twoColGridStyle}>
-          {/* Broken Fibers */}
-          <div>
-            <div style={sectionBarMt6}>Broken Fibers</div>
-            <div style={{ padding: '6px 0' }}>
-              {/* Insertion Tube IN */}
-              <div style={brokenFiberGridStyle}>
-                <span style={brokenFiberLabelStyle}>Insertion Tube (IN)</span>
-                <div style={brokenFiberCellStyle}></div>
-                <div style={brokenFiberCellStyle}></div>
-              </div>
-              {/* Bending Section OUT */}
-              <div style={brokenFiberGridStyle}>
-                <span style={brokenFiberLabelStyle}>Bending Section (OUT)</span>
-                <div style={brokenFiberCellStyle}></div>
-                <div style={brokenFiberCellStyle}></div>
-              </div>
-              <div style={brokenFiberNoteStyle}>Count IN before repair / OUT after repair</div>
-            </div>
-          </div>
-
-          {/* Scope Includes */}
-          <div>
-            <div style={sectionBarMt6}>Scope Includes</div>
-            <ul style={scopeIncludesListStyle}>
-              {SCOPE_INCLUDES.map((inc, i) => (
-                <li key={i} style={scopeIncludeItemStyle}>
-                  <span style={cbBox}></span>{inc}
-                </li>
+        {/* Inspection Checklist — grouped categories in 2 columns */}
+        <div style={sb}>Inspection Checklist</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 8px', marginBottom: g }}>
+          {[INSPECTION_CATEGORIES.slice(0, catMid), INSPECTION_CATEGORIES.slice(catMid)].map((col, ci) => (
+            <div key={ci}>
+              {col.map(cat => (
+                <div key={cat.name}>
+                  <div style={{ fontSize: 7.5, fontWeight: 700, color: '#1B3A5C', textTransform: 'uppercase', padding: '3px 4px 1px', borderBottom: '1px solid #1B3A5C', marginTop: 3 }}>{cat.name}</div>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <tbody>
+                      {cat.items.map((t, i) => (
+                        <tr key={t.field} style={{ background: i % 2 === 1 ? '#f8f9fb' : '#fff' }}>
+                          <td style={td}>{t.label}</td>
+                          <td style={{ ...td, textAlign: 'center', width: 30 }}><PF value={ins[t.field] as string | undefined} /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ))}
-            </ul>
-          </div>
-        </div>
-
-        {/* ── Repairs Performed ── */}
-        <div style={sectionBarMt6}>Repairs Performed</div>
-        <div style={repairsPerformedGridStyle}>
-          {REPAIRS_PERFORMED.map((rep, i) => (
-            <div key={i} style={repairPerformedItemStyle}>
-              <span style={cbBox}></span>{rep}
             </div>
           ))}
         </div>
 
-        {/* ── Result Footer ── */}
-        <div style={resultFooterStyle}>
-          <div style={resultSectionStyle}>
-            <div style={resultLabelStyle}>Condition</div>
-            <div style={resultOptionsRowStyle}>
-              <div style={resultOptionStyle}>
-                <div style={radioCircleStyle}></div>USABLE
-              </div>
-              <div style={resultOptionStyle}>
-                <div style={radioCircleStyle}></div>UNUSABLE
-              </div>
+        {/* Repairs Performed — flex: 1 absorbs remaining page space */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={sb}>Repairs Performed</div>
+          {approvedItems.length > 0 ? (
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead><tr><th style={{ ...td, fontSize: 7.5, fontWeight: 700, color: '#888', textTransform: 'uppercase', borderBottom: '1px solid #ccc' }}>Repair Item</th><th style={{ ...td, fontSize: 7.5, fontWeight: 700, color: '#888', textTransform: 'uppercase', borderBottom: '1px solid #ccc', width: 50 }}>Fix</th><th style={{ ...td, fontSize: 7.5, fontWeight: 700, color: '#888', textTransform: 'uppercase', borderBottom: '1px solid #ccc', width: 160 }}>Comments</th></tr></thead>
+              <tbody>
+                {approvedItems.map((li, i) => (
+                  <tr key={li.tranKey} style={{ background: i % 2 === 1 ? '#f8f9fb' : '#fff' }}>
+                    <td style={td}>{li.description}</td>
+                    <td style={td}>{li.fixType || em}</td>
+                    <td style={{ ...td, fontSize: 8 }}>{li.comments || em}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : <div style={{ padding: '3px 0', fontSize: 8.5, color: '#888', fontStyle: 'italic' }}>No approved repair items</div>}
+        </div>
+
+        {/* Comments */}
+        {repair.complaint && (
+          <div style={{ marginBottom: g }}>
+            <div style={sb}>Comments</div>
+            <div style={{ padding: '3px 0', fontSize: 8.5, whiteSpace: 'pre-wrap' }}>{repair.complaint}</div>
+          </div>
+        )}
+
+        {/* Leak Tester Data — fields TBD, placeholder for future */}
+        <div style={{ marginBottom: g }}>
+          <div style={sb}>Leak Tester Data</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '3px 8px', padding: '3px 0' }}>
+            <div><span style={fl}>Tester S/N</span><div style={fv}>{em}</div></div>
+            <div><span style={fl}>Version</span><div style={fv}>{em}</div></div>
+            <div><span style={fl}>Run ID</span><div style={fv}>{em}</div></div>
+            <div><span style={fl}>Test Duration</span><div style={fv}>{em}</div></div>
+            <div><span style={fl}>Leak Result</span><div style={fv}>{em}</div></div>
+            <div><span style={fl}>Fluid Result</span><div style={fv}>{em}</div></div>
+            <div><span style={fl}>Date / Time</span><div style={fv}>{em}</div></div>
+          </div>
+        </div>
+
+        {/* Reprocessing Warning + QC Certification */}
+        <div style={{ marginBottom: g }}>
+          <div style={{ fontSize: 7.5, color: '#991b1b', fontStyle: 'italic', padding: '4px 8px', background: '#fef2f2', borderLeft: '2px solid #991b1b', borderRadius: '0 3px 3px 0', marginBottom: 4 }}>
+            <b>Reprocessing Required:</b> This endoscope must be fully reprocessed per facility policies and manufacturer IFU before patient use. TSI does not perform HLD/sterilization.
+          </div>
+          <div style={{ textAlign: 'center', padding: '4px 0' }}>
+            {finalPF === 'P' ? (
+              <>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#1B3A5C', letterSpacing: '.3px' }}>SCOPE HAS BEEN REPAIRED</div>
+                <div style={{ fontSize: 8, color: '#222', marginTop: 2 }}>Passed final inspection and QC testing per TSI SOPs. Diagnostically <b>USABLE</b> — cleared for return to clinical service.</div>
+              </>
+            ) : finalPF === 'F' ? (
+              <div style={{ fontSize: 9, fontWeight: 600, color: '#991b1b' }}>Scope has not passed Final Inspection.</div>
+            ) : (
+              <div style={{ fontSize: 9, color: '#888' }}>Pending inspection.</div>
+            )}
+          </div>
+        </div>
+
+        {/* Condition / Result */}
+        <div style={{ display: 'flex', border: '2px solid var(--primary)', borderRadius: 3, overflow: 'hidden', marginBottom: g }}>
+          <div style={{ flex: 1, padding: '5px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, borderRight: '2px solid var(--primary)' }}>
+            <div style={{ fontSize: 7, fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.05em' }}>Condition</div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700 }}><div style={radio(scopeUsable === 'Y')} />USABLE</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700 }}><div style={radio(scopeUsable === 'N')} />UNUSABLE</div>
             </div>
           </div>
-          <div style={resultSectionLastStyle}>
-            <div style={resultLabelStyle}>Final Result</div>
-            <div style={resultOptionsRowStyle}>
-              <div style={resultOptionStyle}>
-                <div style={radioCircleStyle}></div>PASSED
-              </div>
-              <div style={resultOptionStyle}>
-                <div style={radioCircleStyle}></div>FAILED
-              </div>
+          <div style={{ flex: 1, padding: '5px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <div style={{ fontSize: 7, fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.05em' }}>Final Result</div>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700 }}><div style={radio(finalPF === 'P')} />PASSED</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 9, fontWeight: 700 }}><div style={radio(finalPF === 'F')} />FAILED</div>
             </div>
           </div>
         </div>
 
-        {/* ── Signature Block ── */}
-        <div style={sigBlockRowStyle}>
-          <div style={sigFieldStyle}>
-            <div style={sigLineStyle}></div>
-            <div style={sigLabelStyle}>Repair Technician / Signature</div>
+        {/* Signature Block */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: g }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ borderBottom: '1px solid #ccc', minHeight: 22, fontSize: 9, padding: '6px 2px 1px' }}>{repair.tech ?? ''}</div>
+            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 1 }}>Repair Technician</div>
           </div>
-          <div style={sigFieldDateStyle}>
-            <div style={sigLineStyle}></div>
-            <div style={sigLabelStyle}>Date</div>
+          <div style={{ minWidth: 90 }}>
+            <div style={{ borderBottom: '1px solid #ccc', minHeight: 22 }} />
+            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 1 }}>Date</div>
           </div>
-          <div style={sigFieldStyle}>
-            <div style={sigLineStyle}></div>
-            <div style={sigLabelStyle}>Final Inspector / Signature</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ borderBottom: '1px solid #ccc', minHeight: 22, fontSize: 9, padding: '6px 2px 1px' }}>{repair.inspector ?? ''}</div>
+            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 1 }}>Final Inspector</div>
           </div>
-          <div style={sigFieldDateStyle}>
-            <div style={sigLineStyle}></div>
-            <div style={sigLabelStyle}>Date</div>
+          <div style={{ minWidth: 90 }}>
+            <div style={{ borderBottom: '1px solid #ccc', minHeight: 22 }} />
+            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 1 }}>Date</div>
           </div>
         </div>
 
-        {/* ── Form Footer ── */}
-        <div style={formFooterStyle}>
-          <span>ISO 13485 Certified</span>
-          <span>Total Scope Inc.&nbsp;|&nbsp;17 Creek Pkwy, Upper Chichester PA 19061&nbsp;|&nbsp;(610) 485-3838</span>
-          <span>OM10-2</span>
+        {/* Footer */}
+        <div style={{ paddingTop: 4, borderTop: '1px solid #ddd', fontSize: 7, color: '#999', textAlign: 'center' }}>
+          <div style={{ fontWeight: 600, marginBottom: 2 }}>Total Scope, Inc. — ISO 13485 Certified <span style={{ float: 'right', fontWeight: 400 }}>OM10-2</span></div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, fontSize: 6.5, color: '#aaa' }}>
+            <span>PA: 17 Creek Pkwy, Upper Chichester 19061 · (866) 352-7697</span>
+            <span>TN: 601 Grassmere Park Dr Ste 2, Nashville 37211 · (844) 843-2055</span>
+            <span>FL: 10877 NW 52nd St Ste 3, Sunrise 33351 · (954) 916-7347</span>
+          </div>
         </div>
       </div>
     </div>

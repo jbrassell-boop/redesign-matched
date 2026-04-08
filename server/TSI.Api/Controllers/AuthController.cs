@@ -57,14 +57,20 @@ public class AuthController(IConfiguration config, JwtService jwtService) : Cont
             if (valid)
             {
                 // Auto-upgrade: store a hash so next login uses BCrypt
-                var hash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-                await using var updateCmd = new SqlCommand(
-                    "UPDATE tblUsers SET sUserPassword = @hash WHERE LOWER(sUserName) = LOWER(@user)",
-                    conn);
-                updateCmd.Parameters.AddWithValue("@hash", hash);
-                updateCmd.Parameters.AddWithValue("@user", request.Username);
-                updateCmd.CommandTimeout = 10;
-                await updateCmd.ExecuteNonQueryAsync();
+                // NOTE: skipped — sUserPassword column too narrow for 60-char BCrypt hash
+                // TODO: ALTER COLUMN sUserPassword to nvarchar(128) then re-enable
+                try
+                {
+                    var hash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+                    await using var updateCmd = new SqlCommand(
+                        "UPDATE tblUsers SET sUserPassword = @hash WHERE LOWER(sUserName) = LOWER(@user)",
+                        conn);
+                    updateCmd.Parameters.AddWithValue("@hash", hash);
+                    updateCmd.Parameters.AddWithValue("@user", request.Username);
+                    updateCmd.CommandTimeout = 10;
+                    await updateCmd.ExecuteNonQueryAsync();
+                }
+                catch { /* column too narrow — skip upgrade silently */ }
             }
         }
 

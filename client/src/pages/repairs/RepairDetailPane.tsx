@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { Spin, message, Popconfirm } from 'antd';
 import { useParams } from 'react-router-dom';
-import type { RepairDetail, RepairFull, RepairLineItem } from './types';
+import type { RepairDetail, RepairFull, RepairLineItem, RepairInspections } from './types';
 import { DiInspectionForm } from './forms/DiInspectionForm';
 import { DiFlexibleForm } from './forms/DiFlexibleForm';
 import { DiRigidForm } from './forms/DiRigidForm';
@@ -31,7 +31,7 @@ import { InlineEditor } from '../../components/common/InlineEditor';
 import {
   updateRepairNotes, getRepairStatuses, updateRepairStatus,
   getRepairLineItems, getRepairScopeHistory, getRepairStatusHistory,
-  getRepairFull, createDraftInvoice, patchRepairHeader,
+  getRepairFull, getRepairInspections, createDraftInvoice, patchRepairHeader,
 } from '../../api/repairs';
 import { getClientFlags } from '../../api/clients';
 import type { RepairStatusOption } from '../../api/repairs';
@@ -158,6 +158,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   // Cockpit-specific state
   const [headerExpanded, setHeaderExpanded] = useState(false);
   const [fullRepair, setFullRepair] = useState<RepairFull | null>(null);
+  const [inspections, setInspections] = useState<RepairInspections | null>(null);
   const [flags, setFlags] = useState<ClientFlag[]>([]);
   const [cockpitLoading, setCockpitLoading] = useState(false);
 
@@ -182,6 +183,9 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       }
       promises.push(
         getRepairLineItems(resolvedKey).then(li => { if (!cancelled) setLineItems(li); }).catch(() => { if (!cancelled) message.error('Failed to load repair line items'); }),
+      );
+      promises.push(
+        getRepairInspections(resolvedKey).then(ins => { if (!cancelled) setInspections(ins); }).catch(() => { /* inspections may not exist for all repairs */ }),
       );
       return Promise.all(promises);
     }).catch(() => { if (!cancelled) message.error('Failed to load repair data'); }).finally(() => { if (!cancelled) setCockpitLoading(false); });
@@ -464,7 +468,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         {activeForm === 'di-flex-diagnostic' && <DiFlexibleDiagnosticForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
         {activeForm === 'di-rigid'           && <DiRigidForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
         {activeForm === 'requisition'        && <RequisitionForm repair={fullRepair} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
-        {activeForm === 'final-inspection'   && <FinalInspectionForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'final-inspection'   && <FinalInspectionForm repair={fullRepair} inspections={inspections} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
         {activeForm === 'return-verification' && <ReturnVerificationForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
         {activeForm === 'amendment'          && <AmendmentForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
         {activeForm === 'update-slip'        && <UpdateSlipForm repair={fullRepair} onClose={() => setActiveForm(null)} />}

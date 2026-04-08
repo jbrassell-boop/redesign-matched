@@ -47,44 +47,64 @@ This document provides Claude Code with the rules, patterns, and context needed 
 
 ## Design System — Forms
 
-### Brand Standards (Customer-Facing)
-| Element | Specification |
-|---------|--------------|
-| **Primary Font** | Arial |
-| **Body Text** | 10pt, color #333333 |
-| **H1 (Form Title)** | 16pt Bold, color #1B3A5C (Navy) |
-| **H2 (Section Header)** | 13pt Bold, color #2E75B6 (Blue) |
-| **H3 (Subsection)** | 11pt Bold, color #1F4D78 (Dark Blue) |
-| **Logo** | TSI logo top-left, full color |
-| **Accent Line** | 2px solid #2E75B6 below header |
-| **Table Header BG** | #1B3A5C (Navy), white text |
-| **Table Alt Row** | #F5F7FA |
-| **Table Border** | 1px solid #DEE2E6 |
-| **Footer** | 8pt, color #666666, page numbers right-aligned |
-| **Confidentiality** | None on customer-facing forms |
+### Established Template (from FinalInspectionForm.tsx — OM10-2)
 
-### Brand Standards (Internal)
+All forms follow this proven pattern. Reference `client/src/pages/repairs/forms/FinalInspectionForm.tsx` as the canonical template.
+
+### Brand Standards
 | Element | Specification |
 |---------|--------------|
-| **Primary Font** | Arial |
-| **Body Text** | 9pt, color #333333 |
-| **H1 (Form Title)** | 14pt Bold, color #1B3A5C |
-| **H2 (Section Header)** | 11pt Bold, color #1F4D78 |
-| **Logo** | TSI logo top-left, smaller variant |
-| **Table Header BG** | #4A5568 (Gray), white text |
-| **Table Alt Row** | #F7FAFC |
-| **Footer** | 8pt, "INTERNAL USE ONLY — Total Scope, Inc." + page number |
+| **Primary Font** | Inter, Arial fallback |
+| **Body Text** | 8.5-9pt, color #222 |
+| **Form Title** | 14pt Bold, color #1B3A5C (Navy) |
+| **Section Bar** | `var(--primary)` bg, white text, 7.5pt bold uppercase, 2px 6px padding |
+| **Category Header** | 7.5pt bold, color #1B3A5C, uppercase, navy underline (used within checklist sections) |
+| **Field Label** | 7pt bold uppercase, color #888 |
+| **Field Value** | 9pt, 1px bottom border #ccc, min-height 13px |
+| **Logo** | Horizontal TSI logo with tagline (`/logo-horizontal.jpg`), height 44-52px |
+| **Table Alt Row** | #f8f9fb |
+| **Table Border** | 1px solid #eee |
+| **Pass/Fail** | Green filled badge (P) or Red filled badge (F), 20x12px rounded, em dash for N/A |
+| **Checkbox** | 9x9px, `var(--primary)` bg when checked with ✓ |
+| **Radio** | 12x12px circle, filled `var(--primary)` when active |
+| **Empty states** | Em dash (—), never blank |
 
 ### Layout Rules
-- **Page size:** US Letter (8.5" x 11") portrait unless data requires landscape
-- **Margins:** 0.75" all sides (customer), 0.5" all sides (internal)
-- **Header block:** Logo left, form title center, date/reference# right
-- **Section spacing:** 16px between sections
+- **Page size:** US Letter (8.5" x 11"), fixed `height: 11in` for single-page forms
+- **Margins:** 0.4in all sides
+- **Header:** Logo left, form title + subtitle + form code right-aligned
+- **Section gap:** 6px between sections (consistent `g` variable)
+- **Scope Info:** 4-column grid (2fr 1fr 1fr 1fr) with Ship To spanning full width
+- **Patient Safety + Scope Includes:** Combined on one row, PS badges (red→green), Includes with check marks pushed right
+- **Inspection Checklists:** 2-column layout with grouped categories (navy underline headers)
+- **Repairs table:** `flex: 1` to absorb remaining page space; section bar header, then subtle gray column labels (not double-blue)
 - **Tables:** Full-width, no horizontal scroll — if columns exceed width, switch to landscape or split
-- **Currency:** Always formatted `$X,XXX.XX` — right-aligned in tables
+- **Currency:** Always formatted `$X,XXX.XX` — right-aligned
 - **Dates:** `MM/DD/YYYY` display format
-- **Serial Numbers:** Always monospaced font within tables for readability
-- **Empty states:** If a field is NULL/empty, display `—` (em dash), never blank
+- **Reprocessing Warning:** Red left-border callout with italic text (customer-facing flex/rigid forms)
+- **QC Certification:** Centered bold statement, conditional on pass/fail
+- **Condition/Result:** Bordered box with radio buttons (Usable/Unusable, Passed/Failed)
+- **Signature Block:** 4 fields in a row — Technician, Date, Inspector, Date
+- **Footer:** Two lines — top: "Total Scope, Inc. — ISO 13485 Certified" centered + OM form code right; bottom: all 3 locations (PA, TN, FL) with phone numbers
+
+### Footer (all forms)
+```
+Line 1: Total Scope, Inc. — ISO 13485 Certified                    OM##-#
+Line 2: PA: 17 Creek Pkwy, Upper Chichester 19061 · (866) 352-7697
+        TN: 601 Grassmere Park Dr Ste 2, Nashville 37211 · (844) 843-2055
+        FL: 10877 NW 52nd St Ste 3, Sunrise 33351 · (954) 916-7347
+```
+
+### Form Overlay Pattern
+Forms render as a modal overlay (`position: fixed, inset: 0, z-index: 1100`) with:
+- Print/Close buttons in top-right corner (`no-print` class hides on print)
+- Click outside to close
+- `print-form` CSS class triggers print-specific layout via `print.css`
+
+### Data Loading Pattern
+- Parent component (`RepairDetailPane`) loads `inspections` and `lineItems` alongside `fullRepair`
+- Forms receive data via props: `repair: RepairFull`, `inspections?: RepairInspections`, `lineItems?: RepairLineItem[]`
+- Forms are read-only renders — no editing, no API calls from within the form
 
 ---
 
