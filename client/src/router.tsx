@@ -29,6 +29,7 @@ const DevelopmentListPage = lazy(() => import('./pages/development-list/Developm
 const EndoCartsPage = lazy(() => import('./pages/endocarts/EndoCartsPage').then(m => ({ default: m.EndoCartsPage })));
 const ReceivingPage = lazy(() => import('./pages/receiving/ReceivingPage').then(m => ({ default: m.ReceivingPage })));
 const RepairItemsPage = lazy(() => import('./pages/repair-items/RepairItemsPage').then(m => ({ default: m.RepairItemsPage })));
+const FieldVerifierPage = lazy(() => import('./pages/FieldVerifier/index').then(m => ({ default: m.FieldVerifierPage })));
 
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '2rem' }}><Spin size="large" /></div>}>
@@ -40,6 +41,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <SuspenseWrapper><LoginPage /></SuspenseWrapper>,
+  },
+  {
+    path: '/verify',
+    element: <SuspenseWrapper><FieldVerifierPage /></SuspenseWrapper>,
   },
   {
     element: <RouteGuard />,
