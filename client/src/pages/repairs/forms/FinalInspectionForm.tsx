@@ -625,7 +625,7 @@ export const FinalInspectionForm = ({ repair, inspections, lineItems, onClose }:
         <button onClick={onClose} style={{ height: 32, padding: '0 14px', border: '1px solid #ddd', borderRadius: 5, background: '#fff', color: '#888', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
       </div>
       {type === 'Rigid'  && <RigidFinalInspection repair={repair} />}
-      {type === 'Camera' && <CameraFinalInspection repair={repair} lineItems={lineItems} />}
+      {type === 'Camera' && <CameraFinalInspection repair={repair} />}
       {type !== 'Rigid' && type !== 'Camera' && <FlexFinalInspection repair={repair} inspections={inspections} lineItems={lineItems} />}
     </div>
   );
