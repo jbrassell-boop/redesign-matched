@@ -12,7 +12,7 @@ const fmt$ = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDig
 
 // ── Extracted static styles ──
 const sectionCardBaseStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--neutral-200)', borderRadius: 6, overflow: 'hidden' };
-const sectionHeaderStyle: React.CSSProperties = { padding: '8px 14px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', fontSize: 11, fontWeight: 800, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '.06em' };
+const sectionHeaderStyle: React.CSSProperties = { padding: '8px 14px', background: 'var(--neutral-50)', borderBottom: '1px solid var(--neutral-200)', fontSize: 11, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '.06em' };
 const sectionBodyStyle: React.CSSProperties = { padding: 0 };
 const kpiContainerStyle: React.CSSProperties = { textAlign: 'center', padding: '12px 16px', flex: 1, minWidth: 100 };
 const kpiValueBaseStyle: React.CSSProperties = { fontSize: 28, fontWeight: 900, lineHeight: 1 };

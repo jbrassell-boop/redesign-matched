@@ -84,7 +84,7 @@ export const ExecutiveKpi = () => {
     }}>
       {/* Title row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <h2 style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: '.08em', margin: 0 }}>
+        <h2 style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: '.08em', margin: 0 }}>
           Executive Dashboard
         </h2>
         <span style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>

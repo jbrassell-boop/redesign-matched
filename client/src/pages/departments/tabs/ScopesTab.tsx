@@ -127,7 +127,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
                 <span style={{
                   width: 28, height: 28, borderRadius: 6, display: 'flex',
                   alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 800,
+                  fontSize: 11, fontWeight: 700,
                   background: s.type === 'F' || s.type === 'Flexible' ? 'rgba(var(--success-rgb), 0.1)' :
                               s.type === 'R' || s.type === 'Rigid' ? 'rgba(var(--primary-rgb), 0.1)' :
                               s.type === 'I' || s.type === 'Instrument' ? 'rgba(var(--amber-rgb), 0.1)' :

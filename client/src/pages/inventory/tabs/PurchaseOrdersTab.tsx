@@ -59,7 +59,7 @@ export const PurchaseOrdersTab = ({ inventoryKey }: Props) => {
               return (
                 <tr key={po.supplierPOKey} className="hover-row-light" style={{ cursor: 'pointer' }}>
                   <td style={tdStyle}>
-                    <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 800, color: 'var(--navy)' }}>{po.poNumber || '\u2014'}</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: 11, fontWeight: 700, color: 'var(--navy)' }}>{po.poNumber || '\u2014'}</span>
                   </td>
                   <td style={tdStyle}>{po.supplierName || '\u2014'}</td>
                   <td style={tdStyle}>{po.poDate || '\u2014'}</td>
