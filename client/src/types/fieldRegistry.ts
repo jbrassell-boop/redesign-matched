@@ -21,6 +21,22 @@ export interface ScreenRegistry {
   fields: FieldEntry[];
 }
 
+// Maps screen display name → registry file slug
+// Used by DevInspectorPanel to construct deep-links to /verify
+export const SCREEN_FILES_REVERSE: Record<string, string> = {
+  'Dashboard': 'dashboard',
+  'Clients': 'clients',
+  'Departments': 'departments',
+  'Repairs': 'repairs',
+  'Inventory': 'inventory',
+  'Contracts': 'contracts',
+  'Onsite Services': 'onsite-services',
+  'Product Sale': 'product-sale',
+  'Financial': 'financial',
+  'Suppliers': 'suppliers',
+  'Scope Model': 'scope-model',
+};
+
 // Maps route pathname → registry screen name
 // Must stay in sync with SCREEN_FILES in FieldVerifier/index.tsx
 export const ROUTE_TO_SCREEN: Record<string, string> = {
