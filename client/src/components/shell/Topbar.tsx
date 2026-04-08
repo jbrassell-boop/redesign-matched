@@ -166,6 +166,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
           <button
             onClick={toggleInspector}
             title={inspectorEnabled ? 'Close Dev Inspector' : 'Open Dev Inspector'}
+            aria-pressed={inspectorEnabled}
             style={{
               height: 28,
               padding: '0 10px',
