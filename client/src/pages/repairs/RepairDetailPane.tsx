@@ -12,6 +12,15 @@ import { ReturnVerificationForm } from './forms/ReturnVerificationForm';
 import { AmendmentForm } from './forms/AmendmentForm';
 import { UpdateSlipForm } from './forms/UpdateSlipForm';
 import { LoanerForm } from './forms/LoanerForm';
+import { BiFlexForm }           from './forms/BiFlexForm';
+import { BiCameraForm }         from './forms/BiCameraForm';
+import { BiRigidForm }          from './forms/BiRigidForm';
+import { SubassemblyQcForm }    from './forms/SubassemblyQcForm';
+import { FortyDayWarrantyForm } from './forms/FortyDayWarrantyForm';
+import { NcpForm }              from './forms/NcpForm';
+import { InvoiceForm }          from './forms/InvoiceForm';
+import { RepairRequestForm }    from './forms/RepairRequestForm';
+import { IntakeLabelForm }      from './forms/IntakeLabelForm';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import { CommandStrip } from './components/CommandStrip';
@@ -130,6 +139,12 @@ const INTERNAL_FORMS = [
   { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)', title: 'Rigid endoscope disassembly & inspection form', types: ['Rigid'] },
   { key: 'amendment'      as const, label: 'Amendment (OM07-9)', title: 'Repair order amendment form' },
   { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)', title: 'Customer update communication slip' },
+  { key: 'bi-flexible'     as const, label: 'BI Flexible (OM07-3)',       title: 'Blank inspection — flexible endoscope',       types: ['Flexible'] },
+  { key: 'bi-camera'       as const, label: 'BI Camera (OM07-4)',         title: 'Blank inspection — camera system',            types: ['Camera'] },
+  { key: 'bi-rigid'        as const, label: 'BI Rigid (OM07-5)',          title: 'Blank inspection — rigid endoscope',          types: ['Rigid'] },
+  { key: 'subassembly-qc'  as const, label: 'Sub-Assembly QC (OM07-1)',   title: 'Sub-assembly parts QC requisition' },
+  { key: '40-day-warranty' as const, label: '40-Day Warranty (OM06-2)',   title: '40-day warranty review form' },
+  { key: 'ncp'             as const, label: 'Non-Conforming (OM23-1)',     title: 'Non-conforming product report' },
 ];
 
 /** Filter forms by scope type — forms without a `types` array are always shown */
@@ -143,6 +158,9 @@ const CUSTOMER_FORMS = [
   { key: 'final-inspection'     as const, label: 'Final Inspection (OM10-2)', title: 'Final quality inspection report' },
   { key: 'return-verification'  as const, label: 'Return Verification (OM14-1)', title: 'Return shipment verification form' },
   { key: 'loaner'               as const, label: 'Loaner (OM17-1)', title: 'Loaner scope request and tracking form' },
+  { key: 'invoice'         as const, label: 'Invoice',                   title: 'Billing invoice for repair services' },
+  { key: 'repair-request'  as const, label: 'Repair Request (OM03-2)',   title: 'Customer-facing repair intake form' },
+  { key: 'intake-label'    as const, label: 'Intake Label (OM04-1)',     title: 'Printable 4×2 intake label with barcode' },
 ];
 
 export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged, cockpitMode, repairKey: repairKeyProp }: RepairDetailPaneProps) => {
@@ -159,7 +177,15 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   // Forms dropdown + overlay state
   const [formsMenuOpen, setFormsMenuOpen] = useState(false);
   const formsMenuRef = useRef<HTMLDivElement>(null);
-  const [activeForm, setActiveForm] = useState<'di-inspection' | 'di-flexible' | 'di-flex-diagnostic' | 'di-rigid' | 'requisition' | 'final-inspection' | 'return-verification' | 'amendment' | 'update-slip' | 'loaner' | null>(null);
+  const [activeForm, setActiveForm] = useState<
+    'di-inspection' | 'di-flexible' | 'di-flex-diagnostic' | 'di-rigid' |
+    'bi-flexible' | 'bi-camera' | 'bi-rigid' |
+    'requisition' | 'final-inspection' | 'return-verification' |
+    'amendment' | 'update-slip' | 'loaner' |
+    'subassembly-qc' | '40-day-warranty' | 'ncp' |
+    'invoice' | 'repair-request' | 'intake-label' |
+    null
+  >(null);
 
   // Cockpit-specific state
   const [headerExpanded, setHeaderExpanded] = useState(false);
@@ -497,6 +523,15 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         {activeForm === 'amendment'          && <AmendmentForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
         {activeForm === 'update-slip'        && <UpdateSlipForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
         {activeForm === 'loaner'             && <LoanerForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'bi-flexible'     && <BiFlexForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'bi-camera'       && <BiCameraForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'bi-rigid'        && <BiRigidForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'subassembly-qc'  && <SubassemblyQcForm repair={fullRepair} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
+        {activeForm === '40-day-warranty' && <FortyDayWarrantyForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'ncp'             && <NcpForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'invoice'         && <InvoiceForm repair={fullRepair} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'repair-request'  && <RepairRequestForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
+        {activeForm === 'intake-label'    && <IntakeLabelForm repair={fullRepair} onClose={() => setActiveForm(null)} />}
 
         {/* Tab bar */}
         <div style={repairCockpitTabBarStyle}>
@@ -714,6 +749,15 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       {activeForm === 'amendment'          && <AmendmentForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
       {activeForm === 'update-slip'        && <UpdateSlipForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
       {activeForm === 'loaner'             && <LoanerForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'bi-flexible'     && <BiFlexForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'bi-camera'       && <BiCameraForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'bi-rigid'        && <BiRigidForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'subassembly-qc'  && <SubassemblyQcForm repair={detail as unknown as RepairFull} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
+      {activeForm === '40-day-warranty' && <FortyDayWarrantyForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'ncp'             && <NcpForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'invoice'         && <InvoiceForm repair={detail as unknown as RepairFull} lineItems={lineItems} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'repair-request'  && <RepairRequestForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
+      {activeForm === 'intake-label'    && <IntakeLabelForm repair={detail as unknown as RepairFull} onClose={() => setActiveForm(null)} />}
     </div>
   );
 };
