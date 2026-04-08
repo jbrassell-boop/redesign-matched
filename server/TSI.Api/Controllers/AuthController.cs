@@ -42,7 +42,9 @@ public class AuthController(IConfiguration config, JwtService jwtService) : Cont
 
             storedPassword = reader["sUserPassword"]?.ToString() ?? "";
             var isSupervisor = reader["sSupervisor"]?.ToString()?.Trim();
-            role = (isSupervisor == "1" || isSupervisor?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
+            var isIsoManager = reader["sISOManager"]?.ToString()?.Trim();
+            role = (isSupervisor == "1" || isSupervisor?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true
+                 || isIsoManager == "1" || isIsoManager?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
                 ? "Admin" : "User";
         } // reader disposed here — connection is free for the UPDATE below
 
