@@ -59,10 +59,10 @@ export const CompleteServiceModal = ({ open, visit, onClose, onUpdated }: Comple
           fontSize: 12,
         }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-            <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Client</span><div>{visit.clientName}</div></div>
-            <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Department</span><div>{visit.deptName}</div></div>
-            <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Date</span><div>{visit.visitDate ?? '\u2014'}</div></div>
-            <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Current Status</span><div style={{ fontWeight: 700 }}>{visit.status}</div></div>
+            <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Client</span><div>{visit.clientName}</div></div>
+            <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Department</span><div>{visit.deptName}</div></div>
+            <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Date</span><div>{visit.visitDate ?? '\u2014'}</div></div>
+            <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Current Status</span><div style={{ fontWeight: 700 }}>{visit.status}</div></div>
           </div>
         </div>
 

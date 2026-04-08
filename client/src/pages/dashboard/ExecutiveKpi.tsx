@@ -37,13 +37,13 @@ const KpiCard = ({ label, value, sub, color }: { label: string; value: string; s
     border: '1px solid var(--neutral-200)',
     display: 'flex', flexDirection: 'column', gap: 2,
   }}>
-    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
+    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em' }}>
       {label}
     </div>
     <div style={{ fontSize: 22, fontWeight: 900, color: color || 'var(--navy)', lineHeight: 1.1 }}>
       {value}
     </div>
-    {sub && <div style={{ fontSize: 10, color: 'var(--muted)' }}>{sub}</div>}
+    {sub && <div style={{ fontSize: 11, color: 'var(--muted)' }}>{sub}</div>}
   </div>
 );
 
@@ -87,7 +87,7 @@ export const ExecutiveKpi = () => {
         <h2 style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: '.08em', margin: 0 }}>
           Executive Dashboard
         </h2>
-        <span style={{ fontSize: 10, color: 'rgba(255,255,255,.4)' }}>
+        <span style={{ fontSize: 11, color: 'rgba(255,255,255,.4)' }}>
           {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
         </span>
       </div>

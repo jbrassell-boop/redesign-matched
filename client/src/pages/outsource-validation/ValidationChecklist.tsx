@@ -78,12 +78,12 @@ export const ValidationChecklist = ({ open, item, onClose, onValidated }: Valida
         marginBottom: 16,
       }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>WO#</span><div style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.wo}</div></div>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Vendor</span><div>{item.vendorName}</div></div>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Status</span><div style={{ fontWeight: 700 }}>{item.status}</div></div>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Vendor Cost</span><div>{fmtMoney(item.vendorCost)}</div></div>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>TSI Charge</span><div>{fmtMoney(item.tsiCharge)}</div></div>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Margin</span><div style={{ fontWeight: 700, color: item.marginDollar >= 0 ? 'var(--success)' : 'var(--danger)' }}>{item.marginPct}%</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>WO#</span><div style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.wo}</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Vendor</span><div>{item.vendorName}</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Status</span><div style={{ fontWeight: 700 }}>{item.status}</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Vendor Cost</span><div>{fmtMoney(item.vendorCost)}</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>TSI Charge</span><div>{fmtMoney(item.tsiCharge)}</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Margin</span><div style={{ fontWeight: 700, color: item.marginDollar >= 0 ? 'var(--success)' : 'var(--danger)' }}>{item.marginPct}%</div></div>
         </div>
       </div>
 
@@ -119,7 +119,7 @@ export const ValidationChecklist = ({ open, item, onClose, onValidated }: Valida
               </div>
             ))}
           </div>
-          <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 4 }}>
+          <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
             {checks.filter(Boolean).length}/{CHECKLIST_ITEMS.length} items checked
           </div>
         </div>

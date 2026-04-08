@@ -75,7 +75,7 @@ export const RepairsTab = ({ deptKey }: RepairsTabProps) => {
                   <div style={{ fontSize: 13, fontWeight: 800, lineHeight: 1.1, color: c.text }}>
                     {chip.value}
                   </div>
-                  <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                     {chip.label}
                   </div>
                 </div>
@@ -189,7 +189,7 @@ const StatusBadge = ({ status }: { status?: string }) => {
 };
 
 const thStyle: React.CSSProperties = {
-  padding: '8px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700,
+  padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700,
   textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em',
 };
 

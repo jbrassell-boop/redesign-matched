@@ -359,13 +359,11 @@ export const ScopeModelPage = () => {
 
   const SEditField = ({ label, value, field }: { label: string; value: string | null | undefined; field: keyof PatchScopeModelPayload }) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '2px 0' }}>
-      <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em' }}>{label}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em' }}>{label}</span>
       <input
         value={value ?? ''}
         onChange={e => handleSpecFieldChange(field, e.target.value)}
-        style={scopeInputStyle}
-        onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
-        onBlur={e => (e.target.style.borderColor = 'var(--neutral-200)')}
+        className="inline-edit-input" style={scopeInputStyle}
       />
     </div>
   );
@@ -403,9 +401,7 @@ export const ScopeModelPage = () => {
               <input
                 value={a.val ?? ''}
                 onChange={e => handleSpecFieldChange(a.field, e.target.value)}
-                style={{ ...scopeInputStyle, textAlign: 'center', fontWeight: 800, fontSize: 14 }}
-                onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
-                onBlur={e => (e.target.style.borderColor = 'var(--neutral-200)')}
+                className="inline-edit-input" style={{ ...scopeInputStyle, textAlign: 'center', fontWeight: 800, fontSize: 14 }}
               />
             </div>
           ))}
@@ -432,9 +428,7 @@ export const ScopeModelPage = () => {
           value={localDetail.notes ?? ''}
           onChange={e => handleSpecFieldChange('notes', e.target.value)}
           rows={3}
-          style={{ ...scopeInputStyle, resize: 'vertical', whiteSpace: 'pre-wrap' }}
-          onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
-          onBlur={e => (e.target.style.borderColor = 'var(--neutral-200)')}
+          className="inline-edit-input" style={{ ...scopeInputStyle, resize: 'vertical', whiteSpace: 'pre-wrap' }}
         />
       </div>
     </div>

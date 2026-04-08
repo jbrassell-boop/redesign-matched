@@ -25,7 +25,7 @@ const typeBadgeStyle = (type: string | null): React.CSSProperties => ({
   display: 'inline-block',
   padding: '1px 6px',
   borderRadius: 3,
-  fontSize: 9.5,
+  fontSize: 11.5,
   fontWeight: 700,
   background: type === 'F' ? 'var(--primary-light)' : 'rgba(var(--success-rgb), 0.15)',
   color: type === 'F' ? 'var(--primary)' : 'var(--success)',
@@ -36,7 +36,7 @@ const plBadgeStyle = (pl: string | null): React.CSSProperties => ({
   display: 'inline-block',
   padding: '1px 6px',
   borderRadius: 3,
-  fontSize: 9.5,
+  fontSize: 11.5,
   fontWeight: 700,
   background: pl === 'P' ? 'var(--primary-light)' : 'rgba(var(--amber-rgb), 0.15)',
   color: pl === 'P' ? 'var(--primary)' : 'var(--warning)',
@@ -213,7 +213,7 @@ export const RepairItemDetailPane = ({ itemKey, onItemDeleted, onItemSaved }: Re
             background: detail.isActive ? 'var(--success)' : 'var(--muted)',
             flexShrink: 0,
           }} />
-          <span style={{ fontSize: 10, color: detail.isActive ? 'var(--success)' : 'var(--muted)' }}>
+          <span style={{ fontSize: 11, color: detail.isActive ? 'var(--success)' : 'var(--muted)' }}>
             {detail.isActive ? 'Active' : 'Inactive'}
           </span>
         </div>
@@ -289,7 +289,7 @@ export const RepairItemDetailPane = ({ itemKey, onItemDeleted, onItemSaved }: Re
           gap: 5,
           color: dirty ? 'var(--warning)' : 'var(--muted)',
         }}>
-          <span style={{ fontSize: 9 }}>&#9679;</span>
+          <span style={{ fontSize: 11 }}>&#9679;</span>
           {dirty ? 'Unsaved changes' : 'Ready'}
         </span>
         <Button

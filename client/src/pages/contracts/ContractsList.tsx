@@ -71,7 +71,7 @@ export const ContractsList = ({ contracts, loading, selectedKey, search, onSearc
               </span>
               <span style={{
                 display: 'inline-flex', padding: '1px 7px', borderRadius: 9999,
-                fontSize: 10, fontWeight: 700, flexShrink: 0,
+                fontSize: 11, fontWeight: 700, flexShrink: 0,
                 ...statusStyle(c.status),
               }}>
                 {c.status.toUpperCase()}
@@ -82,17 +82,17 @@ export const ContractsList = ({ contracts, loading, selectedKey, search, onSearc
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 2 }}>
               {c.terminationDate && (
-                <span style={{ fontSize: 10, color: 'var(--muted)' }}>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>
                   Exp: <b style={{ color: 'var(--text)', fontWeight: 600 }}>{fmtDate(c.terminationDate)}</b>
                 </span>
               )}
               {c.scopeCount > 0 && (
-                <span style={{ fontSize: 10, color: 'var(--muted)' }}>
+                <span style={{ fontSize: 11, color: 'var(--muted)' }}>
                   {c.scopeCount} scope{c.scopeCount !== 1 ? 's' : ''}
                 </span>
               )}
               {c.totalAmount > 0 && (
-                <span style={{ fontSize: 10, color: 'var(--primary)', fontWeight: 600 }}>
+                <span style={{ fontSize: 11, color: 'var(--primary)', fontWeight: 600 }}>
                   {fmtMoney(c.totalAmount)}
                 </span>
               )}
@@ -105,7 +105,7 @@ export const ContractsList = ({ contracts, loading, selectedKey, search, onSearc
       padding: '4px 12px',
       borderTop: '1px solid var(--neutral-200)',
       background: 'var(--neutral-50)',
-      fontSize: 10,
+      fontSize: 11,
       color: 'var(--muted)',
       flexShrink: 0,
     }}>

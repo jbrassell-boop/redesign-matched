@@ -14,7 +14,7 @@ const selectStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
+  fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
   letterSpacing: '0.04em', minWidth: 55, textAlign: 'right',
 };
 
@@ -44,7 +44,7 @@ const DateRangeRow = () => (
   <div style={rowStyle}>
     <span style={labelStyle}>Date Range</span>
     <input type="date" aria-label="Report start date" style={{ ...inputStyle, width: 130 }} />
-    <span style={{ fontSize: 10, color: 'var(--muted)' }}>to</span>
+    <span style={{ fontSize: 11, color: 'var(--muted)' }}>to</span>
     <input type="date" aria-label="Report end date" style={{ ...inputStyle, width: 130 }} />
   </div>
 );
@@ -260,7 +260,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <div style={rowStyle}>
               <span style={labelStyle}>Min Invoices</span>
               <input type="number" style={{ ...inputStyle, width: 80 }} defaultValue={1} min={1} aria-label="Minimum invoices" />
-              <span style={{ fontSize: 10, color: 'var(--muted)' }}>in past year</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)' }}>in past year</span>
             </div>
             <div style={rowStyle}>
               <span style={labelStyle}>Summary By</span>

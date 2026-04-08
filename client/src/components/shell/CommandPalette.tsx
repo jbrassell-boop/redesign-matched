@@ -254,7 +254,7 @@ export const CommandPalette = () => {
             }}
           />
           <kbd style={{
-            fontSize: 10, padding: '2px 6px',
+            fontSize: 11, padding: '2px 6px',
             borderRadius: 'var(--radius-sm)',
             border: '1px solid var(--border)',
             color: 'var(--muted)',
@@ -299,7 +299,7 @@ export const CommandPalette = () => {
                   }}
                 >
                   <span style={{
-                    fontSize: 10, fontWeight: 600,
+                    fontSize: 11, fontWeight: 600,
                     padding: '2px 6px',
                     borderRadius: 'var(--radius-sm)',
                     background: badge.bg,
@@ -326,7 +326,7 @@ export const CommandPalette = () => {
                     )}
                   </div>
                   {isSelected && (
-                    <span style={{ fontSize: 10, color: 'var(--muted)', flexShrink: 0 }}>
+                    <span style={{ fontSize: 11, color: 'var(--muted)', flexShrink: 0 }}>
                       Enter
                     </span>
                   )}
@@ -337,7 +337,7 @@ export const CommandPalette = () => {
             return (
               <div key={group.label}>
                 <div style={{
-                  fontSize: 10, fontWeight: 600,
+                  fontSize: 11, fontWeight: 600,
                   color: 'var(--muted)',
                   padding: '8px 16px 4px',
                   textTransform: 'uppercase',
@@ -360,7 +360,7 @@ export const CommandPalette = () => {
           display: 'flex', alignItems: 'center', gap: 12,
           padding: '8px 16px',
           borderTop: '1px solid var(--border)',
-          fontSize: 10, color: 'var(--muted)',
+          fontSize: 11, color: 'var(--muted)',
         }}>
           <span><kbd style={kbdStyle}>&uarr;</kbd> <kbd style={kbdStyle}>&darr;</kbd> navigate</span>
           <span><kbd style={kbdStyle}>&crarr;</kbd> select</span>
@@ -372,7 +372,7 @@ export const CommandPalette = () => {
 };
 
 const kbdStyle: React.CSSProperties = {
-  fontSize: 9, padding: '1px 4px',
+  fontSize: 11, padding: '1px 4px',
   borderRadius: 3,
   border: '1px solid var(--border)',
   background: 'var(--neutral-50)',

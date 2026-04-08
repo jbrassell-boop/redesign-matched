@@ -116,11 +116,11 @@ const pageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection
 const statStripStyle: React.CSSProperties = { display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
 const tabFlexColumnStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 };
 const toolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0, flexWrap: 'wrap' };
-const filterLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' };
+const filterLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' };
 const segmentedWrapStyle: React.CSSProperties = { display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 'var(--radius-md)', overflow: 'hidden' };
 const separatorStyle: React.CSSProperties = { width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 };
 const dateInputStyle: React.CSSProperties = { height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)', outline: 'none', cursor: 'pointer', width: 120 };
-const dateToLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
+const dateToLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
 const searchInputStyle: React.CSSProperties = { marginLeft: 'auto', height: 30, width: 220, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px', fontSize: 11, fontFamily: 'inherit', outline: 'none', background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center` };
 const ncrSearchInputStyle: React.CSSProperties = { ...searchInputStyle, width: 240 };
 const capaSearchInputStyle: React.CSSProperties = { ...searchInputStyle, width: 260 };

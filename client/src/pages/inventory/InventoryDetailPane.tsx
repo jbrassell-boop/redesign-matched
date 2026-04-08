@@ -71,7 +71,7 @@ function StatChip({
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
         <span style={{ fontSize: 16, fontWeight: 800, color: valueColor, lineHeight: 1 }}>{value}</span>
-        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
       </div>
     </div>
   );
@@ -136,7 +136,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
                 background: flag.value ? 'var(--success-light)' : 'var(--neutral-100)',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: 10,
+                fontSize: 11,
                 color: flag.value ? 'var(--success)' : 'var(--muted)',
                 fontWeight: 700,
               }}>
@@ -179,7 +179,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
                 width: 80,
                 render: (v: string | null) => (
                   <span style={{
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: 700,
                     color: 'var(--primary)',
                     background: 'var(--primary-light)',

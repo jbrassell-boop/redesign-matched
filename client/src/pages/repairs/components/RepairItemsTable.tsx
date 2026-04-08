@@ -45,7 +45,7 @@ const causeBadge = (cause: string) => {
   return (
     <span title={CAUSE_TITLES[cause?.toUpperCase()] ?? undefined} style={{
       display: 'inline-block', padding: '1px 6px', borderRadius: 10,
-      fontSize: 10, fontWeight: 700,
+      fontSize: 11, fontWeight: 700,
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
     }}>
       {cause || '—'}
@@ -73,7 +73,7 @@ const fixBadge = (fix: string) => {
   return (
     <span title={FIX_TITLES[fix?.toUpperCase()] ?? undefined} style={{
       display: 'inline-block', padding: '1px 6px', borderRadius: 10,
-      fontSize: 10, fontWeight: 700,
+      fontSize: 11, fontWeight: 700,
       background: s.bg, color: s.color, border: `1px solid ${s.border}`,
     }}>
       {fix || '—'}
@@ -334,7 +334,7 @@ export const RepairItemsTable = ({
                   {(['UA', 'NW'] as CauseType[]).map(c => (
                     <button key={c} title={c === 'UA' ? 'User Abuse' : 'Normal Wear'} onClick={() => setAddRow(r => ({ ...r, cause: r.cause === c ? '' : c }))}
                       style={{
-                        padding: '1px 5px', fontSize: 10, fontWeight: 700,
+                        padding: '1px 5px', fontSize: 11, fontWeight: 700,
                         borderRadius: 3, cursor: 'pointer',
                         background: addRow.cause === c ? 'var(--danger)' : 'var(--neutral-50)',
                         color: addRow.cause === c ? 'var(--card)' : 'var(--muted)',
@@ -351,7 +351,7 @@ export const RepairItemsTable = ({
                   {fixTypeButtons.map(({ label, value, title }) => (
                     <button key={value} title={title} onClick={() => handleFixType(value)}
                       style={{
-                        padding: '1px 5px', fontSize: 10, fontWeight: 700,
+                        padding: '1px 5px', fontSize: 11, fontWeight: 700,
                         borderRadius: 3, cursor: 'pointer',
                         background: addRow.fixType === value ? 'var(--primary)' : 'var(--neutral-50)',
                         color: addRow.fixType === value ? 'var(--card)' : 'var(--muted)',
@@ -396,7 +396,7 @@ export const RepairItemsTable = ({
                     background: addRow.selectedItem ? 'var(--primary)' : 'var(--neutral-200)',
                     color: addRow.selectedItem ? 'var(--card)' : 'var(--muted)',
                     border: 'none', borderRadius: 3,
-                    padding: '3px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                    padding: '3px 8px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
                   }}>
                   {saving ? '…' : '+'}
                 </button>

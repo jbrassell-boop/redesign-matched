@@ -48,7 +48,7 @@ export const ExpenseTab = ({ repairKey }: ExpenseTabProps) => {
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
         <div style={{
           background: 'var(--neutral-50, var(--bg))', padding: '6px 10px',
-          fontSize: 9.5, fontWeight: 700, color: 'var(--navy)',
+          fontSize: 11.5, fontWeight: 700, color: 'var(--navy)',
           textTransform: 'uppercase', letterSpacing: '.05em',
           borderBottom: '1px solid var(--border)',
         }}>
@@ -72,7 +72,7 @@ export const ExpenseTab = ({ repairKey }: ExpenseTabProps) => {
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
         <div style={{
           background: 'var(--neutral-50, var(--bg))', padding: '6px 10px',
-          fontSize: 9.5, fontWeight: 700, color: 'var(--navy)',
+          fontSize: 11.5, fontWeight: 700, color: 'var(--navy)',
           textTransform: 'uppercase', letterSpacing: '.05em',
           borderBottom: '1px solid var(--border)',
         }}>
@@ -93,7 +93,7 @@ export const ExpenseTab = ({ repairKey }: ExpenseTabProps) => {
           </div>
 
           <div style={{ marginTop: 14, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-            <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 4 }}>
               Repair Margin
             </div>
             <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end' }}>
@@ -118,7 +118,7 @@ export const ExpenseTab = ({ repairKey }: ExpenseTabProps) => {
         display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
         gap: 4, minHeight: 200,
       }}>
-        <div style={{ fontSize: 9, opacity: .6, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.05em' }}>
+        <div style={{ fontSize: 11, opacity: .6, textTransform: 'uppercase', fontWeight: 700, letterSpacing: '.05em' }}>
           Repair Margin
         </div>
         <div style={{
@@ -142,7 +142,7 @@ export const ExpenseTab = ({ repairKey }: ExpenseTabProps) => {
         <div style={{
           marginTop: 10, padding: '5px 10px',
           background: 'rgba(255,255,255,.08)', borderRadius: 4,
-          fontSize: 10, opacity: .7, textAlign: 'center',
+          fontSize: 11, opacity: .7, textAlign: 'center',
         }}>
           (Revenue − Expense) ÷ Revenue
         </div>

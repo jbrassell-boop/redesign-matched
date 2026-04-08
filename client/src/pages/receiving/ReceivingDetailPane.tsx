@@ -14,11 +14,11 @@ const walkinTitleStyle: React.CSSProperties = { margin: 0, fontSize: 15, fontWei
 const cancelBtnStyle: React.CSSProperties = { height: 28, padding: '0 12px', border: '1px solid var(--neutral-200)', borderRadius: 5, background: 'var(--card)', color: 'var(--muted)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
 const clientPickerGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, maxHeight: 150, overflowY: 'auto', marginTop: 6 };
 const clientCardNameStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--navy)' };
-const clientCardCityStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
+const clientCardCityStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
 const selectedClientWrapStyle: React.CSSProperties = { background: 'rgba(var(--success-rgb), 0.08)', border: '1px solid rgba(var(--success-rgb), 0.25)', borderRadius: 6, padding: '7px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 };
-const selectedClientLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase' };
+const selectedClientLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase' };
 const selectedClientNameStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--navy)' };
-const selectedClientCityStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', marginLeft: 4 };
+const selectedClientCityStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginLeft: 4 };
 const changeBtnStyle: React.CSSProperties = { background: 'none', border: 'none', color: 'var(--primary)', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' };
 const fieldGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 };
 const submitRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', marginTop: 16 };
@@ -33,7 +33,7 @@ const detailHeaderStyle: React.CSSProperties = { display: 'flex', alignItems: 'c
 const woNumberStyle: React.CSSProperties = { fontSize: 16, fontWeight: 700, color: 'var(--navy)' };
 const woSubtitleStyle: React.CSSProperties = { fontSize: 12, color: 'var(--muted)', marginTop: 2 };
 const detailGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 };
-const detailFieldLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.3 };
+const detailFieldLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 0.3 };
 const detailFieldValueBaseStyle: React.CSSProperties = { fontSize: 13, fontWeight: 600, color: 'var(--navy)', marginTop: 2 };
 const complaintBoxStyle: React.CSSProperties = { fontSize: 12, color: 'var(--danger)', fontStyle: 'italic', padding: '8px 12px', background: 'rgba(var(--danger-rgb), 0.04)', border: '1px solid rgba(var(--danger-rgb), 0.12)', borderRadius: 6, marginTop: 4 };
 const actionRowStyle: React.CSSProperties = { display: 'flex', gap: 8 };
@@ -309,7 +309,7 @@ export const ReceivingDetailPane = ({ arrival, loading, onReceived }: Props) => 
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 600, color: 'var(--navy)',
+  fontSize: 11, fontWeight: 600, color: 'var(--navy)',
   textTransform: 'uppercase', letterSpacing: 0.3, display: 'block', marginBottom: 2,
 };
 

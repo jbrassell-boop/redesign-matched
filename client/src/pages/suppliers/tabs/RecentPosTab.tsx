@@ -42,11 +42,11 @@ export const RecentPosTab = ({ pos }: RecentPosTabProps) => {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
         <thead>
           <tr style={{ borderBottom: '2px solid var(--neutral-200)' }}>
-            <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>PO #</th>
-            <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Date</th>
-            <th style={{ textAlign: 'right', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Amount</th>
-            <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Status</th>
-            <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Type</th>
+            <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>PO #</th>
+            <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Date</th>
+            <th style={{ textAlign: 'right', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Amount</th>
+            <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Status</th>
+            <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Type</th>
           </tr>
         </thead>
         <tbody>

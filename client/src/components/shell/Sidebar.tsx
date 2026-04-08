@@ -292,7 +292,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
             </div>
             <div style={{
               color: 'var(--sidebar-text)',
-              fontSize: 10,
+              fontSize: 11,
               marginTop: 2,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -339,7 +339,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
             {/* Section label — hidden when collapsed */}
             {!collapsed && (
               <div style={{
-                fontSize: 10,
+                fontSize: 11,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
                 color: 'rgba(255,255,255,0.6)',
@@ -374,7 +374,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
       {/* Footer — hidden when collapsed */}
       {!collapsed && (
         <div style={{
-          fontSize: 10,
+          fontSize: 11,
           color: 'var(--sidebar-text)',
           padding: '12px 16px',
           borderTop: '1px solid var(--sidebar-lt)',

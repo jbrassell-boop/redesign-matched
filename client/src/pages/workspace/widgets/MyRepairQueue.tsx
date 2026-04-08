@@ -48,13 +48,13 @@ export const MyRepairQueue = () => {
         </span>
         {urgent > 0 && (
           <span style={{
-            fontSize: 10, fontWeight: 700, color: 'var(--card)',
+            fontSize: 11, fontWeight: 700, color: 'var(--card)',
             background: 'var(--warning)', borderRadius: 'var(--radius-pill)',
             padding: '1px 7px',
           }}>{urgent} urgent</span>
         )}
         <span style={{
-          fontSize: 10, fontWeight: 700, color: 'var(--card)',
+          fontSize: 11, fontWeight: 700, color: 'var(--card)',
           background: 'var(--primary)', borderRadius: 'var(--radius-pill)',
           padding: '1px 7px',
         }}>{repairs.length} assigned</span>
@@ -65,7 +65,7 @@ export const MyRepairQueue = () => {
             <tr>
               {['WO#', 'Client', 'Scope', 'TAT', 'Status', 'Next Action'].map(h => (
                 <th key={h} style={{
-                  fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
+                  fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
                   letterSpacing: '0.04em', padding: '4px 8px', borderBottom: '1.5px solid var(--border-dk)',
                   textAlign: 'left', whiteSpace: 'nowrap',
                 }}>{h}</th>
@@ -86,12 +86,12 @@ export const MyRepairQueue = () => {
                   <span style={{ fontWeight: 700, color: 'var(--primary)', cursor: 'pointer' }}>{r.wo}</span>
                 </td>
                 <td style={tdStyle}>{r.client}</td>
-                <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 10 }}>{r.scopeType}</td>
+                <td style={{ ...tdStyle, fontFamily: 'monospace', fontSize: 11 }}>{r.scopeType}</td>
                 <td style={tdStyle}>
                   <StatusBadge status={`${r.daysIn}d`} variant={r.daysIn > 14 ? 'red' : r.daysIn > 10 ? 'amber' : 'blue'} />
                 </td>
                 <td style={tdStyle}><StatusBadge status={r.status} /></td>
-                <td style={{ ...tdStyle, fontSize: 10, color: 'var(--muted)' }}>{NEXT_ACTION[r.status] ?? ''}</td>
+                <td style={{ ...tdStyle, fontSize: 11, color: 'var(--muted)' }}>{NEXT_ACTION[r.status] ?? ''}</td>
               </tr>
             ))}
           </tbody>

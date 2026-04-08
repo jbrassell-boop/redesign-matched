@@ -6,15 +6,15 @@
 .fin-exec-banner { padding: 12px 20px; background: var(--navy); border-bottom: 2px solid var(--primary); }
 .fin-exec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .fin-exec-title { font-size: 11px; font-weight: 800; color: rgba(255,255,255,.7); text-transform: uppercase; letter-spacing: .08em; }
-.fin-exec-date { font-size: 10px; color: rgba(255,255,255,.4); }
+.fin-exec-date { font-size: 11px; color: rgba(255,255,255,.4); }
 .fin-exec-cards { display: flex; gap: 10px; flex-wrap: wrap; }
 
 /* Exec cards */
 .fin-exec-card { background: var(--card); border-radius: 8px; padding: 14px 16px; flex: 1; min-width: 140px; border: 1px solid var(--neutral-200); display: flex; flex-direction: column; gap: 2px; }
 .fin-exec-card--clickable { cursor: pointer; }
-.fin-exec-card-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
-.fin-exec-subtext-muted { font-size: 10px; color: var(--muted); }
-.fin-exec-subtext-danger { font-size: 10px; color: var(--danger); font-weight: 600; }
+.fin-exec-card-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.fin-exec-subtext-muted { font-size: 11px; color: var(--muted); }
+.fin-exec-subtext-danger { font-size: 11px; color: var(--danger); font-weight: 600; }
 
 /* Exec value colours */
 .fin-val-navy { font-size: 22px; font-weight: 900; color: var(--navy); line-height: 1.1; }
@@ -43,7 +43,7 @@
 /* Summary stats */
 .fin-summary-flex { display: flex; gap: 8px; }
 .fin-summary-card { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; text-align: center; }
-.fin-summary-label { font-size: 10px; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
+.fin-summary-label { font-size: 11px; color: var(--muted); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em; }
 .fin-summary-value { font-size: 16px; font-weight: 800; }
 
 /* Generic layout helpers */
@@ -57,5 +57,5 @@
 
 /* Hold rows */
 .fin-hold-row-flex { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-.fin-hold-badge { font-size: 10px; font-weight: 700; color: var(--danger); text-transform: uppercase; }
-.fin-hold-since { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.fin-hold-badge { font-size: 11px; font-weight: 700; color: var(--danger); text-transform: uppercase; }
+.fin-hold-since { font-size: 11px; color: var(--muted); margin-top: 2px; }

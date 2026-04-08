@@ -646,7 +646,7 @@ function renderInvoiceRows(
                 <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{inv.clientName}</div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
                   <StatusBadgeInline status={isDraft ? 'Draft' : inv.status} />
-                  <span style={{ fontSize: 10, color: 'var(--muted)' }}>{fmtDate(inv.issuedDate)}</span>
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>{fmtDate(inv.issuedDate)}</span>
                 </div>
               </div>
             ) : (
@@ -657,7 +657,7 @@ function renderInvoiceRows(
                     <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>{inv.invoiceNumber}</span>
                     <StatusBadgeInline status={isDraft ? 'Draft' : inv.status} />
                     {inv.agingDays > 30 && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--danger)' }}>{inv.agingDays}d overdue</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--danger)' }}>{inv.agingDays}d overdue</span>
                     )}
                   </div>
                   <div style={{ fontSize: 12, color: 'var(--text)', marginTop: 2 }}>{inv.clientName}</div>
@@ -668,9 +668,9 @@ function renderInvoiceRows(
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
                   <div style={{ fontSize: 15, fontWeight: 800, color: amtColor }}>{fmt$(inv.amount)}</div>
                   {inv.taxAmount > 0 && (
-                    <div style={{ fontSize: 10, color: 'var(--muted)' }}>+{fmt$(inv.taxAmount)} tax</div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)' }}>+{fmt$(inv.taxAmount)} tax</div>
                   )}
-                  <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
                     Issued {fmtDate(inv.issuedDate)}
                   </div>
                 </div>
@@ -759,7 +759,7 @@ function StatusBadgeInline({ status }: { status: string }) {
                 'var(--muted)';
   return (
     <span style={{
-      fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
+      fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
       background: bg, color,
     }}>
       {status}

@@ -40,11 +40,11 @@ const notesTextStyle: React.CSSProperties = { fontSize: 12, color: 'var(--text)'
 const emptyPadStyle: React.CSSProperties = { padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 };
 const traysPadStyle: React.CSSProperties = { padding: '14px 16px' };
 const cardBorderStyle: React.CSSProperties = { background: 'var(--card)', border: '1px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden' };
-const cardHeaderStyle: React.CSSProperties = { background: 'var(--neutral-50)', padding: '6px 12px', fontSize: 10, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' };
+const cardHeaderStyle: React.CSSProperties = { background: 'var(--neutral-50)', padding: '6px 12px', fontSize: 11, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--border)' };
 const traysCardHeaderStyle: React.CSSProperties = { ...cardHeaderStyle, display: 'flex', justifyContent: 'space-between' };
 const trayCountLabelStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--muted)', textTransform: 'none', letterSpacing: 0 };
 const trayTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', fontSize: 11 };
-const trayThBaseStyle: React.CSSProperties = { background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--neutral-200)' };
+const trayThBaseStyle: React.CSSProperties = { background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid var(--neutral-200)' };
 const trayTdBoldStyle: React.CSSProperties = { padding: '5px 8px', borderBottom: '1px solid var(--border)', fontSize: 11, fontWeight: 600 };
 const trayTdCenterBoldStyle: React.CSSProperties = { padding: '5px 8px', borderBottom: '1px solid var(--border)', fontSize: 11, textAlign: 'center', fontWeight: 700 };
 const trayTdCenterSuccessStyle: React.CSSProperties = { padding: '5px 8px', borderBottom: '1px solid var(--border)', fontSize: 11, textAlign: 'center', color: 'var(--success)', fontWeight: 600 };
@@ -57,7 +57,7 @@ const expenseTotalLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(
 const expenseTotalValueStyle: React.CSSProperties = { fontSize: 14, fontWeight: 800, color: 'var(--navy)', fontFamily: 'monospace' };
 const cardBodyPadStyle: React.CSSProperties = { padding: '12px 14px' };
 const twoColGridOnsiteStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' };
-const fieldLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 };
+const fieldLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 };
 const fieldValueStyle: React.CSSProperties = { fontSize: 12, color: 'var(--text)' };
 
 export const OnsiteServiceDetailDrawer = ({ open, serviceKey, onClose, onUpdated }: Props) => {

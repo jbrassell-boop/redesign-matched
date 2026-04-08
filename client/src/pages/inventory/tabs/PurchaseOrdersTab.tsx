@@ -31,12 +31,12 @@ export const PurchaseOrdersTab = ({ inventoryKey }: Props) => {
     <div style={{ padding: '14px 18px' }}>
       <div style={{ background: 'var(--card)', border: '1px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden' }}>
         <div style={{
-          background: 'var(--neutral-50)', padding: '6px 12px', fontSize: 10, fontWeight: 700,
+          background: 'var(--neutral-50)', padding: '6px 12px', fontSize: 11, fontWeight: 700,
           color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em',
           borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <span>Purchase Orders</span>
-          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'none', letterSpacing: 0 }}>{items.length} orders</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'none', letterSpacing: 0 }}>{items.length} orders</span>
         </div>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
           <thead>
@@ -71,7 +71,7 @@ export const PurchaseOrdersTab = ({ inventoryKey }: Props) => {
                   <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 600 }}>{po.receivedQty}</td>
                   <td style={{ ...tdStyle, textAlign: 'center' }}>
                     <span style={{
-                      display: 'inline-flex', padding: '1px 6px', borderRadius: 9999, fontSize: 10, fontWeight: 700,
+                      display: 'inline-flex', padding: '1px 6px', borderRadius: 9999, fontSize: 11, fontWeight: 700,
                       color: statusColor,
                     }}>
                       {statusLabel}
@@ -88,7 +88,7 @@ export const PurchaseOrdersTab = ({ inventoryKey }: Props) => {
 };
 
 const thStyle: React.CSSProperties = {
-  background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600,
+  background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 11, fontWeight: 600,
   color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left',
   borderBottom: '1px solid var(--neutral-200)',
 };

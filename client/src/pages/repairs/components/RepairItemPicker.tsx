@@ -138,7 +138,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
           <div style={{ display: 'flex', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 4, overflow: 'hidden' }}>
             {['all', 'Flexible', 'Rigid', 'Camera'].map(t => (
               <button key={t} onClick={() => setTypeFilter(t)} style={{
-                height: 28, padding: '0 10px', border: 'none', fontSize: 10, fontWeight: 600,
+                height: 28, padding: '0 10px', border: 'none', fontSize: 11, fontWeight: 600,
                 background: typeFilter === t ? 'rgba(255,255,255,0.2)' : 'transparent',
                 color: 'var(--card)', cursor: 'pointer', fontFamily: 'inherit',
               }}>
@@ -176,10 +176,10 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
                   className={isSelected ? 'selected' : 'hover-row'}
                 >
                   <input type="checkbox" checked={isSelected} readOnly style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--primary)' }} />
-                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--navy)', minWidth: 60 }}>{item.itemCode}</span>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', minWidth: 60 }}>{item.itemCode}</span>
                   <span style={{ flex: 1, fontSize: 12, color: 'var(--label)' }}>{item.description}</span>
                   {item.minutesTech1 != null && (
-                    <span style={{ fontSize: 10, color: 'var(--muted)', minWidth: 44, textAlign: 'right' }} title="Est. minutes (T1/T2/T3)">
+                    <span style={{ fontSize: 11, color: 'var(--muted)', minWidth: 44, textAlign: 'right' }} title="Est. minutes (T1/T2/T3)">
                       {item.minutesTech1}m
                     </span>
                   )}
@@ -194,10 +194,10 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
                     borderBottom: '1px solid var(--neutral-200)',
                     display: 'flex', gap: 10, alignItems: 'center',
                   }}>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)' }}>Fix:</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)' }}>Fix:</span>
                     {['R', 'W', 'N', 'C', 'A'].map(ft => (
                       <button key={ft} onClick={() => updateFixType(item.itemKey, ft)} style={{
-                        padding: '2px 8px', fontSize: 10, fontWeight: 700, borderRadius: 3, cursor: 'pointer',
+                        padding: '2px 8px', fontSize: 11, fontWeight: 700, borderRadius: 3, cursor: 'pointer',
                         border: entry.fixType === ft ? '1px solid var(--primary)' : '1px solid var(--border)',
                         background: entry.fixType === ft ? 'var(--primary)' : 'var(--card)',
                         color: entry.fixType === ft ? 'var(--card)' : 'var(--muted)',

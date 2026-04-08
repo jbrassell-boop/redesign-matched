@@ -173,7 +173,7 @@ const TogglePill = ({ on }: { on: boolean }) => (
 );
 
 const thStyle: React.CSSProperties = {
-  padding: '8px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700,
+  padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700,
   textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em',
 };
 

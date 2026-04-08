@@ -100,7 +100,7 @@ export const RepairsList = ({ repairs, loading, selectedKey, search, onSearchCha
                         {r.wo}
                       </span>
                       <span style={{
-                        fontSize: 10,
+                        fontSize: 11,
                         fontWeight: 700,
                         color: STATUS_COLORS[r.status] ?? 'var(--muted)',
                       }}>
@@ -111,8 +111,8 @@ export const RepairsList = ({ repairs, loading, selectedKey, search, onSearchCha
                       {r.client} — {r.dept}
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
-                      <span style={{ fontSize: 10, color: 'var(--muted)' }}>{r.scopeType}</span>
-                      <span style={{ fontSize: 10, color: r.daysIn > 14 ? 'var(--danger)' : r.daysIn > 7 ? 'var(--amber)' : 'var(--muted)' }}>
+                      <span style={{ fontSize: 11, color: 'var(--muted)' }}>{r.scopeType}</span>
+                      <span style={{ fontSize: 11, color: r.daysIn > 14 ? 'var(--danger)' : r.daysIn > 7 ? 'var(--amber)' : 'var(--muted)' }}>
                         {r.daysIn}d
                       </span>
                     </div>

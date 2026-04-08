@@ -5,7 +5,7 @@ import { createDepartment } from '../../api/departments';
 import { getSalesReps, getPricingCategories, getPaymentTerms, getScopeTypes, getCarriers, type LookupOption } from '../../api/lookups';
 
 const lbl: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
+  fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
   letterSpacing: '.03em', marginBottom: 2,
 };
 const fld: React.CSSProperties = {
@@ -15,7 +15,7 @@ const fld: React.CSSProperties = {
 };
 const secHead: React.CSSProperties = {
   background: 'var(--navy)', color: 'var(--card)', padding: '4px 10px',
-  fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',
+  fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',
   borderRadius: 3, marginBottom: 6, marginTop: 12,
 };
 const g2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px' };

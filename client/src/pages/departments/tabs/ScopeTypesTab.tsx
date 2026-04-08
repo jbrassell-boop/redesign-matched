@@ -14,7 +14,7 @@ interface TypeSummary {
 }
 
 const thStyle: React.CSSProperties = {
-  padding: '8px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700,
+  padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700,
   textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em',
 };
 
@@ -86,7 +86,7 @@ export const ScopeTypesTab = ({ deptKey }: ScopeTypesTabProps) => {
             }}>
               <div style={{ fontSize: 20, fontWeight: 800, color: c.fg }}>{s.count}</div>
               <div style={{
-                fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+                fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
                 color: 'var(--muted)', letterSpacing: '0.04em', marginTop: 2,
               }}>{s.type}</div>
             </div>

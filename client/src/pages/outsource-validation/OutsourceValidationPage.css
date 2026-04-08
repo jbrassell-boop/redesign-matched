@@ -11,7 +11,7 @@
 
 /* Toolbar */
 .ovp-toolbar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--card); border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; flex-wrap: wrap; }
-.ovp-filter-label { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+.ovp-filter-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
 .ovp-seg-group { display: inline-flex; border: 1px solid var(--border-dk); border-radius: 6px; overflow: hidden; }
 .ovp-sep { width: 1px; height: 22px; background: var(--border-dk); flex-shrink: 0; }
 .ovp-date-input { height: 30px; border: 1.5px solid var(--border-dk); border-radius: 6px; padding: 0 8px; font-size: 11px; font-family: inherit; color: var(--text); background: var(--card); outline: none; cursor: pointer; min-width: 120px; }

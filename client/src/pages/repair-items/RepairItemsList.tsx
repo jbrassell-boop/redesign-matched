@@ -26,7 +26,7 @@ const SEG_BTNS: React.CSSProperties = {
 function segBtn(active: boolean): React.CSSProperties {
   return {
     padding: '2px 9px',
-    fontSize: 10.5,
+    fontSize: 11.5,
     fontWeight: active ? 700 : 500,
     background: active ? 'var(--navy)' : 'var(--card)',
     color: active ? 'var(--card)' : 'var(--muted)',
@@ -42,7 +42,7 @@ const typeBadge = (type: string | null) => ({
   display: 'inline-block' as const,
   padding: '1px 6px',
   borderRadius: 3,
-  fontSize: 9.5,
+  fontSize: 11.5,
   fontWeight: 700,
   background: type === 'F' ? 'var(--primary-light)' : 'rgba(var(--success-rgb), 0.15)',
   color: type === 'F' ? 'var(--primary)' : 'var(--success)',
@@ -85,7 +85,7 @@ export const RepairItemsList = ({
       borderBottom: '1px solid var(--neutral-200)',
       flexWrap: 'wrap',
     }}>
-      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>Type</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>Type</span>
       <div style={SEG_BTNS}>
         {['all', 'F', 'R'].map(v => (
           <button key={v} style={{ ...segBtn(typeFilter === v), borderRight: v === 'R' ? 'none' : undefined }} onClick={() => onTypeFilterChange(v)}>
@@ -94,7 +94,7 @@ export const RepairItemsList = ({
         ))}
       </div>
       <span style={{ width: 1, height: 18, background: 'var(--border-dk)', flexShrink: 0 }} />
-      <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>Status</span>
+      <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>Status</span>
       <div style={SEG_BTNS}>
         {['all', 'active', 'inactive'].map(v => (
           <button key={v} style={{ ...segBtn(statusFilter === v), borderRight: v === 'inactive' ? 'none' : undefined }} onClick={() => onStatusFilterChange(v)}>
@@ -108,7 +108,7 @@ export const RepairItemsList = ({
     <div style={{
       background: 'var(--neutral-50)',
       padding: '4px 10px',
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: 700,
       textTransform: 'uppercase',
       letterSpacing: '0.05em',
@@ -182,7 +182,7 @@ export const RepairItemsList = ({
                   border: '1px solid var(--border-dk)',
                   borderRadius: 3,
                   padding: '1px 5px',
-                  fontSize: 10,
+                  fontSize: 11,
                   fontWeight: 600,
                   color: 'var(--muted)',
                   fontFamily: 'monospace',
@@ -198,12 +198,12 @@ export const RepairItemsList = ({
                 background: item.isActive ? 'var(--success)' : 'var(--muted)',
                 flexShrink: 0,
               }} />
-              <span style={{ fontSize: 10, color: item.isActive ? 'var(--success)' : 'var(--muted)' }}>
+              <span style={{ fontSize: 11, color: item.isActive ? 'var(--success)' : 'var(--muted)' }}>
                 {item.isActive ? 'Active' : 'Inactive'}
               </span>
               {item.partOrLabor && (
                 <span style={{
-                  fontSize: 10,
+                  fontSize: 11,
                   color: 'var(--muted)',
                   background: 'var(--neutral-100)',
                   padding: '0 4px',

@@ -64,7 +64,7 @@ export const DocumentsTab = ({ supplierKey }: DocumentsTabProps) => {
       </div>
       <div style={{
         padding: '6px 8px',
-        fontSize: 10,
+        fontSize: 11,
         color: 'var(--muted)',
         display: 'flex',
         alignItems: 'center',
@@ -79,7 +79,7 @@ export const DocumentsTab = ({ supplierKey }: DocumentsTabProps) => {
 const thStyle: React.CSSProperties = {
   padding: '6px 8px',
   textAlign: 'left',
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: 700,
   textTransform: 'uppercase',
   color: 'var(--muted)',

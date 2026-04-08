@@ -21,12 +21,12 @@ const ReportCard = ({ report, favorited, onToggleFav, paramOpen, onToggleParams,
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
         <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{report.name}</span>
         {report.extractOnly && (
-          <span style={{ fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'var(--neutral-50)', border: '1px solid var(--border)', color: 'var(--muted)', whiteSpace: 'nowrap' }}>EXTRACT</span>
+          <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: 'var(--neutral-50)', border: '1px solid var(--border)', color: 'var(--muted)', whiteSpace: 'nowrap' }}>EXTRACT</span>
         )}
       </div>
       <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>{report.desc}</div>
       {report.lastRun != null && (
-        <div style={{ fontSize: 10, color: 'var(--muted)' }}>
+        <div style={{ fontSize: 11, color: 'var(--muted)' }}>
           {report.lastRun === 0 ? 'Just now' : `Last run: ${report.lastRun}d ago`}
         </div>
       )}
@@ -74,9 +74,9 @@ const CategorySection = ({ category, reports, collapsed, onToggle, favorites, on
       aria-expanded={!collapsed}
       style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--neutral-50)', cursor: 'pointer', userSelect: 'none', borderBottom: collapsed ? 'none' : '1px solid var(--border)', transition: 'background 0.1s' }}
     >
-      <span style={{ fontSize: 10, color: 'var(--muted)', transition: 'transform 0.2s', transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)', display: 'inline-block' }}>{'\u25B6'}</span>
+      <span style={{ fontSize: 11, color: 'var(--muted)', transition: 'transform 0.2s', transform: collapsed ? 'rotate(-90deg)' : 'rotate(0deg)', display: 'inline-block' }}>{'\u25B6'}</span>
       <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)', flex: 1 }}>{category}</span>
-      <span style={{ fontSize: 10, fontWeight: 700, background: 'var(--navy)', color: 'var(--card)', padding: '1px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>{reports.length}</span>
+      <span style={{ fontSize: 11, fontWeight: 700, background: 'var(--navy)', color: 'var(--card)', padding: '1px 7px', borderRadius: 10, minWidth: 18, textAlign: 'center' }}>{reports.length}</span>
     </div>
     {!collapsed && (
       <div style={{ padding: '12px 16px' }}>

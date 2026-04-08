@@ -14,7 +14,7 @@ interface UpdateSlipsModalProps {
 
 const sBar: React.CSSProperties = {
   background: 'var(--primary)', color: 'var(--card)',
-  fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
+  fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
   letterSpacing: '.06em', padding: '4px 10px', margin: '8px 0 0',
 };
 const fl: React.CSSProperties = {
@@ -86,7 +86,7 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
           <img src="/logo-color.png" alt="Total Scope Inc." loading="lazy" style={{ height: 44 }} />
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Update Slip</div>
-            <div style={{ fontSize: 10, color: 'var(--print-light)', marginTop: 2 }}>OM15-2</div>
+            <div style={{ fontSize: 11, color: 'var(--print-light)', marginTop: 2 }}>OM15-2</div>
           </div>
         </div>
 
@@ -104,7 +104,7 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
         {slips.length === 0 ? (
           <div style={{ padding: '12px 0', color: 'var(--muted)', fontStyle: 'italic', fontSize: 11 }}>No update slips recorded.</div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 10 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, fontSize: 11 }}>
             <thead>
               <tr>
                 {['Date', 'Reason', 'Primary Tech', 'Secondary Tech'].map(h => (
@@ -137,7 +137,7 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
             </button>
           ) : (
             <div style={{ border: '1px solid var(--border)', borderRadius: 6, padding: 12, background: 'var(--neutral-50)' }}>
-              <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>Create New Slip</div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '.04em', marginBottom: 8 }}>Create New Slip</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px' }}>
                 <div>
                   <div style={fl}>Reason *</div>

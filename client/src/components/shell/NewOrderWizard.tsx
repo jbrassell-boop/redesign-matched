@@ -20,7 +20,7 @@ interface Props {
 const TYPE_LABELS: Record<string, string> = { F: 'Flexible', R: 'Rigid', C: 'Camera', I: 'Instrument' };
 
 const lbl: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
+  fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
   letterSpacing: '.03em', marginBottom: 2,
 };
 const fld: React.CSSProperties = {
@@ -59,7 +59,7 @@ const wizBodyStyle: React.CSSProperties = { flex: 1, minHeight: 0, overflow: 'hi
 const wizStepContentStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, padding: '14px 18px', gap: 8 };
 const wizGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, overflowY: 'auto', flex: 1 };
 const wizCardNameStyle: React.CSSProperties = { fontSize: 12, fontWeight: 600, color: 'var(--navy)' };
-const wizCardSubStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', marginTop: 2 };
+const wizCardSubStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginTop: 2 };
 const wizEmptyStyle: React.CSSProperties = { gridColumn: '1/-1', padding: 20, textAlign: 'center', fontSize: 11, color: 'var(--muted)' };
 const wizScopeGridStyle: React.CSSProperties = { overflowY: 'auto', flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, alignContent: 'start' };
 const wizNewScopeBoxStyle: React.CSSProperties = {
@@ -67,10 +67,10 @@ const wizNewScopeBoxStyle: React.CSSProperties = {
   background: 'var(--neutral-50)', padding: '10px 12px', flexShrink: 0,
 };
 const wizNewScopeTitleStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 };
-const wizNewScopeHintStyle: React.CSSProperties = { fontSize: 9, color: 'var(--muted)', fontWeight: 400, marginLeft: 'auto' };
+const wizNewScopeHintStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', fontWeight: 400, marginLeft: 'auto' };
 const wizNewScopeGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '140px 1fr', gap: '6px 10px' };
 const wizModelDropdownStyle: React.CSSProperties = { maxHeight: 120, overflowY: 'auto', border: '1px solid var(--neutral-200)', borderRadius: 4, background: 'var(--card)', marginTop: 6 };
-const wizModelEmptyStyle: React.CSSProperties = { padding: 8, fontSize: 10, color: 'var(--muted)', textAlign: 'center' };
+const wizModelEmptyStyle: React.CSSProperties = { padding: 8, fontSize: 11, color: 'var(--muted)', textAlign: 'center' };
 const wizSerialRowStyle: React.CSSProperties = { display: 'flex', gap: 10, marginTop: 8, alignItems: 'flex-end' };
 const wizAddScopeBtnStyle: React.CSSProperties = {
   height: 28, padding: '0 16px', background: 'var(--success)', color: 'var(--card)',
@@ -88,19 +88,19 @@ const wizAccessoryLabelStyle: React.CSSProperties = { display: 'flex', alignItem
 const wizPoGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 };
 const wizStepNumBaseStyle: React.CSSProperties = {
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: 16, height: 16, borderRadius: '50%', fontSize: 9,
+  width: 16, height: 16, borderRadius: '50%', fontSize: 11,
   color: 'var(--card)',
 };
-const wizModelMfgStyle: React.CSSProperties = { fontSize: 9, color: 'var(--muted)' };
+const wizModelMfgStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
 const wizIconStyle: React.CSSProperties = { width: 16, height: 16 };
 const wizChipBreadcrumbStyle: React.CSSProperties = {
   background: 'rgba(var(--success-rgb), 0.08)', border: '1px solid rgba(var(--success-rgb), 0.25)',
   borderRadius: 6, padding: '7px 12px', display: 'flex', alignItems: 'center',
   justifyContent: 'space-between', flexShrink: 0,
 };
-const wizChipLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase' };
+const wizChipLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase' };
 const wizChipValueStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--navy)' };
-const wizChipExtraStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', marginLeft: 4 };
+const wizChipExtraStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginLeft: 4 };
 const wizChangeBtnStyle: React.CSSProperties = {
   background: 'none', border: 'none', color: 'var(--primary)',
   fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline',

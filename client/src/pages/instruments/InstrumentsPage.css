@@ -7,16 +7,16 @@
 .inst-stat-chip { flex: 1; display: flex; align-items: center; gap: 8px; padding: 10px 12px; transition: background 0.12s; min-width: 100px; }
 .inst-stat-chip-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; }
 .inst-stat-chip-value { font-size: 14px; font-weight: 800; line-height: 1.2; }
-.inst-stat-chip-label { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.inst-stat-chip-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
 
 /* Left panel */
 .inst-panel-toolbar { padding: 10px 12px; border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
 .inst-panel-list { flex: 1; overflow: auto; }
-.inst-count-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: var(--primary-light); color: var(--primary); }
+.inst-count-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; background: var(--primary-light); color: var(--primary); }
 
 /* Pagination bar */
 .inst-pagination-bar { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; border-top: 1px solid var(--border); background: var(--neutral-50); flex-shrink: 0; }
-.inst-pagination-count { font-size: 10px; color: var(--muted); }
+.inst-pagination-count { font-size: 11px; color: var(--muted); }
 .inst-pagination-btns { display: flex; gap: 3px; }
 
 /* Right detail panel */

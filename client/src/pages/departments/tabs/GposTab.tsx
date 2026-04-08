@@ -7,7 +7,7 @@ interface GposTabProps {
 }
 
 const th: React.CSSProperties = {
-  padding: '6px 10px', fontSize: 10, fontWeight: 700, color: 'var(--muted)',
+  padding: '6px 10px', fontSize: 11, fontWeight: 700, color: 'var(--muted)',
   textTransform: 'uppercase', letterSpacing: '.04em',
   background: 'var(--neutral-50)', borderBottom: '1px solid var(--border)',
   textAlign: 'left', whiteSpace: 'nowrap',

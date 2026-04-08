@@ -16,7 +16,7 @@ const COLUMNS: ColumnsType<RepairScopeHistory> = [
   { title: 'Date In', dataIndex: 'dateIn', key: 'dateIn', width: 100 },
   { title: 'Status', dataIndex: 'status', key: 'status', width: 120, render: (v: string) => {
     const s = STATUS_COLORS[v] ?? { bg: 'var(--neutral-100)', color: 'var(--muted)' };
-    return <span style={{ display: 'inline-flex', padding: '1px 6px', borderRadius: 4, fontSize: 10, fontWeight: 600, background: s.bg, color: s.color }}>{v}</span>;
+    return <span style={{ display: 'inline-flex', padding: '1px 6px', borderRadius: 4, fontSize: 11, fontWeight: 600, background: s.bg, color: s.color }}>{v}</span>;
   }},
   { title: 'Scope Type', dataIndex: 'scopeType', key: 'scopeType' },
   { title: 'Client', dataIndex: 'client', key: 'client' },
@@ -52,24 +52,24 @@ export const ScopeHistoryTab = ({ repairKey, currentRepairKey }: { repairKey: nu
           background: 'var(--navy)',
           borderRadius: 8, color: 'var(--card)',
         }}>
-          <div style={{ fontSize: 10, fontWeight: 700, opacity: .6, textTransform: 'uppercase', letterSpacing: '.06em', alignSelf: 'center', marginRight: 8 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, opacity: .6, textTransform: 'uppercase', letterSpacing: '.06em', alignSelf: 'center', marginRight: 8 }}>
             Scope Lifecycle
           </div>
           <div>
             <div style={{ fontSize: 18, fontWeight: 900 }}>{totalRepairs}</div>
-            <div style={{ fontSize: 9, opacity: .6 }}>Total Repairs</div>
+            <div style={{ fontSize: 11, opacity: .6 }}>Total Repairs</div>
           </div>
           <div>
             <div style={{ fontSize: 18, fontWeight: 900 }}>{fmt$(totalCost)}</div>
-            <div style={{ fontSize: 9, opacity: .6 }}>Lifetime Cost</div>
+            <div style={{ fontSize: 11, opacity: .6 }}>Lifetime Cost</div>
           </div>
           <div>
             <div style={{ fontSize: 18, fontWeight: 900 }}>{avgTat.toFixed(1)}d</div>
-            <div style={{ fontSize: 9, opacity: .6 }}>Avg TAT</div>
+            <div style={{ fontSize: 11, opacity: .6 }}>Avg TAT</div>
           </div>
           <div>
             <div style={{ fontSize: 18, fontWeight: 900 }}>{fmt$(totalRepairs > 0 ? totalCost / totalRepairs : 0)}</div>
-            <div style={{ fontSize: 9, opacity: .6 }}>Avg Cost/Repair</div>
+            <div style={{ fontSize: 11, opacity: .6 }}>Avg Cost/Repair</div>
           </div>
         </div>
       )}

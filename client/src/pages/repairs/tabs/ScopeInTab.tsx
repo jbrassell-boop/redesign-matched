@@ -13,7 +13,7 @@ interface ScopeInTabProps {
 
 /* ── Shared styles ────────────────────────────────────── */
 const lblStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: 'var(--muted)',
+  fontSize: 11, fontWeight: 700, color: 'var(--muted)',
   textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 2,
 };
 const inputStyle: React.CSSProperties = {
@@ -86,7 +86,7 @@ const Section = ({ title, extra, children }: { title: string; extra?: React.Reac
   <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden', marginBottom: 10 }}>
     <div style={{
       background: 'var(--neutral-50, var(--bg))', padding: '6px 10px',
-      fontSize: 9.5, fontWeight: 700, color: 'var(--navy)',
+      fontSize: 11.5, fontWeight: 700, color: 'var(--navy)',
       textTransform: 'uppercase', letterSpacing: '.05em',
       borderBottom: '1px solid var(--border)',
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',

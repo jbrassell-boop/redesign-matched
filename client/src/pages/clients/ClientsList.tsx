@@ -46,7 +46,7 @@ export const ClientsList = ({ clients, loading, selectedKey, search, onSearchCha
               <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-dark)' }}>{c.name}</span>
               <span style={{
                 display: 'inline-flex', padding: '1px 6px', borderRadius: 9999,
-                fontSize: 10, fontWeight: 700,
+                fontSize: 11, fontWeight: 700,
                 background: c.isActive ? 'var(--success-light)' : 'var(--neutral-100)',
                 border: `1px solid ${c.isActive ? 'var(--success-border)' : 'var(--neutral-200)'}`,
                 color: c.isActive ? 'var(--success)' : 'var(--muted)',

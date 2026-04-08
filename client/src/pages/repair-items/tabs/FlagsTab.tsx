@@ -23,7 +23,7 @@ const FlagRow = ({ label, sub, checked, onToggle }: FlagRowProps) => (
   }}>
     <div style={{ flex: 1 }}>
       <div style={{ fontSize: 12, fontWeight: 500, color: 'var(--text)' }}>{label}</div>
-      <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 1 }}>{sub}</div>
+      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{sub}</div>
     </div>
     <Switch
       checked={checked}
@@ -46,7 +46,7 @@ export const FlagsTab = ({ draft, onChange }: FlagsTabProps) => (
       <div style={{
         background: 'var(--neutral-50)',
         padding: '5px 12px',
-        fontSize: 10,
+        fontSize: 11,
         fontWeight: 700,
         textTransform: 'uppercase',
         letterSpacing: '0.05em',

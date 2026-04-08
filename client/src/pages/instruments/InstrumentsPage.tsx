@@ -205,7 +205,7 @@ export const InstrumentsPage = () => {
           <StatusBadge status={item.status} />
         </div>
         <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{item.clientName}</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 11, color: 'var(--muted)' }}>
           <span>{item.departmentName}</span>
           <span style={{ fontWeight: 600, color: 'var(--navy)' }}>{fmt$(item.totalValue)}</span>
         </div>
@@ -234,7 +234,7 @@ export const InstrumentsPage = () => {
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)', flex: 1, marginRight: 8 }}>{item.itemDescription}</div>
           <StatusBadge status={item.isActive ? 'Active' : 'Inactive'} />
         </div>
-        <div style={{ display: 'flex', gap: 12, marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+        <div style={{ display: 'flex', gap: 12, marginTop: 3, fontSize: 11, color: 'var(--muted)' }}>
           <span>{item.rigidOrFlexible === 'R' ? 'Rigid' : item.rigidOrFlexible === 'F' ? 'Flexible' : item.rigidOrFlexible || '\u2014'}</span>
           <span>{item.tsiCode || '\u2014'}</span>
           <span style={{ marginLeft: 'auto' }}>Usage: {item.usageCount}</span>
@@ -430,7 +430,7 @@ export const InstrumentsPage = () => {
 /* ── Shared ───────────────────────────────────────────────── */
 const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (
   <button disabled={disabled} onClick={onClick} style={{
-    height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 10, fontFamily: 'inherit',
+    height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, fontFamily: 'inherit',
     cursor: disabled ? 'default' : 'pointer', fontWeight: active ? 600 : 400,
     background: active ? 'var(--navy)' : 'var(--card)', color: active ? 'var(--card)' : 'var(--muted)', opacity: disabled ? 0.4 : 1,
   }}>{children}</button>

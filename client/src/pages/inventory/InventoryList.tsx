@@ -34,7 +34,7 @@ function StockLevelBadge({ current, min }: { current: number; min: number }) {
   const isAtMin = current === min && min > 0;
   const color = isLow ? 'var(--danger)' : isAtMin ? 'var(--amber)' : 'var(--success)';
   return (
-    <span style={{ fontSize: 10, fontWeight: 700, color }}>
+    <span style={{ fontSize: 11, fontWeight: 700, color }}>
       {current}/{min}
     </span>
   );
@@ -59,10 +59,10 @@ export const InventoryList = ({
       alignItems: 'center',
       justifyContent: 'space-between',
     }}>
-      <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--navy)' }}>
+      <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--navy)' }}>
         Inventory Items
       </span>
-      <span style={{ fontSize: 10, color: 'var(--muted)' }}>{totalCount} items</span>
+      <span style={{ fontSize: 11, color: 'var(--muted)' }}>{totalCount} items</span>
     </div>
 
     {/* Search */}
@@ -145,7 +145,7 @@ export const InventoryList = ({
                   display: 'inline-flex',
                   padding: '0px 5px',
                   borderRadius: 9999,
-                  fontSize: 9,
+                  fontSize: 11,
                   fontWeight: 700,
                   background: catStyle.bg,
                   border: `1px solid ${catStyle.border}`,
@@ -155,7 +155,7 @@ export const InventoryList = ({
                 </span>
                 <StockLevelBadge current={item.currentLevel} min={item.minLevel} />
                 {item.sizeCount > 0 && (
-                  <span style={{ fontSize: 9, color: 'var(--muted)', marginLeft: 'auto' }}>
+                  <span style={{ fontSize: 11, color: 'var(--muted)', marginLeft: 'auto' }}>
                     {item.sizeCount} size{item.sizeCount !== 1 ? 's' : ''}
                   </span>
                 )}
@@ -171,7 +171,7 @@ export const InventoryList = ({
       padding: '3px 8px',
       borderTop: '1px solid var(--border)',
       background: 'var(--neutral-50)',
-      fontSize: 10,
+      fontSize: 11,
       color: 'var(--muted)',
     }}>
       {items.length} of {totalCount} shown

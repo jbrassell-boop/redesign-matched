@@ -41,7 +41,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: 700,
   textTransform: 'uppercase',
   color: 'var(--muted)',

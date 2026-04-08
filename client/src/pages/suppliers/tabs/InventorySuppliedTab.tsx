@@ -82,7 +82,7 @@ export const InventorySuppliedTab = ({ supplierKey }: InventorySuppliedTabProps)
                     display: 'inline-flex',
                     padding: '2px 6px',
                     borderRadius: 9999,
-                    fontSize: 10,
+                    fontSize: 11,
                     fontWeight: 600,
                     background: item.isActive ? 'rgba(var(--success-rgb), 0.1)' : 'var(--neutral-100)',
                     color: item.isActive ? 'var(--success)' : 'var(--muted)',
@@ -102,7 +102,7 @@ export const InventorySuppliedTab = ({ supplierKey }: InventorySuppliedTabProps)
 const thStyle: React.CSSProperties = {
   padding: '6px 8px',
   textAlign: 'left',
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: 700,
   textTransform: 'uppercase',
   color: 'var(--muted)',

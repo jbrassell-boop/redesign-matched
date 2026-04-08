@@ -41,7 +41,7 @@ export const AnalyticsWidget = () => {
             minWidth: 80, flex: 1,
           }}>
             <div style={{ fontSize: 20, fontWeight: 800, color: item.color }}>{item.value}</div>
-            <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 2 }}>{item.label}</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 2 }}>{item.label}</div>
           </div>
         ))}
       </div>

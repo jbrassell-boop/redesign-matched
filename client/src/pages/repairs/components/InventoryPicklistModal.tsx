@@ -11,7 +11,7 @@ interface InventoryPicklistModalProps {
 
 const sBar: CSSProperties = {
   background: 'var(--primary)', color: 'var(--card)',
-  fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
+  fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
   letterSpacing: '.06em', padding: '4px 10px', margin: '8px 0 0',
 };
 const fl: CSSProperties = {
@@ -48,7 +48,7 @@ export const InventoryPicklistModal = ({ open, onClose, repair, items }: Invento
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Inventory Pick List</div>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Repair Parts & Inventory</div>
-            <div style={{ fontSize: 10, color: 'var(--print-light)', marginTop: 2 }}>OM07-6</div>
+            <div style={{ fontSize: 11, color: 'var(--print-light)', marginTop: 2 }}>OM07-6</div>
           </div>
         </div>
 
@@ -88,7 +88,7 @@ export const InventoryPicklistModal = ({ open, onClose, repair, items }: Invento
             No inventory items recorded for this repair.
           </div>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 2, fontSize: 10 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 2, fontSize: 11 }}>
             <thead>
               <tr>
                 {[
@@ -173,7 +173,7 @@ export const InventoryPicklistModal = ({ open, onClose, repair, items }: Invento
                 <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', color: 'var(--print-muted)', letterSpacing: '.04em' }}>
                   {f.label}
                 </span>
-                <div style={{ borderBottom: '1px solid var(--print-check-border)', minWidth: f.minWidth, minHeight: 16, fontSize: 10 }}>
+                <div style={{ borderBottom: '1px solid var(--print-check-border)', minWidth: f.minWidth, minHeight: 16, fontSize: 11 }}>
                   {f.value || ''}
                 </div>
               </div>

@@ -44,7 +44,7 @@ const StatChip = ({ label, value, iconColor, iconBg, icon, valueColor }: StatChi
     </div>
     <div>
       <div style={{ fontSize: 15, fontWeight: 800, color: valueColor ?? 'var(--navy)', lineHeight: 1.1 }}>{value}</div>
-      <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted)', whiteSpace: 'nowrap' }}>{label}</div>
+      <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted)', whiteSpace: 'nowrap' }}>{label}</div>
     </div>
   </div>
 );
@@ -111,10 +111,10 @@ const tableContainerStyle: React.CSSProperties = { padding: 0, maxHeight: 500, o
 const tableContainerShortStyle: React.CSSProperties = { padding: 0, maxHeight: 400, overflowY: 'auto' };
 const tableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse' };
 const miniStatStripStyle: React.CSSProperties = { display: 'flex', gap: 8, marginBottom: 10 };
-const miniStatLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' };
+const miniStatLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' };
 const panelBodyStyle: React.CSSProperties = { padding: '12px 14px' };
 const panelBodyLargeStyle: React.CSSProperties = { padding: '16px 14px' };
-const formLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 };
+const formLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 4 };
 const formGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 16px' };
 const formActionsStyle: React.CSSProperties = { display: 'flex', justifyContent: 'flex-end', gap: 8 };
 const amendCancelBtnStyle: React.CSSProperties = { padding: '5px 14px', fontSize: 12, border: '1px solid var(--border)', borderRadius: 5, background: 'var(--card)', cursor: 'pointer', color: 'var(--text)' };
@@ -143,7 +143,7 @@ const reportMetricCardStyle: React.CSSProperties = {
   border: '1px solid var(--neutral-200)', borderRadius: 8,
   background: 'var(--card)', textAlign: 'center',
 };
-const reportMetricLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.04em', marginBottom: 4 };
+const reportMetricLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.04em', marginBottom: 4 };
 const notesBlockStyle: React.CSSProperties = { marginTop: 10, fontSize: 13, color: 'var(--text)', lineHeight: 1.5, borderTop: '1px solid var(--neutral-200)', paddingTop: 10 };
 const newAmendBtnStyle: React.CSSProperties = { padding: '2px 10px', fontSize: 11, fontWeight: 600, border: '1px solid var(--primary)', borderRadius: 4, background: 'rgba(var(--primary-rgb), 0.07)', color: 'var(--primary)', cursor: 'pointer' };
 const expensePlaceholderStyle: React.CSSProperties = { padding: '48px 24px', textAlign: 'center', color: 'var(--muted)' };
@@ -166,7 +166,7 @@ const notesBodyStyle: React.CSSProperties = { padding: '12px 14px', fontSize: 13
 
 // Table styling
 const thStyle: React.CSSProperties = {
-  padding: '6px 10px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+  padding: '6px 10px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
   letterSpacing: '0.05em', color: 'var(--navy)', borderBottom: '1px solid var(--neutral-200)',
   textAlign: 'left', background: 'var(--neutral-50)', whiteSpace: 'nowrap',
 };
@@ -338,7 +338,7 @@ const InvoicesTab = ({ contractKey, detail }: { contractKey: number; detail: Con
         ].map(s => (
           <div key={s.label} style={miniStatCardStyle}>
             <div style={{ fontSize: 16, fontWeight: 800, color: s.color }}>{s.value}</div>
-            <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{s.label}</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', fontWeight: 600, letterSpacing: '0.05em' }}>{s.label}</div>
           </div>
         ))}
       </div>
@@ -1058,9 +1058,8 @@ const CEditField = ({ label, value, field, onChange }: CEditFieldProps) => (
     <input
       value={value ?? ''}
       onChange={e => onChange(field, e.target.value)}
+      className="inline-edit-input"
       style={contractInputStyle}
-      onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
-      onBlur={e => (e.target.style.borderColor = 'var(--neutral-200)')}
     />
   </div>
 );

@@ -17,7 +17,7 @@ const cardStyle: React.CSSProperties = {
 const headStyle: React.CSSProperties = {
   background: 'var(--neutral-50)',
   padding: '5px 12px',
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: '0.05em',
@@ -29,7 +29,7 @@ const bodyStyle: React.CSSProperties = { padding: '10px 12px' };
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: 700,
   color: 'var(--muted)',
   textTransform: 'uppercase',

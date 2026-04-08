@@ -129,7 +129,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
                 onClick={() => window.print()}
                 style={{
                   background: 'var(--card)', color: 'var(--muted)', border: '1px solid var(--border)',
-                  borderRadius: 3, padding: '2px 7px', fontSize: 9, fontWeight: 600, cursor: 'pointer',
+                  borderRadius: 3, padding: '2px 7px', fontSize: 11, fontWeight: 600, cursor: 'pointer',
                 }}>
                 Print OM07-9
               </button>
@@ -137,7 +137,7 @@ export const AmendmentModal = ({ repairKey, repair: _repair, open, onClose, onAm
                 onClick={() => { setShowForm(true); setSelected(null); }}
                 style={{
                   background: 'var(--primary)', color: 'var(--card)', border: 'none',
-                  borderRadius: 3, padding: '2px 8px', fontSize: 10, fontWeight: 700, cursor: 'pointer',
+                  borderRadius: 3, padding: '2px 8px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
                 }}>
                 + New
               </button>

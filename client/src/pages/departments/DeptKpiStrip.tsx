@@ -72,7 +72,7 @@ export const DeptKpiStrip = ({ dept, kpis, loading }: DeptKpiStripProps) => {
                 </div>
               )}
               <div style={{
-                fontSize: 10, color: 'var(--muted)',
+                fontSize: 11, color: 'var(--muted)',
                 textTransform: 'uppercase', letterSpacing: '0.02em', whiteSpace: 'nowrap',
               }}>
                 {chip.label}

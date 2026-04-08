@@ -64,7 +64,7 @@ export const SuppliersList = ({ suppliers, loading, selectedKey, search, onSearc
                 {s.name}
               </span>
               <span style={{
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: 700,
                 color: s.isActive ? 'var(--success)' : 'var(--muted)',
                 flexShrink: 0,
@@ -79,7 +79,7 @@ export const SuppliersList = ({ suppliers, loading, selectedKey, search, onSearc
               <div style={{ display: 'flex', gap: 4, marginTop: 3, flexWrap: 'wrap' }}>
                 {s.roles.map(r => (
                   <span key={r} style={{
-                    fontSize: 9,
+                    fontSize: 11,
                     fontWeight: 600,
                     padding: '1px 5px',
                     borderRadius: 3,

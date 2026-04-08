@@ -39,7 +39,7 @@ export const OverdueAtRisk = () => {
           Overdue / At Risk
         </span>
         <span style={{
-          fontSize: 10, fontWeight: 700, color: 'var(--card)',
+          fontSize: 11, fontWeight: 700, color: 'var(--card)',
           background: 'var(--danger)', borderRadius: 'var(--radius-pill)',
           padding: '1px 7px', marginLeft: 'auto',
         }}>{items.length}</span>

@@ -60,7 +60,7 @@ export const ScopeGlance = ({ repair, flags }: ScopeGlanceProps) => {
           <span style={{
             background: 'var(--danger)', color: 'var(--card)',
             padding: '2px 9px', borderRadius: 10,
-            fontSize: 10, fontWeight: 700,
+            fontSize: 11, fontWeight: 700,
           }}>⚑ Rush</span>
         )}
         {flags.map((f) => (
@@ -68,7 +68,7 @@ export const ScopeGlance = ({ repair, flags }: ScopeGlanceProps) => {
             background: 'var(--amber-light)', color: 'var(--badge-amber-text)',
             border: '1px solid var(--amber-border)',
             padding: '2px 9px', borderRadius: 10,
-            fontSize: 10, fontWeight: 700,
+            fontSize: 11, fontWeight: 700,
           }}>⚑ {f.flag}</span>
         ))}
       </div>

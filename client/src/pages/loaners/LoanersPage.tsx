@@ -19,7 +19,7 @@ const DaysChip = ({ days, status }: { days: number; status: string }) => {
   if (status === 'Overdue') { bg = 'rgba(var(--danger-rgb), 0.1)'; color = 'var(--danger)'; }
   else if (days >= 14) { bg = 'rgba(var(--amber-rgb), 0.1)'; color = 'var(--amber)'; }
   return (
-    <span style={{ display: 'inline-block', padding: '1px 7px', borderRadius: 4, fontSize: 10, fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.04em', background: bg, color }}>
+    <span style={{ display: 'inline-block', padding: '1px 7px', borderRadius: 4, fontSize: 11, fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.04em', background: bg, color }}>
       {days}d
     </span>
   );
@@ -34,7 +34,7 @@ const loanerSeparatorStyle: React.CSSProperties = { width: 1, height: 22, backgr
 const loanerThStyle: React.CSSProperties = {
   background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 600, padding: '8px 10px',
   textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)',
-  borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 10,
+  borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 11,
 };
 const loanerCheckboxThStyle: React.CSSProperties = {
   background: 'var(--neutral-50)', padding: '8px 6px', borderBottom: '1px solid var(--neutral-200)',
@@ -43,7 +43,7 @@ const loanerCheckboxThStyle: React.CSSProperties = {
 const loanerFooterStyle: React.CSSProperties = { background: 'var(--card)', borderTop: '1px solid var(--border)', padding: '6px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 };
 const loanerTabContentStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' };
 const loanerTabInnerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
-const loanerFilterLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' };
+const loanerFilterLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' };
 const loanerDetailLoadingStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: 40 };
 const loanerDetailScrollStyle: React.CSSProperties = { overflow: 'auto', height: '100%' };
 const loanerDetailHeaderBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
@@ -59,7 +59,7 @@ const serialMonoStyle: React.CSSProperties = { fontFamily: 'monospace', fontSize
 const fulfillBtnStyle: React.CSSProperties = { width: 28, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer', background: 'rgba(var(--success-rgb), 0.1)', color: 'var(--success)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.1s' };
 const declineBtnStyle: React.CSSProperties = { width: 28, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer', background: 'rgba(var(--danger-rgb), 0.1)', color: 'var(--danger)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.1s' };
 const actionCenterStyle: React.CSSProperties = { display: 'flex', gap: 4, justifyContent: 'center' };
-const statusSmallStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
+const statusSmallStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
 const scopeTypeNameStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--navy)' };
 
 const ACTIVE_COLS = [

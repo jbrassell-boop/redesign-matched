@@ -25,9 +25,9 @@ const Metric = ({ label, value, sub, color, large }: { label: string; value: str
     padding: large ? '20px 24px' : '14px 16px',
     display: 'flex', flexDirection: 'column', gap: 3,
   }}>
-    <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{label}</div>
+    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.04em' }}>{label}</div>
     <div style={{ fontSize: large ? 28 : 20, fontWeight: 900, color: color || 'var(--navy)', lineHeight: 1.1 }}>{value}</div>
-    {sub && <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>{sub}</div>}
+    {sub && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{sub}</div>}
   </div>
 );
 
@@ -55,7 +55,7 @@ export const ReportCardTab = ({ clientKey }: Props) => {
         background: 'var(--navy)',
         borderRadius: 8, padding: '16px 20px', color: 'var(--card)',
       }}>
-        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', opacity: .6, marginBottom: 4 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', opacity: .6, marginBottom: 4 }}>
           Client Performance Report Card — {year} YTD
         </div>
         <div style={{ fontSize: 18, fontWeight: 900 }}>{data.clientName}</div>
@@ -105,7 +105,7 @@ export const ReportCardTab = ({ clientKey }: Props) => {
       {/* Footer */}
       <div style={{
         background: 'var(--neutral-50)', border: '1px solid var(--neutral-200)', borderRadius: 6,
-        padding: '10px 14px', fontSize: 10, color: 'var(--muted)', fontStyle: 'italic',
+        padding: '10px 14px', fontSize: 11, color: 'var(--muted)', fontStyle: 'italic',
       }}>
         Performance data refreshed in real-time from repair management system. On-time delivery measured as repairs shipped within 14 business days of receipt.
         ISO 13485:2016 certified processes.

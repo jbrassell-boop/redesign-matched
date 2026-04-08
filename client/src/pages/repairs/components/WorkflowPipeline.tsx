@@ -39,7 +39,7 @@ export const WorkflowPipeline = ({ currentStatus }: Props) => {
             <div title={stage.title} style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               height: 26, padding: '0 10px', borderRadius: 13,
-              fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap',
+              fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap',
               background: isActive ? 'var(--primary)' : isPast ? 'var(--primary-light)' : 'var(--neutral-100, var(--neutral-100))',
               color: isActive ? 'var(--card)' : isPast ? 'var(--primary)' : 'var(--muted, var(--muted))',
               border: isActive ? '2px solid var(--primary)' : isPast ? '1px solid var(--primary)' : '1px solid var(--neutral-200, var(--border))',

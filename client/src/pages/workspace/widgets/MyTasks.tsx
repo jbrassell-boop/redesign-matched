@@ -32,7 +32,7 @@ export const MyTasks = () => {
       }}>
         <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>My Tasks</span>
         <span style={{
-          fontSize: 10, fontWeight: 700, color: 'var(--card)',
+          fontSize: 11, fontWeight: 700, color: 'var(--card)',
           background: 'var(--primary)', borderRadius: 'var(--radius-pill)',
           padding: '1px 7px', minWidth: 18, textAlign: 'center',
         }}>{tasks.length}</span>
@@ -54,7 +54,7 @@ export const MyTasks = () => {
               <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {task.title}
               </span>
-              <span style={{ fontSize: 10, color: 'var(--muted)', flexShrink: 0 }}>{task.client}</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)', flexShrink: 0 }}>{task.client}</span>
             </div>
           ))
         )}

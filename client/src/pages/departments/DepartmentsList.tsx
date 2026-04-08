@@ -46,7 +46,7 @@ export const DepartmentsList = ({ departments, loading, selectedKey, search, onS
               <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--primary-dark)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '70%' }}>{d.name}</span>
               <span style={{
                 display: 'inline-flex', padding: '1px 6px', borderRadius: 9999,
-                fontSize: 10, fontWeight: 700,
+                fontSize: 11, fontWeight: 700,
                 background: d.isActive ? 'var(--success-light)' : 'var(--neutral-100)',
                 border: `1px solid ${d.isActive ? 'var(--success-border)' : 'var(--neutral-200)'}`,
                 color: d.isActive ? 'var(--success)' : 'var(--muted)',

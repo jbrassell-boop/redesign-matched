@@ -62,7 +62,7 @@ export const ReceivingList = ({ arrivals, loading, selectedKey, search, onSearch
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>{a.clientName || 'Unknown'}</div>
               <span style={{
-                fontSize: 9, padding: '1px 6px', borderRadius: 3,
+                fontSize: 11, padding: '1px 6px', borderRadius: 3,
                 background: badge.bg, color: badge.color, fontWeight: 700,
               }}>{badge.label}</span>
             </div>
@@ -71,11 +71,11 @@ export const ReceivingList = ({ arrivals, loading, selectedKey, search, onSearch
               {a.serialNumber && <span>SN: <span style={{ fontFamily: 'monospace' }}>{a.serialNumber}</span></span>}
             </div>
             {a.scopeTypeDesc && (
-              <div style={{ fontSize: 10, color: 'var(--muted)', marginTop: 2 }}>{a.scopeTypeDesc}</div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{a.scopeTypeDesc}</div>
             )}
             {a.complaintDesc && (
               <div style={{
-                fontSize: 10, color: 'var(--danger)', marginTop: 2,
+                fontSize: 11, color: 'var(--danger)', marginTop: 2,
                 fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>{a.complaintDesc}</div>
             )}

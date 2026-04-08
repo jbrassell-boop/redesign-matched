@@ -45,7 +45,7 @@ export const ContractsExpiring = () => {
               fontSize: 12,
             }}>
               <span style={{ flex: 1, color: 'var(--text)' }}>{item.client}</span>
-              <span style={{ fontSize: 10, color: 'var(--muted)', marginRight: 8 }}>{item.expirationDate}</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)', marginRight: 8 }}>{item.expirationDate}</span>
               <StatusBadge status={`${item.daysUntil}d`} variant={item.daysUntil < 30 ? 'red' : item.daysUntil < 60 ? 'amber' : undefined} />
             </div>
           ))

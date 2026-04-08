@@ -10,23 +10,23 @@ const tabContainerStyle: React.CSSProperties = { padding: '10px 14px', display: 
 const topGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 };
 const diContentStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 8 };
 const diButtonRowStyle: React.CSSProperties = { display: 'flex', gap: 12 };
-const fieldLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', fontWeight: 600 };
+const fieldLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', fontWeight: 600 };
 const pfButtonRowStyle: React.CSSProperties = { display: 'flex', gap: 4, marginTop: 2 };
-const angLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', fontWeight: 600, marginBottom: 4, display: 'block' };
+const angLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', fontWeight: 600, marginBottom: 4, display: 'block' };
 const angTableStyle: React.CSSProperties = { fontSize: 11, borderCollapse: 'collapse', width: '100%' };
-const angThStyle: React.CSSProperties = { textAlign: 'center', fontSize: 9, color: 'var(--muted)', padding: '2px 4px' };
-const angThLeftStyle: React.CSSProperties = { textAlign: 'left', fontSize: 9, color: 'var(--muted)', padding: '2px 4px' };
+const angThStyle: React.CSSProperties = { textAlign: 'center', fontSize: 11, color: 'var(--muted)', padding: '2px 4px' };
+const angThLeftStyle: React.CSSProperties = { textAlign: 'left', fontSize: 11, color: 'var(--muted)', padding: '2px 4px' };
 const angTdStyle: React.CSSProperties = { padding: '2px 4px', fontWeight: 500 };
 const angTdCenterStyle: React.CSSProperties = { padding: '2px 4px', textAlign: 'center' };
 const angInputStyle: React.CSSProperties = { width: 50, fontSize: 11, textAlign: 'center', border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '1px 3px', fontFamily: 'inherit' };
 const fiberGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 };
-const fiberLabelStyle: React.CSSProperties = { fontSize: 9, color: 'var(--muted)' };
+const fiberLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
 const fiberInputStyle: React.CSSProperties = { width: '100%', fontSize: 11, border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '2px 4px', fontFamily: 'inherit' };
 const postRepairMsgStyle: React.CSSProperties = { color: 'var(--muted)', fontSize: 12, textAlign: 'center', padding: 16 };
 const pfActionsRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
 const pfCountStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', fontWeight: 600 };
-const markAllPassBtnStyle: React.CSSProperties = { fontSize: 10, padding: '2px 8px', border: '1px solid var(--success)', borderRadius: 4, background: 'var(--card)', color: 'var(--success)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' };
-const clearAllBtnStyle: React.CSSProperties = { fontSize: 10, padding: '2px 8px', border: '1px solid var(--neutral-200)', borderRadius: 4, background: 'var(--card)', color: 'var(--muted)', cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' };
+const markAllPassBtnStyle: React.CSSProperties = { fontSize: 11, padding: '2px 8px', border: '1px solid var(--success)', borderRadius: 4, background: 'var(--card)', color: 'var(--success)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' };
+const clearAllBtnStyle: React.CSSProperties = { fontSize: 11, padding: '2px 8px', border: '1px solid var(--neutral-200)', borderRadius: 4, background: 'var(--card)', color: 'var(--muted)', cursor: 'pointer', fontWeight: 500, fontFamily: 'inherit' };
 const pfGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px 16px' };
 const pfFieldRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
 const pfFieldLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--text)' };
@@ -71,7 +71,7 @@ const PFButton = ({ value, target, onClick }: { value: string | undefined; targe
       onClick={onClick}
       style={{
         width: 36, height: 36, minWidth: 36, border: '1px solid var(--neutral-200)', borderRadius: 3,
-        fontSize: 10, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+        fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
         background: active ? (isPass ? 'var(--success)' : 'var(--danger)') : 'var(--card)',
         color: active ? 'var(--card)' : 'var(--muted)',
       }}

@@ -82,7 +82,7 @@ export const DepartmentsTab = ({ clientKey }: DepartmentsTabProps) => {
 const thStyle: React.CSSProperties = {
   padding: '8px 12px',
   textAlign: 'left',
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: 700,
   textTransform: 'uppercase',
   color: 'var(--muted)',

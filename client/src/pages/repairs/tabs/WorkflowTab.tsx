@@ -13,7 +13,7 @@ const APPROVED_STYLES: Record<string, { bg: string; color: string }> = {
 const COLUMNS: ColumnsType<RepairLineItem> = [
   { title: 'Appr', dataIndex: 'approved', key: 'approved', width: 58, align: 'center', render: (v: string) => {
     const s = APPROVED_STYLES[v] ?? { bg: 'var(--neutral-100)', color: 'var(--muted)' };
-    return <span style={{ display: 'inline-flex', width: 22, height: 22, borderRadius: 4, alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, background: s.bg, color: s.color }}>{v || '\u2014'}</span>;
+    return <span style={{ display: 'inline-flex', width: 22, height: 22, borderRadius: 4, alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, background: s.bg, color: s.color }}>{v || '\u2014'}</span>;
   }},
   { title: 'Code', dataIndex: 'itemCode', key: 'itemCode', width: 70 },
   { title: 'Repair Item', dataIndex: 'description', key: 'description' },

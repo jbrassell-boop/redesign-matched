@@ -90,7 +90,7 @@ export const ProductSaleDetailPane = ({ detail, loading, onClose }: Props) => {
             ].map((c) => (
               <div key={c.label} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: 16, fontWeight: 800, color: c.color }}>{c.value}</div>
-                <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{c.label}</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{c.label}</div>
               </div>
             ))}
           </div>

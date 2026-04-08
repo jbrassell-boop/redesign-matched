@@ -80,7 +80,7 @@ export const ReceiveInventoryTab = () => {
           padding: '8px 14px',
           background: 'var(--neutral-50)',
           borderBottom: '1px solid var(--border)',
-          fontSize: 10, fontWeight: 700, color: 'var(--navy)',
+          fontSize: 11, fontWeight: 700, color: 'var(--navy)',
           textTransform: 'uppercase', letterSpacing: '0.04em',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
@@ -112,7 +112,7 @@ export const ReceiveInventoryTab = () => {
               >
                 <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>{item.description}</div>
                 <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{item.sizeDescription || 'Default size'}</div>
-                <div style={{ display: 'flex', gap: 10, marginTop: 4, fontSize: 10, fontWeight: 600 }}>
+                <div style={{ display: 'flex', gap: 10, marginTop: 4, fontSize: 11, fontWeight: 600 }}>
                   <span style={{ color: 'var(--danger)' }}>Current: {item.currentLevel}</span>
                   <span style={{ color: 'var(--muted)' }}>Min: {item.minLevel}</span>
                   {item.binNumber && <span style={{ color: 'var(--primary)', background: 'var(--primary-light)', padding: '0 4px', borderRadius: 3 }}>Bin: {item.binNumber}</span>}
@@ -231,7 +231,7 @@ export const ReceiveInventoryTab = () => {
 const FormField = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
     <label style={{
-      display: 'block', fontSize: 10, fontWeight: 700, color: 'var(--muted)',
+      display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--muted)',
       textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4,
     }}>
       {label}

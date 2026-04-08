@@ -18,7 +18,7 @@ const inputStyle: React.CSSProperties = {
 };
 
 const labelStyle: React.CSSProperties = {
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: 700,
   textTransform: 'uppercase',
   color: 'var(--muted)',
@@ -48,7 +48,7 @@ const Field = ({ label, value, field, onChange, type = 'text', span2 = false }: 
 );
 
 const colHeadStyle: React.CSSProperties = {
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: 700,
   color: 'var(--muted)',
   textTransform: 'uppercase',

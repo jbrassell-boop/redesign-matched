@@ -267,7 +267,7 @@ export const OnsiteServicesPage = () => {
           New Visit
         </button>
         <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
-        <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
           Status
         </span>
         <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden' }}>
@@ -299,7 +299,7 @@ export const OnsiteServicesPage = () => {
             outline: 'none', cursor: 'pointer', width: 120,
           }}
         />
-        <span style={{ fontSize: 10, color: 'var(--muted)' }}>to</span>
+        <span style={{ fontSize: 11, color: 'var(--muted)' }}>to</span>
         <input
           type="date"
           value={dateTo}
@@ -374,11 +374,11 @@ export const OnsiteServicesPage = () => {
                       <StatusBadge status={item.status} />
                     </div>
                     <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{item.clientName}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 11, color: 'var(--muted)' }}>
                       <span>{item.deptName}</span>
                       <span>{item.visitDate ?? '\u2014'}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2, fontSize: 10, color: 'var(--muted)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2, fontSize: 11, color: 'var(--muted)' }}>
                       <span>{item.techName}</span>
                       <span style={{ fontWeight: 600, color: 'var(--navy)' }}>${item.totalBilled.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>

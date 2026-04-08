@@ -25,8 +25,8 @@ const acqCenterSpinStyle: React.CSSProperties = { display: 'flex', justifyConten
 const acqNoDetailStyle: React.CSSProperties = { padding: 40, textAlign: 'center', color: 'var(--muted)' };
 const acqCostBannerStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: '12px 0 16px', borderBottom: '1px solid var(--border)', marginBottom: 16 };
 const acqCostValueStyle: React.CSSProperties = { fontSize: 22, fontWeight: 800, color: 'var(--navy)' };
-const acqCostLabelStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
-const acqCommentsLabelStyle: React.CSSProperties = { fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 };
+const acqCostLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' };
+const acqCommentsLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 };
 const acqCommentBoxStyle: React.CSSProperties = { fontSize: 12, color: 'var(--text)', background: 'var(--neutral-50)', borderRadius: 6, padding: '10px 12px', border: '1px solid var(--border)' };
 const acqPageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
 const acqSplitPaneStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex' };
@@ -36,16 +36,16 @@ const acqListHeaderStyle: React.CSSProperties = { padding: '10px 12px', borderBo
 const acqListTitleRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between' };
 const acqListTitleLeftStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8 };
 const acqListTitleTextStyle: React.CSSProperties = { fontSize: 13, fontWeight: 800, color: 'var(--navy)' };
-const acqListCountBadgeStyle: React.CSSProperties = { fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' };
+const acqListCountBadgeStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'var(--primary-light)', color: 'var(--primary)' };
 const acqSearchIconStyle: React.CSSProperties = { color: 'var(--muted)', fontSize: 12 };
 const acqSearchInputStyle: React.CSSProperties = { height: 28, fontSize: 11 };
 const acqListBodyStyle: React.CSSProperties = { flex: 1, overflow: 'auto' };
 const acqLoadingStyle: React.CSSProperties = { padding: 30, textAlign: 'center', color: 'var(--muted)', fontSize: 12 };
 const acqRowSerialStyle: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: 'var(--navy)', lineHeight: 1.2 };
 const acqRowModelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', marginTop: 1 };
-const acqRowBottomStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 10, color: 'var(--muted)' };
+const acqRowBottomStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 11, color: 'var(--muted)' };
 const acqPaginationStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderTop: '1px solid var(--border)', background: 'var(--neutral-50)', flexShrink: 0 };
-const acqPagCountStyle: React.CSSProperties = { fontSize: 10, color: 'var(--muted)' };
+const acqPagCountStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
 const acqPagBtnsStyle: React.CSSProperties = { display: 'flex', gap: 3 };
 
 const TABS: TabDef[] = [
@@ -402,7 +402,7 @@ export const AcquisitionsPage = () => {
 /* ── Shared ───────────────────────────────────────────────── */
 const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (
   <button disabled={disabled} onClick={onClick} style={{
-    height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 10, fontFamily: 'inherit',
+    height: 36, minWidth: 36, padding: '0 6px', border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, fontFamily: 'inherit',
     cursor: disabled ? 'default' : 'pointer', fontWeight: active ? 600 : 400,
     background: active ? 'var(--navy)' : 'var(--card)', color: active ? 'var(--card)' : 'var(--muted)', opacity: disabled ? 0.4 : 1,
   }}>{children}</button>

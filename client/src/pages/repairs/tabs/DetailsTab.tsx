@@ -24,12 +24,12 @@ const fieldStyle: React.CSSProperties = {
   display: 'flex', alignItems: 'center',
 };
 const lblStyle: React.CSSProperties = {
-  fontSize: 9, fontWeight: 700, color: 'var(--muted)',
+  fontSize: 11, fontWeight: 700, color: 'var(--muted)',
   textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 4,
 };
 const sectionHd: React.CSSProperties = {
   background: 'var(--neutral-50, var(--bg))',
-  padding: '7px 14px', fontSize: 10.5, fontWeight: 700, color: 'var(--navy)',
+  padding: '7px 14px', fontSize: 11.5, fontWeight: 700, color: 'var(--navy)',
   textTransform: 'uppercase', letterSpacing: '.05em',
   borderBottom: '1px solid var(--border)',
   borderTop: '1px solid var(--border)',
@@ -41,7 +41,7 @@ const dtActionBarStyle: React.CSSProperties = {
   background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 6,
   padding: '7px 10px', display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center',
 };
-const dtActionsLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginRight: 4 };
+const dtActionsLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.05em', marginRight: 4 };
 const dtActionBtnBaseStyle: React.CSSProperties = {
   height: 28, padding: '0 10px', borderRadius: 4,
   fontSize: 11, fontWeight: 600, cursor: 'pointer',
@@ -59,7 +59,7 @@ const dtTextareaStyle: React.CSSProperties = {
 
 const dtCommentPlaceholderStyle: React.CSSProperties = {
   minHeight: 44, border: '1px solid var(--neutral-200)', borderRadius: 3,
-  background: 'var(--card)', padding: '6px 7px', fontSize: 10,
+  background: 'var(--card)', padding: '6px 7px', fontSize: 11,
   color: 'var(--muted)', fontStyle: 'italic', marginBottom: 8,
 };
 const dtNotesBoxStyle: React.CSSProperties = {
@@ -67,7 +67,7 @@ const dtNotesBoxStyle: React.CSSProperties = {
   borderRadius: 4, padding: '5px 7px',
 };
 const dtNotesLabelStyle: React.CSSProperties = { fontSize: 8, fontWeight: 700, color: 'var(--navy)', marginBottom: 1 };
-const dtNotesTextStyle: React.CSSProperties = { fontSize: 10, color: 'var(--label)' };
+const dtNotesTextStyle: React.CSSProperties = { fontSize: 11, color: 'var(--label)' };
 const dtFlagsBannerStyle: React.CSSProperties = {
   background: 'var(--amber-light)',
   border: '1px solid var(--amber-border)',
@@ -76,11 +76,11 @@ const dtFlagsBannerStyle: React.CSSProperties = {
   padding: '7px 12px',
   display: 'flex', gap: 10, alignItems: 'center',
 };
-const dtFlagsLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, color: 'var(--badge-amber-text)', textTransform: 'uppercase', letterSpacing: '.05em', flexShrink: 0 };
+const dtFlagsLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--badge-amber-text)', textTransform: 'uppercase', letterSpacing: '.05em', flexShrink: 0 };
 const dtFlagsRowStyle: React.CSSProperties = { display: 'flex', gap: 6, flexWrap: 'wrap' };
-const dtRushBadgeStyle: React.CSSProperties = { background: 'var(--danger)', color: 'var(--card)', padding: '2px 9px', borderRadius: 10, fontSize: 10, fontWeight: 700 };
-const dtFlagBadgeStyle: React.CSSProperties = { background: 'var(--badge-amber-text)', color: 'var(--card)', padding: '2px 9px', borderRadius: 10, fontSize: 10, fontWeight: 700 };
-const dtFlagsReviewStyle: React.CSSProperties = { marginLeft: 'auto', fontSize: 10, color: 'var(--badge-amber-text)', fontStyle: 'italic' };
+const dtRushBadgeStyle: React.CSSProperties = { background: 'var(--danger)', color: 'var(--card)', padding: '2px 9px', borderRadius: 10, fontSize: 11, fontWeight: 700 };
+const dtFlagBadgeStyle: React.CSSProperties = { background: 'var(--badge-amber-text)', color: 'var(--card)', padding: '2px 9px', borderRadius: 10, fontSize: 11, fontWeight: 700 };
+const dtFlagsReviewStyle: React.CSSProperties = { marginLeft: 'auto', fontSize: 11, color: 'var(--badge-amber-text)', fontStyle: 'italic' };
 const dtTechModalTitleStyle: React.CSSProperties = { fontSize: 14, fontWeight: 700, color: 'var(--navy)' };
 const dtTechModalBodyStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12, padding: '8px 0' };
 const dtTechFieldLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 };

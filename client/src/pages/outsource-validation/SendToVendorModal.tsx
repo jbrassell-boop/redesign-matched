@@ -63,10 +63,10 @@ export const SendToVendorModal = ({ open, item, onClose, onSent }: SendToVendorM
         marginBottom: 16,
       }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>WO#</span><div style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.wo}</div></div>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Serial#</span><div>{item.serial}</div></div>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Scope Type</span><div>{item.scopeType}</div></div>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Client</span><div>{item.clientName}</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>WO#</span><div style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.wo}</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Serial#</span><div>{item.serial}</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Scope Type</span><div>{item.scopeType}</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Client</span><div>{item.clientName}</div></div>
         </div>
       </div>
 

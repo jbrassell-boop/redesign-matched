@@ -16,7 +16,7 @@ const cardStyle: React.CSSProperties = {
 const headStyle: React.CSSProperties = {
   background: 'var(--neutral-50)',
   padding: '5px 12px',
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: '0.05em',
@@ -26,7 +26,7 @@ const headStyle: React.CSSProperties = {
 
 const labelStyle: React.CSSProperties = {
   display: 'block',
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: 700,
   color: 'var(--muted)',
   textTransform: 'uppercase',
@@ -37,7 +37,7 @@ const labelStyle: React.CSSProperties = {
 const tgHeadStyle: React.CSSProperties = {
   background: 'var(--navy)',
   color: 'var(--card)',
-  fontSize: 9.5,
+  fontSize: 11.5,
   fontWeight: 700,
   padding: '5px 10px',
   textAlign: 'center',
@@ -47,7 +47,7 @@ const tgHeadStyle: React.CSSProperties = {
 const tgSubStyle: React.CSSProperties = {
   background: 'var(--neutral-50)',
   color: 'var(--navy)',
-  fontSize: 9,
+  fontSize: 11,
   fontWeight: 700,
   padding: '3px 10px',
   textAlign: 'center',
@@ -61,7 +61,7 @@ const tgLblStyle: React.CSSProperties = {
   flexShrink: 0,
   background: 'var(--neutral-50)',
   padding: '4px 8px',
-  fontSize: 10,
+  fontSize: 11,
   fontWeight: 700,
   color: 'var(--navy)',
   borderRight: '1px solid var(--border)',

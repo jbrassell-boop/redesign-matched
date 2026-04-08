@@ -96,7 +96,7 @@ export const RepairItemAutoComplete = ({ repairKey, onSelect, inputRef }: Props)
               onMouseEnter={() => setHighlighted(idx)}
             >
               <span>
-                <span style={{ fontWeight: 600, color: 'var(--navy)', marginRight: 6, fontSize: 10 }}>
+                <span style={{ fontWeight: 600, color: 'var(--navy)', marginRight: 6, fontSize: 11 }}>
                   {item.itemCode}
                 </span>
                 {item.description}

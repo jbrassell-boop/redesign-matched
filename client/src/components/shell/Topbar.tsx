@@ -148,7 +148,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
                     </div>
                     <div>
                       <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>{item.label}</div>
-                      <div style={{ fontSize: 10, color: 'var(--muted)' }}>{item.desc}</div>
+                      <div style={{ fontSize: 11, color: 'var(--muted)' }}>{item.desc}</div>
                     </div>
                   </div>
                   );

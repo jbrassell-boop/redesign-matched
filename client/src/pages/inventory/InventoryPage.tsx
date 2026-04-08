@@ -92,14 +92,14 @@ export const InventoryPage = () => {
           overflow: 'hidden',
         }}>
           <div style={{ padding: '6px 10px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--navy)', margin: 0 }}>Inventory</h2>
+            <h2 style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--navy)', margin: 0 }}>Inventory</h2>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 10, color: 'var(--muted)' }} aria-live="polite">{totalCount} items</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)' }} aria-live="polite">{totalCount} items</span>
               <ExportButton data={items as unknown as Record<string, unknown>[]} columns={INVENTORY_EXPORT_COLS} filename="inventory-export" sheetName="Inventory" />
               <button
                 onClick={() => { setPoSupplier(''); setPoNotes(''); setDraftPOOpen(true); }}
                 style={{
-                  height: 36, minWidth: 36, padding: '0 8px', fontSize: 10, fontWeight: 700, fontFamily: 'inherit',
+                  height: 36, minWidth: 36, padding: '0 8px', fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
                   background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 4, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', gap: 3,
                 }}

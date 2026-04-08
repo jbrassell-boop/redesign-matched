@@ -84,7 +84,7 @@ export const NotesTab = ({ repairKey }: Props) => {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
               <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--navy)' }}>{n.user || 'System'}</span>
-              <span style={{ fontSize: 10, color: 'var(--muted)' }}>{n.date}</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)' }}>{n.date}</span>
             </div>
             <div style={{ fontSize: 12, color: 'var(--danger)', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
               {n.note}

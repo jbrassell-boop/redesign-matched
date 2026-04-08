@@ -85,7 +85,7 @@ export const DepartmentsPage = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <h1 style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)', margin: 0 }}>Departments</h1>
               <span aria-live="polite" style={{
-                fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
+                fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 10,
                 background: 'var(--primary-light)', color: 'var(--primary)',
               }}>
                 {filtered.length}
@@ -123,7 +123,7 @@ export const DepartmentsPage = () => {
                 key={s.key}
                 onClick={() => setStatusFilter(s.key)}
                 style={{
-                  padding: '3px 10px', borderRadius: 9999, fontSize: 10, fontWeight: 700,
+                  padding: '3px 10px', borderRadius: 9999, fontSize: 11, fontWeight: 700,
                   cursor: 'pointer', border: 'none', display: 'flex', gap: 4, alignItems: 'center',
                   background: statusFilter === s.key ? 'var(--navy)' : 'var(--neutral-100)',
                   color: statusFilter === s.key ? 'var(--card)' : 'var(--muted)',
@@ -131,7 +131,7 @@ export const DepartmentsPage = () => {
               >
                 {s.label}
                 <span style={{
-                  fontSize: 9, opacity: .7,
+                  fontSize: 11, opacity: .7,
                   background: statusFilter === s.key ? 'rgba(255,255,255,.2)' : 'var(--neutral-200)',
                   padding: '0 5px', borderRadius: 8,
                 }}>
@@ -181,7 +181,7 @@ export const DepartmentsPage = () => {
                           <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{d.clientName}</div>
                         </div>
                         <span style={{
-                          fontSize: 9, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
+                          fontSize: 11, fontWeight: 700, padding: '1px 6px', borderRadius: 8,
                           background: d.isActive ? 'rgba(var(--success-rgb), 0.1)' : 'var(--neutral-100)',
                           color: d.isActive ? 'var(--success)' : 'var(--muted)',
                         }}>

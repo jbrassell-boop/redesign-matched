@@ -151,8 +151,8 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 10, color: 'var(--muted)' }}>{s.manufacturer || ''}</div>
-                  <div style={{ fontSize: 10, color: 'var(--muted)' }}>{s.category || ''}</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>{s.manufacturer || ''}</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>{s.category || ''}</div>
                 </div>
                 <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" style={{ width: 14, height: 14, opacity: 0.4 }}>
                   <polyline points="9 18 15 12 9 6" />
@@ -173,7 +173,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '8px 0' }}>
           <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 4 }}>
               Serial Number
             </div>
             <input
@@ -185,7 +185,7 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
             />
           </div>
           <div>
-            <div style={{ fontSize: 9, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 4 }}>
+            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 4 }}>
               Scope Type
             </div>
             <select

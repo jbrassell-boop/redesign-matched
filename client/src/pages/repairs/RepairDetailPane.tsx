@@ -389,7 +389,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
               onClick={() => setHeaderExpanded(!headerExpanded)}
               style={{
                 marginLeft: 'auto', border: 'none', background: 'none', cursor: 'pointer',
-                fontSize: 10, fontWeight: 600, color: 'var(--primary)', fontFamily: 'inherit',
+                fontSize: 11, fontWeight: 600, color: 'var(--primary)', fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center', gap: 3, padding: '2px 6px',
               }}
             >

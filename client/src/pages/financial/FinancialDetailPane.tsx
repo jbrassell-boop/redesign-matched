@@ -92,11 +92,11 @@ export const FinancialDetailPane = ({ detail, loading, open, onClose }: Props) =
             {/* Summary row */}
             <div style={{ display: 'flex', gap: 16, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--neutral-200)' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Amount</div>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Amount</div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>{fmt$(detail.amount)}</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Aging</div>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Aging</div>
                 <div style={{
                   fontSize: 20,
                   fontWeight: 800,

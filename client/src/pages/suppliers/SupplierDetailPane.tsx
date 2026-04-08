@@ -20,7 +20,7 @@ interface EditFieldProps {
 
 const EditField = ({ label, value, field, onChange }: EditFieldProps) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '3px 0' }}>
-    <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em' }}>
+    <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em' }}>
       {label}
     </span>
     <input
@@ -38,8 +38,7 @@ const EditField = ({ label, value, field, onChange }: EditFieldProps) => (
         width: '100%',
         boxSizing: 'border-box',
       }}
-      onFocus={e => (e.target.style.borderColor = 'var(--primary)')}
-      onBlur={e => (e.target.style.borderColor = 'var(--neutral-200)')}
+      className="inline-edit-input"
     />
   </div>
 );
@@ -58,7 +57,7 @@ const RoleChip = ({ label, active }: { label: string; active: boolean }) => (
     gap: 4,
     padding: '2px 8px',
     borderRadius: 4,
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: 600,
     border: '1px solid',
     borderColor: active ? 'rgba(var(--primary-rgb), 0.3)' : 'var(--border)',
@@ -82,7 +81,7 @@ const TABS: TabDef[] = [
 ];
 
 const SectionLabel = ({ title }: { title: string }) => (
-  <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.05em', paddingBottom: 4, borderBottom: '1px solid var(--neutral-200)', marginBottom: 8 }}>
+  <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.05em', paddingBottom: 4, borderBottom: '1px solid var(--neutral-200)', marginBottom: 8 }}>
     {title}
   </div>
 );
@@ -195,7 +194,7 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
           </>
         )}
 
-        <div style={{ marginTop: 12, fontSize: 10, color: 'var(--muted)' }}>
+        <div style={{ marginTop: 12, fontSize: 11, color: 'var(--muted)' }}>
           Last Updated: {localDetail.lastUpdate ?? 'N/A'}
         </div>
       </div>
@@ -210,11 +209,11 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
           <thead>
             <tr style={{ borderBottom: '2px solid var(--neutral-200)' }}>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>PO #</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Date</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Amount</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Status</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Type</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>PO #</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Date</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Amount</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Status</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Type</th>
             </tr>
           </thead>
           <tbody>
@@ -249,7 +248,7 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
                 border: '1px solid var(--border)',
                 borderRadius: 4,
                 padding: '2px 8px',
-                fontSize: 10,
+                fontSize: 11,
                 fontWeight: 700,
                 color: 'var(--muted)',
                 fontFamily: 'monospace',
@@ -260,7 +259,7 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
             <div style={{ display: 'flex', gap: 4, marginLeft: 6 }}>
               {localDetail.roles.map(r => (
                 <span key={r} style={{
-                  fontSize: 9,
+                  fontSize: 11,
                   fontWeight: 600,
                   padding: '2px 6px',
                   borderRadius: 3,

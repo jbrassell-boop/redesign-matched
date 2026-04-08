@@ -78,11 +78,11 @@ export const RepairDetailPane = ({ detail, loading, onClose }: RepairPaneProps) 
           <>
             <div style={{ display: 'flex', gap: 16, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--neutral-200)' }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Items</div>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Items</div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>{detail.items.length}</div>
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Days Open</div>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Days Open</div>
                 <div style={{
                   fontSize: 20,
                   fontWeight: 800,
@@ -92,7 +92,7 @@ export const RepairDetailPane = ({ detail, loading, onClose }: RepairPaneProps) 
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Total Value</div>
+                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Total Value</div>
                 <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>
                   {fmt$(detail.items.reduce((s, i) => s + i.repairPrice, 0))}
                 </div>
@@ -185,7 +185,7 @@ export const CatalogDetailPane = ({ detail, loading, onClose }: CatalogPaneProps
             ].map((card) => (
               <div key={card.label} style={{ background: 'var(--neutral-50)', border: '1px solid var(--border)', borderRadius: 6, padding: 12, textAlign: 'center' }}>
                 <div style={{ fontSize: 18, fontWeight: 800, color: card.color }}>{card.value}</div>
-                <div style={{ fontSize: 9, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 2 }}>{card.label}</div>
+                <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 2 }}>{card.label}</div>
               </div>
             ))}
           </FormGrid>

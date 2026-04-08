@@ -31,12 +31,12 @@ export const RepairItemsTab = ({ scopeTypeKey }: Props) => {
     <div style={{ padding: '14px 18px' }}>
       <div style={{ background: 'var(--card)', border: '1px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden' }}>
         <div style={{
-          background: 'var(--neutral-50)', padding: '6px 12px', fontSize: 10, fontWeight: 700,
+          background: 'var(--neutral-50)', padding: '6px 12px', fontSize: 11, fontWeight: 700,
           color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em',
           borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         }}>
           <span>Repair Items</span>
-          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'none', letterSpacing: 0 }}>{items.length} items</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'none', letterSpacing: 0 }}>{items.length} items</span>
         </div>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
           <thead>
@@ -68,7 +68,7 @@ export const RepairItemsTab = ({ scopeTypeKey }: Props) => {
 };
 
 const thStyle: React.CSSProperties = {
-  background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 9, fontWeight: 600,
+  background: 'var(--neutral-50)', padding: '5px 8px', fontSize: 11, fontWeight: 600,
   color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', textAlign: 'left',
   borderBottom: '1px solid var(--neutral-200)',
 };

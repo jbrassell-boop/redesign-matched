@@ -94,6 +94,11 @@
   background: var(--primary-hover-bg) !important;
 }
 
+/* ── Inline edit inputs (focus border) ─────────────────────────────── */
+.inline-edit-input:focus {
+  border-color: var(--primary) !important;
+}
+
 /* ── Login inputs ─────────────────────────────────────────────────────── */
 .login-input {
   width: 100%;

@@ -88,7 +88,7 @@ export const MaxChargesTab = ({ deptKey }: Props) => {
 };
 
 const thStyle: React.CSSProperties = {
-  padding: '6px 10px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
+  padding: '6px 10px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
   color: 'var(--muted)', letterSpacing: '.04em', textAlign: 'left',
   borderBottom: '1px solid var(--neutral-200)',
 };

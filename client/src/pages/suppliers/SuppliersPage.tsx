@@ -25,7 +25,7 @@ const StatChip = ({ label, value, color }: { label: string; value: number; color
     background: 'var(--card)',
     border: '1px solid var(--neutral-200)',
   }}>
-    <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>{label}</span>
+    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase' }}>{label}</span>
     <span style={{ fontSize: 13, fontWeight: 800, color }}>{value}</span>
   </div>
 );

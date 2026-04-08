@@ -153,13 +153,13 @@ export const LoginPage = () => {
               <svg aria-hidden="true" width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth={2.5}>
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
-              <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--primary)', letterSpacing: '.03em' }}>ISO 13485:2016</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', letterSpacing: '.03em' }}>ISO 13485:2016</span>
             </div>
           </div>
         </div>
 
         {/* Copyright */}
-        <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>
           &copy; {new Date().getFullYear()} Total Scope, Inc. &mdash; WinScope Platform
         </div>
       </div>

@@ -11,7 +11,7 @@ interface DefectTrackingModalProps {
 
 const sBar: CSSProperties = {
   background: 'var(--primary)', color: 'var(--card)',
-  fontSize: 9, fontWeight: 700, textTransform: 'uppercase',
+  fontSize: 11, fontWeight: 700, textTransform: 'uppercase',
   letterSpacing: '.06em', padding: '4px 10px', margin: '8px 0 0',
 };
 const fl: CSSProperties = {
@@ -48,7 +48,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 15, fontWeight: 800, color: 'var(--navy)' }}>Defect Tracking</div>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Repair Quality Record</div>
-            <div style={{ fontSize: 10, color: 'var(--print-light)', marginTop: 2 }}>OM07-8</div>
+            <div style={{ fontSize: 11, color: 'var(--print-light)', marginTop: 2 }}>OM07-8</div>
           </div>
         </div>
 
@@ -92,9 +92,9 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
                 </svg>
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 10.5, fontWeight: 600 }}>{d.item || 'Unknown defect item'}</div>
+                <div style={{ fontSize: 11.5, fontWeight: 600 }}>{d.item || 'Unknown defect item'}</div>
                 {d.comment && (
-                  <div style={{ borderBottom: '1px solid var(--print-border)', minHeight: 16, fontSize: 10, color: 'var(--print-muted)', marginTop: 4 }}>
+                  <div style={{ borderBottom: '1px solid var(--print-border)', minHeight: 16, fontSize: 11, color: 'var(--print-muted)', marginTop: 4 }}>
                     {d.comment}
                   </div>
                 )}
@@ -107,7 +107,7 @@ export const DefectTrackingModal = ({ open, onClose, repair, defects }: DefectTr
         <div style={sBar}>Follow-Up Notes</div>
         <div style={{
           border: '1px solid var(--print-border)', borderRadius: 3, minHeight: 36,
-          padding: '4px 8px', fontSize: 10.5, marginTop: 4,
+          padding: '4px 8px', fontSize: 11.5, marginTop: 4,
           color: defects.some(d => d.comment) ? 'var(--label)' : 'var(--muted)',
           fontStyle: defects.some(d => d.comment) ? 'normal' : 'italic',
         }}>

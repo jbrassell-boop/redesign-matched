@@ -57,10 +57,10 @@ export const ReceiveBackModal = ({ open, item, onClose, onReceived }: ReceiveBac
         marginBottom: 16,
       }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>WO#</span><div style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.wo}</div></div>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Vendor</span><div>{item.vendorName}</div></div>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Days Out</span><div style={{ fontWeight: 600, color: item.daysOut > 30 ? 'var(--danger)' : item.daysOut > 14 ? 'var(--warning)' : 'var(--muted)' }}>{item.daysOut}d</div></div>
-          <div><span style={{ color: 'var(--muted)', fontSize: 10, fontWeight: 600, textTransform: 'uppercase' }}>Vendor Cost</span><div>{fmtMoney(item.vendorCost)}</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>WO#</span><div style={{ fontWeight: 700, color: 'var(--navy)' }}>{item.wo}</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Vendor</span><div>{item.vendorName}</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Days Out</span><div style={{ fontWeight: 600, color: item.daysOut > 30 ? 'var(--danger)' : item.daysOut > 14 ? 'var(--warning)' : 'var(--muted)' }}>{item.daysOut}d</div></div>
+          <div><span style={{ color: 'var(--muted)', fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>Vendor Cost</span><div>{fmtMoney(item.vendorCost)}</div></div>
         </div>
       </div>
 
