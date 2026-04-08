@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Progress, Tabs, Tag } from 'antd';
 import { VerifierCard } from './VerifierCard';
 import { DeveloperView } from './DeveloperView';
@@ -32,6 +33,7 @@ export function FieldVerifierPage() {
   const [activeScreen, setActiveScreen] = useState<string>('Dashboard');
   const [activeFieldIndex, setActiveFieldIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
     fetch(`${FIELD_VERIFIER_API}/registry`)
@@ -41,6 +43,26 @@ export function FieldVerifierPage() {
         setLoading(false);
       });
   }, []);
+
+  // Navigate to screen + field from deep-link params (?screen=repairs&field=rep_status)
+  useEffect(() => {
+    if (screens.length === 0) return; // not loaded yet
+    const screenParam = searchParams.get('screen'); // e.g. 'repairs'
+    const fieldParam = searchParams.get('field');   // e.g. 'rep_status'
+    if (!screenParam) return;
+
+    // Find the display name that matches this slug
+    const screenName = Object.entries(SCREEN_FILES).find(([, slug]) => slug === screenParam)?.[0];
+    if (!screenName) return;
+
+    setActiveScreen(screenName);
+    if (fieldParam) {
+      const screen = screens.find(s => s.screen === screenName);
+      const idx = screen?.fields.findIndex(f => f.id === fieldParam) ?? -1;
+      if (idx >= 0) setActiveFieldIndex(idx);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screens]); // runs once screens array becomes non-empty
 
   const totalFields = screens.reduce((acc, s) => acc + s.fields.length, 0);
   const confirmedFields = screens.reduce(
