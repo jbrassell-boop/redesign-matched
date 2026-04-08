@@ -1,171 +1,190 @@
+import './print.css';
 import type { RepairFull } from '../types';
-
-// ── Extracted static styles ──
-const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflow: 'auto', padding: '20px 0' };
-const printFormStyle: React.CSSProperties = { width: '8.5in', background: 'var(--card)', fontFamily: "'Inter', Arial, sans-serif", fontSize: 11, color: 'var(--print-text)' };
-const printCloseRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 0' };
-const printBtnStyle: React.CSSProperties = { padding: '8px 20px', background: 'var(--primary)', color: 'var(--card)', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
-const closeBtnStyle: React.CSSProperties = { padding: '8px 20px', background: 'var(--print-light)', color: 'var(--card)', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
-const formBodyStyle: React.CSSProperties = { padding: '0.5in', display: 'flex', flexDirection: 'column', gap: 10 };
-const headerRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 };
-const headerTitleStyle: React.CSSProperties = { fontSize: 15, fontWeight: 800, color: 'var(--navy)' };
-const headerDocRefStyle: React.CSSProperties = { fontSize: 10, color: 'var(--print-light)', marginTop: 2 };
-const addrGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 };
-const shipRefGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 12px', marginTop: 6 };
-const itemsTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse', marginTop: 4 };
-const altRowStyle: React.CSSProperties = { background: 'var(--bg)' };
-const checkboxCellStyle: React.CSSProperties = { display: 'inline-block', width: 14, height: 14, border: '1px solid var(--print-check-border)', borderRadius: 2 };
-const disinfectionWrapStyle: React.CSSProperties = { marginTop: 10, padding: '10px 14px', background: 'var(--print-warn-bg)', border: '1.5px solid var(--warning)', borderRadius: 4 };
-const disinfectionTitleStyle: React.CSSProperties = { fontSize: '9.5px', fontWeight: 800, textTransform: 'uppercase', color: 'var(--badge-amber-text)', letterSpacing: '.06em', marginBottom: 4 };
-const disinfectionBodyStyle: React.CSSProperties = { fontSize: '10.5px', color: 'var(--print-warn-text)', lineHeight: 1.5 };
-const sigRow1Style: React.CSSProperties = { display: 'flex', gap: 20, marginTop: 8 };
-const sigRow2Style: React.CSSProperties = { display: 'flex', gap: 20 };
-const footerStyle: React.CSSProperties = { marginTop: 'auto', paddingTop: 8, borderTop: '1px solid var(--print-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: 'var(--print-footer)' };
-const addrBlockStyle: React.CSSProperties = { border: '1px solid var(--print-border-lt)', borderRadius: 4, padding: '8px 12px' };
-const addrBlockTitleStyle: React.CSSProperties = { fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '.06em', marginBottom: 6, borderBottom: '1px solid var(--print-border-xlt)', paddingBottom: 3 };
-const addrLineStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-border)', minHeight: 16, fontSize: 11, marginBottom: 4 };
-const sigLineStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-check-border)', minHeight: 30 };
-const sigLabelStyle: React.CSSProperties = { fontSize: '8.5px', color: 'var(--print-muted)', fontWeight: 600, marginTop: 2 };
-const fldValueStyle: React.CSSProperties = { borderBottom: '1px solid var(--print-check-border)', minHeight: 17, fontSize: 11, padding: '1px 2px' };
 
 interface Props {
   repair: RepairFull;
   onClose: () => void;
 }
 
+// ── Canonical template styles (OM14-1) ──
+const sb: React.CSSProperties = { background: 'var(--primary)', color: '#fff', fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 6px' };
+const fl: React.CSSProperties = { fontSize: 7, fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.04em' };
+const fv: React.CSSProperties = { borderBottom: '1px solid #ccc', fontSize: 9, padding: '0 2px', minHeight: 13 };
+const em = '—';
+const g = 6;
+
 export const ReturnVerificationForm = ({ repair, onClose }: Props) => {
   const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 
+  // Bill To
   const clientName = repair.client ?? '';
-  const addr = repair.billAddr1 ?? '';
-  const city = repair.billCity ?? '';
-  const state = repair.billState ?? '';
-  const zip = repair.billZip ?? '';
-  const csz = [city, state].filter(Boolean).join(', ') + (zip ? ' ' + zip : '');
+  const billAddr = repair.billAddr1 ?? '';
+  const billCity = repair.billCity ?? '';
+  const billState = repair.billState ?? '';
+  const billZip = repair.billZip ?? '';
+  const billCSZ = [billCity, billState].filter(Boolean).join(', ') + (billZip ? ' ' + billZip : '');
+
+  // Ship To — prefer ship fields, fall back to bill
+  const shipName = repair.shipName ?? repair.client ?? '';
+  const shipAddr = repair.shipAddr1 ?? repair.billAddr1 ?? '';
+  const shipCity = repair.shipCity ?? repair.billCity ?? '';
+  const shipState = repair.shipState ?? repair.billState ?? '';
+  const shipZip = repair.shipZip ?? repair.billZip ?? '';
+  const shipCSZ = [shipCity, shipState].filter(Boolean).join(', ') + (shipZip ? ' ' + shipZip : '');
 
   return (
-    <div style={overlayStyle}>
-      <div className="print-form" style={printFormStyle}>
-        {/* Print/Close */}
-        <div className="no-print" style={printCloseRowStyle}>
-          <button onClick={() => window.print()} style={printBtnStyle}>Print / Save PDF</button>
-          <button onClick={onClose} style={closeBtnStyle}>Close</button>
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px 16px', overflowY: 'auto' }}
+    >
+      {/* Action bar */}
+      <div className="no-print" style={{ position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200 }}>
+        <button onClick={() => window.print()} style={{ height: 32, padding: '0 16px', border: 'none', borderRadius: 5, background: 'var(--primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Print</button>
+        <button onClick={onClose} style={{ height: 32, padding: '0 14px', border: '1px solid #ddd', borderRadius: 5, background: '#fff', color: '#888', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
+      </div>
+
+      {/* Printable page */}
+      <div className="print-form" style={{ width: '8.5in', height: '11in', background: '#fff', padding: '0.4in', fontFamily: "'Inter', Arial, sans-serif", fontSize: 9, color: '#222', boxSizing: 'border-box', boxShadow: '0 4px 24px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: g }}>
+          <img src="/logo-horizontal.jpg" alt="Total Scope, Inc." style={{ height: 44 }} />
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#1B3A5C' }}>Scope Return Verification</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--primary)' }}>Return Shipment Documentation</div>
+            <div style={{ fontSize: 8, color: '#aaa' }}>OM14-1</div>
+          </div>
         </div>
 
-        <div style={formBodyStyle}>
-          {/* Header */}
-          <div style={headerRowStyle}>
-            <img src="/logo-color.png" alt="TSI Logo" loading="lazy" style={{ height: 44 }} />
-            <div style={{ textAlign: 'right' }}>
-              <div style={headerTitleStyle}>Scope Return Verification</div>
-              <div style={headerDocRefStyle}>OM14-1</div>
-            </div>
+        {/* Bill To / Ship To */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: g }}>
+          {/* Bill To */}
+          <div style={{ border: '1px solid #eee', borderRadius: 4, padding: '6px 10px' }}>
+            <div style={{ fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '.06em', marginBottom: 4, borderBottom: '1px solid #f0f0f0', paddingBottom: 2 }}>Bill To</div>
+            <div style={{ ...fv, marginBottom: 3 }}>{clientName || em}</div>
+            <div style={{ ...fv, marginBottom: 3 }}>{billAddr || em}</div>
+            <div style={fv}>{billCSZ || em}</div>
           </div>
-
-          {/* Bill To / Ship To */}
-          <div style={addrGridStyle}>
-            <AddrBlock title="Bill To" name={clientName} addr={addr} csz={csz} />
-            <AddrBlock title="Ship To" name={clientName} addr={addr} csz={csz} />
+          {/* Ship To */}
+          <div style={{ border: '1px solid #eee', borderRadius: 4, padding: '6px 10px' }}>
+            <div style={{ fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase', color: 'var(--primary)', letterSpacing: '.06em', marginBottom: 4, borderBottom: '1px solid #f0f0f0', paddingBottom: 2 }}>Ship To</div>
+            <div style={{ ...fv, marginBottom: 3 }}>{shipName || em}</div>
+            <div style={{ ...fv, marginBottom: 3 }}>{shipAddr || em}</div>
+            <div style={fv}>{shipCSZ || em}</div>
           </div>
+        </div>
 
-          {/* Shipment Reference */}
-          <Bar style={{ marginTop: 6 }}>Shipment Reference</Bar>
-          <div style={shipRefGridStyle}>
-            <Fld label="Date" value={today} />
-            <Fld label="Work Order #" value={repair.wo} />
-            <Fld label="PO #" value={repair.purchaseOrder} />
-            <Fld label="Scope / Equipment Model" value={`${repair.scopeType ?? ''} ${repair.scopeModel ?? ''}`.trim()} span2 />
-            <Fld label="Serial #" value={repair.serial} />
-            <Fld label="Tracking Number" value="" span2 />
-            <Fld label="Payment Terms" value="Net 30" />
+        {/* Shipment Reference */}
+        <div style={sb}>Shipment Reference</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 12px', padding: '4px 0', marginBottom: g }}>
+          <div>
+            <span style={fl}>Date</span>
+            <div style={fv}>{today}</div>
           </div>
+          <div>
+            <span style={fl}>Work Order #</span>
+            <div style={fv}>{repair.wo ?? em}</div>
+          </div>
+          <div>
+            <span style={fl}>PO #</span>
+            <div style={fv}>{repair.purchaseOrder ?? em}</div>
+          </div>
+          <div style={{ gridColumn: 'span 2' }}>
+            <span style={fl}>Scope / Equipment Model</span>
+            <div style={fv}>{[repair.scopeType, repair.scopeModel].filter(Boolean).join(' ') || em}</div>
+          </div>
+          <div>
+            <span style={fl}>Serial #</span>
+            <div style={fv}>{repair.serial ?? em}</div>
+          </div>
+          <div style={{ gridColumn: 'span 2' }}>
+            <span style={fl}>Tracking Number</span>
+            <div style={fv}>&nbsp;</div>
+          </div>
+          <div>
+            <span style={fl}>Payment Terms</span>
+            <div style={fv}>Net 30</div>
+          </div>
+        </div>
 
-          {/* Items Returned Table */}
-          <Bar style={{ marginTop: 8 }}>Items Returned</Bar>
-          <table style={itemsTableStyle}>
-            <thead>
-              <tr>
-                <th style={thS}>Description</th>
-                <th style={{ ...thS, textAlign: 'center', width: 50 }}>Qty</th>
-                <th style={{ ...thS, textAlign: 'center', width: 50 }}>Included</th>
-                <th style={{ ...thS, borderRight: 'none' }}>Notes / Condition</th>
+        {/* Items Returned Table */}
+        <div style={sb}>Items Returned</div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 4, marginBottom: g }}>
+          <thead>
+            <tr>
+              <th style={{ fontSize: 7.5, fontWeight: 700, color: '#888', textTransform: 'uppercase', borderBottom: '1px solid #ccc', padding: '1px 4px', textAlign: 'left' }}>Description</th>
+              <th style={{ fontSize: 7.5, fontWeight: 700, color: '#888', textTransform: 'uppercase', borderBottom: '1px solid #ccc', padding: '1px 4px', textAlign: 'center', width: 50 }}>Qty</th>
+              <th style={{ fontSize: 7.5, fontWeight: 700, color: '#888', textTransform: 'uppercase', borderBottom: '1px solid #ccc', padding: '1px 4px', textAlign: 'center', width: 60 }}>Included</th>
+              <th style={{ fontSize: 7.5, fontWeight: 700, color: '#888', textTransform: 'uppercase', borderBottom: '1px solid #ccc', padding: '1px 4px', textAlign: 'left' }}>Notes / Condition</th>
+            </tr>
+          </thead>
+          <tbody>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <tr key={i} style={{ background: i % 2 === 1 ? '#f8f9fb' : '#fff' }}>
+                <td style={{ padding: '4px 4px', fontSize: 8.5, borderBottom: '1px solid #eee', verticalAlign: 'middle' }}>&nbsp;</td>
+                <td style={{ padding: '4px 4px', fontSize: 8.5, borderBottom: '1px solid #eee', verticalAlign: 'middle', textAlign: 'center' }}>&nbsp;</td>
+                <td style={{ padding: '4px 4px', fontSize: 8.5, borderBottom: '1px solid #eee', verticalAlign: 'middle', textAlign: 'center' }}>
+                  <span style={{ display: 'inline-block', width: 12, height: 12, border: '1px solid #ccc', borderRadius: 2 }} />
+                </td>
+                <td style={{ padding: '4px 4px', fontSize: 8.5, borderBottom: '1px solid #eee', verticalAlign: 'middle' }}>&nbsp;</td>
               </tr>
-            </thead>
-            <tbody>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <tr key={i} style={i % 2 === 1 ? altRowStyle : undefined}>
-                  <td style={tdS}>&nbsp;</td>
-                  <td style={{ ...tdS, textAlign: 'center' }}>&nbsp;</td>
-                  <td style={{ ...tdS, textAlign: 'center' }}><span style={checkboxCellStyle} /></td>
-                  <td style={{ ...tdS, borderRight: 'none' }}>&nbsp;</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </tbody>
+        </table>
 
-          {/* Disinfection Reminder */}
-          <div style={disinfectionWrapStyle}>
-            <div style={disinfectionTitleStyle}>Disinfection Reminder</div>
-            <div style={disinfectionBodyStyle}>
-              All equipment returned to Total Scope Inc. must be properly cleaned and high-level disinfected or sterilized prior to shipment. Equipment arriving without documentation of disinfection will be treated as contaminated. TSI reserves the right to charge a decontamination fee. Please include your facility's decontamination record with this shipment.
-            </div>
+        {/* Disinfection Reminder */}
+        <div style={{ marginBottom: g, padding: '6px 10px', background: '#fffbeb', border: '1.5px solid #f59e0b', borderRadius: 4 }}>
+          <div style={{ fontSize: 8, fontWeight: 800, textTransform: 'uppercase', color: '#b45309', letterSpacing: '.06em', marginBottom: 3 }}>Disinfection Reminder</div>
+          <div style={{ fontSize: 8.5, color: '#78350f', lineHeight: 1.5 }}>
+            All equipment returned to Total Scope Inc. must be properly cleaned and high-level disinfected or sterilized prior to shipment. Equipment arriving without documentation of disinfection will be treated as contaminated. TSI reserves the right to charge a decontamination fee. Please include your facility's decontamination record with this shipment.
           </div>
+        </div>
 
-          {/* Authorization */}
-          <Bar style={{ marginTop: 10 }}>Authorization</Bar>
-          <div style={sigRow1Style}>
-            <Sig label="Customer Signature" />
-            <Sig label="Printed Name" width={180} />
-            <Sig label="Title" width={130} />
-            <Sig label="Date" width={110} />
+        {/* Authorization */}
+        <div style={sb}>Authorization</div>
+        <div style={{ display: 'flex', gap: 16, marginTop: 8, marginBottom: g }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ borderBottom: '1px solid #ccc', minHeight: 26 }} />
+            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 1 }}>Customer Signature</div>
           </div>
-          <div style={sigRow2Style}>
-            <Sig label="TSI Customer Service Rep" />
-            <Sig label="Printed Name" width={180} />
-            <Sig label="Date" width={240} />
+          <div style={{ maxWidth: 180, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ borderBottom: '1px solid #ccc', minHeight: 26 }} />
+            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 1 }}>Printed Name</div>
           </div>
+          <div style={{ maxWidth: 130, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ borderBottom: '1px solid #ccc', minHeight: 26 }} />
+            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 1 }}>Title</div>
+          </div>
+          <div style={{ maxWidth: 110, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ borderBottom: '1px solid #ccc', minHeight: 26 }} />
+            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 1 }}>Date</div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 16, marginBottom: g }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ borderBottom: '1px solid #ccc', minHeight: 26 }} />
+            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 1 }}>TSI Customer Service Rep</div>
+          </div>
+          <div style={{ maxWidth: 180, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ borderBottom: '1px solid #ccc', minHeight: 26 }} />
+            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 1 }}>Printed Name</div>
+          </div>
+          <div style={{ maxWidth: 240, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ borderBottom: '1px solid #ccc', minHeight: 26 }} />
+            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 1 }}>Date</div>
+          </div>
+        </div>
 
-          {/* Footer */}
-          <div style={footerStyle}>
-            <span>ISO 13485 Certified</span>
-            <span>Total Scope Inc. &nbsp;|&nbsp; 17 Creek Pkwy, Upper Chichester PA 19061 &nbsp;|&nbsp; (610) 485-3838</span>
-            <span>OM14-1</span>
+        {/* Footer */}
+        <div style={{ marginTop: 'auto', paddingTop: 4, borderTop: '1px solid #ddd', fontSize: 7, color: '#999', textAlign: 'center' }}>
+          <div style={{ fontWeight: 600, marginBottom: 2 }}>Total Scope, Inc. — ISO 13485 Certified <span style={{ float: 'right', fontWeight: 400 }}>OM14-1</span></div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, fontSize: 6.5, color: '#aaa' }}>
+            <span>PA: 17 Creek Pkwy, Upper Chichester 19061 · (866) 352-7697</span>
+            <span>TN: 601 Grassmere Park Dr Ste 2, Nashville 37211 · (844) 843-2055</span>
+            <span>FL: 10877 NW 52nd St Ste 3, Sunrise 33351 · (954) 916-7347</span>
           </div>
         </div>
       </div>
     </div>
   );
 };
-
-/* ── Primitives ── */
-const fl: React.CSSProperties = { fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', color: 'var(--print-muted)', letterSpacing: '.04em' };
-const thS: React.CSSProperties = { background: 'var(--primary)', color: 'var(--card)', fontSize: '8.5px', fontWeight: 700, textTransform: 'uppercase', padding: '5px 8px', textAlign: 'left', letterSpacing: '.04em', borderRight: '1px solid rgba(255,255,255,.2)' };
-const tdS: React.CSSProperties = { padding: '5px 8px', fontSize: '10.5px', borderBottom: '1px solid var(--print-border-lt)', verticalAlign: 'middle', borderRight: '1px solid var(--print-border-xlt)' };
-const barBaseStyle: React.CSSProperties = { background: 'var(--primary)', color: 'var(--card)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', padding: '4px 10px' };
-
-const Bar = ({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) => (
-  <div style={{ ...barBaseStyle, ...style }}>{children}</div>
-);
-
-const Fld = ({ label, value, span2 }: { label: string; value?: string | null; span2?: boolean }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 1, ...(span2 ? { gridColumn: 'span 2' } : {}) }}>
-    <span style={fl}>{label}</span>
-    <div style={fldValueStyle}>{value || ''}</div>
-  </div>
-);
-
-const AddrBlock = ({ title, name, addr, csz }: { title: string; name: string; addr: string; csz: string }) => (
-  <div style={addrBlockStyle}>
-    <div style={addrBlockTitleStyle}>{title}</div>
-    <div style={addrLineStyle}>{name}</div>
-    <div style={addrLineStyle}>{addr}</div>
-    <div style={addrLineStyle}>{csz}</div>
-  </div>
-);
-
-const Sig = ({ label, width }: { label: string; width?: number }) => (
-  <div style={{ flex: width ? undefined : 1, maxWidth: width, display: 'flex', flexDirection: 'column', gap: 2 }}>
-    <div style={sigLineStyle} />
-    <div style={sigLabelStyle}>{label}</div>
-  </div>
-);

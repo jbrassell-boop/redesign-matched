@@ -1,196 +1,156 @@
 import './print.css';
 import type { RepairFull } from '../types';
 
-// ── Extracted static styles ──
-const overlayStyle: React.CSSProperties = { position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.4)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflow: 'auto', padding: '20px 0' };
-const printFormStyle: React.CSSProperties = { width: '8.5in', background: 'var(--card)', fontFamily: "'Inter', Arial, sans-serif", fontSize: 11, color: 'var(--print-text)' };
-const printCloseRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '12px 0' };
-const printBtnStyle: React.CSSProperties = { padding: '8px 20px', background: 'var(--primary)', color: 'var(--card)', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
-const closeBtnStyle: React.CSSProperties = { padding: '8px 20px', background: 'var(--print-light)', color: 'var(--card)', border: 'none', borderRadius: 5, fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' };
-const formBodyStyle: React.CSSProperties = { padding: '0.5in', display: 'flex', flexDirection: 'column', gap: 8 };
-const headerRowStyle: React.CSSProperties = { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 };
-const headerTitleStyle: React.CSSProperties = { fontSize: 15, fontWeight: 800, color: 'var(--navy)' };
-const headerSubtitleStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--primary)', marginTop: 1 };
-const headerDocRefStyle: React.CSSProperties = { fontSize: 10, color: 'var(--print-light)', marginTop: 2 };
-const cameraGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '5px 12px', padding: '6px 0 2px' };
-const flexColGap1Style: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1 };
-const customerTypeRowStyle: React.CSSProperties = { display: 'flex', gap: 10, alignItems: 'center', paddingTop: 3 };
-const receivedLabelStyle: React.CSSProperties = { fontSize: 9, fontWeight: 700, textTransform: 'uppercase', color: 'var(--print-muted)', letterSpacing: '.04em', marginRight: 4 };
-const uncleanWarningStyle: React.CSSProperties = { background: 'var(--amber-subtle)', border: '1px solid var(--amber-border)', borderRadius: 3, padding: '4px 8px', fontSize: 9, color: 'var(--badge-amber-text)', fontWeight: 600, marginLeft: 8 };
-const couplerSubheadStyle: React.CSSProperties = { fontWeight: 400, textTransform: 'none', fontSize: '8.5px', opacity: .85 };
-const sigRowStyle: React.CSSProperties = { display: 'flex', gap: 20, marginTop: 8 };
-const footerStyle: React.CSSProperties = { marginTop: 'auto', paddingTop: 8, borderTop: '1px solid var(--print-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: 'var(--print-footer)' };
-
 interface Props {
   repair: RepairFull;
   onClose: () => void;
 }
 
-export const DiInspectionForm = ({ repair, onClose }: Props) => {
-  const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+const sb: React.CSSProperties = { background: 'var(--primary)', color: '#fff', fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 6px' };
+const fl: React.CSSProperties = { fontSize: 7, fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.04em' };
+const fv: React.CSSProperties = { borderBottom: '1px solid #ccc', fontSize: 9, padding: '0 2px', minHeight: 13 };
+const em = '—';
+const g = 6;
 
-  return (
-    <div style={overlayStyle}>
-      <div className="print-form" style={printFormStyle}>
-        {/* Print/Close */}
-        <div className="no-print" style={printCloseRowStyle}>
-          <button onClick={() => window.print()} style={printBtnStyle}>Print / Save PDF</button>
-          <button onClick={onClose} style={closeBtnStyle}>Close</button>
-        </div>
+const cbBoxStyle: React.CSSProperties = { width: 10, height: 10, border: '1px solid #ccc', borderRadius: 2, display: 'inline-block', flexShrink: 0 };
+const cbStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: 8 };
 
-        <div style={formBodyStyle}>
-          {/* Header */}
-          <div style={headerRowStyle}>
-            <img src="/logo-color.png" alt="TSI Logo" loading="lazy" style={{ height: 44 }} />
-            <div style={{ textAlign: 'right' }}>
-              <div style={headerTitleStyle}>D&amp;I Inspection Report</div>
-              <div style={headerSubtitleStyle}>Camera System</div>
-              <div style={headerDocRefStyle}>OM05-2</div>
-            </div>
-          </div>
-
-          {/* Camera Information */}
-          <Bar>Camera Information</Bar>
-          <div style={cameraGridStyle}>
-            <Fld label="Client / Facility" value={repair.client} span2 />
-            <div style={flexColGap1Style}>
-              <span style={fl}>Customer Type</span>
-              <div style={customerTypeRowStyle}>
-                <Cb label="CAP" /><Cb label="FFS" />
-              </div>
-            </div>
-            <Fld label="Camera Type / Model" value={`${repair.scopeType ?? ''} ${repair.scopeModel ?? ''}`.trim()} span2 />
-            <Fld label="Complaint" value={repair.complaint} h={28} />
-            <Fld label="Work Order #" value={repair.wo} />
-            <Fld label="Serial #" value={repair.serial} />
-            <Fld label="Date" value={today} />
-            <Fld label="Rack #" value={repair.rackLocation} />
-            <Fld label="Inspected By" value="" />
-          </div>
-
-          {/* Accessories Received */}
-          <Bar>Accessories Received</Bar>
-          <CbRow><Cb label="Camera Head" /><Cb label="Coupler" /><Cb label="Soak Cap" /><Cb label="Edge Card Protector" /></CbRow>
-
-          {/* Item Received Condition */}
-          <Bar>Item Received Condition</Bar>
-          <CbRow>
-            <span style={receivedLabelStyle}>Received:</span>
-            <Cb label="Clean" /><Cb label="Unclean" />
-            <span style={uncleanWarningStyle}>
-              If Unclean — follow OM-22 decontamination protocol before proceeding
-            </span>
-          </CbRow>
-
-          {/* Camera Inspection */}
-          <Bar>Camera Inspection</Bar>
-          <PfTable items={['1. Leak Test','2. Focus Test','3. Fog Test','4. White Balance','5. Control Buttons','6. Cable Connector','7. Video Image','8. Edge Card Protector','9. Focus Mechanism','10. Scope Retaining Mechanism']} />
-
-          {/* Coupler Inspection */}
-          <Bar>Coupler Inspection <span style={couplerSubheadStyle}>(complete if coupler received)</span></Bar>
-          <PfTable items={['1. Image Quality','2. Soak Cap Assembly','3. Leak Test','4. Pass Test']} />
-
-          {/* Items in Need of Repair */}
-          <Bar>Items in Need of Repair</Bar>
-          <TextField h={36} />
-
-          {/* Comments */}
-          <Bar>Comments</Bar>
-          <TextField h={28} />
-
-          {/* Signatures */}
-          <div style={sigRowStyle}>
-            <Sig label="Inspected By / Signature" /><Sig label="Date" narrow /><Sig label="Reviewed By / Signature" /><Sig label="Date" narrow />
-          </div>
-
-          {/* Footer */}
-          <div style={footerStyle}>
-            <span>ISO 13485 Certified</span>
-            <span>Total Scope, Inc. &nbsp;|&nbsp; 17 Creek Pkwy, Upper Chichester PA 19061 &nbsp;|&nbsp; (610) 485-3838</span>
-            <span>OM05-2</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* ── Shared primitives — pixel-match the HTML CSS ── */
-const fl: React.CSSProperties = { fontSize:'8.5px', fontWeight:700, textTransform:'uppercase', color:'var(--print-muted)', letterSpacing:'.04em' };
-const barStyle: React.CSSProperties = { background:'var(--primary)', color:'var(--card)', fontSize:9, fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', padding:'4px 10px' };
-const fldValueStyle: React.CSSProperties = { borderBottom:'1px solid var(--print-check-border)', fontSize:11, padding:'1px 2px' };
-const cbStyle: React.CSSProperties = { display:'flex', alignItems:'center', gap:5, fontSize:'10.5px' };
-const cbBoxStyle: React.CSSProperties = { width:12, height:12, border:'1px solid var(--print-check-border)', borderRadius:2, display:'inline-block', flexShrink:0 };
-const cbRowStyle: React.CSSProperties = { display:'flex', gap:14, alignItems:'center', padding:'5px 0', flexWrap:'wrap' };
-const pfTableStyle: React.CSSProperties = { width:'100%', borderCollapse:'collapse', marginTop:4 };
-const pfTdStyle: React.CSSProperties = { padding:'4px 8px', fontSize:'10.5px', borderBottom:'1px solid var(--print-border-lt)', borderRight:'1px solid var(--print-border-xlt)', verticalAlign:'middle' };
-const pfTdCenterStyle: React.CSSProperties = { padding:'4px 8px', textAlign:'center', borderBottom:'1px solid var(--print-border-lt)', borderRight:'1px solid var(--print-border-xlt)' };
-const pfTdCenterLastStyle: React.CSSProperties = { padding:'4px 8px', textAlign:'center', borderBottom:'1px solid var(--print-border-lt)' };
-const pfBadgeBaseStyle: React.CSSProperties = { display:'inline-block', width:26, height:16, borderRadius:2, textAlign:'center', lineHeight:'16px', fontSize:9, fontWeight:700 };
-const pfBadgeYStyle: React.CSSProperties = { ...pfBadgeBaseStyle, border:'1px solid var(--success)', color:'var(--success)' };
-const pfBadgeNStyle: React.CSSProperties = { ...pfBadgeBaseStyle, border:'1px solid var(--danger)', color:'var(--danger)' };
-const pfBadgeNaStyle: React.CSSProperties = { ...pfBadgeBaseStyle, border:'1px solid var(--print-placeholder)', color:'var(--print-light)' };
-const sigLineStyle: React.CSSProperties = { borderBottom:'1px solid var(--print-check-border)', minHeight:28 };
-const sigLabelStyle: React.CSSProperties = { fontSize:'8.5px', color:'var(--print-muted)', fontWeight:600, marginTop:2 };
-const altRowStyle: React.CSSProperties = { background:'var(--bg)' };
-
-const Bar = ({ children }: { children: React.ReactNode }) => (
-  <div style={barStyle}>{children}</div>
+const Cb = ({ label }: { label: string }) => (
+  <span style={cbStyle}><span style={cbBoxStyle} />{label}</span>
 );
 
-const Fld = ({ label, value, span2, h }: { label:string; value?:string|null; span2?:boolean; h?:number }) => (
-  <div style={{ display:'flex', flexDirection:'column', gap:1, ...(span2 ? { gridColumn:'span 2' } : {}) }}>
-    <span style={fl}>{label}</span>
-    <div style={{ ...fldValueStyle, minHeight: h ?? 17 }}>{value || ''}</div>
-  </div>
-);
-
-const Cb = ({ label }: { label:string }) => (
-  <span style={cbStyle}>
-    <span style={cbBoxStyle} />{label}
-  </span>
-);
-
-const CbRow = ({ children }: { children: React.ReactNode }) => (
-  <div style={cbRowStyle}>{children}</div>
-);
-
-const TextField = ({ h }: { h:number }) => (
-  <div style={{ border:'1px solid var(--print-border)', borderRadius:3, minHeight:h, padding:'3px 6px', marginTop:3, fontSize:'10.5px' }} />
-);
-
-const thStyle: React.CSSProperties = { background:'var(--primary)', color:'var(--card)', fontSize:'8.5px', fontWeight:700, textTransform:'uppercase', padding:'4px 8px', letterSpacing:'.04em', borderRight:'1px solid rgba(255,255,255,.2)' };
-
-const PfTable = ({ items }: { items:string[] }) => (
-  <table style={pfTableStyle}>
-    <thead><tr>
-      <th style={{ ...thStyle, textAlign:'left' }}>Test Item</th>
-      <th style={{ ...thStyle, textAlign:'center', width:44 }}>Y</th>
-      <th style={{ ...thStyle, textAlign:'center', width:44 }}>N</th>
-      <th style={{ ...thStyle, textAlign:'center', width:44, borderRight:'none' }}>N/A</th>
-    </tr></thead>
+const PfTable = ({ items }: { items: string[] }) => (
+  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+    <thead>
+      <tr>
+        <th style={{ fontSize: 7.5, fontWeight: 700, color: '#888', textTransform: 'uppercase', borderBottom: '1px solid #ccc', padding: '1px 4px', textAlign: 'left' }}>Test Item</th>
+        <th style={{ fontSize: 7.5, fontWeight: 700, color: '#888', textTransform: 'uppercase', borderBottom: '1px solid #ccc', padding: '1px 4px', textAlign: 'center', width: 30 }}>Y</th>
+        <th style={{ fontSize: 7.5, fontWeight: 700, color: '#888', textTransform: 'uppercase', borderBottom: '1px solid #ccc', padding: '1px 4px', textAlign: 'center', width: 30 }}>N</th>
+        <th style={{ fontSize: 7.5, fontWeight: 700, color: '#888', textTransform: 'uppercase', borderBottom: '1px solid #ccc', padding: '1px 4px', textAlign: 'center', width: 30 }}>N/A</th>
+      </tr>
+    </thead>
     <tbody>
       {items.map((item, i) => (
-        <tr key={item} style={i%2===1 ? altRowStyle : undefined}>
-          <td style={pfTdStyle}>{item}</td>
-          <td style={pfTdCenterStyle}>
-            <span style={pfBadgeYStyle}>Y</span>
-          </td>
-          <td style={pfTdCenterStyle}>
-            <span style={pfBadgeNStyle}>N</span>
-          </td>
-          <td style={pfTdCenterLastStyle}>
-            <span style={pfBadgeNaStyle}>N/A</span>
-          </td>
+        <tr key={item} style={{ background: i % 2 === 1 ? '#f8f9fb' : '#fff' }}>
+          <td style={{ padding: '1px 4px', fontSize: 8.5, borderBottom: '1px solid #eee', verticalAlign: 'middle' }}>{item}</td>
+          <td style={{ padding: '1px 4px', fontSize: 8.5, borderBottom: '1px solid #eee', textAlign: 'center' }}><span style={{ display: 'inline-block', width: 14, height: 10, border: '1px solid #ccc', borderRadius: 1 }} /></td>
+          <td style={{ padding: '1px 4px', fontSize: 8.5, borderBottom: '1px solid #eee', textAlign: 'center' }}><span style={{ display: 'inline-block', width: 14, height: 10, border: '1px solid #ccc', borderRadius: 1 }} /></td>
+          <td style={{ padding: '1px 4px', fontSize: 8.5, borderBottom: '1px solid #eee', textAlign: 'center' }}><span style={{ display: 'inline-block', width: 14, height: 10, border: '1px solid #ccc', borderRadius: 1 }} /></td>
         </tr>
       ))}
     </tbody>
   </table>
 );
 
-const Sig = ({ label, narrow }: { label:string; narrow?:boolean }) => (
-  <div style={{ flex: narrow ? undefined : 1, maxWidth: narrow ? 130 : undefined, display:'flex', flexDirection:'column', gap:2 }}>
-    <div style={sigLineStyle} />
-    <div style={sigLabelStyle}>{label}</div>
+const SigLine = ({ label, narrow }: { label: string; narrow?: boolean }) => (
+  <div style={{ flex: narrow ? undefined : 1, maxWidth: narrow ? 110 : undefined, display: 'flex', flexDirection: 'column', gap: 2 }}>
+    <div style={{ borderBottom: '1px solid #ccc', minHeight: 20 }} />
+    <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 1 }}>{label}</div>
   </div>
 );
+
+export const DiInspectionForm = ({ repair, onClose }: Props) => {
+  const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px 16px', overflowY: 'auto' }}
+    >
+      <div className="no-print" style={{ position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200 }}>
+        <button onClick={() => window.print()} style={{ height: 32, padding: '0 16px', border: 'none', borderRadius: 5, background: 'var(--primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Print</button>
+        <button onClick={onClose} style={{ height: 32, padding: '0 14px', border: '1px solid #ddd', borderRadius: 5, background: '#fff', color: '#888', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
+      </div>
+
+      <div className="print-form" style={{ width: '8.5in', height: '11in', background: '#fff', padding: '0.4in', fontFamily: "'Inter', Arial, sans-serif", fontSize: 9, color: '#222', boxSizing: 'border-box', boxShadow: '0 4px 24px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: g }}>
+          <img src="/logo-horizontal.jpg" alt="Total Scope, Inc." style={{ height: 44 }} />
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 14, fontWeight: 800, color: '#1B3A5C' }}>D&amp;I Inspection Report</div>
+            <div style={{ fontSize: 9, fontWeight: 600, color: 'var(--primary)' }}>Camera System</div>
+            <div style={{ fontSize: 8, color: '#aaa' }}>OM05-2</div>
+          </div>
+        </div>
+
+        {/* Camera Information */}
+        <div style={sb}>Camera Information</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '3px 8px', padding: '3px 0', marginBottom: g }}>
+          <div style={{ gridColumn: 'span 2' }}><span style={fl}>Client / Facility</span><div style={fv}>{repair.client ?? em}</div></div>
+          <div>
+            <span style={fl}>Customer Type</span>
+            <div style={{ display: 'flex', gap: 8, paddingTop: 2 }}>
+              <Cb label="CAP" /><Cb label="FFS" />
+            </div>
+          </div>
+          <div><span style={fl}>Date</span><div style={fv}>{today}</div></div>
+          <div style={{ gridColumn: 'span 2' }}><span style={fl}>Camera Type / Model</span><div style={fv}>{`${repair.scopeType ?? ''} ${repair.scopeModel ?? ''}`.trim() || em}</div></div>
+          <div><span style={fl}>Work Order #</span><div style={fv}>{repair.wo ?? em}</div></div>
+          <div><span style={fl}>Serial #</span><div style={fv}>{repair.serial ?? em}</div></div>
+          <div style={{ gridColumn: 'span 3' }}><span style={fl}>Complaint</span><div style={{ ...fv, minHeight: 22 }}>{repair.complaint ?? em}</div></div>
+          <div><span style={fl}>Rack #</span><div style={fv}>{repair.rackLocation ?? em}</div></div>
+          <div style={{ gridColumn: 'span 2' }}><span style={fl}>Inspected By</span><div style={fv}>&nbsp;</div></div>
+        </div>
+
+        {/* Accessories Received */}
+        <div style={{ ...sb, marginBottom: 3 }}>Accessories Received</div>
+        <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', padding: '3px 0', marginBottom: g }}>
+          <Cb label="Camera Head" /><Cb label="Coupler" /><Cb label="Soak Cap" /><Cb label="Edge Card Protector" />
+        </div>
+
+        {/* Item Received Condition */}
+        <div style={{ ...sb, marginBottom: 3 }}>Item Received Condition</div>
+        <div style={{ display: 'flex', gap: 14, alignItems: 'center', padding: '3px 0', marginBottom: g, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '.04em' }}>Received:</span>
+          <Cb label="Clean" /><Cb label="Unclean" />
+          <span style={{ fontSize: 8, color: '#b45309', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: 3, padding: '1px 6px', fontWeight: 600 }}>
+            If Unclean — follow OM-22 decontamination protocol before proceeding
+          </span>
+        </div>
+
+        {/* Camera Inspection + Coupler Inspection side by side */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 10px', marginBottom: g }}>
+          <div>
+            <div style={sb}>Camera Inspection</div>
+            <PfTable items={['1. Leak Test','2. Focus Test','3. Fog Test','4. White Balance','5. Control Buttons','6. Cable Connector','7. Video Image','8. Edge Card Protector','9. Focus Mechanism','10. Scope Retaining Mechanism']} />
+          </div>
+          <div>
+            <div style={sb}>Coupler Inspection <span style={{ fontWeight: 400, textTransform: 'none', fontSize: 7, opacity: 0.85 }}>(complete if coupler received)</span></div>
+            <PfTable items={['1. Image Quality','2. Soak Cap Assembly','3. Leak Test','4. Pass Test']} />
+          </div>
+        </div>
+
+        {/* Items in Need of Repair */}
+        <div style={{ marginBottom: g }}>
+          <div style={sb}>Items in Need of Repair</div>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: 2, minHeight: 36, padding: '3px 6px', marginTop: 2, fontSize: 8.5 }} />
+        </div>
+
+        {/* Comments */}
+        <div style={{ marginBottom: g }}>
+          <div style={sb}>Comments</div>
+          <div style={{ border: '1px solid #e5e7eb', borderRadius: 2, minHeight: 28, padding: '3px 6px', marginTop: 2, fontSize: 8.5 }} />
+        </div>
+
+        {/* Signatures */}
+        <div style={{ display: 'flex', gap: 12, marginBottom: g }}>
+          <SigLine label="Inspected By / Signature" />
+          <SigLine label="Date" narrow />
+          <SigLine label="Reviewed By / Signature" />
+          <SigLine label="Date" narrow />
+        </div>
+
+        {/* Footer */}
+        <div style={{ paddingTop: 4, borderTop: '1px solid #ddd', fontSize: 7, color: '#999', textAlign: 'center' }}>
+          <div style={{ fontWeight: 600, marginBottom: 2 }}>Total Scope, Inc. — ISO 13485 Certified <span style={{ float: 'right', fontWeight: 400 }}>OM05-2</span></div>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, fontSize: 6.5, color: '#aaa' }}>
+            <span>PA: 17 Creek Pkwy, Upper Chichester 19061 · (866) 352-7697</span>
+            <span>TN: 601 Grassmere Park Dr Ste 2, Nashville 37211 · (844) 843-2055</span>
+            <span>FL: 10877 NW 52nd St Ste 3, Sunrise 33351 · (954) 916-7347</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
