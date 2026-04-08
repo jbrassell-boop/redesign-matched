@@ -9,7 +9,7 @@ namespace TSI.Api.Controllers;
 [ApiController]
 [Route("api/field-verifier")]
 [AllowAnonymous]
-public class FieldVerifierController(IConfiguration config) : ControllerBase
+public class FieldVerifierController(IConfiguration config, IWebHostEnvironment env) : ControllerBase
 {
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -17,8 +17,16 @@ public class FieldVerifierController(IConfiguration config) : ControllerBase
         WriteIndented = true
     };
 
-    private string RegistryPath => config["FieldRegistryPath"]
-        ?? throw new InvalidOperationException("FieldRegistryPath not configured in appsettings.Development.json");
+    private string RegistryPath
+    {
+        get
+        {
+            var configured = config["FieldRegistryPath"];
+            if (!string.IsNullOrEmpty(configured) && Path.IsPathRooted(configured))
+                return configured;
+            return Path.Combine(env.ContentRootPath, configured ?? "Registry");
+        }
+    }
 
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);

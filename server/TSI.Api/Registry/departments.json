@@ -1,0 +1,78 @@
+{
+  "screen": "Departments",
+  "lastUpdated": "2026-04-08T17:55:48.7482753Z",
+  "fields": [
+    {
+      "id": "dept_name",
+      "label": "Department Name",
+      "sqlTable": "tblDepartment",
+      "sqlQuery": "SELECT TOP 5 sDepartmentName FROM tblDepartment ORDER BY sDepartmentName",
+      "apiEndpoint": "GET /api/departments",
+      "responseProperty": "deptName",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:55:31.1900001Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "dept_client",
+      "label": "Client",
+      "sqlTable": "tblClient",
+      "sqlQuery": "SELECT TOP 5 c.sClientName1 FROM tblDepartment d LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey ORDER BY c.sClientName1",
+      "apiEndpoint": "GET /api/departments",
+      "responseProperty": "clientName",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:55:32.7418839Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "dept_address",
+      "label": "Address",
+      "sqlTable": "tblDepartment",
+      "sqlQuery": "SELECT TOP 5 ISNULL(sMailAddr1, \u0027\u0027) \u002B \u0027, \u0027 \u002B ISNULL(sMailCity, \u0027\u0027) AS Address FROM tblDepartment ORDER BY sDepartmentName",
+      "apiEndpoint": "GET /api/departments/{id}",
+      "responseProperty": "address",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:55:34.1965499Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "dept_contact",
+      "label": "Contact Name",
+      "sqlTable": "tblDepartment",
+      "sqlQuery": "SELECT TOP 5 LTRIM(RTRIM(ISNULL(sContactFirst,\u0027\u0027) \u002B \u0027 \u0027 \u002B ISNULL(sContactLast,\u0027\u0027))) AS ContactName FROM tblDepartment ORDER BY sDepartmentName",
+      "apiEndpoint": "GET /api/departments/{id}",
+      "responseProperty": "contactName",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:55:44.7548497Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "dept_phone",
+      "label": "Phone",
+      "sqlTable": "tblDepartment",
+      "sqlQuery": "SELECT TOP 5 sContactPhoneVoice FROM tblDepartment ORDER BY sDepartmentName",
+      "apiEndpoint": "GET /api/departments/{id}",
+      "responseProperty": "phone",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:55:46.2249992Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "dept_service_location",
+      "label": "Service Location",
+      "sqlTable": "tblServiceLocations",
+      "sqlQuery": "SELECT TOP 5 sl.sServiceLocation FROM tblDepartment d LEFT JOIN tblServiceLocations sl ON sl.lServiceLocationKey = d.lServiceLocationKey ORDER BY d.sDepartmentName",
+      "apiEndpoint": "GET /api/departments/{id}",
+      "responseProperty": "serviceLocation",
+      "status": "confirmed",
+      "notes": "VERIFY: tblServiceLocations join \u2014 check actual table/column names",
+      "verifiedAt": "2026-04-08T17:55:48.7482459Z",
+      "verifiedBy": "Joe"
+    }
+  ]
+}

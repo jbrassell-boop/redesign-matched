@@ -1,0 +1,78 @@
+{
+  "screen": "Contracts",
+  "lastUpdated": "2026-04-08T17:56:43.2112026Z",
+  "fields": [
+    {
+      "id": "contract_number",
+      "label": "Contract #",
+      "sqlTable": "tblContract",
+      "sqlQuery": "SELECT TOP 5 sContractNumber FROM tblContract ORDER BY dtDateEffective DESC",
+      "apiEndpoint": "GET /api/contracts",
+      "responseProperty": "contractNumber",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:34.1583239Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "contract_client",
+      "label": "Client / Contract Name",
+      "sqlTable": "tblContract",
+      "sqlQuery": "SELECT TOP 5 sContractName1 FROM tblContract ORDER BY dtDateEffective DESC",
+      "apiEndpoint": "GET /api/contracts",
+      "responseProperty": "name",
+      "status": "confirmed",
+      "notes": "sContractName1 is the client/contract name stored directly on tblContract",
+      "verifiedAt": "2026-04-08T17:56:36.3935916Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "contract_start_date",
+      "label": "Start Date",
+      "sqlTable": "tblContract",
+      "sqlQuery": "SELECT TOP 5 CONVERT(VARCHAR, dtDateEffective, 101) AS StartDate FROM tblContract ORDER BY dtDateEffective DESC",
+      "apiEndpoint": "GET /api/contracts",
+      "responseProperty": "effectiveDate",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:37.7378144Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "contract_end_date",
+      "label": "End Date",
+      "sqlTable": "tblContract",
+      "sqlQuery": "SELECT TOP 5 CONVERT(VARCHAR, dtDateTermination, 101) AS EndDate FROM tblContract ORDER BY dtDateEffective DESC",
+      "apiEndpoint": "GET /api/contracts",
+      "responseProperty": "terminationDate",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:38.6827135Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "contract_amount",
+      "label": "Annual Contract Value",
+      "sqlTable": "tblContract",
+      "sqlQuery": "SELECT TOP 5 ISNULL(dblAmtTotal, 0) AS ACV FROM tblContract ORDER BY dtDateEffective DESC",
+      "apiEndpoint": "GET /api/contracts",
+      "responseProperty": "totalAmount",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:56:40.1228711Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "contract_status",
+      "label": "Status",
+      "sqlTable": "tblContract",
+      "sqlQuery": "SELECT TOP 5 CASE WHEN dtDateTermination \u003C GETDATE() THEN \u0027Expired\u0027 WHEN dtDateTermination BETWEEN GETDATE() AND DATEADD(day,90,GETDATE()) THEN \u0027Expiring\u0027 ELSE \u0027Active\u0027 END AS Status FROM tblContract ORDER BY dtDateEffective DESC",
+      "apiEndpoint": "GET /api/contracts",
+      "responseProperty": "status",
+      "status": "confirmed",
+      "notes": "Derived from dtDateTermination date logic",
+      "verifiedAt": "2026-04-08T17:56:43.2111907Z",
+      "verifiedBy": "Joe"
+    }
+  ]
+}

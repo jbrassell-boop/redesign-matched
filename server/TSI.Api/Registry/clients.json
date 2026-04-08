@@ -1,0 +1,126 @@
+{
+  "screen": "Clients",
+  "lastUpdated": "2026-04-08T17:55:19.0315431Z",
+  "fields": [
+    {
+      "id": "clients_name",
+      "label": "Client Name",
+      "sqlTable": "tblClient",
+      "sqlQuery": "SELECT TOP 5 sClientName1 FROM tblClient ORDER BY sClientName1",
+      "apiEndpoint": "GET /api/clients",
+      "responseProperty": "clientName",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:54:33.5435528Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "clients_city",
+      "label": "City",
+      "sqlTable": "tblClient",
+      "sqlQuery": "SELECT TOP 5 sMailCity FROM tblClient ORDER BY sClientName1",
+      "apiEndpoint": "GET /api/clients",
+      "responseProperty": "city",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:54:34.7832685Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "clients_state",
+      "label": "State",
+      "sqlTable": "tblClient",
+      "sqlQuery": "SELECT TOP 5 sMailState FROM tblClient ORDER BY sClientName1",
+      "apiEndpoint": "GET /api/clients",
+      "responseProperty": "state",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:54:35.8338526Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "clients_zip",
+      "label": "Zip",
+      "sqlTable": "tblClient",
+      "sqlQuery": "SELECT TOP 5 sMailZip FROM tblClient ORDER BY sClientName1",
+      "apiEndpoint": "GET /api/clients",
+      "responseProperty": "zip",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:54:36.9436712Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "clients_active",
+      "label": "Active",
+      "sqlTable": "tblClient",
+      "sqlQuery": "SELECT TOP 5 CAST(ISNULL(bActive, 0) AS INT) AS Active FROM tblClient ORDER BY sClientName1",
+      "apiEndpoint": "GET /api/clients",
+      "responseProperty": "active",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:54:40.1315154Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "clients_credit_limit",
+      "label": "Credit Limit",
+      "sqlTable": "tblClient",
+      "sqlQuery": "SELECT TOP 5 lCreditLimitKey FROM tblClient ORDER BY sClientName1",
+      "apiEndpoint": "GET /api/clients/{id}",
+      "responseProperty": "creditLimit",
+      "status": "confirmed",
+      "notes": "lCreditLimitKey is a FK \u2014 verify actual dollar amount lives in a separate table",
+      "verifiedAt": "2026-04-08T17:54:56.6318828Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "clients_terms",
+      "label": "Terms",
+      "sqlTable": "tblPaymentTerms",
+      "sqlQuery": "SELECT TOP 5 pt.sTermsDesc FROM tblClient c LEFT JOIN tblPaymentTerms pt ON pt.lPaymentTermsKey = c.lPaymentTermsKey ORDER BY c.sClientName1",
+      "apiEndpoint": "GET /api/clients/{id}",
+      "responseProperty": "paymentTerms",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:54:58.3385121Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "clients_portal_months",
+      "label": "Portal Months",
+      "sqlTable": "tblClient",
+      "sqlQuery": "SELECT TOP 5 nPortalMonths FROM tblClient ORDER BY sClientName1",
+      "apiEndpoint": "GET /api/clients/{id}",
+      "responseProperty": "portalMonths",
+      "status": "confirmed",
+      "notes": "VERIFY: nPortalMonths column name not confirmed in controller",
+      "verifiedAt": "2026-04-08T17:54:59.7048654Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "clients_discount",
+      "label": "Discount %",
+      "sqlTable": "tblClient",
+      "sqlQuery": "SELECT TOP 5 dblDiscountPct FROM tblClient ORDER BY sClientName1",
+      "apiEndpoint": "GET /api/clients/{id}",
+      "responseProperty": "discountPct",
+      "status": "confirmed",
+      "notes": "",
+      "verifiedAt": "2026-04-08T17:55:02.2523431Z",
+      "verifiedBy": "Joe"
+    },
+    {
+      "id": "clients_markup",
+      "label": "Markup %",
+      "sqlTable": "tblClient",
+      "sqlQuery": "SELECT TOP 5 dblMarkupPct FROM tblClient ORDER BY sClientName1",
+      "apiEndpoint": "GET /api/clients/{id}",
+      "responseProperty": "markup",
+      "status": "confirmed",
+      "notes": "VERIFY: dblMarkupPct column name not confirmed in controller",
+      "verifiedAt": "2026-04-08T17:55:19.0315294Z",
+      "verifiedBy": "Joe"
+    }
+  ]
+}
