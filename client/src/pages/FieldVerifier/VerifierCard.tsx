@@ -69,17 +69,18 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     }
   }
 
-  async function fetchPreviewRows(sql: string) {
-    if (!sql) return;
+  async function fetchPreviewRows() {
+    if (!field.sqlTable) return;
     setLoadingPreview(true);
     setPreviewRows([]);
     setPreviewError('');
     setShowPreview(true);
     try {
+      const previewSql = `SELECT TOP 5 * FROM ${field.sqlTable}`;
       const res = await fetch(`${API}/preview-rows`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sqlQuery: sql }),
+        body: JSON.stringify({ sqlQuery: previewSql }),
       });
       const data = await res.json();
       if (data.error) setPreviewError(data.error);
@@ -211,7 +212,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
               size="small"
               icon={<TableOutlined />}
               style={{ padding: '0 0', fontSize: 11, color: '#2E74B5' }}
-              onClick={() => showPreview && previewRows.length > 0 ? setShowPreview(false) : fetchPreviewRows(editing ? editSqlQuery : field.sqlQuery)}
+              onClick={() => showPreview && previewRows.length > 0 ? setShowPreview(false) : fetchPreviewRows()}
               loading={loadingPreview}
             >
               {showPreview ? 'Hide sample data' : 'Show sample data'}
