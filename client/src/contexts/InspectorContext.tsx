@@ -18,6 +18,7 @@ const InspectorContext = createContext<InspectorContextValue | null>(null);
 
 export function InspectorProvider({ children }: { children: ReactNode }) {
   const [enabled, setEnabled] = useState(false);
+  const enabledRef = useRef(false);
   const [registry, setRegistry] = useState<ScreenRegistry[]>([]);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -35,7 +36,8 @@ export function InspectorProvider({ children }: { children: ReactNode }) {
 
   // Fetch registry the first time inspect mode is enabled
   const toggle = useCallback(async () => {
-    const next = !enabled;
+    const next = !enabledRef.current;       // read from ref — never stale
+    enabledRef.current = next;              // update ref immediately
     setEnabled(next);
     if (next && !fetchedRef.current) {
       fetchedRef.current = true;
@@ -43,6 +45,7 @@ export function InspectorProvider({ children }: { children: ReactNode }) {
       setError('');
       try {
         const res = await fetch(`${FIELD_VERIFIER_API}/registry`);
+        if (!res.ok) throw new Error(`Registry fetch failed: ${res.status}`);
         const data: ScreenRegistry[] = await res.json();
         setRegistry(data);
       } catch {
@@ -52,7 +55,7 @@ export function InspectorProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }
     }
-  }, [enabled]);
+  }, []);   // empty deps — reads from ref, not closure
 
   return (
     <InspectorContext.Provider value={{ enabled, toggle, activeScreen, registry, selectedFieldId, setSelectedFieldId, loading, error }}>
