@@ -160,6 +160,7 @@ export interface RepairInspections {
   insLightGuideConnectorPF?: string; insDistalTipPF?: string; insEyePiecePF?: string;
   insLightFibersPF?: string; insAlcoholWipePF?: string;
   insFinalPF?: string;
+  diInsComments?: string;
 }
 
 export interface ClientSummary {

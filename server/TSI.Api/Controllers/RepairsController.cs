@@ -772,7 +772,8 @@ public class RepairsController(IConfiguration config) : ControllerBase
                    sInsAirWaterPF, sInsAuxWaterPF,
                    sInsVisionPF, sInsInsertionTubePF, sInsUniversalCordPF,
                    sInsLightGuideConnectorPF, sInsDistalTipPF, sInsEyePiecePF,
-                   sInsLightFibersPF, sInsAlcoholWipePF, sInsFinalPF
+                   sInsLightFibersPF, sInsAlcoholWipePF, sInsFinalPF,
+                   mCommentsDisIns
             FROM tblRepair WHERE lRepairKey = @repairKey
             """;
 
@@ -806,7 +807,8 @@ public class RepairsController(IConfiguration config) : ControllerBase
             InsLightGuideConnectorPF: R("sInsLightGuideConnectorPF"),
             InsDistalTipPF: R("sInsDistalTipPF"), InsEyePiecePF: R("sInsEyePiecePF"),
             InsLightFibersPF: R("sInsLightFibersPF"), InsAlcoholWipePF: R("sInsAlcoholWipePF"),
-            InsFinalPF: R("sInsFinalPF")
+            InsFinalPF: R("sInsFinalPF"),
+            DiInsComments: R("mCommentsDisIns")
         ));
     }
 
@@ -837,7 +839,8 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 sInsLightGuideConnectorPF = @insLightGuideConnectorPF,
                 sInsDistalTipPF = @insDistalTipPF, sInsEyePiecePF = @insEyePiecePF,
                 sInsLightFibersPF = @insLightFibersPF, sInsAlcoholWipePF = @insAlcoholWipePF,
-                sInsFinalPF = @insFinalPF
+                sInsFinalPF = @insFinalPF,
+                mCommentsDisIns = @diInsComments
             WHERE lRepairKey = @repairKey;
             ENABLE TRIGGER ALL ON tblRepair;
             """;
@@ -880,6 +883,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
         cmd.Parameters.AddWithValue("@insLightFibersPF", (object?)body.InsLightFibersPF ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@insAlcoholWipePF", (object?)body.InsAlcoholWipePF ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@insFinalPF", (object?)body.InsFinalPF ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@diInsComments", (object?)body.DiInsComments ?? DBNull.Value);
         var rows = await cmd.ExecuteNonQueryAsync();
         return rows > 0 ? NoContent() : NotFound();
     }

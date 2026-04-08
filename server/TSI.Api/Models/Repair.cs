@@ -166,7 +166,9 @@ public record RepairInspections(
     string? InsVisionPF, string? InsInsertionTubePF, string? InsUniversalCordPF,
     string? InsLightGuideConnectorPF, string? InsDistalTipPF, string? InsEyePiecePF,
     string? InsLightFibersPF, string? InsAlcoholWipePF,
-    string? InsFinalPF
+    string? InsFinalPF,
+    // Comments
+    string? DiInsComments
 );
 
 public record ClientSummary(
