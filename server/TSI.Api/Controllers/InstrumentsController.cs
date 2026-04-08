@@ -24,6 +24,8 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         var where = new List<string>();
+        // Instrument repairs only — exclude scope repairs (Flex/Rigid/Camera)
+        where.Add("ISNULL(st.sRigidOrFlexible, '') NOT IN ('R','F','C')");
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("(r.sWorkOrderNumber LIKE @search OR c.sClientName1 LIKE @search OR d.sDepartmentName LIKE @search)");
         if (!string.IsNullOrWhiteSpace(statusFilter))
@@ -33,6 +35,8 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
 
         var countSql = $"""
             SELECT COUNT(*) FROM tblRepair r
+            LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
@@ -46,6 +50,8 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
                    (SELECT COUNT(*) FROM tblRepairItemTran rit WHERE rit.lRepairKey = r.lRepairKey) AS ItemCount,
                    (SELECT ISNULL(SUM(rit2.dblRepairPrice), 0) FROM tblRepairItemTran rit2 WHERE rit2.lRepairKey = r.lRepairKey) AS TotalValue
             FROM tblRepair r
+            LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID

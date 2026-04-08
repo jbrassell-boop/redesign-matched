@@ -25,6 +25,8 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         var where = new List<string>();
+        // Scope repairs only (Flex/Rigid/Camera) — instruments go to /instruments
+        where.Add("ISNULL(st.sRigidOrFlexible, '') IN ('R','F','C')");
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("(r.sWorkOrderNumber LIKE @search OR c.sClientName1 LIKE @search OR d.sDepartmentName LIKE @search OR st.sScopeTypeDesc LIKE @search OR s.sSerialNumber LIKE @search)");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all")
