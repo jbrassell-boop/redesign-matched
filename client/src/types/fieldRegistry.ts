@@ -1,6 +1,6 @@
 // client/src/types/fieldRegistry.ts
 
-export const FIELD_VERIFIER_API = 'http://localhost:5000/api/field-verifier';
+export const FIELD_VERIFIER_API = `${import.meta.env.VITE_API_BASE_URL ?? ''}/api/field-verifier`;
 
 export interface FieldEntry {
   id: string;
