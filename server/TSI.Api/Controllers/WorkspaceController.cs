@@ -144,13 +144,13 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
     {
         const string sql = """
             SELECT TOP 5 ISNULL(c.sClientName1, '') AS sClientName1,
-                   con.dtContractEnd,
-                   DATEDIFF(day, GETDATE(), con.dtContractEnd) AS DaysUntil
+                   con.dtDateTermination,
+                   DATEDIFF(day, GETDATE(), con.dtDateTermination) AS DaysUntil
             FROM tblContract con
             LEFT JOIN tblClient c ON c.lClientKey = con.lClientKey
-            WHERE con.dtContractEnd >= GETDATE()
-                  AND con.dtContractEnd <= DATEADD(day, 60, GETDATE())
-            ORDER BY con.dtContractEnd ASC
+            WHERE con.dtDateTermination >= GETDATE()
+                  AND con.dtDateTermination <= DATEADD(day, 60, GETDATE())
+            ORDER BY con.dtDateTermination ASC
             """;
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
@@ -158,7 +158,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            var expDate = reader["dtContractEnd"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(reader["dtContractEnd"]);
+            var expDate = reader["dtDateTermination"] == DBNull.Value ? null : (DateTime?)Convert.ToDateTime(reader["dtDateTermination"]);
             items.Add(new ContractExpiringItem(
                 Client: reader["sClientName1"]?.ToString() ?? "",
                 ExpirationDate: expDate?.ToString("MM/dd/yyyy") ?? "",

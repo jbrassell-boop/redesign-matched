@@ -474,7 +474,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
                 ISNULL(r.sWorkOrderNumber, '') AS sWorkOrderNumber,
                 ISNULL(s.sSerialNumber, '') AS sSerialNumber,
                 ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
-                ISNULL(rl.sRepairLevel, '') AS sRepairLevel,
+                '' AS sRepairLevel,
                 r.dtDateIn,
                 ISNULL(rs.sRepairStatus, '') AS sRepairStatus,
                 ISNULL(r.dblAmtRepair, 0) AS dblNetTotal,
@@ -483,7 +483,6 @@ public class ContractsController(IConfiguration config) : ControllerBase
             INNER JOIN tblScope s ON r.lScopeKey = s.lScopeKey
             LEFT JOIN tblScopeType st ON s.lScopeTypeKey = st.lScopeTypeKey
             LEFT JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-            LEFT JOIN tblRepairLevels rl ON r.lRepairLevelKey = rl.lRepairLevelKey
             LEFT JOIN tblTechnicians t ON r.lTechnicianKey = t.lTechnicianKey
             WHERE r.lContractKey = @contractKey
             ORDER BY r.dtDateIn DESC

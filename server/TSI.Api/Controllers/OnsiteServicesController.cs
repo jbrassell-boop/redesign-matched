@@ -25,10 +25,29 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Call stored procedure to get onsite services
-        await using var cmd = new SqlCommand("onsiteServicesGet", conn);
+        const string sql = """
+            SELECT ss.lSiteServiceKey AS lOnsiteServiceKey,
+                   ISNULL(ss.sWorkOrderNumber, '') AS sInvoiceNumber,
+                   ISNULL(c.sClientName1, '') AS sClientName,
+                   ISNULL(d.sDepartmentName, '') AS sDepartmentName,
+                   ISNULL(t.sTechName, '') AS sTechName,
+                   ss.dtOnsiteDate,
+                   ss.dtDateSubmitted AS dtSubmittedDate,
+                   CASE WHEN ss.dtVoidDate IS NOT NULL THEN 'Voided'
+                        WHEN ss.dtDateSubmitted IS NOT NULL THEN 'Submitted'
+                        WHEN ss.dtInvoiceDate IS NOT NULL THEN 'Invoiced'
+                        ELSE 'Draft' END AS sStatus,
+                   ISNULL(ss.lTrayCount, 0) AS nTrayCount,
+                   ISNULL(ss.lTotalInstruments, 0) AS nInstrumentCount,
+                   ISNULL(ss.nInvoiceAmount, 0) AS dblTotalBilled
+            FROM tblSiteServices ss
+            LEFT JOIN tblClient c ON c.lClientKey = ss.lClientKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = ss.lDepartmentKey
+            LEFT JOIN tblTechnicians t ON t.lTechnicianKey = ss.lTechnicianKey
+            ORDER BY ss.dtOnsiteDate DESC
+            """;
+        await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
-        cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
         var items = new List<OnsiteServiceListItem>();
         try
@@ -100,9 +119,16 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        await using var cmd = new SqlCommand("onsiteServicesGet", conn);
+        const string sql = """
+            SELECT CASE WHEN ss.dtVoidDate IS NOT NULL THEN 'Voided'
+                        WHEN ss.dtDateSubmitted IS NOT NULL THEN 'Submitted'
+                        WHEN ss.dtInvoiceDate IS NOT NULL THEN 'Invoiced'
+                        ELSE 'Draft' END AS sStatus,
+                   ISNULL(ss.nInvoiceAmount, 0) AS dblTotalBilled
+            FROM tblSiteServices ss
+            """;
+        await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
-        cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
         var total = 0;
         var submitted = 0;
