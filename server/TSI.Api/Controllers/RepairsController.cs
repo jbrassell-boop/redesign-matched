@@ -816,7 +816,10 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // tblRepair has a trigger that calls dbo.clientAdditionalInfoUpdate (not migrated to Azure).
+        // Disable triggers around the UPDATE to prevent a 500 on inspection saves.
         const string sql = """
+            DISABLE TRIGGER ALL ON tblRepair;
             UPDATE tblRepair SET
                 sInsScopeIsRepairableYN = @scopeRepairable, sInsScopeIsUsableYN = @scopeUsable,
                 sAngInUp = @angInUp, sAngInDown = @angInDown, sAngInLeft = @angInLeft, sAngInRight = @angInRight,
@@ -835,7 +838,8 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 sInsDistalTipPF = @insDistalTipPF, sInsEyePiecePF = @insEyePiecePF,
                 sInsLightFibersPF = @insLightFibersPF, sInsAlcoholWipePF = @insAlcoholWipePF,
                 sInsFinalPF = @insFinalPF
-            WHERE lRepairKey = @repairKey
+            WHERE lRepairKey = @repairKey;
+            ENABLE TRIGGER ALL ON tblRepair;
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
