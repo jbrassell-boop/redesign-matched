@@ -359,6 +359,11 @@ function CameraFinalInspection({ repair }: { repair: RepairFull }) {
         </div>
       </div>
 
+      {/* Result Banner */}
+      <div style={{ background: 'var(--primary)', color: '#fff', textAlign: 'center', padding: '5px 10px', fontSize: 9, fontWeight: 700, letterSpacing: '0.04em', margin: '8px 0' }}>
+        Scope Has Been Repaired and Returned to Service-Ready Condition
+      </div>
+
       {/* Condition / Result */}
       <div style={{ display: 'flex', border: '2px solid var(--primary)', borderRadius: 3, overflow: 'hidden', marginBottom: g }}>
         <div style={{ flex: 1, padding: '5px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, borderRight: '2px solid var(--primary)' }}>
