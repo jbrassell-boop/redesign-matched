@@ -147,6 +147,141 @@ public class FieldVerifierController(IConfiguration config) : ControllerBase
         }
     }
 
+    // POST /api/field-verifier/ai-search-columns
+    [HttpPost("ai-search-columns")]
+    public async Task<IActionResult> AiSearchColumns([FromBody] AiColumnSearchRequest request)
+    {
+        var apiKey = config["Anthropic:ApiKey"]
+            ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
+
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return Ok(new { columns = new List<ColumnMatch>(), error = "Add 'Anthropic:ApiKey' to appsettings.Development.json to enable AI search." });
+
+        try
+        {
+            await using var conn = CreateConnection();
+            await conn.OpenAsync();
+
+            // Fetch column names from DB
+            SqlCommand colCmd;
+            if (!string.IsNullOrWhiteSpace(request.Table))
+            {
+                colCmd = new SqlCommand(
+                    "SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @table ORDER BY ORDINAL_POSITION",
+                    conn);
+                colCmd.Parameters.AddWithValue("@table", request.Table);
+            }
+            else
+            {
+                var keyTables = new[]
+                {
+                    "tblRepair", "tblClient", "tblDepartment", "tblContract",
+                    "tblScopeType", "tblScope", "tblTechnicians", "tblInvoice",
+                    "tblSiteServices", "tblProductSales", "tblSupplier", "tblInventory"
+                };
+                var inList = string.Join(",", keyTables.Select((_, i) => $"@t{i}"));
+                colCmd = new SqlCommand(
+                    $"SELECT TABLE_NAME, COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME IN ({inList}) ORDER BY TABLE_NAME, ORDINAL_POSITION",
+                    conn);
+                for (var i = 0; i < keyTables.Length; i++)
+                    colCmd.Parameters.AddWithValue($"@t{i}", keyTables[i]);
+            }
+
+            colCmd.CommandTimeout = 10;
+            await using var colReader = await colCmd.ExecuteReaderAsync();
+            var allColumns = new List<(string Table, string Column)>();
+            while (await colReader.ReadAsync())
+                allColumns.Add((colReader.GetString(0), colReader.GetString(1)));
+            await colReader.CloseAsync();
+
+            if (allColumns.Count == 0)
+                return Ok(new { columns = new List<ColumnMatch>(), error = "No columns found for this table." });
+
+            // Build prompt — send up to 200 column names
+            var colList = allColumns.Take(200).Select(c => $"{c.Table}.{c.Column}");
+            var prompt = $"""
+                You are mapping plain English descriptions to SQL column names in a medical device repair management database (WinScope).
+
+                Available columns (table.column):
+                {string.Join(", ", colList)}
+
+                The user is looking for: "{request.Query}"
+
+                Return a raw JSON array of up to 5 column names (table.column format) that best match, most relevant first.
+                Only return the JSON array — no explanation, no markdown. Example: ["tblRepair.dtExpDelDate","tblRepair.dtShipDate"]
+                """;
+
+            // Call Claude
+            using var http = new HttpClient();
+            http.DefaultRequestHeaders.Add("x-api-key", apiKey);
+            http.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
+            http.Timeout = TimeSpan.FromSeconds(20);
+
+            var requestBody = JsonSerializer.Serialize(new
+            {
+                model = "claude-haiku-4-5-20251001",
+                max_tokens = 256,
+                messages = new[] { new { role = "user", content = prompt } }
+            });
+
+            var response = await http.PostAsync(
+                "https://api.anthropic.com/v1/messages",
+                new StringContent(requestBody, System.Text.Encoding.UTF8, "application/json"));
+
+            var responseText = await response.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(responseText);
+            var text = doc.RootElement.GetProperty("content")[0].GetProperty("text").GetString() ?? "[]";
+
+            var jsonStart = text.IndexOf('[');
+            var jsonEnd = text.LastIndexOf(']');
+            if (jsonStart < 0 || jsonEnd < 0)
+                return Ok(new { columns = new List<ColumnMatch>(), error = $"Unexpected AI response: {text[..Math.Min(text.Length, 100)]}" });
+
+            var matched = JsonSerializer.Deserialize<List<string>>(text[jsonStart..(jsonEnd + 1)]) ?? [];
+
+            // Fetch sample + data type for each matched column
+            var results = new List<ColumnMatch>();
+            foreach (var match in matched.Take(5))
+            {
+                var parts = match.Split('.');
+                if (parts.Length != 2) continue;
+                var (tbl, col) = (parts[0].Trim(), parts[1].Trim());
+                if (!allColumns.Any(c => c.Table == tbl && c.Column == col)) continue;
+
+                try
+                {
+                    await using var typeCmd = new SqlCommand(
+                        "SELECT DATA_TYPE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME=@t AND COLUMN_NAME=@c",
+                        conn);
+                    typeCmd.Parameters.AddWithValue("@t", tbl);
+                    typeCmd.Parameters.AddWithValue("@c", col);
+                    typeCmd.CommandTimeout = 5;
+                    var dataType = (await typeCmd.ExecuteScalarAsync())?.ToString() ?? "";
+
+                    await using var sampleCmd = new SqlCommand(
+                        $"SELECT TOP 1 [{col}] FROM [{tbl}] WHERE [{col}] IS NOT NULL",
+                        conn);
+                    sampleCmd.CommandTimeout = 5;
+                    var sample = await sampleCmd.ExecuteScalarAsync();
+                    var sampleStr = sample == null || sample == DBNull.Value ? "(null)" : sample.ToString()!;
+                    if (sampleStr.Length > 60) sampleStr = sampleStr[..60] + "…";
+
+                    results.Add(new ColumnMatch(tbl, col, dataType, sampleStr));
+                }
+                catch
+                {
+                    results.Add(new ColumnMatch(tbl, col, "", "(error reading sample)"));
+                }
+            }
+
+            return Ok(new { columns = results, error = "" });
+        }
+        catch (Exception ex)
+        {
+            return Ok(new { columns = new List<ColumnMatch>(), error = ex.Message });
+        }
+    }
+
     // POST /api/field-verifier/preview-rows
     [HttpPost("preview-rows")]
     public async Task<IActionResult> GetPreviewRows([FromBody] LiveValueRequest request)

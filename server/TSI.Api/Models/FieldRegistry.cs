@@ -51,6 +51,11 @@ public record ColumnSearchRequest(
     string? Table
 );
 
+public record AiColumnSearchRequest(
+    string Query,
+    string? Table
+);
+
 public record ColumnMatch(
     string TableName,
     string ColumnName,

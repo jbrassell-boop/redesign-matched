@@ -107,13 +107,14 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setLoadingCols(true);
     setColResults([]);
     try {
-      const res = await fetch(`${API}/search-columns`, {
+      const res = await fetch(`${API}/ai-search-columns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ searchTerm: colSearch, table: editSqlTable || null }),
+        body: JSON.stringify({ query: colSearch, table: editSqlTable || null }),
       });
       const data = await res.json();
-      setColResults(data);
+      if (data.error) message.error(data.error);
+      setColResults(data.columns ?? []);
     } catch {
       message.error('Failed to search columns');
     } finally {
@@ -298,10 +299,10 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
         {editing && (
           <div style={{ marginBottom: 16, padding: 12, background: '#F8FAFF', border: '1px solid #DDE6F5', borderRadius: 6 }}>
             <div style={{ fontSize: 11, color: '#44697D', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
-              Search DB columns by keyword
+              AI Column Search — describe what you're looking for
             </div>
             <Input.Search
-              placeholder='e.g. "estimated delivery" or "ship date"'
+              placeholder='e.g. "when we expect to deliver the repair" or "pending ship status"'
               value={colSearch}
               onChange={e => setColSearch(e.target.value)}
               onSearch={searchColumns}
