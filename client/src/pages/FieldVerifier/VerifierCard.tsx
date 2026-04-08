@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button, Input, Spin, Tag, message } from 'antd';
 import { CheckOutlined, CloseOutlined, EditOutlined, LeftOutlined, RightOutlined, TableOutlined, SearchOutlined } from '@ant-design/icons';
-import type { FieldEntry } from './index';
-
-const API = 'http://localhost:5000/api/field-verifier';
+import { FIELD_VERIFIER_API, type FieldEntry } from '../../types/fieldRegistry';
 
 interface Props {
   screenFile: string;
@@ -61,7 +59,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setLiveValue('');
     setLiveError('');
     try {
-      const res = await fetch(`${API}/live-value`, {
+      const res = await fetch(`${FIELD_VERIFIER_API}/live-value`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sqlQuery: sql }),
@@ -84,7 +82,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setShowPreview(true);
     try {
       const previewSql = `SELECT TOP 5 * FROM ${field.sqlTable}`;
-      const res = await fetch(`${API}/preview-rows`, {
+      const res = await fetch(`${FIELD_VERIFIER_API}/preview-rows`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sqlQuery: previewSql }),
@@ -107,7 +105,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setLoadingCols(true);
     setColResults([]);
     try {
-      const res = await fetch(`${API}/ai-search-columns`, {
+      const res = await fetch(`${FIELD_VERIFIER_API}/ai-search-columns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: colSearch, table: editSqlTable || null }),
@@ -143,7 +141,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
       notes: updated.notes,
       verifiedBy: 'Joe',
     };
-    await fetch(`${API}/field`, {
+    await fetch(`${FIELD_VERIFIER_API}/field`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

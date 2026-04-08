@@ -2,25 +2,9 @@ import { useState, useEffect } from 'react';
 import { Progress, Tabs, Tag } from 'antd';
 import { VerifierCard } from './VerifierCard';
 import { DeveloperView } from './DeveloperView';
+import { FIELD_VERIFIER_API, type FieldEntry, type ScreenRegistry } from '../../types/fieldRegistry';
 
-export interface FieldEntry {
-  id: string;
-  label: string;
-  sqlTable: string;
-  sqlQuery: string;
-  apiEndpoint: string;
-  responseProperty: string;
-  status: 'unverified' | 'confirmed' | 'flagged';
-  notes: string;
-  verifiedAt: string;
-  verifiedBy: string;
-}
-
-export interface ScreenRegistry {
-  screen: string;
-  lastUpdated: string;
-  fields: FieldEntry[];
-}
+export type { FieldEntry, ScreenRegistry };
 
 const SCREEN_FILES: Record<string, string> = {
   'Dashboard': 'dashboard',
@@ -36,8 +20,6 @@ const SCREEN_FILES: Record<string, string> = {
   'Scope Model': 'scope-model',
 };
 
-const API = 'http://localhost:5000/api/field-verifier';
-
 function getScreenStatus(fields: FieldEntry[]): 'green' | 'amber' | 'gray' {
   if (fields.length === 0) return 'gray';
   if (fields.every(f => f.status === 'confirmed')) return 'green';
@@ -52,7 +34,7 @@ export function FieldVerifierPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API}/registry`)
+    fetch(`${FIELD_VERIFIER_API}/registry`)
       .then(r => r.json())
       .then((data: ScreenRegistry[]) => {
         setScreens(data);
