@@ -137,11 +137,11 @@ const INTERNAL_FORMS = [
   { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)', title: 'Flexible endoscope disassembly & inspection form', types: ['Flexible'] },
   { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)', title: 'Flexible endoscope diagnostic disassembly & inspection form', types: ['Flexible'] },
   { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)', title: 'Rigid endoscope disassembly & inspection form', types: ['Rigid'] },
-  { key: 'amendment'      as const, label: 'Amendment (OM07-9)', title: 'Repair order amendment form' },
-  { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)', title: 'Customer update communication slip' },
   { key: 'bi-flexible'     as const, label: 'BI Flexible (OM07-3)',       title: 'Blank inspection — flexible endoscope',       types: ['Flexible'] },
   { key: 'bi-camera'       as const, label: 'BI Camera (OM07-4)',         title: 'Blank inspection — camera system',            types: ['Camera'] },
   { key: 'bi-rigid'        as const, label: 'BI Rigid (OM07-5)',          title: 'Blank inspection — rigid endoscope',          types: ['Rigid'] },
+  { key: 'amendment'      as const, label: 'Amendment (OM07-9)', title: 'Repair order amendment form' },
+  { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)', title: 'Customer update communication slip' },
   { key: 'subassembly-qc'  as const, label: 'Sub-Assembly QC (OM07-1)',   title: 'Sub-assembly parts QC requisition' },
   { key: '40-day-warranty' as const, label: '40-Day Warranty (OM06-2)',   title: '40-day warranty review form' },
   { key: 'ncp'             as const, label: 'Non-Conforming (OM23-1)',     title: 'Non-conforming product report' },
@@ -155,7 +155,7 @@ function formsForScope<T extends { types?: string[] }>(forms: T[], scopeType: st
 
 const CUSTOMER_FORMS = [
   { key: 'requisition'          as const, label: 'Requisition (OM07-2)', title: 'Customer repair requisition form' },
-  { key: 'final-inspection'     as const, label: 'Final Inspection (OM10-2)', title: 'Final quality inspection report' },
+  { key: 'final-inspection'     as const, label: 'Final Inspection (OM10)', title: 'Final quality inspection report' },
   { key: 'return-verification'  as const, label: 'Return Verification (OM14-1)', title: 'Return shipment verification form' },
   { key: 'loaner'               as const, label: 'Loaner (OM17-1)', title: 'Loaner scope request and tracking form' },
   { key: 'invoice'         as const, label: 'Invoice',                   title: 'Billing invoice for repair services' },
