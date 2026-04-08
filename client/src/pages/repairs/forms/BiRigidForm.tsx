@@ -10,7 +10,7 @@ const em = '—';
 const cbBox: React.CSSProperties = { display: 'inline-block', width: 10, height: 10, border: '1px solid #999', borderRadius: 2, verticalAlign: 'middle', flexShrink: 0 };
 const costField: React.CSSProperties = { borderBottom: '1px solid #aaa', minWidth: 54, display: 'inline-block', height: 12, verticalAlign: 'middle' };
 const sigMini: React.CSSProperties = { borderBottom: '1px solid #aaa', minWidth: 90, display: 'inline-block', height: 12, verticalAlign: 'middle' };
-const pfBtnP: React.CSSProperties = { display: 'inline-block', width: 20, height: 13, border: '1px solid #16A34A', borderRadius: 2, textAlign: 'center', lineHeight: '13px', fontSize: 7, fontWeight: 700, color: '#16A34A', margin: '0 1px' };
+const pfBtnP: React.CSSProperties = { display: 'inline-block', width: 20, height: 13, border: '1px solid var(--success)', borderRadius: 2, textAlign: 'center', lineHeight: '13px', fontSize: 7, fontWeight: 700, color: 'var(--success)', margin: '0 1px' };
 const pfBtnF: React.CSSProperties = { display: 'inline-block', width: 20, height: 13, border: '1px solid var(--danger)', borderRadius: 2, textAlign: 'center', lineHeight: '13px', fontSize: 7, fontWeight: 700, color: 'var(--danger)', margin: '0 1px' };
 
 const pageStyle: React.CSSProperties = {
@@ -99,6 +99,10 @@ export const BiRigidForm = ({ repair, onClose }: Props) => (
         <Fld label="Complaint" value={repair.complaint} span2 h={22} />
         <Fld label="Work Order #" value={repair.wo} />
         <Fld label="Serial #" value={repair.serial} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <span style={fl}>Technician</span>
+          <div style={fv}>{repair.tech ?? '—'}</div>
+        </div>
         <Fld label="Scope Model" value={repair.scopeModel} span2 />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <span style={fl}>Rack #</span><div style={fv}></div>
