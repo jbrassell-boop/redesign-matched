@@ -3,10 +3,10 @@
   "lastUpdated": "",
   "fields": [
     { "id": "inv_scope_type", "label": "Scope Type", "sqlTable": "tblScopeModel", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "scopeType", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_serial", "label": "Serial #", "sqlTable": "tblInstrument", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "serial", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "inv_serial", "label": "Serial #", "sqlTable": "tblScope", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "serial", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
     { "id": "inv_client", "label": "Client", "sqlTable": "tblClient", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "client", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_location", "label": "Location", "sqlTable": "tblInstrument", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "location", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_status", "label": "Status", "sqlTable": "tblInstrument", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "status", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "inv_cost", "label": "Cost", "sqlTable": "tblInstrument", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "cost", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+    { "id": "inv_location", "label": "Location", "sqlTable": "tblScope", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "location", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "inv_status", "label": "Status", "sqlTable": "tblScope", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "status", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "inv_cost", "label": "Cost", "sqlTable": "tblScope", "sqlQuery": "", "apiEndpoint": "GET /api/inventory", "responseProperty": "cost", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
   ]
 }

@@ -2,10 +2,10 @@
   "screen": "Scope Model",
   "lastUpdated": "",
   "fields": [
-    { "id": "sm_scope_type", "label": "Scope Type", "sqlTable": "tblScopeModel", "sqlQuery": "", "apiEndpoint": "GET /api/scope-models", "responseProperty": "scopeType", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "sm_manufacturer", "label": "Manufacturer", "sqlTable": "tblScopeModel", "sqlQuery": "", "apiEndpoint": "GET /api/scope-models", "responseProperty": "manufacturer", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "sm_model", "label": "Model", "sqlTable": "tblScopeModel", "sqlQuery": "", "apiEndpoint": "GET /api/scope-models", "responseProperty": "model", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "sm_repair_price", "label": "Repair Price", "sqlTable": "tblScopeModel", "sqlQuery": "", "apiEndpoint": "GET /api/scope-models", "responseProperty": "repairPrice", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
-    { "id": "sm_active", "label": "Active", "sqlTable": "tblScopeModel", "sqlQuery": "", "apiEndpoint": "GET /api/scope-models", "responseProperty": "active", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
+    { "id": "sm_scope_type", "label": "Scope Type", "sqlTable": "tblScopeType", "sqlQuery": "", "apiEndpoint": "GET /api/scope-models", "responseProperty": "scopeType", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "sm_manufacturer", "label": "Manufacturer", "sqlTable": "tblScopeType", "sqlQuery": "", "apiEndpoint": "GET /api/scope-models", "responseProperty": "manufacturer", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "sm_model", "label": "Model", "sqlTable": "tblScopeType", "sqlQuery": "", "apiEndpoint": "GET /api/scope-models", "responseProperty": "model", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "sm_repair_price", "label": "Repair Price", "sqlTable": "tblScopeType", "sqlQuery": "", "apiEndpoint": "GET /api/scope-models", "responseProperty": "repairPrice", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" },
+    { "id": "sm_active", "label": "Active", "sqlTable": "tblScopeType", "sqlQuery": "", "apiEndpoint": "GET /api/scope-models", "responseProperty": "active", "status": "unverified", "notes": "", "verifiedAt": "", "verifiedBy": "" }
   ]
 }
