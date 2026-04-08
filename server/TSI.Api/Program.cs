@@ -42,7 +42,8 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(
             "http://localhost:5173",
             "http://localhost:5176",
-            builder.Configuration["ClientOrigin"] ?? "https://placeholder.azurestaticapps.net"
+            "https://happy-plant-03638db0f.6.azurestaticapps.net",
+            builder.Configuration["ClientOrigin"] ?? "https://happy-plant-03638db0f.6.azurestaticapps.net"
         )
         .AllowAnyMethod()
         .AllowAnyHeader()
