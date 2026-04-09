@@ -355,6 +355,10 @@ export const QualityPage = () => {
     transition: 'all 0.1s',
   });
 
+  const yieldPct = stats?.firstPassYield ?? 0;
+  const yieldColor = yieldPct < 50 ? 'var(--danger)' : yieldPct < 80 ? 'var(--warning)' : 'var(--success)';
+  const yieldBg = yieldPct < 50 ? 'rgba(var(--danger-rgb), 0.13)' : yieldPct < 80 ? 'rgba(var(--amber-rgb), 0.13)' : 'rgba(var(--success-rgb), 0.13)';
+
   return (
     <section aria-label="Quality" style={pageContainerStyle}>
 
@@ -382,11 +386,11 @@ export const QualityPage = () => {
         />
         <StatChip
           label="First-Pass Yield"
-          value={statsLoading ? '—' : `${stats?.firstPassYield ?? 0}%`}
+          value={statsLoading ? '—' : `${yieldPct}%`}
           icon={<IconCheckDouble />}
-          iconColor="var(--primary)"
-          iconBg="rgba(var(--primary-rgb), 0.13)"
-          valueColor="var(--primary)"
+          iconColor={yieldColor}
+          iconBg={yieldBg}
+          valueColor={yieldColor}
           active={false}
           clickable={false}
         />

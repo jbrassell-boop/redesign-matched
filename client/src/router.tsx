@@ -30,6 +30,7 @@ const EndoCartsPage = lazy(() => import('./pages/endocarts/EndoCartsPage').then(
 const ReceivingPage = lazy(() => import('./pages/receiving/ReceivingPage').then(m => ({ default: m.ReceivingPage })));
 const RepairItemsPage = lazy(() => import('./pages/repair-items/RepairItemsPage').then(m => ({ default: m.RepairItemsPage })));
 const FieldVerifierPage = lazy(() => import('./pages/FieldVerifier/index').then(m => ({ default: m.FieldVerifierPage })));
+const NotFoundPage = lazy(() => import('./pages/not-found/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
 
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '2rem' }}><Spin size="large" /></div>}>
@@ -77,6 +78,7 @@ export const router = createBrowserRouter([
           { path: '/endocarts', element: <SuspenseWrapper><EndoCartsPage /></SuspenseWrapper> },
           { path: '/receiving', element: <SuspenseWrapper><ReceivingPage /></SuspenseWrapper> },
           { path: '/repair-items', element: <SuspenseWrapper><RepairItemsPage /></SuspenseWrapper> },
+          { path: '*', element: <SuspenseWrapper><NotFoundPage /></SuspenseWrapper> },
         ],
       },
     ],

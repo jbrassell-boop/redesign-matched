@@ -103,7 +103,12 @@ public record HoldListResponse(
 
 public record GLAccountItem(
     string AccountNumber,
-    string BatchNumber
+    string BatchNumber,
+    string Description,
+    string? TransactionDate,
+    double DebitAmount,
+    double CreditAmount,
+    double Balance
 );
 
 public record AtRiskItem(

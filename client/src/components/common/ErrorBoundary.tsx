@@ -13,24 +13,23 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (!this.state.hasError) return this.props.children;
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', padding: 40 }}>
-        <div style={{ textAlign: 'center', maxWidth: 480 }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>!</div>
-          <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)', margin: '0 0 8px' }}>Something went wrong</h2>
-          <p style={{ fontSize: 13, color: 'var(--muted)', margin: '0 0 16px' }}>
-            {this.state.error?.message ?? 'An unexpected error occurred.'}
-          </p>
-          <button
-            onClick={() => this.setState({ hasError: false, error: null })}
-            style={{
-              padding: '8px 20px', fontSize: 13, fontWeight: 600,
-              background: 'var(--primary)', color: '#fff', border: 'none',
-              borderRadius: 6, cursor: 'pointer',
-            }}
-          >
-            Try Again
-          </button>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', padding: 40, gap: 12 }}>
+        <div style={{ fontSize: 40, opacity: 0.15, fontWeight: 800, color: 'var(--navy)' }}>!</div>
+        <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--navy)' }}>Something went wrong</div>
+        <div style={{ fontSize: 13, color: 'var(--muted)', maxWidth: 400, textAlign: 'center' }}>
+          An unexpected error occurred. Please try again or contact support if the problem persists.
         </div>
+        {import.meta.env.DEV && this.state.error && (
+          <pre style={{ fontSize: 11, color: 'var(--danger)', background: 'var(--neutral-50)', padding: 12, borderRadius: 6, maxWidth: 600, overflow: 'auto', marginTop: 8 }}>
+            {this.state.error.message}
+          </pre>
+        )}
+        <button
+          onClick={() => this.setState({ hasError: false, error: null })}
+          style={{ marginTop: 8, height: 36, padding: '0 20px', fontSize: 13, fontWeight: 600, background: 'var(--primary)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          Try Again
+        </button>
       </div>
     );
   }

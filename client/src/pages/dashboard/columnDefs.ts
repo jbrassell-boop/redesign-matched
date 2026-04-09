@@ -62,12 +62,12 @@ const shippingColumns = (onRowClick: (key: number) => void): ColumnsType<any> =>
 
 // ── Invoices ──
 const invoicesColumns = (_onRowClick: (key: number) => void): ColumnsType<any> => [
-  { title: 'INVOICE #', dataIndex: 'invoiceNumber', key: 'invoiceNumber', width: 110 },
+  { title: 'INVOICE #', dataIndex: 'invoiceNumber', key: 'invoiceNumber', width: 120 },
   { title: 'WO#', dataIndex: 'wo', key: 'wo', width: 110 },
-  { title: 'CLIENT', dataIndex: 'client', key: 'client' },
-  { title: 'STATUS', dataIndex: 'status', key: 'status', width: 130, render: statusRender },
-  { title: 'AMOUNT', dataIndex: 'amount', key: 'amount', width: 100, align: 'right', render: moneyRender },
+  { title: 'CLIENT', dataIndex: 'client', key: 'client', width: 220, ellipsis: true },
   { title: 'DATE', dataIndex: 'date', key: 'date', width: 100 },
+  { title: 'AMOUNT', dataIndex: 'amount', key: 'amount', width: 110, align: 'right', render: moneyRender },
+  { title: 'STATUS', dataIndex: 'status', key: 'status', width: 130, render: statusRender },
 ];
 
 // ── Flags ──

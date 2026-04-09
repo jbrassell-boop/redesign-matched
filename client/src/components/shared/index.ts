@@ -12,3 +12,4 @@ export { DataTable } from './DataTable';
 export { PairedTable } from './PairedTable';
 export type { PairedColumn, PairedTableProps } from './PairedTable';
 export { ModalShell } from './ModalShell';
+export { EmptyState } from './EmptyState';

@@ -104,6 +104,11 @@ export type FinancialTab = 'outstanding' | 'drafts' | 'hold' | 'payments' | 'gl'
 export interface GLAccountItem {
   accountNumber: string;
   batchNumber: string;
+  description: string;
+  transactionDate: string | null;
+  debitAmount: number;
+  creditAmount: number;
+  balance: number;
 }
 
 export interface AtRiskItem {

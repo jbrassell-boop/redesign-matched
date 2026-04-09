@@ -261,13 +261,15 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
         var avgDays = reader["AvgDaysOut"] == DBNull.Value ? 0 : Convert.ToInt32(reader["AvgDaysOut"]);
         await reader.CloseAsync();
 
-        // Top vendor by spend
+        // Top vendor by spend — include records with no vendor assigned (NULL group)
         const string vendorSql = """
-            SELECT TOP 1 v.sVendName1, SUM(ISNULL(r.dblOutSourceCost, 0)) AS VendorSpend
+            SELECT TOP 1
+                ISNULL(v.sVendName1, '(Unassigned)') AS sVendName1,
+                SUM(ISNULL(r.dblOutSourceCost, 0)) AS VendorSpend
             FROM tblRepair r
             LEFT JOIN tblVendor v ON v.lVendorKey = r.lVendorKey
-            WHERE r.bOutsourced = 1 AND v.sVendName1 IS NOT NULL
-            GROUP BY v.sVendName1
+            WHERE r.bOutsourced = 1
+            GROUP BY ISNULL(v.sVendName1, '(Unassigned)')
             ORDER BY VendorSpend DESC
             """;
         await using var vendorCmd = new SqlCommand(vendorSql, conn);

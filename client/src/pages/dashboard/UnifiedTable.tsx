@@ -35,6 +35,17 @@ export const UnifiedTable = ({
   const columns = getColumnsForView(view, onRowClick);
   const rowKey = getRowKey(view);
 
+  const SCROLL_X: Record<string, number> = {
+    repairs: 1400,
+    techbench: 800,
+    invoices: 800,
+    shipping: 700,
+    tasks: 800,
+    emails: 900,
+    flags: 600,
+  };
+  const scrollX = SCROLL_X[view] ?? 900;
+
   const [menuPosition, setMenuPosition] = useState<{ x: number; y: number } | null>(null);
   const [menuRecord, setMenuRecord] = useState<any>(null);
   const [techList, setTechList] = useState<TechnicianOption[]>([]);
@@ -140,6 +151,14 @@ export const UnifiedTable = ({
     ? getRepairMenuItems(menuRecord)
     : [];
 
+  if (!loading && data.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--muted)', fontSize: 13 }}>
+        No {view === 'techbench' ? 'items' : view}
+      </div>
+    );
+  }
+
   return (
     <>
       <Table
@@ -148,7 +167,7 @@ export const UnifiedTable = ({
         rowKey={rowKey}
         loading={loading}
         size="small"
-        scroll={{ x: 1400 }}
+        scroll={{ x: scrollX }}
         rowClassName={(row: any) => row.isUrgent ? 'urgent-row' : ''}
         rowSelection={{
           selectedRowKeys: selectedKeys,

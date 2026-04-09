@@ -93,7 +93,7 @@ export const ExecutiveKpi = () => {
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10 }}>
         <KpiCard
           label="Throughput (Month)"
           value={`${data.shippedThisMonth}`}

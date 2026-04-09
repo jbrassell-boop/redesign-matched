@@ -44,7 +44,7 @@ export const AppShell = () => {
           </main>
         </div>
         <CommandPalette />
-        <DevInspectorPanel />
+        {import.meta.env.DEV && <DevInspectorPanel />}
         <div aria-live="polite" id="status-announcer" style={{ position: 'absolute', width: 1, height: 1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap' }} />
       </div>
     </InspectorProvider>

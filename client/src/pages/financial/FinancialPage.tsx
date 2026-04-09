@@ -231,8 +231,13 @@ export const FinancialPage = () => {
 
 
   const glColumns = [
-    { title: 'Account #', dataIndex: 'accountNumber', key: 'accountNumber', render: (v: string) => <span style={{ fontWeight: 600 }}>{v}</span> },
-    { title: 'Batch Number', dataIndex: 'batchNumber', key: 'batchNumber', render: (v: string) => v || '\u2014' },
+    { title: 'Account #', dataIndex: 'accountNumber', key: 'accountNumber', width: 130, render: (v: string) => <span style={{ fontWeight: 600 }}>{v}</span> },
+    { title: 'Batch Number', dataIndex: 'batchNumber', key: 'batchNumber', width: 130, render: (v: string) => v || '\u2014' },
+    { title: 'Description', dataIndex: 'description', key: 'description', render: (v: string) => v || '\u2014' },
+    { title: 'Date', dataIndex: 'transactionDate', key: 'transactionDate', width: 100, render: (v: string | null) => fmtDate(v) },
+    { title: 'Debit', dataIndex: 'debitAmount', key: 'debitAmount', width: 110, align: 'right' as const, render: (v: number) => v ? fmt$(v) : '\u2014' },
+    { title: 'Credit', dataIndex: 'creditAmount', key: 'creditAmount', width: 110, align: 'right' as const, render: (v: number) => v ? fmt$(v) : '\u2014' },
+    { title: 'Balance', dataIndex: 'balance', key: 'balance', width: 120, align: 'right' as const, render: (v: number) => <span style={{ fontWeight: 600, color: v < 0 ? '#c0392b' : undefined }}>{fmt$(v)}</span> },
   ];
 
   // ─── Executive summary banner ───────────────────────────────────────────────
@@ -421,7 +426,7 @@ export const FinancialPage = () => {
               <Table
                 dataSource={glAccounts}
                 columns={glColumns}
-                rowKey="accountNumber"
+                rowKey={(_record, index) => String(index)}
                 loading={loading}
                 size="small"
                 pagination={{ pageSize: 50, showSizeChanger: true, pageSizeOptions: ['25', '50', '100'] }}

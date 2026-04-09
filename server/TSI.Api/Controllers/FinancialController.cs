@@ -336,10 +336,18 @@ public class FinancialController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         const string sql = """
-            SELECT DISTINCT GLAccount, sBatchNumber
+            SELECT
+                GLAccount,
+                sBatchNumber,
+                ISNULL(sDescription, '') AS sDescription,
+                dTranDate,
+                ISNULL(TRY_CAST(dblDebitAmount  AS FLOAT), 0) AS dblDebitAmount,
+                ISNULL(TRY_CAST(dblCreditAmount AS FLOAT), 0) AS dblCreditAmount,
+                ISNULL(TRY_CAST(dblDebitAmount  AS FLOAT), 0)
+                    - ISNULL(TRY_CAST(dblCreditAmount AS FLOAT), 0) AS dblBalance
             FROM tblGP_InvoiceStaging
             WHERE GLAccount IS NOT NULL AND GLAccount <> ''
-            ORDER BY GLAccount
+            ORDER BY GLAccount, dTranDate DESC
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
@@ -349,9 +357,15 @@ public class FinancialController(IConfiguration config) : ControllerBase
         var items = new List<GLAccountItem>();
         while (await reader.ReadAsync())
         {
+            DateTime? tranDate = reader["dTranDate"] as DateTime?;
             items.Add(new GLAccountItem(
                 AccountNumber: reader["GLAccount"]?.ToString() ?? "",
-                BatchNumber: reader["sBatchNumber"]?.ToString() ?? ""
+                BatchNumber: reader["sBatchNumber"]?.ToString() ?? "",
+                Description: reader["sDescription"]?.ToString() ?? "",
+                TransactionDate: tranDate?.ToString("yyyy-MM-dd"),
+                DebitAmount: Convert.ToDouble(reader["dblDebitAmount"]),
+                CreditAmount: Convert.ToDouble(reader["dblCreditAmount"]),
+                Balance: Convert.ToDouble(reader["dblBalance"])
             ));
         }
 
@@ -389,11 +403,13 @@ public class FinancialController(IConfiguration config) : ControllerBase
         overdueCmd.CommandTimeout = 30;
         var overdueCount = Convert.ToInt32(await overdueCmd.ExecuteScalarAsync());
 
-        // Average aging days
+        // Average aging days — limit to last 12 months to avoid skew from old invoices
         const string agingSql = """
             SELECT ISNULL(AVG(DATEDIFF(day, ISNULL(dtDueDate, dtTranDate), GETDATE())), 0)
             FROM tblInvoice
-            WHERE dblTranAmount > 0 AND dtDueDate IS NOT NULL
+            WHERE dblTranAmount > 0
+              AND dtDueDate IS NOT NULL
+              AND dtTranDate >= DATEADD(year, -1, GETDATE())
             """;
         await using var agingCmd = new SqlCommand(agingSql, conn);
         agingCmd.CommandTimeout = 30;
@@ -411,7 +427,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
         holdCmd.CommandTimeout = 30;
         var holdCount = Convert.ToInt32(await holdCmd.ExecuteScalarAsync());
 
-        // Paid MTD from tblInvoicePayments
+        // Paid MTD from tblInvoicePayments (cash collected)
         const string paidSql = """
             SELECT ISNULL(SUM(nInvoicePayment), 0) FROM tblInvoicePayments
             WHERE dtPaymentDate >= DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)
@@ -421,6 +437,18 @@ public class FinancialController(IConfiguration config) : ControllerBase
         var paidResult = await paidCmd.ExecuteScalarAsync();
         var paidMTD = paidResult == null || paidResult == DBNull.Value ? 0.0 : Convert.ToDouble(paidResult);
 
+        // Revenue MTD from tblRepair (shipped revenue — consistent with Dashboard KPIs)
+        const string revMtdSql = """
+            SELECT ISNULL(SUM(dblAmtRepair), 0) FROM tblRepair
+            WHERE dtShipDate IS NOT NULL
+              AND CAST(dtShipDate AS DATE) >= DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)
+              AND dblAmtRepair > 0
+            """;
+        await using var revMtdCmd = new SqlCommand(revMtdSql, conn);
+        revMtdCmd.CommandTimeout = 30;
+        var revMtdResult = await revMtdCmd.ExecuteScalarAsync();
+        var revenueMTD = revMtdResult == null || revMtdResult == DBNull.Value ? 0.0 : Convert.ToDouble(revMtdResult);
+
         return Ok(new FinancialStats(
             OutstandingAR: totalAR,
             OverdueCount: overdueCount,
@@ -429,7 +457,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
             OnHoldCount: holdCount,
             PaidMTD: paidMTD,
             DSO: Math.Abs(avgAging),
-            RevenueMTD: paidMTD
+            RevenueMTD: revenueMTD
         ));
     }
 

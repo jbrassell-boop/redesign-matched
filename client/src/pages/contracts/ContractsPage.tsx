@@ -21,16 +21,17 @@ export const ContractsPage = () => {
   const [contracts, setContracts] = useState<ContractListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'active' | 'expiring' | 'expired' | 'all'>('active');
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
   const [detail, setDetail] = useState<ContractDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [stats, setStats] = useState<ContractStats | null>(null);
   const [collapsed, setCollapsed] = useState(false);
 
-  const loadContracts = useCallback(async (s: string) => {
+  const loadContracts = useCallback(async (s: string, sf: string) => {
     setLoading(true);
     try {
-      const result = await getContracts({ search: s, pageSize: 200 });
+      const result = await getContracts({ search: s, pageSize: 200, statusFilter: sf });
       setContracts(result.contracts);
     } finally {
       setLoading(false);
@@ -42,9 +43,9 @@ export const ContractsPage = () => {
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => loadContracts(search), search ? 300 : 0);
+    const timer = setTimeout(() => loadContracts(search, statusFilter), search ? 300 : 0);
     return () => clearTimeout(timer);
-  }, [search, loadContracts]);
+  }, [search, statusFilter, loadContracts]);
 
   const handleSelect = useCallback(async (c: ContractListItem) => {
     setSelectedKey(c.contractKey);
@@ -97,6 +98,35 @@ export const ContractsPage = () => {
                   ◀
                 </button>
               </div>
+            </div>
+            {/* Status filter bar */}
+            <div style={{
+              display: 'flex',
+              borderBottom: '1px solid var(--neutral-200)',
+              background: 'var(--neutral-50)',
+            }}>
+              {(['active', 'expiring', 'expired', 'all'] as const).map((v, i, arr) => (
+                <button
+                  key={v}
+                  onClick={() => setStatusFilter(v)}
+                  style={{
+                    flex: 1,
+                    padding: '5px 4px',
+                    fontSize: 11,
+                    fontWeight: statusFilter === v ? 700 : 500,
+                    color: statusFilter === v ? 'var(--navy)' : 'var(--muted)',
+                    background: statusFilter === v ? 'var(--primary-light)' : 'transparent',
+                    border: 'none',
+                    borderRight: i < arr.length - 1 ? '1px solid var(--neutral-200)' : 'none',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    textTransform: 'capitalize',
+                    transition: 'all 0.1s',
+                  }}
+                >
+                  {v === 'all' ? 'All' : v.charAt(0).toUpperCase() + v.slice(1)}
+                </button>
+              ))}
             </div>
             <ContractsList
               contracts={contracts}

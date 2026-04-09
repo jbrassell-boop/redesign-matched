@@ -4,7 +4,15 @@
   background: var(--card);
   border-bottom: 1px solid var(--neutral-200);
   flex-shrink: 0;
+  min-width: 0;
   overflow-x: auto;
+  /* Hide scrollbar visually while keeping scroll functional */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.tab-bar::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
 }
 
 .tab-bar__item {

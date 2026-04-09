@@ -112,6 +112,10 @@ export const DashboardPage = () => {
   };
 
   const handleChipClick = (chipId: string) => {
+    if (chipId === 'expiringContracts') {
+      navigate('/contracts');
+      return;
+    }
     const statusMap: Record<string, string> = {
       urgent: 'all',
       pendingQC: 'Pending QC',
@@ -227,7 +231,7 @@ export const DashboardPage = () => {
         selectedCount={selectedKeys.length}
         onExport={handleExport}
       />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: toolbarState.view === 'briefing' ? 'auto' : 'hidden' }}>
         {toolbarState.view === 'briefing' ? (
           <OpsBriefing stats={stats} />
         ) : (

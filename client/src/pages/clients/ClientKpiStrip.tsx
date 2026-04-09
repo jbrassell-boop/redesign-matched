@@ -51,8 +51,8 @@ export const ClientKpiStrip = ({ client, kpis, loading }: ClientKpiStripProps) =
             gap: 8,
             padding: '8px 12px',
             borderRight: i < chips.length - 1 ? '1px solid var(--neutral-200)' : undefined,
-            flex: 1,
-            minWidth: 0,
+            flex: '1 0 auto',
+            minWidth: 90,
           }}>
             <div style={{
               width: 24, height: 24, borderRadius: 4,
@@ -69,7 +69,8 @@ export const ClientKpiStrip = ({ client, kpis, loading }: ClientKpiStripProps) =
                   fontSize: 14, fontWeight: 800, lineHeight: 1.1,
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                   color: c.text,
-                }}>
+                }}
+                title={chip.value}>
                   {chip.value}
                 </div>
               )}
