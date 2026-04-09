@@ -1,0 +1,92 @@
+/* ── DiFlexibleForm styles ──
+   Extracted from inline styles. Uses design tokens from tokens.css.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Layout — overlay + action bar */
+.dif-overlay      { position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,0.5); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+.dif-form-col     { display: flex; flex-direction: column; gap: 0; }
+.dif-action-bar   { position: fixed; top: 16px; right: 32px; display: flex; gap: 8px; z-index: 1200; }
+.dif-btn-print    { height: 32px; padding: 0 16px; border: none; border-radius: 5px; background: var(--primary); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.dif-btn-close    { height: 32px; padding: 0 14px; border: 1px solid #ddd; border-radius: 5px; background: #fff; color: #888; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+/* Page shell */
+.dif-page         { width: 8.5in; min-height: 11in; background: #fff; padding: 0.4in; font-family: 'Inter', Arial, sans-serif; font-size: 9px; color: #222; box-sizing: border-box; display: flex; flex-direction: column; align-self: center; }
+.dif-page--auto   { width: 8.5in; min-height: auto; background: #fff; padding: 0.4in; font-family: 'Inter', Arial, sans-serif; font-size: 9px; color: #222; box-sizing: border-box; display: flex; flex-direction: column; align-self: center; }
+
+/* Section bar */
+.dif-sb           { background: var(--primary); color: #fff; font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 6px; }
+.dif-sb--mb       { background: var(--primary); color: #fff; font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 6px; margin-bottom: 3px; }
+
+/* Field label / value */
+.dif-fl           { font-size: 7px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.04em; }
+.dif-fv           { border-bottom: 1px solid #ccc; font-size: 9px; padding: 0 2px; min-height: 13px; }
+
+/* Page header */
+.dif-header       { display: flex; justify-content: space-between; align-items: flex-start; }
+.dif-header-right { text-align: right; }
+.dif-header-logo  { height: 44px; }
+.dif-header-title { font-size: 14px; font-weight: 800; color: #1B3A5C; }
+.dif-header-sub   { font-size: 9px; font-weight: 600; color: var(--primary); }
+.dif-header-form  { font-size: 8px; color: #aaa; }
+
+/* Info grids */
+.dif-grid-3col    { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px 12px; padding: 6px 0 2px; }
+.dif-grid-3mini   { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px 12px; padding: 4px 0; }
+.dif-fld-col      { display: flex; flex-direction: column; gap: 1px; }
+.dif-span2        { grid-column: span 2; }
+
+/* Table */
+.dif-table        { width: 100%; border-collapse: collapse; }
+.dif-th           { padding: 1px 4px; font-size: 7.5px; font-weight: 700; color: #888; text-transform: uppercase; border-bottom: 1px solid #ccc; }
+.dif-th--w20      { padding: 1px 4px; font-size: 7.5px; font-weight: 700; color: #888; text-transform: uppercase; border-bottom: 1px solid #ccc; width: 20px; }
+.dif-th--center70 { padding: 1px 4px; font-size: 7.5px; font-weight: 700; color: #888; text-transform: uppercase; border-bottom: 1px solid #ccc; text-align: center; width: 70px; }
+.dif-th--center55 { padding: 1px 4px; font-size: 7.5px; font-weight: 700; color: #888; text-transform: uppercase; border-bottom: 1px solid #ccc; text-align: center; width: 55px; }
+.dif-th--w46pct   { padding: 1px 4px; font-size: 7.5px; font-weight: 700; color: #888; text-transform: uppercase; border-bottom: 1px solid #ccc; width: 46%; }
+.dif-th--center36 { padding: 1px 4px; font-size: 7.5px; font-weight: 700; color: #888; text-transform: uppercase; border-bottom: 1px solid #ccc; text-align: center; width: 36px; }
+.dif-th--w100     { padding: 1px 4px; font-size: 7.5px; font-weight: 700; color: #888; text-transform: uppercase; border-bottom: 1px solid #ccc; width: 100px; }
+.dif-td           { padding: 1px 4px; font-size: 8.5px; border-bottom: 1px solid #eee; vertical-align: middle; }
+.dif-td--center   { padding: 1px 4px; font-size: 8.5px; border-bottom: 1px solid #eee; vertical-align: middle; text-align: center; }
+.dif-cat-row      { padding: 2px 4px; font-size: 7.5px; font-weight: 700; color: #1B3A5C; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #ddd; }
+.dif-cost-stub    { display: inline-block; border-bottom: 1px solid #ccc; width: 55px; height: 12px; }
+.dif-cb-box       { display: inline-block; width: 9px; height: 9px; border: 1px solid #ccc; border-radius: 1px; }
+.dif-pf-btn       { display: inline-block; width: 20px; height: 12px; border-radius: 2px; text-align: center; line-height: 12px; font-size: 7px; font-weight: 700; }
+.dif-pf-yn        { display: inline-block; width: 20px; height: 12px; border-radius: 2px; text-align: center; line-height: 12px; font-size: 7px; font-weight: 700; border: 1px solid #ccc; }
+
+/* P/F section group header */
+.dif-pfcat-td     { padding: 2px 4px; font-size: 7.5px; font-weight: 700; color: #1B3A5C; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #ddd; }
+
+/* Subtotal / total */
+.dif-total-wrap   { display: flex; justify-content: flex-end; }
+.dif-total-inner  { display: flex; flex-direction: column; gap: 1px; align-items: flex-end; }
+.dif-total-line   { border-bottom: 1px solid #ccc; min-width: 100px; height: 14px; }
+.dif-total-bold   { border-bottom: 2px solid var(--primary); min-width: 100px; height: 14px; font-weight: 700; }
+
+/* Notes / comments areas */
+.dif-notes        { border: 1px solid #e0e0e0; border-radius: 3px; min-height: 34px; padding: 3px 6px; }
+.dif-notes--lg    { border: 1px solid #e0e0e0; border-radius: 3px; min-height: 46px; padding: 3px 6px; }
+
+/* Signature row (4-col) */
+.dif-sig-row      { display: flex; gap: 16px; }
+.dif-sig-flex     { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.dif-sig-fixed    { flex: 0; max-width: 120px; display: flex; flex-direction: column; gap: 2px; }
+.dif-sig-line     { border-bottom: 1px solid #ccc; min-height: 22px; }
+.dif-sig-lbl      { font-size: 7.5px; color: #888; font-weight: 600; }
+
+/* Scope includes grid */
+.dif-acc-grid     { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px 12px; padding: 5px 0; }
+.dif-acc-item     { display: flex; align-items: center; gap: 5px; font-size: 8.5px; }
+
+/* QC sign-off grid */
+.dif-qc-grid      { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px 10px; padding: 8px 10px; border: 1px solid #eee; border-radius: 3px; }
+.dif-qc-cell      { display: flex; flex-direction: column; gap: 2px; }
+.dif-qc-cell--s2  { display: flex; flex-direction: column; gap: 2px; grid-column: span 2; }
+.dif-qc-yn        { display: flex; gap: 12px; align-items: center; padding: 2px 0; }
+.dif-qc-ynitem    { display: flex; align-items: center; gap: 4px; font-size: 8.5px; }
+.dif-qc-pf        { display: flex; gap: 8px; align-items: center; padding: 2px 0; }
+.dif-qc-line      { border-bottom: 1px solid #ccc; min-height: 16px; margin-top: 2px; }
+
+/* Footer */
+.dif-footer       { margin-top: auto; padding-top: 4px; border-top: 1px solid #ddd; font-size: 7px; color: #999; text-align: center; }
+.dif-footer-name  { font-weight: 600; margin-bottom: 2px; }
+.dif-footer-fr    { float: right; font-weight: 400; }
+.dif-footer-locs  { display: flex; justify-content: center; gap: 16px; font-size: 6.5px; color: #aaa; }

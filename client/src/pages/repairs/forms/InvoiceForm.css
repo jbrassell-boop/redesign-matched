@@ -1,0 +1,140 @@
+/* ── InvoiceForm styles ──
+   Extracted from inline styles. Uses design tokens from tokens.css.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Layout — modal overlay */
+.inv-overlay {
+  position: fixed; inset: 0; z-index: 1100;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 24px 16px; overflow-y: auto;
+}
+
+/* Action bar (no-print) */
+.inv-action-bar {
+  position: fixed; top: 16px; right: 32px;
+  display: flex; gap: 8px; z-index: 1200;
+}
+.inv-btn-print {
+  height: 32px; padding: 0 16px; border: none; border-radius: 5px;
+  background: var(--primary); color: #fff;
+  font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.inv-btn-close {
+  height: 32px; padding: 0 14px; border: 1px solid #ddd; border-radius: 5px;
+  background: #fff; color: #888;
+  font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+
+/* Printable page */
+.inv-page {
+  width: 8.5in; min-height: 11in; background: #fff; padding: 0.4in;
+  font-family: 'Inter', Arial, sans-serif; font-size: 9px; color: #222;
+  box-sizing: border-box; box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+/* Envelope window zone */
+.inv-env-zone       { display: flex; justify-content: space-between; align-items: flex-start; }
+
+/* Bill To block */
+.inv-bill-block     { width: 3.2in; min-height: 1in; padding: 8px 0; display: flex; flex-direction: column; gap: 2px; }
+.inv-bill-label     { font-size: 7px; font-weight: 700; text-transform: uppercase; color: #999; letter-spacing: 0.04em; }
+.inv-bill-name      { font-size: 12px; font-weight: 800; color: #111; margin-top: 4px; }
+.inv-bill-line      { font-size: 11px; color: #333; line-height: 1.5; border-bottom: 1px solid #ccc; min-height: 14px; }
+
+/* TSI header block */
+.inv-tsi-header     { text-align: right; }
+.inv-tsi-logo       { height: 44px; display: block; margin-left: auto; margin-bottom: 6px; }
+.inv-tsi-address    { font-size: 9px; color: #666; line-height: 1.5; text-align: right; }
+.inv-tsi-title      { font-size: 22px; font-weight: 800; color: var(--navy); margin-top: 6px; letter-spacing: -0.5px; }
+
+/* Invoice meta strip */
+.inv-meta-strip     {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: var(--primary); border: 2px solid var(--primary); border-radius: 4px; overflow: hidden;
+}
+.inv-meta-cell      { padding: 6px 10px; display: flex; flex-direction: column; gap: 2px; background: #fff; }
+.inv-meta-cell--hl  { background: #F0F6FF; }
+.inv-meta-cell-label {
+  font-size: 8px; font-weight: 700; text-transform: uppercase;
+  color: var(--primary); letter-spacing: 0.06em;
+}
+.inv-meta-cell-value { font-size: 12px; font-weight: 700; color: #111; }
+
+/* Reference fields grid */
+.inv-ref-grid       { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px 12px; }
+.inv-ref-field      { display: flex; flex-direction: column; gap: 1px; }
+
+/* Field label / value tokens */
+.inv-fl { font-size: 7px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.04em; }
+.inv-fv { border-bottom: 1px solid #ccc; font-size: 9px; padding: 0 2px; min-height: 13px; }
+
+/* Section bar */
+.inv-sb {
+  background: var(--primary); color: #fff;
+  font-size: 7.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 2px 6px;
+}
+
+/* Line items table */
+.inv-items-table    { width: 100%; border-collapse: collapse; margin-top: 2px; }
+.inv-th-desc        {
+  background: var(--navy); color: #fff; font-size: 8.5px; font-weight: 700;
+  text-transform: uppercase; padding: 5px 8px; text-align: left;
+  letter-spacing: 0.04em; width: 70%;
+}
+.inv-th-amt         {
+  background: var(--navy); color: #fff; font-size: 8.5px; font-weight: 700;
+  text-transform: uppercase; padding: 5px 8px; text-align: right;
+  letter-spacing: 0.04em;
+}
+.inv-td             { padding: 5px 8px; font-size: 10.5px; border-bottom: 1px solid #ddd; vertical-align: middle; height: 20px; }
+.inv-td--right      { text-align: right; }
+
+/* Totals block */
+.inv-totals-wrap    { display: flex; justify-content: flex-end; margin-top: 6px; }
+.inv-totals-table   { width: 260px; border-collapse: collapse; }
+.inv-tot-cell       { padding: 2px 8px; font-size: 9px; text-align: right; }
+.inv-tot-cell--sep  { border-left: 1px solid #ddd; }
+.inv-tot-due-row    { border-top: 2px solid var(--primary); background: #F0F6FF; }
+.inv-tot-due-label  { padding: 4px 8px; font-size: 13px; font-weight: 800; text-align: right; width: 140px; color: #555; }
+.inv-tot-due-val    { padding: 4px 8px; font-size: 13px; font-weight: 800; text-align: right; }
+
+/* Signature area */
+.inv-sig-area       { margin-top: 16px; display: flex; gap: 24px; }
+.inv-sig-flex2      { flex: 2; }
+.inv-sig-flex1      { flex: 1; }
+.inv-sig-line       { border-bottom: 1px solid #ccc; min-height: 28px; }
+.inv-sig-label      { font-size: 7px; color: #888; font-weight: 600; margin-top: 2px; }
+
+/* Payment notes */
+.inv-payment-note   {
+  font-size: 8px; color: var(--muted); margin-top: 8px; line-height: 1.5;
+  padding: 6px 0; border-top: 1px solid #eee;
+}
+
+/* Remittance stub */
+.inv-remit-stub     { margin-top: 12px; padding: 10px 14px; background: #F9FAFB; border: 1px solid #ddd; border-radius: 3px; }
+.inv-remit-header   {
+  font-size: 9px; font-weight: 700; text-transform: uppercase;
+  color: var(--primary); letter-spacing: 0.06em; margin-bottom: 6px;
+  border-bottom: 1px solid #ccc; padding-bottom: 4px;
+}
+.inv-remit-fields   { display: flex; gap: 24px; font-size: 10.5px; color: #333; }
+.inv-remit-field    { flex: 1; }
+.inv-remit-field--wide { flex: 2; }
+.inv-remit-flabel   { font-size: 8.5px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 2px; }
+.inv-remit-fline    { border-bottom: 1px solid #ccc; min-height: 16px; }
+.inv-remit-cut      {
+  border-top: 1.5px dashed #bbb; margin-top: 14px; padding-top: 4px;
+  font-size: 8px; color: var(--muted);
+  text-align: center; letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+/* Footer */
+.inv-footer {
+  margin-top: auto; padding-top: 8px; border-top: 1px solid #ccc;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 8px; color: #888;
+}

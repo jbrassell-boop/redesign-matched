@@ -36,6 +36,9 @@
 /* Table cells */
 .lp-td             { padding: 6px 8px; font-size: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text); }
 .lp-td--center     { text-align: center; }
+.lp-td--needs      { padding: 6px 10px; }
+.lp-td--mono-bold  { font-family: monospace; font-weight: 600; }
+.lp-td--muted      { color: var(--muted); }
 
 /* Footer */
 .lp-footer         { background: var(--card); border-top: 1px solid var(--border); padding: 6px 16px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }

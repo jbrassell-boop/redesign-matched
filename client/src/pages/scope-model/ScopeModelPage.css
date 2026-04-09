@@ -13,6 +13,9 @@
 /* Table header */
 .sm-th { background: var(--neutral-50); color: var(--muted); font-weight: 700; padding: 9px 10px; text-align: left; white-space: nowrap; border-right: 1px solid rgba(var(--border-light-rgb), 0.3); border-bottom: 1px solid var(--neutral-200); letter-spacing: 0.04em; text-transform: uppercase; font-size: 11px; }
 
+/* Table cell */
+.sm-td { padding: 7px 10px; font-size: 12px; border-bottom: 1px solid var(--border); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; vertical-align: middle; color: var(--text); }
+
 /* Pagination footer */
 .sm-footer { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; background: var(--neutral-50); border-top: 1.5px solid var(--border-dk); flex-shrink: 0; font-size: 11px; color: var(--muted); }
 .sm-pag-btns { display: flex; gap: 3px; align-items: center; }

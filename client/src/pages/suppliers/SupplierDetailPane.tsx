@@ -9,6 +9,7 @@ import { updateSupplier } from '../../api/suppliers';
 import type { PatchSupplierPayload } from '../../api/suppliers';
 import { useAutosave } from '../../hooks/useAutosave';
 import { AutosaveIndicator } from '../../components/common/AutosaveIndicator';
+import './SupplierDetailPane.css';
 
 /* ── Editable field input ──────────────────────────────────────── */
 interface EditFieldProps {
@@ -19,34 +20,20 @@ interface EditFieldProps {
 }
 
 const EditField = ({ label, value, field, onChange }: EditFieldProps) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '3px 0' }}>
-    <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '0.05em' }}>
-      {label}
-    </span>
+  <div className="sdp-edit-field">
+    <span className="sdp-edit-label">{label}</span>
     <input
       value={value ?? ''}
       onChange={e => onChange(field, e.target.value)}
-      style={{
-        fontSize: 12,
-        color: 'var(--text)',
-        background: 'var(--card)',
-        border: '1px solid var(--neutral-200)',
-        borderRadius: 4,
-        padding: '4px 8px',
-        fontFamily: 'inherit',
-        outline: 'none',
-        width: '100%',
-        boxSizing: 'border-box',
-      }}
-      className="inline-edit-input"
+      className="sdp-edit-input inline-edit-input"
     />
   </div>
 );
 
 const ToggleField = ({ label, value }: { label: string; value: boolean }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 0' }}>
+  <div className="sdp-toggle-field">
     <Switch size="small" checked={value} disabled aria-label={label} />
-    <span style={{ fontSize: 11, color: 'var(--text)' }}>{label}</span>
+    <span className="sdp-toggle-label">{label}</span>
   </div>
 );
 
@@ -81,9 +68,7 @@ const TABS: TabDef[] = [
 ];
 
 const SectionLabel = ({ title }: { title: string }) => (
-  <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--navy)', letterSpacing: '0.05em', paddingBottom: 4, borderBottom: '1px solid var(--neutral-200)', marginBottom: 8 }}>
-    {title}
-  </div>
+  <div className="sdp-section-label">{title}</div>
 );
 
 export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps) => {
@@ -118,17 +103,17 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
     autosaveHandleChange(field, value);
   }, [autosaveHandleChange]);
 
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
-  if (!localDetail) return <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>Select a supplier to view details</div>;
+  if (loading) return <div className="sdp-loading"><Spin /></div>;
+  if (!localDetail) return <div className="sdp-empty">Select a supplier to view details</div>;
 
   const tabs: TabDef[] = TABS.map(t =>
     t.key === 'pos' ? { ...t, label: `Recent PO's (${localDetail.recentPos.length})` } : t
   );
 
   const contactTab = (
-    <div style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
+    <div className="sdp-main-layout">
       {/* Left column — Contact Info (editable) */}
-      <div style={{ width: 280, flexShrink: 0, overflowY: 'auto', padding: '12px 14px', borderRight: '1px solid var(--neutral-200)' }}>
+      <div className="sdp-left-col">
         <SectionLabel title="Contact Information" />
         <EditField label="Supplier Name" value={localDetail.name} field="name" onChange={handleFieldChange} />
         <EditField label="Address Line 1" value={localDetail.shipAddr1} field="shipAddr1" onChange={handleFieldChange} />
@@ -143,7 +128,7 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
         <EditField label="Contact Last" value={localDetail.contactLast} field="contactLast" onChange={handleFieldChange} />
         <EditField label="Email" value={localDetail.email} field="email" onChange={handleFieldChange} />
 
-        <div style={{ marginTop: 16 }}>
+        <div className="sdp-section-spacer">
           <SectionLabel title="Billing" />
         </div>
         <Field label="Bill Email Name" value={localDetail.billEmailName} />
@@ -154,9 +139,9 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
       </div>
 
       {/* Right column — Roles & Settings */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px' }}>
+      <div className="sdp-right-col">
         <SectionLabel title="Supplier Roles" />
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+        <div className="sdp-roles-wrap">
           <RoleChip label="Parts" active={localDetail.roles.includes('Parts')} />
           <RoleChip label="Repair" active={localDetail.roles.includes('Repair')} />
           <RoleChip label="Acquisition" active={localDetail.roles.includes('Acquisition')} />
@@ -174,7 +159,7 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
         </FormGrid>
 
         <SectionLabel title="Options" />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 20px', marginBottom: 16 }}>
+        <div className="sdp-options-grid">
           <ToggleField label="Active" value={localDetail.isActive} />
           <ToggleField label="Dashboard - Open Inv." value={localDetail.showOnDashboard} />
           <ToggleField label="Create Part #" value={localDetail.createPartNumbers} />
@@ -194,7 +179,7 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
           </>
         )}
 
-        <div style={{ marginTop: 12, fontSize: 11, color: 'var(--muted)' }}>
+        <div className="sdp-meta">
           Last Updated: {localDetail.lastUpdate ?? 'N/A'}
         </div>
       </div>
@@ -202,30 +187,30 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
   );
 
   const posTab = (
-    <div style={{ padding: '12px 16px' }}>
+    <div className="sdp-po-tab">
       {localDetail.recentPos.length === 0 ? (
-        <div style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No purchase orders found</div>
+        <div className="sdp-po-empty">No purchase orders found</div>
       ) : (
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+        <table className="sdp-po-table">
           <thead>
-            <tr style={{ borderBottom: '2px solid var(--neutral-200)' }}>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>PO #</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Date</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Amount</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Status</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)' }}>Type</th>
+            <tr className="sdp-po-head-row">
+              <th className="sdp-po-th">PO #</th>
+              <th className="sdp-po-th">Date</th>
+              <th className="sdp-po-th--right">Amount</th>
+              <th className="sdp-po-th">Status</th>
+              <th className="sdp-po-th">Type</th>
             </tr>
           </thead>
           <tbody>
             {localDetail.recentPos.map(po => (
-              <tr key={po.supplierPoKey} style={{ borderBottom: '1px solid var(--neutral-200)' }}>
-                <td style={{ padding: '6px 8px', fontWeight: 600, color: 'var(--primary)' }}>{po.poNumber}</td>
-                <td style={{ padding: '6px 8px', color: 'var(--text)' }}>{po.date ?? '\u2014'}</td>
-                <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 600 }}>${po.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
-                <td style={{ padding: '6px 8px' }}>
+              <tr key={po.supplierPoKey} className="sdp-po-row">
+                <td className="sdp-po-td-link">{po.poNumber}</td>
+                <td className="sdp-po-td">{po.date ?? '\u2014'}</td>
+                <td className="sdp-po-td-amount">${po.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</td>
+                <td className="sdp-po-td-status">
                   <StatusBadge status={po.status} />
                 </td>
-                <td style={{ padding: '6px 8px', color: 'var(--muted)' }}>{po.poType ?? '\u2014'}</td>
+                <td className="sdp-po-td-muted">{po.poType ?? '\u2014'}</td>
               </tr>
             ))}
           </tbody>
@@ -235,7 +220,7 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className="sdp-container">
       <DetailHeader
         headingLevel="h2"
         title={localDetail.name}
@@ -243,31 +228,11 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
         badges={
           <>
             {localDetail.gpId && (
-              <span style={{
-                background: 'var(--neutral-50)',
-                border: '1px solid var(--border)',
-                borderRadius: 4,
-                padding: '2px 8px',
-                fontSize: 11,
-                fontWeight: 700,
-                color: 'var(--muted)',
-                fontFamily: 'monospace',
-              }}>
-                {localDetail.gpId}
-              </span>
+              <span className="sdp-gp-badge">{localDetail.gpId}</span>
             )}
-            <div style={{ display: 'flex', gap: 4, marginLeft: 6 }}>
+            <div className="sdp-roles-badge-wrap">
               {localDetail.roles.map(r => (
-                <span key={r} style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  padding: '2px 6px',
-                  borderRadius: 3,
-                  background: 'rgba(var(--primary-rgb), 0.1)',
-                  color: 'var(--primary)',
-                }}>
-                  {r}
-                </span>
+                <span key={r} className="sdp-role-badge">{r}</span>
               ))}
             </div>
             <StatusBadge status={localDetail.isActive ? 'Active' : 'Inactive'} />

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getOnsiteServices, getOnsiteServiceStats } from '../../api/onsite-services';
 import { ExportButton } from '../../components/common/ExportButton';
+import './OnsiteServicesPage.css';
 
 const EXPORT_COLS = [
   { key: 'invoiceNum', label: 'Invoice #' },
@@ -37,30 +38,19 @@ const StatChip = ({ label, value, iconColor, iconBg, valueColor, icon, active, o
     onKeyDown={clickable && onClick ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick(); } } : undefined}
     aria-pressed={clickable ? active : undefined}
     style={{
-      flex: 1,
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10,
-      padding: '10px 16px',
       cursor: clickable ? 'pointer' : 'default',
-      borderRight: '1px solid var(--neutral-200)',
       background: active ? 'var(--primary-light)' : undefined,
       outline: active ? '2.5px solid var(--navy)' : undefined,
       outlineOffset: active ? -2 : undefined,
-      transition: 'background 0.12s',
     }}
-    className={active ? 'active' : clickable ? 'tab-card-hover' : undefined}
+    className={['os-stat-chip-inner', active ? 'active' : '', clickable ? 'tab-card-hover' : ''].filter(Boolean).join(' ')}
   >
-    <div style={{
-      width: 32, height: 32, borderRadius: 6, background: iconBg,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexShrink: 0, color: iconColor,
-    }}>
+    <div className="os-chip-icon" style={{ background: iconBg, color: iconColor }}>
       {icon}
     </div>
     <div>
-      <div style={{ fontSize: 16, fontWeight: 800, color: valueColor, lineHeight: 1.2 }}>{value}</div>
-      <div style={{ fontSize: 11, fontWeight: 500, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</div>
+      <div className="os-chip-value" style={{ color: valueColor }}>{value}</div>
+      <div className="os-chip-label">{label}</div>
     </div>
   </div>
 );
@@ -181,10 +171,10 @@ export const OnsiteServicesPage = () => {
   });
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div className="os-root">
 
       {/* Stat Strip */}
-      <div style={{ display: 'flex', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 }}>
+      <div className="os-stat-strip">
         <StatChip
           label="Total Visits"
           value={statsLoading ? '\u2014' : (stats?.total ?? 0)}
@@ -248,29 +238,16 @@ export const OnsiteServicesPage = () => {
       </div>
 
       {/* Toolbar */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-        background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)',
-        flexShrink: 0, flexWrap: 'wrap',
-      }}>
-        <button
-          onClick={() => setQuoteOpen(true)}
-          style={{
-            height: 30, padding: '0 14px', fontSize: 12, fontWeight: 700, fontFamily: 'inherit',
-            background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 5,
-          }}
-        >
+      <div className="os-toolbar">
+        <button onClick={() => setQuoteOpen(true)} className="os-new-btn">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} width={13} height={13}>
             <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
           </svg>
           New Visit
         </button>
-        <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
-          Status
-        </span>
-        <div style={{ display: 'inline-flex', border: '1px solid var(--border-dk)', borderRadius: 6, overflow: 'hidden' }}>
+        <div className="os-divider" />
+        <span className="os-status-label">Status</span>
+        <div className="os-seg-wrap">
           {(['all', 'Draft', 'Submitted', 'Invoiced', 'Void'] as const).map((v, i) => (
             <button
               key={v}
@@ -285,7 +262,7 @@ export const OnsiteServicesPage = () => {
           ))}
         </div>
 
-        <div style={{ width: 1, height: 22, background: 'var(--border-dk)', flexShrink: 0 }} />
+        <div className="os-divider" />
 
         <input
           type="date"
@@ -293,24 +270,16 @@ export const OnsiteServicesPage = () => {
           onChange={e => { setDateFrom(e.target.value); setPage(1); }}
           title="From date"
           aria-label="Filter from date"
-          style={{
-            height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px',
-            fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)',
-            outline: 'none', cursor: 'pointer', width: 120,
-          }}
+          className="os-date-input"
         />
-        <span style={{ fontSize: 11, color: 'var(--muted)' }}>to</span>
+        <span className="os-date-sep">to</span>
         <input
           type="date"
           value={dateTo}
           onChange={e => { setDateTo(e.target.value); setPage(1); }}
           title="To date"
           aria-label="Filter to date"
-          style={{
-            height: 30, border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 8px',
-            fontSize: 11, fontFamily: 'inherit', color: 'var(--text)', background: 'var(--card)',
-            outline: 'none', cursor: 'pointer', width: 120,
-          }}
+          className="os-date-input"
         />
 
         <input
@@ -319,12 +288,7 @@ export const OnsiteServicesPage = () => {
           onChange={e => { setSearch(e.target.value); setPage(1); }}
           placeholder="Search invoice, client, dept..."
           aria-label="Search onsite services"
-          style={{
-            marginLeft: 'auto', height: 30, width: 220,
-            border: '1.5px solid var(--border-dk)', borderRadius: 6, padding: '0 10px 0 30px',
-            fontSize: 11, fontFamily: 'inherit', outline: 'none',
-            background: `var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center`,
-          }}
+          className="os-search-input"
         />
         <ExportButton
           data={items as unknown as Record<string, unknown>[]}
@@ -334,24 +298,23 @@ export const OnsiteServicesPage = () => {
       </div>
 
       {/* Split pane */}
-      <div style={{ flex: 1, overflow: 'hidden', display: 'flex' }}>
+      <div className="os-split">
         {/* Left panel — list */}
-        <aside aria-label="Onsite services list" style={{
-          width: selectedKey ? 340 : '100%',
-          minWidth: selectedKey ? 340 : undefined,
-          borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
-          display: 'flex', flexDirection: 'column',
-          background: 'var(--card)',
-          transition: 'width 0.2s ease',
-          willChange: 'width',
-          overflow: 'hidden',
-        }}>
+        <aside
+          aria-label="Onsite services list"
+          className="os-list-pane"
+          style={{
+            width: selectedKey ? 340 : '100%',
+            minWidth: selectedKey ? 340 : undefined,
+            borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
+          }}
+        >
           {/* List rows */}
-          <div style={{ flex: 1, overflow: 'auto' }}>
+          <div className="os-list-scroll">
             {loading ? (
-              <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>Loading...</div>
+              <div className="os-list-empty">Loading...</div>
             ) : items.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontSize: 13 }}>No visits found.</div>
+              <div className="os-list-empty">No visits found.</div>
             ) : (
               items.map(item => {
                 const isSelected = item.onsiteServiceKey === selectedKey;
@@ -369,18 +332,18 @@ export const OnsiteServicesPage = () => {
                     }}
                     className={isSelected ? 'selected' : 'hover-row'}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>{item.invoiceNum}</div>
+                    <div className="os-list-row-header">
+                      <div className="os-list-invoice">{item.invoiceNum}</div>
                       <StatusBadge status={item.status} />
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{item.clientName}</div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3, fontSize: 11, color: 'var(--muted)' }}>
+                    <div className="os-list-client">{item.clientName}</div>
+                    <div className="os-list-row2">
                       <span>{item.deptName}</span>
                       <span>{item.visitDate ?? '\u2014'}</span>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2, fontSize: 11, color: 'var(--muted)' }}>
+                    <div className="os-list-row3">
                       <span>{item.techName}</span>
-                      <span style={{ fontWeight: 600, color: 'var(--navy)' }}>${item.totalBilled.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                      <span className="os-list-billed">${item.totalBilled.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
                     </div>
                   </div>
                 );
@@ -389,24 +352,14 @@ export const OnsiteServicesPage = () => {
           </div>
 
           {/* Table Footer */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '8px 12px', background: 'var(--neutral-50)',
-            borderTop: '1.5px solid var(--border-dk)', flexShrink: 0,
-            fontSize: 11, color: 'var(--muted)',
-          }}>
-            <span style={{ fontWeight: 500 }}>{totalCount.toLocaleString()} records</span>
-            <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+          <div className="os-footer">
+            <span className="os-footer-count">{totalCount.toLocaleString()} records</span>
+            <div className="os-pager-wrap">
               <button
                 disabled={page <= 1}
                 onClick={() => setPage(p => p - 1)}
-                style={{
-                  height: 36, minWidth: 36, padding: '0 6px',
-                  border: '1px solid var(--border-dk)', borderRadius: 4,
-                  background: 'var(--card)', fontSize: 11, color: 'var(--label)',
-                  cursor: page <= 1 ? 'default' : 'pointer',
-                  opacity: page <= 1 ? 0.4 : 1, fontFamily: 'inherit',
-                }}
+                className="os-pager-btn"
+                style={{ cursor: page <= 1 ? 'default' : 'pointer', opacity: page <= 1 ? 0.4 : 1 }}
               >
                 {'\u2039'}
               </button>
@@ -416,13 +369,12 @@ export const OnsiteServicesPage = () => {
                   <button
                     key={pg}
                     onClick={() => setPage(pg)}
+                    className="os-pager-btn"
                     style={{
-                      height: 36, minWidth: 36, padding: '0 6px',
-                      border: '1px solid var(--border-dk)', borderRadius: 4,
                       background: page === pg ? 'var(--navy)' : 'var(--card)',
                       color: page === pg ? 'var(--card)' : 'var(--label)',
-                      fontSize: 11, fontWeight: page === pg ? 600 : 400,
-                      cursor: 'pointer', fontFamily: 'inherit',
+                      fontWeight: page === pg ? 600 : 400,
+                      cursor: 'pointer',
                     }}
                   >
                     {pg}
@@ -432,13 +384,8 @@ export const OnsiteServicesPage = () => {
               <button
                 disabled={page >= totalPages}
                 onClick={() => setPage(p => p + 1)}
-                style={{
-                  height: 36, minWidth: 36, padding: '0 6px',
-                  border: '1px solid var(--border-dk)', borderRadius: 4,
-                  background: 'var(--card)', fontSize: 11, color: 'var(--label)',
-                  cursor: page >= totalPages ? 'default' : 'pointer',
-                  opacity: page >= totalPages ? 0.4 : 1, fontFamily: 'inherit',
-                }}
+                className="os-pager-btn"
+                style={{ cursor: page >= totalPages ? 'default' : 'pointer', opacity: page >= totalPages ? 0.4 : 1 }}
               >
                 {'\u203A'}
               </button>
@@ -448,7 +395,7 @@ export const OnsiteServicesPage = () => {
 
         {/* Right panel — detail */}
         {selectedKey && (
-          <section aria-label="Service details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--card)' }}>
+          <section aria-label="Service details" className="os-detail-pane">
             <OnsiteServiceDetailDrawer
               open={true}
               serviceKey={selectedKey}

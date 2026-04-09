@@ -5,6 +5,7 @@ import { getRepairItems, getRepairItemStats, createRepairItem } from '../../api/
 import { RepairItemsList } from './RepairItemsList';
 import { RepairItemDetailPane } from './RepairItemDetailPane';
 import type { RepairItemListItem, RepairItemStats } from './types';
+import './RepairItemsPage.css';
 
 const CHIP_STYLE = (color: 'info' | 'active' | 'neutral'): React.CSSProperties => {
   const bg: Record<string, string> = {
@@ -115,18 +116,9 @@ export const RepairItemsPage = () => {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 48px)', overflow: 'hidden', background: 'var(--bg)' }}>
+    <div className="rip-container">
       {/* Stat Strip */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '4px 14px',
-        background: 'var(--card)',
-        borderBottom: '1px solid var(--neutral-200)',
-        flexShrink: 0,
-        flexWrap: 'wrap',
-      }}>
+      <div className="rip-stat-strip">
         <span style={CHIP_STYLE('info')}>
           <svg aria-hidden="true" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
             <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
@@ -135,30 +127,30 @@ export const RepairItemsPage = () => {
             <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
             <line x1="17" y1="16" x2="23" y2="16"/>
           </svg>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Items</span>
-          <span style={{ fontWeight: 800 }}>{stats?.total ?? '—'}</span>
+          <span className="rip-chip-sub">Items</span>
+          <span className="rip-chip-val">{stats?.total ?? '—'}</span>
         </span>
         <span style={CHIP_STYLE('active')}>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Active</span>
-          <span style={{ fontWeight: 800 }}>{stats?.active ?? '—'}</span>
+          <span className="rip-chip-sub">Active</span>
+          <span className="rip-chip-val">{stats?.active ?? '—'}</span>
         </span>
         <span style={CHIP_STYLE('neutral')}>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Inactive</span>
-          <span style={{ fontWeight: 800 }}>{stats?.inactive ?? '—'}</span>
+          <span className="rip-chip-sub">Inactive</span>
+          <span className="rip-chip-val">{stats?.inactive ?? '—'}</span>
         </span>
         <span style={CHIP_STYLE('info')}>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Flexible</span>
-          <span style={{ fontWeight: 800 }}>{stats?.flexible ?? '—'}</span>
+          <span className="rip-chip-sub">Flexible</span>
+          <span className="rip-chip-val">{stats?.flexible ?? '—'}</span>
         </span>
         <span style={CHIP_STYLE('info')}>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Rigid</span>
-          <span style={{ fontWeight: 800 }}>{stats?.rigid ?? '—'}</span>
+          <span className="rip-chip-sub">Rigid</span>
+          <span className="rip-chip-val">{stats?.rigid ?? '—'}</span>
         </span>
         <span style={CHIP_STYLE('neutral')}>
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>Showing</span>
-          <span style={{ fontWeight: 800 }}>{items.length}</span>
+          <span className="rip-chip-sub">Showing</span>
+          <span className="rip-chip-val">{items.length}</span>
         </span>
-        <div style={{ flex: 1 }} />
+        <div className="rip-strip-spacer" />
         <Button
           type="primary"
           icon={<PlusOutlined />}
@@ -171,17 +163,9 @@ export const RepairItemsPage = () => {
       </div>
 
       {/* Split Layout */}
-      <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+      <div className="rip-split">
         {/* Left panel */}
-        <aside aria-label="Repair items list" style={{
-          width: 320,
-          flexShrink: 0,
-          background: 'var(--card)',
-          borderRight: '1px solid var(--border)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-        }}>
+        <aside aria-label="Repair items list" className="rip-left">
           <RepairItemsList
             items={items}
             loading={loading}
@@ -197,7 +181,7 @@ export const RepairItemsPage = () => {
         </aside>
 
         {/* Right panel */}
-        <section aria-label="Repair item details" style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column', background: 'var(--bg)' }}>
+        <section aria-label="Repair item details" className="rip-right">
           <RepairItemDetailPane
             itemKey={selectedKey}
             onItemDeleted={handleItemDeleted}
@@ -220,7 +204,7 @@ export const RepairItemsPage = () => {
         ]}
         width={480}
       >
-        <Form form={addForm} layout="vertical" size="small" style={{ marginTop: 8 }}>
+        <Form form={addForm} layout="vertical" size="small" className="rip-modal-form">
           <Form.Item
             name="itemDescription"
             label="Description"
@@ -228,7 +212,7 @@ export const RepairItemsPage = () => {
           >
             <Input style={{ height: 30, fontSize: 12 }} />
           </Form.Item>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div className="rip-modal-grid">
             <Form.Item name="tsiCode" label="TSI Code">
               <Input style={{ height: 30, fontSize: 12 }} />
             </Form.Item>

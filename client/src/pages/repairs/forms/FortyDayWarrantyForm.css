@@ -1,0 +1,84 @@
+/* ── FortyDayWarrantyForm styles ──
+   Extracted from inline styles. Uses design tokens from tokens.css.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Overlay */
+.fdw-overlay        { position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,0.5); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+
+/* Action bar */
+.fdw-action-bar     { position: fixed; top: 16px; right: 32px; display: flex; gap: 8px; z-index: 1200; }
+.fdw-btn-print      { height: 32px; padding: 0 16px; border: none; border-radius: 5px; background: var(--primary); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.fdw-btn-close      { height: 32px; padding: 0 14px; border: 1px solid #ddd; border-radius: 5px; background: #fff; color: #888; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+/* Page */
+.fdw-page           { width: 8.5in; min-height: 11in; background: #fff; padding: 0.4in; font-family: 'Inter', Arial, sans-serif; font-size: 9px; color: #222; box-sizing: border-box; display: flex; flex-direction: column; }
+
+/* Section bar */
+.fdw-sb             { background: var(--primary); color: #fff; font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 6px; margin-bottom: 2px; }
+
+/* Field label */
+.fdw-fl             { font-size: 7px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.04em; }
+
+/* Field value underline */
+.fdw-fv             { border-bottom: 1px solid #ccc; font-size: 9px; padding: 0 2px; min-height: 13px; }
+.fdw-fv--tall       { border-bottom: 1px solid #ccc; font-size: 9px; padding: 0 2px; min-height: 28px; }
+
+/* Header */
+.fdw-header         { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+.fdw-header-right   { text-align: right; }
+.fdw-header-logo    { height: 44px; }
+.fdw-header-title   { font-size: 14px; font-weight: 800; color: var(--navy); }
+.fdw-header-sub     { font-size: 9px; font-weight: 600; color: var(--primary); margin-top: 1px; }
+.fdw-header-ref     { font-size: 8px; color: #aaa; margin-top: 1px; }
+
+/* Repair info grid */
+.fdw-info-grid      { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px 12px; padding: 5px 0 4px; margin-bottom: 6px; }
+
+/* Field wrapper */
+.fdw-field          { display: flex; flex-direction: column; gap: 1px; }
+.fdw-field--span2   { display: flex; flex-direction: column; gap: 1px; grid-column: span 2; }
+
+/* Signature line */
+.fdw-sig            { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.fdw-sig--narrow    { max-width: 130px; display: flex; flex-direction: column; gap: 2px; }
+.fdw-sig-line       { border-bottom: 1px solid #ccc; min-height: 24px; }
+.fdw-sig-label      { font-size: 7.5px; color: #888; font-weight: 600; }
+
+/* Radio item */
+.fdw-radio          { display: flex; align-items: center; gap: 6px; font-size: 8.5px; font-weight: 500; }
+.fdw-radio-circle   { width: 12px; height: 12px; border: 1.5px solid #999; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+/* Code item (failure code list) */
+.fdw-code-item      { display: flex; align-items: flex-start; gap: 8px; padding: 5px 0; border-bottom: 1px solid #eee; list-style: none; }
+.fdw-code-num       { font-size: 7.5px; font-weight: 800; color: var(--primary); min-width: 14px; padding-top: 1px; }
+.fdw-code-check     { width: 12px; height: 12px; border: 1.5px solid #999; border-radius: 2px; display: inline-block; flex-shrink: 0; margin-top: 1px; }
+.fdw-code-body      { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.fdw-code-label     { font-size: 8.5px; font-weight: 600; color: #111; }
+.fdw-code-line      { border-bottom: 1px solid #ddd; min-height: 14px; font-size: 8.5px; }
+
+/* Panel (bordered card) */
+.fdw-panel          { border: 1px solid #ddd; border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+.fdw-panel-head     { background: var(--neutral-50); border-bottom: 1px solid #ddd; padding: 4px 8px; font-size: 7.5px; font-weight: 700; text-transform: uppercase; color: var(--navy); letter-spacing: 0.05em; }
+.fdw-panel-body     { padding: 7px 10px; }
+
+/* Technician assessment */
+.fdw-assess-q       { font-size: 8.5px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+.fdw-assess-opts    { display: flex; gap: 20px; align-items: center; padding: 6px 0; }
+.fdw-assess-notes   { margin-top: 5px; }
+.fdw-assess-fl      { margin-bottom: 2px; }
+.fdw-assess-box     { border: 1px solid #ddd; border-radius: 3px; min-height: 34px; padding: 3px 6px; font-size: 8.5px; width: 100%; }
+.fdw-assess-sigs    { display: flex; gap: 16px; margin-top: 10px; }
+
+/* Failure code header */
+.fdw-fc-q           { font-size: 8.5px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+.fdw-fc-list        { padding: 0; margin: 0; }
+.fdw-fc-sigs        { display: flex; gap: 16px; margin-top: 12px; }
+
+/* NCP callout */
+.fdw-ncp            { background: rgba(var(--danger-rgb), 0.08); border: 1.5px solid rgba(var(--danger-rgb), 0.35); border-radius: 4px; padding: 7px 10px; display: flex; align-items: flex-start; gap: 8px; margin-top: 8px; }
+.fdw-ncp-icon       { font-size: 14px; line-height: 1; flex-shrink: 0; }
+.fdw-ncp-text       { font-size: 8.5px; font-weight: 700; color: var(--danger); line-height: 1.5; }
+.fdw-ncp-sub        { font-weight: 400; color: var(--danger); display: block; margin-top: 2px; font-size: 8px; }
+
+/* Footer */
+.fdw-footer         { margin-top: auto; padding-top: 6px; border-top: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; font-size: 7px; color: #aaa; }

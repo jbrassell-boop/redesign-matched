@@ -1,32 +1,6 @@
 import { message } from 'antd';
 import type { ParamType } from './types';
-
-/* ── Shared input styles ─────────────────────────────────────────── */
-
-const inputStyle: React.CSSProperties = {
-  height: 28, border: '1.5px solid var(--border-dk)', borderRadius: 4,
-  padding: '0 8px', fontSize: 11, fontFamily: 'inherit', color: 'var(--text)',
-  background: 'var(--card)', outline: 'none',
-};
-
-const selectStyle: React.CSSProperties = {
-  ...inputStyle, cursor: 'pointer', minWidth: 120,
-};
-
-const labelStyle: React.CSSProperties = {
-  fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase',
-  letterSpacing: '0.04em', minWidth: 55, textAlign: 'right',
-};
-
-const rowStyle: React.CSSProperties = {
-  display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8,
-};
-
-const genBtnStyle: React.CSSProperties = {
-  height: 28, padding: '0 16px', border: 'none', borderRadius: 4,
-  background: 'var(--success)', color: 'var(--card)', fontSize: 11, fontWeight: 700,
-  fontFamily: 'inherit', cursor: 'pointer', transition: 'background 0.1s',
-};
+import './ReportBuilder.css';
 
 /* ── Dropdown option lists ───────────────────────────────────────── */
 
@@ -41,47 +15,47 @@ const RISK_SUMMARY_BY = ['Department', 'Client', 'Sales Rep'];
 /* ── Reusable param rows ─────────────────────────────────────────── */
 
 const DateRangeRow = () => (
-  <div style={rowStyle}>
-    <span style={labelStyle}>Date Range</span>
-    <input type="date" aria-label="Report start date" style={{ ...inputStyle, width: 130 }} />
-    <span style={{ fontSize: 11, color: 'var(--muted)' }}>to</span>
-    <input type="date" aria-label="Report end date" style={{ ...inputStyle, width: 130 }} />
+  <div className="rb-row">
+    <span className="rb-label">Date Range</span>
+    <input type="date" aria-label="Report start date" className="rb-input rb-date" />
+    <span className="rb-date-sep">to</span>
+    <input type="date" aria-label="Report end date" className="rb-input rb-date" />
   </div>
 );
 
 const ClientRow = () => (
-  <div style={rowStyle}>
-    <span style={labelStyle}>Client</span>
-    <select style={selectStyle} aria-label="Client filter"><option>All Clients</option></select>
+  <div className="rb-row">
+    <span className="rb-label">Client</span>
+    <select className="rb-select" aria-label="Client filter"><option>All Clients</option></select>
   </div>
 );
 
 const DeptRow = () => (
-  <div style={rowStyle}>
-    <span style={labelStyle}>Department</span>
-    <select style={selectStyle} aria-label="Department filter"><option>All Departments</option></select>
+  <div className="rb-row">
+    <span className="rb-label">Department</span>
+    <select className="rb-select" aria-label="Department filter"><option>All Departments</option></select>
   </div>
 );
 
 const SalesRepRow = () => (
-  <div style={rowStyle}>
-    <span style={labelStyle}>Sales Rep</span>
-    <select style={selectStyle} aria-label="Sales rep filter">{SALES_REPS.map(r => <option key={r}>{r}</option>)}</select>
+  <div className="rb-row">
+    <span className="rb-label">Sales Rep</span>
+    <select className="rb-select" aria-label="Sales rep filter">{SALES_REPS.map(r => <option key={r}>{r}</option>)}</select>
   </div>
 );
 
 const InstTypeRow = () => (
-  <div style={rowStyle}>
-    <span style={labelStyle}>Inst. Type</span>
-    <select style={selectStyle} aria-label="Instrument type filter">{INST_TYPES.map(t => <option key={t}>{t}</option>)}</select>
+  <div className="rb-row">
+    <span className="rb-label">Inst. Type</span>
+    <select className="rb-select" aria-label="Instrument type filter">{INST_TYPES.map(t => <option key={t}>{t}</option>)}</select>
   </div>
 );
 
 /* ── Generate button ─────────────────────────────────────────────── */
 
 const GenerateButton = ({ label, reportId, onGenerate }: { label: string; reportId: string; onGenerate: (id: string) => void }) => (
-  <div style={{ ...rowStyle, justifyContent: 'flex-end', marginBottom: 0 }}>
-    <button style={genBtnStyle} onClick={() => onGenerate(reportId)}>{label}</button>
+  <div className="rb-row--end">
+    <button className="rb-gen-btn" onClick={() => onGenerate(reportId)}>{label}</button>
   </div>
 );
 
@@ -101,8 +75,8 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
     switch (paramType) {
       case 'instant':
         return (
-          <div style={rowStyle}>
-            <span style={{ fontSize: 11, color: 'var(--label)' }}>This report runs instantly with no parameters.</span>
+          <div className="rb-row">
+            <span className="rb-instant-text">This report runs instantly with no parameters.</span>
           </div>
         );
 
@@ -110,21 +84,21 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
         return (
           <>
             <DateRangeRow />
-            <div style={rowStyle}>
-              <span style={labelStyle}>Status</span>
-              <select style={selectStyle} aria-label="Status filter">{REPAIR_STATUSES.map(s => <option key={s}>{s}</option>)}</select>
+            <div className="rb-row">
+              <span className="rb-label">Status</span>
+              <select className="rb-select" aria-label="Status filter">{REPAIR_STATUSES.map(s => <option key={s}>{s}</option>)}</select>
             </div>
-            <div style={rowStyle}>
-              <span style={labelStyle}>Sort By</span>
-              <select style={selectStyle} aria-label="Sort by">
+            <div className="rb-row">
+              <span className="rb-label">Sort By</span>
+              <select className="rb-select" aria-label="Sort by">
                 <option>Date</option><option>Client</option><option>Status</option><option>Technician</option>
               </select>
             </div>
             <SalesRepRow />
             <InstTypeRow />
-            <div style={rowStyle}>
-              <span style={labelStyle}>Options</span>
-              <label style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+            <div className="rb-row">
+              <span className="rb-label">Options</span>
+              <label className="rb-check-label">
                 <input type="checkbox" defaultChecked style={{ accentColor: 'var(--primary)' }} /> Include Amounts
               </label>
             </div>
@@ -154,9 +128,9 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
             <DateRangeRow />
             <ClientRow />
             <InstTypeRow />
-            <div style={rowStyle}>
-              <span style={labelStyle}>Options</span>
-              <label style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+            <div className="rb-row">
+              <span className="rb-label">Options</span>
+              <label className="rb-check-label">
                 <input type="checkbox" style={{ accentColor: 'var(--primary)' }} /> High Level Summary
               </label>
             </div>
@@ -168,9 +142,9 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
           <>
             <DateRangeRow />
             <ClientRow />
-            <div style={rowStyle}>
-              <span style={labelStyle}>Report Type</span>
-              <select style={selectStyle} aria-label="Report type"><option>Summary</option><option>By Scope Type</option></select>
+            <div className="rb-row">
+              <span className="rb-label">Report Type</span>
+              <select className="rb-select" aria-label="Report type"><option>Summary</option><option>By Scope Type</option></select>
             </div>
           </>
         );
@@ -180,9 +154,9 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
           <>
             <DateRangeRow />
             <ClientRow />
-            <div style={rowStyle}>
-              <span style={labelStyle}>Vendor</span>
-              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter vendor name..." aria-label="Vendor name filter" />
+            <div className="rb-row">
+              <span className="rb-label">Vendor</span>
+              <input type="text" className="rb-input" style={{ width: 200 }} placeholder="Enter vendor name..." aria-label="Vendor name filter" />
             </div>
           </>
         );
@@ -199,9 +173,9 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
         return (
           <>
             <DateRangeRow />
-            <div style={rowStyle}>
-              <span style={labelStyle}>Lot Number</span>
-              <input type="text" style={{ ...inputStyle, width: 160 }} placeholder="Enter lot number..." aria-label="Lot number filter" />
+            <div className="rb-row">
+              <span className="rb-label">Lot Number</span>
+              <input type="text" className="rb-input" style={{ width: 160 }} placeholder="Enter lot number..." aria-label="Lot number filter" />
             </div>
           </>
         );
@@ -210,13 +184,13 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
         return (
           <>
             <DateRangeRow />
-            <div style={rowStyle}>
-              <span style={labelStyle}>Date Field</span>
-              <select style={selectStyle} aria-label="Date field">{DATE_RANGE_FIELDS.map(f => <option key={f}>{f}</option>)}</select>
+            <div className="rb-row">
+              <span className="rb-label">Date Field</span>
+              <select className="rb-select" aria-label="Date field">{DATE_RANGE_FIELDS.map(f => <option key={f}>{f}</option>)}</select>
             </div>
-            <div style={rowStyle}>
-              <span style={labelStyle}>Repair Items</span>
-              <input type="text" style={{ ...inputStyle, width: 160 }} defaultValue="*" title="Wildcard * for all items" aria-label="Repair items filter" />
+            <div className="rb-row">
+              <span className="rb-label">Repair Items</span>
+              <input type="text" className="rb-input" style={{ width: 160 }} defaultValue="*" title="Wildcard * for all items" aria-label="Repair items filter" />
             </div>
           </>
         );
@@ -226,18 +200,18 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
           <>
             <ClientRow />
             <DeptRow />
-            <div style={rowStyle}>
-              <span style={labelStyle}>Contract</span>
-              <select style={selectStyle} aria-label="Contract filter"><option>All Contracts</option></select>
+            <div className="rb-row">
+              <span className="rb-label">Contract</span>
+              <select className="rb-select" aria-label="Contract filter"><option>All Contracts</option></select>
             </div>
             <DateRangeRow />
-            <div style={rowStyle}>
-              <span style={labelStyle}>Report Type</span>
-              <select style={selectStyle} aria-label="Report type">{REPORT_CARD_TYPES.map(t => <option key={t}>{t}</option>)}</select>
+            <div className="rb-row">
+              <span className="rb-label">Report Type</span>
+              <select className="rb-select" aria-label="Report type">{REPORT_CARD_TYPES.map(t => <option key={t}>{t}</option>)}</select>
             </div>
-            <div style={rowStyle}>
-              <span style={labelStyle}>Options</span>
-              <label style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
+            <div className="rb-row">
+              <span className="rb-label">Options</span>
+              <label className="rb-check-label">
                 <input type="checkbox" style={{ accentColor: 'var(--primary)' }} /> Include Inactive
               </label>
             </div>
@@ -247,24 +221,24 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
       case 'at-risk':
         return (
           <>
-            <div style={rowStyle}>
-              <span style={labelStyle}>Expenses</span>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <div className="rb-row">
+              <span className="rb-label">Expenses</span>
+              <div className="rb-check-group">
                 {['Outsource', 'GPO', 'Inventory', 'Commissions', 'Shipping', 'Labor'].map(exp => (
-                  <label key={exp} style={{ fontSize: 11, display: 'flex', alignItems: 'center', gap: 3, cursor: 'pointer' }}>
+                  <label key={exp} className="rb-check-label">
                     <input type="checkbox" defaultChecked style={{ accentColor: 'var(--primary)' }} /> {exp}
                   </label>
                 ))}
               </div>
             </div>
-            <div style={rowStyle}>
-              <span style={labelStyle}>Min Invoices</span>
-              <input type="number" style={{ ...inputStyle, width: 80 }} defaultValue={1} min={1} aria-label="Minimum invoices" />
-              <span style={{ fontSize: 11, color: 'var(--muted)' }}>in past year</span>
+            <div className="rb-row">
+              <span className="rb-label">Min Invoices</span>
+              <input type="number" className="rb-input" style={{ width: 80 }} defaultValue={1} min={1} aria-label="Minimum invoices" />
+              <span className="rb-row-text">in past year</span>
             </div>
-            <div style={rowStyle}>
-              <span style={labelStyle}>Summary By</span>
-              <select style={selectStyle} aria-label="Summary by">{RISK_SUMMARY_BY.map(r => <option key={r}>{r}</option>)}</select>
+            <div className="rb-row">
+              <span className="rb-label">Summary By</span>
+              <select className="rb-select" aria-label="Summary by">{RISK_SUMMARY_BY.map(r => <option key={r}>{r}</option>)}</select>
             </div>
           </>
         );
@@ -273,17 +247,17 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
         return (
           <>
             <DateRangeRow />
-            <div style={rowStyle}>
-              <span style={labelStyle}>Repair Detail</span>
-              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Filter by repair detail..." aria-label="Filter by repair detail" />
+            <div className="rb-row">
+              <span className="rb-label">Repair Detail</span>
+              <input type="text" className="rb-input" style={{ width: 200 }} placeholder="Filter by repair detail..." aria-label="Filter by repair detail" />
             </div>
-            <div style={rowStyle}>
-              <span style={labelStyle}>Client</span>
-              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter client name..." aria-label="Client name filter" />
+            <div className="rb-row">
+              <span className="rb-label">Client</span>
+              <input type="text" className="rb-input" style={{ width: 200 }} placeholder="Enter client name..." aria-label="Client name filter" />
             </div>
-            <div style={rowStyle}>
-              <span style={labelStyle}>Department</span>
-              <input type="text" style={{ ...inputStyle, width: 200 }} placeholder="Enter department..." aria-label="Department filter" />
+            <div className="rb-row">
+              <span className="rb-label">Department</span>
+              <input type="text" className="rb-input" style={{ width: 200 }} placeholder="Enter department..." aria-label="Department filter" />
             </div>
           </>
         );
@@ -291,13 +265,13 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
       case 'leaderboard':
         return (
           <>
-            <div style={rowStyle}>
-              <span style={labelStyle}>Month</span>
-              <input type="month" aria-label="Leaderboard month" style={{ ...inputStyle, width: 160 }} />
+            <div className="rb-row">
+              <span className="rb-label">Month</span>
+              <input type="month" aria-label="Leaderboard month" className="rb-input" style={{ width: 160 }} />
             </div>
-            <div style={rowStyle}>
-              <span style={labelStyle}>Report Type</span>
-              <select style={selectStyle} aria-label="Report type">{LEADERBOARD_TYPES.map(t => <option key={t}>{t}</option>)}</select>
+            <div className="rb-row">
+              <span className="rb-label">Report Type</span>
+              <select className="rb-select" aria-label="Report type">{LEADERBOARD_TYPES.map(t => <option key={t}>{t}</option>)}</select>
             </div>
           </>
         );
@@ -305,9 +279,9 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
       case 'salesrep-month':
         return (
           <>
-            <div style={rowStyle}>
-              <span style={labelStyle}>Month</span>
-              <input type="month" aria-label="Sales rep report month" style={{ ...inputStyle, width: 160 }} />
+            <div className="rb-row">
+              <span className="rb-label">Month</span>
+              <input type="month" aria-label="Sales rep report month" className="rb-input" style={{ width: 160 }} />
             </div>
             <SalesRepRow />
           </>
@@ -326,9 +300,9 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
           <>
             <DateRangeRow />
             <SalesRepRow />
-            <div style={rowStyle}>
-              <span style={labelStyle}>View</span>
-              <select style={selectStyle} aria-label="View"><option>Summary</option><option>Detail</option></select>
+            <div className="rb-row">
+              <span className="rb-label">View</span>
+              <select className="rb-select" aria-label="View"><option>Summary</option><option>Detail</option></select>
             </div>
           </>
         );
@@ -338,9 +312,9 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
           <>
             <DateRangeRow />
             <SalesRepRow />
-            <div style={rowStyle}>
-              <span style={labelStyle}>Sort By</span>
-              <select style={selectStyle} aria-label="Sort by"><option>Invoice Date</option><option>Client</option><option>Amount</option></select>
+            <div className="rb-row">
+              <span className="rb-label">Sort By</span>
+              <select className="rb-select" aria-label="Sort by"><option>Invoice Date</option><option>Client</option><option>Amount</option></select>
             </div>
           </>
         );
@@ -351,11 +325,7 @@ export const ReportBuilder = ({ reportId, paramType, extractOnly, onGenerate }: 
   };
 
   return (
-    <div style={{
-      marginTop: 8, padding: '10px 12px',
-      background: 'var(--neutral-50)', border: '1px solid var(--border)',
-      borderRadius: 4,
-    }}>
+    <div className="rb-panel">
       {renderParams()}
       <GenerateButton label={genLabel} reportId={reportId} onGenerate={onGenerate} />
     </div>

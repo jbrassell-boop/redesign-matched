@@ -1,3 +1,4 @@
+import './InvoiceForm.css';
 import './print.css';
 import type { RepairFull, RepairLineItem } from '../types';
 
@@ -6,11 +7,6 @@ interface Props {
   lineItems?: RepairLineItem[];
   onClose: () => void;
 }
-
-// Canonical style tokens
-const sb: React.CSSProperties = { background: 'var(--primary)', color: '#fff', fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 6px' };
-const fl: React.CSSProperties = { fontSize: 7, fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.04em' };
-const fv: React.CSSProperties = { borderBottom: '1px solid #ccc', fontSize: 9, padding: '0 2px', minHeight: 13 };
 
 const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 
@@ -29,106 +25,106 @@ export const InvoiceForm = ({ repair, lineItems, onClose }: Props) => {
   return (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-      style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px 16px', overflowY: 'auto' }}
+      className="inv-overlay"
     >
       {/* Action bar */}
-      <div className="no-print" style={{ position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200 }}>
-        <button onClick={() => window.print()} style={{ height: 32, padding: '0 16px', border: 'none', borderRadius: 5, background: 'var(--primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Print</button>
-        <button onClick={onClose} style={{ height: 32, padding: '0 14px', border: '1px solid #ddd', borderRadius: 5, background: '#fff', color: '#888', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
+      <div className="no-print inv-action-bar">
+        <button onClick={() => window.print()} className="inv-btn-print">Print</button>
+        <button onClick={onClose} className="inv-btn-close">Close</button>
       </div>
 
       {/* Printable page */}
-      <div className="print-form" style={{ width: '8.5in', minHeight: '11in', background: '#fff', padding: '0.4in', fontFamily: "'Inter', Arial, sans-serif", fontSize: 9, color: '#222', boxSizing: 'border-box', boxShadow: '0 4px 24px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div className="print-form inv-page">
 
         {/* Envelope Window Zone */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="inv-env-zone">
           {/* Bill To — positioned for #10 window envelope */}
-          <div style={{ width: '3.2in', minHeight: '1in', padding: '8px 0', display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div style={{ ...fl, color: '#999' }}>Bill To</div>
-            <div style={{ fontSize: 12, fontWeight: 800, color: '#111', marginTop: 4 }}>{repair.billName ?? ''}</div>
-            <div style={{ fontSize: 11, color: '#333', lineHeight: 1.5, borderBottom: '1px solid #ccc', minHeight: 14 }}>{repair.billAddr1 ?? ''}</div>
-            <div style={{ fontSize: 11, color: '#333', lineHeight: 1.5, borderBottom: '1px solid #ccc', minHeight: 14 }}>{repair.billAddr2 ?? ''}</div>
-            <div style={{ fontSize: 11, color: '#333', lineHeight: 1.5, borderBottom: '1px solid #ccc', minHeight: 14 }}>{billCSZ}</div>
+          <div className="inv-bill-block">
+            <div className="inv-bill-label">Bill To</div>
+            <div className="inv-bill-name">{repair.billName ?? ''}</div>
+            <div className="inv-bill-line">{repair.billAddr1 ?? ''}</div>
+            <div className="inv-bill-line">{repair.billAddr2 ?? ''}</div>
+            <div className="inv-bill-line">{billCSZ}</div>
           </div>
 
           {/* TSI Header */}
-          <div style={{ textAlign: 'right' }}>
-            <img src="/logo-horizontal.jpg" alt="Total Scope Inc." style={{ height: 44, display: 'block', marginLeft: 'auto', marginBottom: 6 }} />
-            <div style={{ fontSize: 9, color: '#666', lineHeight: 1.5, textAlign: 'right' }}>
+          <div className="inv-tsi-header">
+            <img src="/logo-horizontal.jpg" alt="Total Scope Inc." className="inv-tsi-logo" />
+            <div className="inv-tsi-address">
               Total Scope Inc.<br />
               17 Creek Pkwy, Upper Chichester PA 19061<br />
               Phone: (610) 485-3838 &nbsp;|&nbsp; Fax: (610) 485-3839
             </div>
-            <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--navy)', marginTop: 6, letterSpacing: '-0.5px' }}>Invoice</div>
+            <div className="inv-tsi-title">Invoice</div>
           </div>
         </div>
 
         {/* Invoice Meta Strip */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--primary)', border: '2px solid var(--primary)', borderRadius: 4, overflow: 'hidden' }}>
-          <div style={{ background: '#F0F6FF', padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--primary)', letterSpacing: '0.06em' }}>Invoice #</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{repair.invoiceNumber ?? '—'}</span>
+        <div className="inv-meta-strip">
+          <div className="inv-meta-cell inv-meta-cell--hl">
+            <span className="inv-meta-cell-label">Invoice #</span>
+            <span className="inv-meta-cell-value">{repair.invoiceNumber ?? '—'}</span>
           </div>
-          <div style={{ background: '#fff', padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--primary)', letterSpacing: '0.06em' }}>Invoice Date</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{today}</span>
+          <div className="inv-meta-cell">
+            <span className="inv-meta-cell-label">Invoice Date</span>
+            <span className="inv-meta-cell-value">{today}</span>
           </div>
-          <div style={{ background: '#fff', padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--primary)', letterSpacing: '0.06em' }}>Due Date</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}></span>
+          <div className="inv-meta-cell">
+            <span className="inv-meta-cell-label">Due Date</span>
+            <span className="inv-meta-cell-value"></span>
           </div>
-          <div style={{ background: '#fff', padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--primary)', letterSpacing: '0.06em' }}>Terms</span>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#111' }}>{repair.paymentTerms ?? ''}</span>
+          <div className="inv-meta-cell">
+            <span className="inv-meta-cell-label">Terms</span>
+            <span className="inv-meta-cell-value">{repair.paymentTerms ?? ''}</span>
           </div>
         </div>
 
         {/* Reference Fields */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '6px 12px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <span style={fl}>Work Order #</span>
-            <div style={fv}>{repair.wo ?? ''}</div>
+        <div className="inv-ref-grid">
+          <div className="inv-ref-field">
+            <span className="inv-fl">Work Order #</span>
+            <div className="inv-fv">{repair.wo ?? ''}</div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <span style={fl}>Serial #</span>
-            <div style={fv}>{repair.serial ?? ''}</div>
+          <div className="inv-ref-field">
+            <span className="inv-fl">Serial #</span>
+            <div className="inv-fv">{repair.serial ?? ''}</div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <span style={fl}>Service Date</span>
-            <div style={fv}>{repair.dateIn ? new Date(repair.dateIn).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : ''}</div>
+          <div className="inv-ref-field">
+            <span className="inv-fl">Service Date</span>
+            <div className="inv-fv">{repair.dateIn ? new Date(repair.dateIn).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' }) : ''}</div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div className="inv-ref-field">
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, gridColumn: 'span 2' }}>
-            <span style={fl}>Client / Account</span>
-            <div style={fv}>{repair.client ?? ''}</div>
+          <div className="inv-ref-field" style={{ gridColumn: 'span 2' }}>
+            <span className="inv-fl">Client / Account</span>
+            <div className="inv-fv">{repair.client ?? ''}</div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, gridColumn: 'span 2' }}>
-            <span style={fl}>Equipment / Scope Model</span>
-            <div style={fv}>{repair.scopeModel ?? ''}</div>
+          <div className="inv-ref-field" style={{ gridColumn: 'span 2' }}>
+            <span className="inv-fl">Equipment / Scope Model</span>
+            <div className="inv-fv">{repair.scopeModel ?? ''}</div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 1, gridColumn: 'span 2' }}>
-            <span style={fl}>Department</span>
-            <div style={fv}>{repair.dept ?? ''}</div>
+          <div className="inv-ref-field" style={{ gridColumn: 'span 2' }}>
+            <span className="inv-fl">Department</span>
+            <div className="inv-fv">{repair.dept ?? ''}</div>
           </div>
         </div>
 
         {/* Line Items */}
-        <div style={sb}>Services &amp; Items</div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 2 }}>
+        <div className="inv-sb">Services &amp; Items</div>
+        <table className="inv-items-table">
           <thead>
             <tr>
-              <th style={{ background: 'var(--navy)', color: '#fff', fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase' as const, padding: '5px 8px', textAlign: 'left', letterSpacing: '0.04em', width: '70%' }}>Description</th>
-              <th style={{ background: 'var(--navy)', color: '#fff', fontSize: 8.5, fontWeight: 700, textTransform: 'uppercase' as const, padding: '5px 8px', textAlign: 'right', letterSpacing: '0.04em' }}>Amount</th>
+              <th className="inv-th-desc">Description</th>
+              <th className="inv-th-amt">Amount</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((row, i) => (
               <tr key={i} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
-                <td style={{ padding: '5px 8px', fontSize: 10.5, borderBottom: '1px solid #ddd', verticalAlign: 'middle', height: 20 }}>
+                <td className="inv-td">
                   {row?.description ?? ''}
                 </td>
-                <td style={{ padding: '5px 8px', fontSize: 10.5, borderBottom: '1px solid #ddd', verticalAlign: 'middle', textAlign: 'right' }}>
+                <td className="inv-td inv-td--right">
                   {row?.amount != null ? `$${row.amount.toFixed(2)}` : ''}
                 </td>
               </tr>
@@ -137,26 +133,26 @@ export const InvoiceForm = ({ repair, lineItems, onClose }: Props) => {
         </table>
 
         {/* Totals */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 6 }}>
-          <table style={{ width: 260, borderCollapse: 'collapse' }}>
+        <div className="inv-totals-wrap">
+          <table className="inv-totals-table">
             <tbody>
               <tr>
-                <td colSpan={2} style={{ padding: '2px 8px', fontSize: 9, textAlign: 'right' }}>Subtotal</td>
-                <td style={{ padding: '2px 8px', fontSize: 9, textAlign: 'right', borderLeft: '1px solid #ddd' }}>
+                <td colSpan={2} className="inv-tot-cell">Subtotal</td>
+                <td className="inv-tot-cell inv-tot-cell--sep">
                   ${total.toFixed(2)}
                 </td>
               </tr>
               <tr>
-                <td colSpan={2} style={{ padding: '2px 8px', fontSize: 9, textAlign: 'right' }}>Shipping</td>
-                <td style={{ padding: '2px 8px', fontSize: 9, textAlign: 'right', borderLeft: '1px solid #ddd' }}>$</td>
+                <td colSpan={2} className="inv-tot-cell">Shipping</td>
+                <td className="inv-tot-cell inv-tot-cell--sep">$</td>
               </tr>
               <tr>
-                <td colSpan={2} style={{ padding: '2px 8px', fontSize: 9, textAlign: 'right' }}>Tax</td>
-                <td style={{ padding: '2px 8px', fontSize: 9, textAlign: 'right', borderLeft: '1px solid #ddd' }}>$</td>
+                <td colSpan={2} className="inv-tot-cell">Tax</td>
+                <td className="inv-tot-cell inv-tot-cell--sep">$</td>
               </tr>
-              <tr style={{ borderTop: '2px solid var(--primary)', background: '#F0F6FF' }}>
-                <td style={{ padding: '4px 8px', fontSize: 13, fontWeight: 800, textAlign: 'right', width: 140, color: '#555' }}>Amount Due</td>
-                <td style={{ padding: '4px 8px', fontSize: 13, fontWeight: 800, textAlign: 'right' }}>
+              <tr className="inv-tot-due-row">
+                <td className="inv-tot-due-label">Amount Due</td>
+                <td className="inv-tot-due-val">
                   ${total.toFixed(2)}
                 </td>
               </tr>
@@ -165,49 +161,49 @@ export const InvoiceForm = ({ repair, lineItems, onClose }: Props) => {
         </div>
 
         {/* Signature Area */}
-        <div style={{ marginTop: 16, display: 'flex', gap: 24 }}>
-          <div style={{ flex: 2 }}>
-            <div style={{ borderBottom: '1px solid #ccc', minHeight: 28 }} />
-            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 2 }}>Authorized By</div>
+        <div className="inv-sig-area">
+          <div className="inv-sig-flex2">
+            <div className="inv-sig-line" />
+            <div className="inv-sig-label">Authorized By</div>
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ borderBottom: '1px solid #ccc', minHeight: 28 }} />
-            <div style={{ fontSize: 7, color: '#888', fontWeight: 600, marginTop: 2 }}>Date</div>
+          <div className="inv-sig-flex1">
+            <div className="inv-sig-line" />
+            <div className="inv-sig-label">Date</div>
           </div>
         </div>
 
         {/* Payment Notes */}
-        <div style={{ fontSize: 8, color: 'var(--muted)', marginTop: 8, lineHeight: 1.5, padding: '6px 0', borderTop: '1px solid #eee' }}>
+        <div className="inv-payment-note">
           Payment due within 30 days of invoice date. Please include invoice number on your remittance.
           Make checks payable to <strong>Total Scope Inc.</strong> ACH/Wire transfer available upon request.
         </div>
 
         {/* Remittance Stub */}
-        <div style={{ marginTop: 12, padding: '10px 14px', background: '#F9FAFB', border: '1px solid #ddd', borderRadius: 3 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--primary)', letterSpacing: '0.06em', marginBottom: 6, borderBottom: '1px solid #ccc', paddingBottom: 4 }}>
+        <div className="inv-remit-stub">
+          <div className="inv-remit-header">
             Remittance — Please Return With Payment
           </div>
-          <div style={{ display: 'flex', gap: 24, fontSize: 10.5, color: '#333' }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 8.5, fontWeight: 700, color: '#666', textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 2 }}>Invoice #</div>
-              <div style={{ borderBottom: '1px solid #ccc', minHeight: 16 }}>{repair.invoiceNumber ?? ''}</div>
+          <div className="inv-remit-fields">
+            <div className="inv-remit-field">
+              <div className="inv-remit-flabel">Invoice #</div>
+              <div className="inv-remit-fline">{repair.invoiceNumber ?? ''}</div>
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 8.5, fontWeight: 700, color: '#666', textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 2 }}>Amount Enclosed</div>
-              <div style={{ borderBottom: '1px solid #ccc', minHeight: 16 }}></div>
+            <div className="inv-remit-field">
+              <div className="inv-remit-flabel">Amount Enclosed</div>
+              <div className="inv-remit-fline"></div>
             </div>
-            <div style={{ flex: 2 }}>
-              <div style={{ fontSize: 8.5, fontWeight: 700, color: '#666', textTransform: 'uppercase' as const, letterSpacing: '0.04em', marginBottom: 2 }}>Account / PO Reference</div>
-              <div style={{ borderBottom: '1px solid #ccc', minHeight: 16 }}></div>
+            <div className="inv-remit-field inv-remit-field--wide">
+              <div className="inv-remit-flabel">Account / PO Reference</div>
+              <div className="inv-remit-fline"></div>
             </div>
           </div>
-          <div style={{ borderTop: '1.5px dashed #bbb', marginTop: 14, paddingTop: 4, fontSize: 8, color: 'var(--muted)', textAlign: 'center' as const, letterSpacing: '0.08em', textTransform: 'uppercase' as const }}>
+          <div className="inv-remit-cut">
             ✂ &nbsp; Detach and return with payment &nbsp; ✂
           </div>
         </div>
 
         {/* Footer */}
-        <div style={{ marginTop: 'auto', paddingTop: 8, borderTop: '1px solid #ccc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 8, color: '#888' }}>
+        <div className="inv-footer">
           <span>ISO 13485 Certified</span>
           <span>Total Scope Inc. | 17 Creek Pkwy, Upper Chichester PA 19061 | (610) 485-3838</span>
           <span>Page 1 of 1</span>

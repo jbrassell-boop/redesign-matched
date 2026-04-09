@@ -2,77 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { message } from 'antd';
 import type { RepairInspections } from '../types';
 import { getRepairInspections, updateRepairInspections } from '../../../api/repairs';
-
-// ── Shared styles ─────────────────────────────────────────────────────────────
-
-const overlay: React.CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 1100,
-  background: 'rgba(0,0,0,0.48)',
-  display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-  padding: '28px 16px', overflowY: 'auto',
-};
-const panel: React.CSSProperties = {
-  width: 720, background: 'var(--card)', borderRadius: 10,
-  boxShadow: '0 8px 40px rgba(0,0,0,0.24)', overflow: 'hidden', flexShrink: 0,
-};
-const modalHeader: React.CSSProperties = {
-  background: 'var(--navy)', color: '#fff',
-  padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-};
-const modalTitle: React.CSSProperties = { fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' };
-const modalSub: React.CSSProperties = { fontSize: 11, color: 'rgba(255,255,255,0.65)', marginTop: 2 };
-const modalBody: React.CSSProperties = {
-  padding: '14px 20px', display: 'flex', flexDirection: 'column', gap: 12,
-  maxHeight: 'calc(100vh - 160px)', overflowY: 'auto',
-};
-const sectionBlock: React.CSSProperties = {
-  border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden',
-};
-const sectionHead: React.CSSProperties = {
-  background: 'var(--neutral-50)', padding: '5px 10px',
-  fontSize: 10, fontWeight: 700, textTransform: 'uppercase',
-  letterSpacing: '0.06em', color: 'var(--navy)',
-  borderBottom: '1px solid var(--border)',
-};
-const sectionBody: React.CSSProperties = { padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: 4 };
-const pfRow: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 28 };
-const pfLabel: React.CSSProperties = { fontSize: 11.5, color: 'var(--text)', flex: 1 };
-const pfBtnRow: React.CSSProperties = { display: 'flex', gap: 3, flexShrink: 0 };
-const fieldLbl: React.CSSProperties = { fontSize: 10, color: 'var(--muted)', fontWeight: 600, display: 'block', marginBottom: 2 };
-const angInput: React.CSSProperties = {
-  width: 56, fontSize: 11, textAlign: 'center',
-  border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '2px 4px',
-  fontFamily: 'inherit',
-};
-const textInput: React.CSSProperties = {
-  width: '100%', fontSize: 11, border: '1px solid var(--neutral-200)',
-  borderRadius: 3, padding: '3px 6px', fontFamily: 'inherit', boxSizing: 'border-box' as const,
-};
-const textarea: React.CSSProperties = {
-  width: '100%', fontSize: 11, border: '1px solid var(--neutral-200)',
-  borderRadius: 4, padding: '6px 8px', fontFamily: 'inherit',
-  resize: 'vertical' as const, minHeight: 60, boxSizing: 'border-box' as const,
-};
-const closeBtnStyle: React.CSSProperties = {
-  height: 28, padding: '0 12px', border: '1px solid rgba(255,255,255,0.3)',
-  borderRadius: 5, background: 'transparent', color: '#fff',
-  fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-};
-const saveBtnStyle: React.CSSProperties = {
-  height: 28, padding: '0 16px', border: 'none',
-  borderRadius: 5, background: 'var(--primary)', color: '#fff',
-  fontSize: 11, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
-};
-const cancelBtnStyle: React.CSSProperties = {
-  height: 28, padding: '0 12px', border: '1px solid var(--border)',
-  borderRadius: 5, background: 'var(--card)', color: 'var(--muted)',
-  fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-};
-const modalFooter: React.CSSProperties = {
-  padding: '12px 20px', borderTop: '1px solid var(--border)',
-  display: 'flex', justifyContent: 'flex-end', gap: 8,
-  background: 'var(--neutral-50)',
-};
+import './InspectionsTab.css';
 
 // ── Shared P/F keys type ──────────────────────────────────────────────────────
 
@@ -101,6 +31,8 @@ const NaBtn = ({ active, onClick }: { active: boolean; onClick: () => void }) =>
   }}>N/A</button>
 );
 
+// Note: PFBtn and NaBtn retain inline styles because background and color are dynamic (active state)
+
 
 // ── PF row helper ─────────────────────────────────────────────────────────────
 
@@ -121,9 +53,9 @@ const PFLine = ({
     onChange({ [pfKey]: val === target ? '' : target } as Partial<RepairInspections>);
 
   return (
-    <div style={pfRow}>
-      <span style={pfLabel}>{label}</span>
-      <div style={pfBtnRow}>
+    <div className="insp-pf-row">
+      <span className="insp-pf-label">{label}</span>
+      <div className="insp-pf-btn-row">
         <PFBtn value={val} target="P" onClick={() => toggle('P')} />
         <PFBtn value={val} target="F" onClick={() => toggle('F')} />
         {naKey && (
@@ -170,41 +102,41 @@ interface ModalProps {
 }
 
 const DiModal = ({ data, saving, onChange, onSave, onClose }: ModalProps) => (
-  <div style={overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-    <div style={panel}>
-      <div style={modalHeader}>
+  <div className="insp-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="insp-panel">
+      <div className="insp-modal-header">
         <div>
-          <div style={modalTitle}>Flexible Endoscope Diagnostic Report</div>
-          <div style={modalSub}>OM05-1 — D&amp;I Intake Inspection</div>
+          <div className="insp-modal-title">Flexible Endoscope Diagnostic Report</div>
+          <div className="insp-modal-sub">OM05-1 — D&amp;I Intake Inspection</div>
         </div>
-        <button style={closeBtnStyle} onClick={onClose}>Close</button>
+        <button className="insp-close-btn" onClick={onClose}>Close</button>
       </div>
 
-      <div style={modalBody}>
+      <div className="insp-modal-body">
 
         {/* 3A — Leak Test & Fluid Invasion */}
-        <div style={sectionBlock}>
-          <div style={sectionHead}>3A · Leak Test &amp; Fluid Invasion</div>
-          <div style={sectionBody}>
+        <div className="insp-section-block">
+          <div className="insp-section-head">3A · Leak Test &amp; Fluid Invasion</div>
+          <div className="insp-section-body">
             <PFLine label="Leak Test Performed" pfKey="insLeakPF" data={data} onChange={onChange} />
             <PFLine label="Fluid Invasion Detected" pfKey="insHotColdLeakPF" data={data} onChange={onChange} />
           </div>
         </div>
 
         {/* 3B — Angulation System */}
-        <div style={sectionBlock}>
-          <div style={sectionHead}>3B · Angulation System</div>
-          <div style={sectionBody}>
+        <div className="insp-section-block">
+          <div className="insp-section-head">3B · Angulation System</div>
+          <div className="insp-section-body">
             {/* Degree inputs */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 6 }}>
+            <div className="insp-ang-grid">
               {ANG_DIRS.map(dir => (
                 <div key={dir}>
-                  <span style={fieldLbl}>{dir} <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(factory {ANG_FACTORY[dir]})</span></span>
+                  <span className="insp-field-lbl">{dir} <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(factory {ANG_FACTORY[dir]})</span></span>
                   <input
                     value={(data[`angIn${dir}` as PFKey] as string) ?? ''}
                     onChange={e => onChange({ [`angIn${dir}`]: e.target.value } as Partial<RepairInspections>)}
                     placeholder={ANG_FACTORY[dir]}
-                    style={angInput}
+                    className="insp-ang-input"
                   />
                 </div>
               ))}
@@ -214,23 +146,23 @@ const DiModal = ({ data, saving, onChange, onSave, onClose }: ModalProps) => (
         </div>
 
         {/* 3C — Image & Light Transmission */}
-        <div style={sectionBlock}>
-          <div style={sectionHead}>3C · Image &amp; Light Transmission</div>
-          <div style={sectionBody}>
+        <div className="insp-section-block">
+          <div className="insp-section-head">3C · Image &amp; Light Transmission</div>
+          <div className="insp-section-body">
             <PFLine label="Video Image (No Image / Static / Lens Sep / Imperfection)" pfKey="insImagePF" data={data} onChange={onChange} />
             <PFLine label="Light Bundle (Slip from Tip / Broken Fibers)" pfKey="insLightFibersPF" data={data} onChange={onChange} />
-            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', padding: '2px 0' }}>
-              <div style={{ flex: 1 }}>
-                <span style={fieldLbl}>Broken Fibers — % In</span>
-                <input value={data.brokenFibersIn ?? ''} onChange={e => onChange({ brokenFibersIn: e.target.value })} style={textInput} placeholder="e.g. N/A" />
+            <div className="insp-trio-row">
+              <div className="insp-trio-cell">
+                <span className="insp-field-lbl">Broken Fibers — % In</span>
+                <input value={data.brokenFibersIn ?? ''} onChange={e => onChange({ brokenFibersIn: e.target.value })} className="insp-text-input" placeholder="e.g. N/A" />
               </div>
-              <div style={{ flex: 1 }}>
-                <span style={fieldLbl}>Fiber Angle</span>
-                <input value={data.fiberAngle ?? ''} onChange={e => onChange({ fiberAngle: e.target.value })} style={textInput} />
+              <div className="insp-trio-cell">
+                <span className="insp-field-lbl">Fiber Angle</span>
+                <input value={data.fiberAngle ?? ''} onChange={e => onChange({ fiberAngle: e.target.value })} className="insp-text-input" />
               </div>
-              <div style={{ flex: 1 }}>
-                <span style={fieldLbl}>Fiber Light Trans %</span>
-                <input value={data.fiberLightTrans ?? ''} onChange={e => onChange({ fiberLightTrans: e.target.value })} style={textInput} />
+              <div className="insp-trio-cell">
+                <span className="insp-field-lbl">Fiber Light Trans %</span>
+                <input value={data.fiberLightTrans ?? ''} onChange={e => onChange({ fiberLightTrans: e.target.value })} className="insp-text-input" />
               </div>
             </div>
             <PFLine label="Fiber Light Transmission" pfKey="insFiberLightTransPF" data={data} onChange={onChange} />
@@ -242,9 +174,9 @@ const DiModal = ({ data, saving, onChange, onSave, onClose }: ModalProps) => (
         </div>
 
         {/* 3D — Channel Function */}
-        <div style={sectionBlock}>
-          <div style={sectionHead}>3D · Channel Function</div>
-          <div style={sectionBody}>
+        <div className="insp-section-block">
+          <div className="insp-section-head">3D · Channel Function</div>
+          <div className="insp-section-body">
             <PFLine label="Suction Channel (Blocked / Leaking / Impeded)" pfKey="insSuctionPF" data={data} onChange={onChange} />
             <PFLine label="Forcep / Biopsy Channel (Blocked / Leaking / Port Seal)" pfKey="insForcepChannelPF" data={data} onChange={onChange} />
             <PFLine label="Auxiliary Water Channel (Blocked / Leaking / Loose / Weak)" pfKey="insAuxWaterPF" data={data} onChange={onChange} />
@@ -253,63 +185,63 @@ const DiModal = ({ data, saving, onChange, onSave, onClose }: ModalProps) => (
         </div>
 
         {/* 3E — Electrical & Connector Integrity */}
-        <div style={sectionBlock}>
-          <div style={sectionHead}>3E · Electrical &amp; Connector Integrity</div>
-          <div style={sectionBody}>
+        <div className="insp-section-block">
+          <div className="insp-section-head">3E · Electrical &amp; Connector Integrity</div>
+          <div className="insp-section-body">
             <PFLine label="Light Guide Connector (LGC) — Alignment Pin / Prong / Lens / ETO Valve" pfKey="insLightGuideConnectorPF" data={data} onChange={onChange} />
           </div>
         </div>
 
         {/* 3F — Control Body (info only, see comments) */}
-        <div style={sectionBlock}>
-          <div style={sectionHead}>3F · Control Body</div>
-          <div style={{ ...sectionBody }}>
-            <span style={{ fontSize: 11, color: 'var(--muted)', fontStyle: 'italic' }}>
+        <div className="insp-section-block">
+          <div className="insp-section-head">3F · Control Body</div>
+          <div className="insp-section-body">
+            <span className="insp-italic-note">
               Control Body Housing / Elevator Function — record findings in Comments below.
             </span>
           </div>
         </div>
 
         {/* 3G — Insertion Tube */}
-        <div style={sectionBlock}>
-          <div style={sectionHead}>3G · Insertion Tube</div>
-          <div style={sectionBody}>
+        <div className="insp-section-block">
+          <div className="insp-section-head">3G · Insertion Tube</div>
+          <div className="insp-section-body">
             <PFLine label="Insertion Tube Surface (Dented / Buckled / Cut / Peeling / Discolored)" pfKey="insInsertionTubePF" data={data} onChange={onChange} />
           </div>
         </div>
 
         {/* 3H — Distal Tip & Adhesive Surfaces */}
-        <div style={sectionBlock}>
-          <div style={sectionHead}>3H · Distal Tip &amp; Adhesive Surfaces</div>
-          <div style={sectionBody}>
+        <div className="insp-section-block">
+          <div className="insp-section-head">3H · Distal Tip &amp; Adhesive Surfaces</div>
+          <div className="insp-section-body">
             <PFLine label="Distal Tip / C-Cover / Bending Rubber / Section Mesh" pfKey="insDistalTipPF" data={data} onChange={onChange} />
             <PFLine label="Lenses (Cracked / Chipped / Dirty / Glue Missing)" pfKey="insEyePiecePF" data={data} onChange={onChange} />
           </div>
         </div>
 
         {/* 3I — Universal Cord & Boots */}
-        <div style={sectionBlock}>
-          <div style={sectionHead}>3I · Universal Cord &amp; Boots</div>
-          <div style={sectionBody}>
+        <div className="insp-section-block">
+          <div className="insp-section-head">3I · Universal Cord &amp; Boots</div>
+          <div className="insp-section-body">
             <PFLine label="Universal Cord (Dented / Buckled / Cut / Peeling)" pfKey="insUniversalCordPF" data={data} onChange={onChange} />
           </div>
         </div>
 
         {/* 4 — Detailed Inspection */}
-        <div style={sectionBlock}>
-          <div style={sectionHead}>4 · Detailed Inspection</div>
-          <div style={sectionBody}>
+        <div className="insp-section-block">
+          <div className="insp-section-head">4 · Detailed Inspection</div>
+          <div className="insp-section-body">
             <PFLine label="Internal Channels (Freckling / Debris / Scratched / Deformed)" pfKey="insImageCentrationPF" data={data} onChange={onChange} />
-            <span style={{ fontSize: 10, color: 'var(--muted)', fontStyle: 'italic', marginTop: -2 }}>
+            <span className="insp-italic-note-sm">
               Residue / Photos Taken — note in Comments
             </span>
           </div>
         </div>
 
         {/* Scope Condition */}
-        <div style={sectionBlock}>
-          <div style={sectionHead}>Scope Condition</div>
-          <div style={{ ...sectionBody, flexDirection: 'row', gap: 8, flexWrap: 'wrap' as const, alignItems: 'center' }}>
+        <div className="insp-section-block">
+          <div className="insp-section-head">Scope Condition</div>
+          <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'row', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             {(['Not Patient Safe', 'Functional Issue', 'Cosmetic Only', 'No Issues Found'] as const).map(opt => {
               // map to scopeRepairable / scopeUsable
               const isActive =
@@ -358,21 +290,22 @@ const DiModal = ({ data, saving, onChange, onSave, onClose }: ModalProps) => (
 
         {/* 5 — Comments / Tech Notes */}
         <div>
-          <span style={{ ...fieldLbl, marginBottom: 4 }}>5 · Repair Assessment / Tech Notes</span>
+          <span className="insp-field-lbl" style={{ marginBottom: 4 }}>5 · Repair Assessment / Tech Notes</span>
           <textarea
             value={data.diInsComments ?? ''}
             onChange={e => onChange({ diInsComments: e.target.value })}
             placeholder="Tech notes, control body findings, residue location, photos taken..."
-            style={textarea}
+            className="insp-textarea"
           />
         </div>
 
       </div>
 
-      <div style={modalFooter}>
-        <button style={cancelBtnStyle} onClick={onClose}>Cancel</button>
+      <div className="insp-modal-footer">
+        <button className="insp-cancel-btn" onClick={onClose}>Cancel</button>
         <button
-          style={{ ...saveBtnStyle, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}
+          className="insp-save-btn"
+          style={{ cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}
           onClick={onSave}
           disabled={saving}
         >
@@ -454,30 +387,30 @@ const PostRepairModal = ({ data, saving, onChange, onSave, onClose }: ModalProps
   };
 
   return (
-    <div style={overlay} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <div style={panel}>
-        <div style={modalHeader}>
+    <div className="insp-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div className="insp-panel">
+        <div className="insp-modal-header">
           <div>
-            <div style={modalTitle}>Post-Repair Inspection</div>
-            <div style={modalSub}>Outgoing condition — verify all repairs complete</div>
+            <div className="insp-modal-title">Post-Repair Inspection</div>
+            <div className="insp-modal-sub">Outgoing condition — verify all repairs complete</div>
           </div>
-          <button style={closeBtnStyle} onClick={onClose}>Close</button>
+          <button className="insp-close-btn" onClick={onClose}>Close</button>
         </div>
 
-        <div style={modalBody}>
+        <div className="insp-modal-body">
 
           {/* Angulation OUT */}
-          <div style={sectionBlock}>
-            <div style={sectionHead}>Angulation — Outgoing</div>
-            <div style={{ ...sectionBody, flexDirection: 'row', gap: 12 }}>
+          <div className="insp-section-block">
+            <div className="insp-section-head">Angulation — Outgoing</div>
+            <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'row', gap: 12 }}>
               {ANG_DIRS.map(dir => (
                 <div key={dir} style={{ flex: 1 }}>
-                  <span style={fieldLbl}>{dir} <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(factory {ANG_FACTORY[dir]})</span></span>
+                  <span className="insp-field-lbl">{dir} <span style={{ color: 'var(--muted)', fontWeight: 400 }}>(factory {ANG_FACTORY[dir]})</span></span>
                   <input
                     value={(data[`angOut${dir}` as PFKey] as string) ?? ''}
                     onChange={e => onChange({ [`angOut${dir}`]: e.target.value } as Partial<RepairInspections>)}
                     placeholder={ANG_FACTORY[dir]}
-                    style={angInput}
+                    className="insp-ang-input"
                   />
                 </div>
               ))}
@@ -485,39 +418,39 @@ const PostRepairModal = ({ data, saving, onChange, onSave, onClose }: ModalProps
           </div>
 
           {/* Broken Fibers Out */}
-          <div style={sectionBlock}>
-            <div style={sectionHead}>Fiber Readings — Outgoing</div>
-            <div style={{ ...sectionBody, flexDirection: 'row', gap: 10 }}>
+          <div className="insp-section-block">
+            <div className="insp-section-head">Fiber Readings — Outgoing</div>
+            <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'row', gap: 10 }}>
               <div style={{ flex: 1 }}>
-                <span style={fieldLbl}>Broken Fibers — % Out</span>
-                <input value={data.brokenFibersOut ?? ''} onChange={e => onChange({ brokenFibersOut: e.target.value })} style={textInput} placeholder="e.g. N/A" />
+                <span className="insp-field-lbl">Broken Fibers — % Out</span>
+                <input value={data.brokenFibersOut ?? ''} onChange={e => onChange({ brokenFibersOut: e.target.value })} className="insp-text-input" placeholder="e.g. N/A" />
               </div>
             </div>
           </div>
 
           {/* P/F verification by section */}
-          <div style={sectionBlock}>
-            <div style={{ ...sectionHead, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div className="insp-section-block">
+            <div className="insp-section-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span>Pass / Fail Verification</span>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: failCount > 0 ? 'var(--danger)' : 'var(--success)', fontWeight: 700 }}>
+                <span className={failCount > 0 ? 'insp-pf-count-fail' : 'insp-pf-count-pass'}>
                   {passCount}P / {failCount}F
                 </span>
-                <button onClick={markAllPass} style={{ fontSize: 10, padding: '1px 8px', border: '1px solid var(--success)', borderRadius: 4, background: 'var(--card)', color: 'var(--success)', cursor: 'pointer', fontWeight: 600, fontFamily: 'inherit' }}>
+                <button onClick={markAllPass} className="insp-mark-all-btn">
                   Mark All Pass
                 </button>
               </div>
             </div>
-            <div style={sectionBody}>
+            <div className="insp-section-body">
               {POST_SECTIONS.map(sec => (
-                <div key={sec.cat} style={{ marginBottom: 8 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3 }}>
+                <div key={sec.cat} className="insp-section-cat-wrap">
+                  <div className="insp-section-cat-lbl">
                     {sec.cat}
                   </div>
                   {sec.items.map(f => (
-                    <div key={f.key} style={pfRow}>
-                      <span style={pfLabel}>{f.label}</span>
-                      <div style={pfBtnRow}>
+                    <div key={f.key} className="insp-pf-row">
+                      <span className="insp-pf-label">{f.label}</span>
+                      <div className="insp-pf-btn-row">
                         <PFBtn value={data[f.key] as string | undefined} target="P" onClick={() => toggle(f.key, 'P')} />
                         <PFBtn value={data[f.key] as string | undefined} target="F" onClick={() => toggle(f.key, 'F')} />
                       </div>
@@ -530,10 +463,11 @@ const PostRepairModal = ({ data, saving, onChange, onSave, onClose }: ModalProps
 
         </div>
 
-        <div style={modalFooter}>
-          <button style={cancelBtnStyle} onClick={onClose}>Cancel</button>
+        <div className="insp-modal-footer">
+          <button className="insp-cancel-btn" onClick={onClose}>Cancel</button>
           <button
-            style={{ ...saveBtnStyle, cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}
+            className="insp-save-btn"
+            style={{ cursor: saving ? 'wait' : 'pointer', opacity: saving ? 0.7 : 1 }}
             onClick={onSave}
             disabled={saving}
           >
@@ -559,27 +493,21 @@ interface SelectorCardProps {
 const SelectorCard = ({ title, subtitle, badge, badgeColor, onClick, icon }: SelectorCardProps) => (
   <button
     onClick={onClick}
-    style={{
-      flex: 1, display: 'flex', alignItems: 'center', gap: 16,
-      padding: '20px 22px', border: '1.5px solid var(--border-dk)',
-      borderRadius: 10, background: 'var(--card)', cursor: 'pointer',
-      textAlign: 'left', fontFamily: 'inherit', transition: 'border-color 0.15s, box-shadow 0.15s',
-    }}
-    className="tab-card-hover"
+    className="insp-sel-card tab-card-hover"
   >
-    <div style={{ width: 44, height: 44, borderRadius: 8, background: 'rgba(var(--navy-rgb),0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--navy)', flexShrink: 0 }}>
+    <div className="insp-sel-icon">
       {icon}
     </div>
-    <div style={{ flex: 1 }}>
-      <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)', marginBottom: 3 }}>{title}</div>
-      <div style={{ fontSize: 11, color: 'var(--muted)' }}>{subtitle}</div>
+    <div className="insp-sel-body">
+      <div className="insp-sel-title">{title}</div>
+      <div className="insp-sel-subtitle">{subtitle}</div>
     </div>
     {badge && (
-      <div style={{ fontSize: 11, fontWeight: 700, color: badgeColor ?? 'var(--muted)', background: 'var(--neutral-50)', border: '1px solid var(--border)', borderRadius: 20, padding: '2px 10px', flexShrink: 0 }}>
+      <div className="insp-sel-badge" style={{ color: badgeColor ?? 'var(--muted)' }}>
         {badge}
       </div>
     )}
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={16} height={16} style={{ color: 'var(--muted)', flexShrink: 0 }}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={16} height={16} className="insp-sel-chevron">
       <polyline points="9 18 15 12 9 6" />
     </svg>
   </button>
@@ -624,8 +552,8 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
     }
   }, [data, repairKey]);
 
-  if (loading) return <div style={{ padding: 24, color: 'var(--muted)', fontSize: 12 }}>Loading inspections...</div>;
-  if (!data) return <div style={{ padding: 24, color: 'var(--muted)', fontSize: 12 }}>No inspection data</div>;
+  if (loading) return <div className="insp-loading">Loading inspections...</div>;
+  if (!data) return <div className="insp-loading">No inspection data</div>;
 
   const diDone = !!(data.scopeRepairable || data.scopeUsable || data.angInUp || data.diInsComments);
   const pfPassCount = ALL_PF_KEYS.filter(k => data[k] === 'P').length;
@@ -634,11 +562,11 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
 
   return (
     <>
-      <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+      <div className="insp-selector-wrap">
+        <div className="insp-selector-header">
           Select Inspection Type
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div className="insp-selector-row">
           <SelectorCard
             title="D&I Intake"
             subtitle="OM05-1 — Flexible Endoscope Diagnostic Report"

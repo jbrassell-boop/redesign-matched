@@ -1,0 +1,243 @@
+/* ── UpdateSlipForm styles ──
+   Extracted from inline styles. Uses design tokens from tokens.css.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Overlay */
+.us-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+}
+
+/* Action bar (no-print) */
+.us-action-bar {
+  position: fixed;
+  top: 16px;
+  right: 32px;
+  display: flex;
+  gap: 8px;
+  z-index: 1200;
+}
+.us-btn-print {
+  height: 32px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 5px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.us-btn-close {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #fff;
+  color: #888;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Print page */
+.us-page {
+  width: 8.5in;
+  height: 11in;
+  background: #fff;
+  padding: 0.4in;
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 9px;
+  color: #222;
+  box-sizing: border-box;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Internal use banner */
+.us-banner {
+  background: #fef2f2;
+  border: 2px solid #b71234;
+  border-radius: 4px;
+  padding: 6px 14px;
+  text-align: center;
+  margin-bottom: 6px;
+}
+.us-banner__title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #b71234;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.us-banner__sub {
+  font-size: 8px;
+  color: #991b1b;
+  margin-top: 2px;
+  font-weight: 600;
+}
+
+/* Page header */
+.us-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+.us-header__logo {
+  height: 44px;
+}
+.us-header__right {
+  text-align: right;
+}
+.us-header__title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1B3A5C;
+}
+.us-header__subtitle {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--primary);
+}
+.us-header__doc {
+  font-size: 8px;
+  color: #aaa;
+}
+
+/* Section bar (shared sb pattern) */
+.us-sb {
+  background: var(--primary);
+  color: #fff;
+  font-size: 7.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+}
+
+/* Field label (shared fl pattern) */
+.us-fl {
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #888;
+  letter-spacing: 0.04em;
+}
+
+/* Field value (shared fv pattern) */
+.us-fv {
+  border-bottom: 1px solid #ccc;
+  font-size: 9px;
+  padding: 0 2px;
+  min-height: 13px;
+}
+
+/* Scope info grid */
+.us-scope-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 4px 10px;
+  padding: 4px 0;
+  margin-bottom: 6px;
+}
+.us-span2 {
+  grid-column: span 2;
+}
+
+/* Reason for update grid */
+.us-reason-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+  padding: 6px 0;
+  margin-bottom: 6px;
+  flex: 1;
+}
+.us-reason-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.us-reason-label {
+  font-size: 7.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--primary);
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  background: #f0f4fc;
+  border-left: 3px solid var(--primary);
+}
+.us-reason-box {
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  min-height: 48px;
+  padding: 3px 6px;
+  font-size: 9px;
+}
+
+/* Completed by row */
+.us-completed-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  margin-bottom: 6px;
+}
+.us-sig-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.us-sig-block--narrow {
+  max-width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.us-sig-line {
+  border-bottom: 1px solid #ccc;
+  min-height: 26px;
+}
+.us-sig-label {
+  font-size: 7px;
+  color: #888;
+  font-weight: 600;
+  margin-top: 1px;
+}
+
+/* Footer */
+.us-footer {
+  padding-top: 4px;
+  border-top: 1px solid #ddd;
+  font-size: 7px;
+  color: #999;
+  text-align: center;
+}
+.us-footer__primary {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+.us-footer__doc-num {
+  float: right;
+  font-weight: 400;
+}
+.us-footer__addresses {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  font-size: 6.5px;
+  color: #aaa;
+}

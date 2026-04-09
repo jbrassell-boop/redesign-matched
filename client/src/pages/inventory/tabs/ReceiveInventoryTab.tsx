@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Spin, message } from 'antd';
 import { getInventoryPendingReceipt, receiveInventory } from '../../../api/inventory';
 import type { InventoryReceivingItem } from '../types';
+import './ReceiveInventoryTab.css';
 
 export const ReceiveInventoryTab = () => {
   const [items, setItems] = useState<InventoryReceivingItem[]>([]);
@@ -65,57 +66,37 @@ export const ReceiveInventoryTab = () => {
     }
   };
 
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin size="small" /></div>;
+  if (loading) return <div className="rcv-loading"><Spin size="small" /></div>;
 
   return (
-    <div style={{ display: 'flex', height: '100%', minHeight: 400 }}>
+    <div className="rcv-shell">
       {/* Left: pending receipt list */}
-      <div style={{
-        width: 320, flexShrink: 0,
-        borderRight: '1px solid var(--border)',
-        display: 'flex', flexDirection: 'column',
-        background: 'var(--neutral-50)',
-      }}>
-        <div style={{
-          padding: '8px 14px',
-          background: 'var(--neutral-50)',
-          borderBottom: '1px solid var(--border)',
-          fontSize: 11, fontWeight: 700, color: 'var(--navy)',
-          textTransform: 'uppercase', letterSpacing: '0.04em',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        }}>
+      <div className="rcv-left">
+        <div className="rcv-left-head">
           <span>Pending Receipt</span>
-          <span style={{ fontWeight: 600, color: 'var(--muted)', textTransform: 'none', letterSpacing: 0 }}>
-            {items.length} items
-          </span>
+          <span className="rcv-left-count">{items.length} items</span>
         </div>
-        <div style={{ flex: 1, overflow: 'auto' }}>
+        <div className="rcv-left-scroll">
           {items.length === 0 ? (
-            <div style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>
-              No items at or below minimum stock level
-            </div>
+            <div className="rcv-empty">No items at or below minimum stock level</div>
           ) : items.map(item => {
             const isSelected = selected?.inventorySizeKey === item.inventorySizeKey;
             return (
               <div
                 key={item.inventorySizeKey}
                 onClick={() => handleSelect(item)}
+                className={`rcv-item ${isSelected ? 'selected' : 'hover-row-light'}`}
                 style={{
-                  padding: '9px 14px',
-                  borderBottom: '1px solid var(--border)',
-                  cursor: 'pointer',
                   background: isSelected ? 'var(--amber-light)' : 'var(--card)',
                   borderLeft: isSelected ? '2px solid var(--amber)' : '2px solid transparent',
-                  transition: 'background 0.1s',
                 }}
-                className={isSelected ? 'selected' : 'hover-row-light'}
               >
-                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--navy)' }}>{item.description}</div>
-                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 1 }}>{item.sizeDescription || 'Default size'}</div>
-                <div style={{ display: 'flex', gap: 10, marginTop: 4, fontSize: 11, fontWeight: 600 }}>
-                  <span style={{ color: 'var(--danger)' }}>Current: {item.currentLevel}</span>
-                  <span style={{ color: 'var(--muted)' }}>Min: {item.minLevel}</span>
-                  {item.binNumber && <span style={{ color: 'var(--primary)', background: 'var(--primary-light)', padding: '0 4px', borderRadius: 3 }}>Bin: {item.binNumber}</span>}
+                <div className="rcv-item-name">{item.description}</div>
+                <div className="rcv-item-size">{item.sizeDescription || 'Default size'}</div>
+                <div className="rcv-item-levels">
+                  <span className="rcv-level-danger">Current: {item.currentLevel}</span>
+                  <span className="rcv-level-muted">Min: {item.minLevel}</span>
+                  {item.binNumber && <span className="rcv-bin-badge">Bin: {item.binNumber}</span>}
                 </div>
               </div>
             );
@@ -124,44 +105,40 @@ export const ReceiveInventoryTab = () => {
       </div>
 
       {/* Right: receive form */}
-      <div style={{ flex: 1, padding: '20px 24px', overflow: 'auto' }}>
+      <div className="rcv-right">
         {!selected ? (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--muted)', gap: 8 }}>
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={40} height={40} style={{ opacity: 0.3 }}>
+          <div className="rcv-placeholder">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} width={40} height={40} className="rcv-placeholder-icon">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
               <polyline points="17 8 12 3 7 8" />
               <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
-            <span style={{ fontSize: 13 }}>Select an item to receive inventory</span>
+            <span className="rcv-placeholder-text">Select an item to receive inventory</span>
           </div>
         ) : (
-          <div style={{ maxWidth: 480 }}>
+          <div className="rcv-form-wrap">
             {/* Item header */}
-            <div style={{
-              background: 'rgba(var(--primary-rgb), 0.06)',
-              border: '1px solid rgba(var(--primary-rgb), 0.15)',
-              borderRadius: 6, padding: '10px 14px', marginBottom: 18,
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{selected.description}</div>
+            <div className="rcv-item-card">
+              <div className="rcv-item-card-name">{selected.description}</div>
               {selected.sizeDescription && (
-                <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>{selected.sizeDescription}</div>
+                <div className="rcv-item-card-size">{selected.sizeDescription}</div>
               )}
-              <div style={{ display: 'flex', gap: 16, marginTop: 6, fontSize: 11, fontWeight: 600 }}>
-                <span style={{ color: 'var(--danger)' }}>Current: {selected.currentLevel}</span>
-                <span style={{ color: 'var(--muted)' }}>Min: {selected.minLevel}</span>
-                <span style={{ color: 'var(--muted)' }}>Max: {selected.maxLevel}</span>
+              <div className="rcv-item-card-levels">
+                <span className="rcv-level-danger">Current: {selected.currentLevel}</span>
+                <span className="rcv-level-muted">Min: {selected.minLevel}</span>
+                <span className="rcv-level-muted">Max: {selected.maxLevel}</span>
               </div>
             </div>
 
             {/* Form fields */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="rcv-fields">
               <FormField label="Quantity Received *">
                 <input
                   type="number"
                   min={1}
                   value={qty}
                   onChange={e => setQty(e.target.value)}
-                  style={inputStyle}
+                  className="rcv-input"
                   placeholder="Enter quantity"
                 />
               </FormField>
@@ -171,7 +148,7 @@ export const ReceiveInventoryTab = () => {
                   type="text"
                   value={lotNumber}
                   onChange={e => setLotNumber(e.target.value)}
-                  style={inputStyle}
+                  className="rcv-input"
                   placeholder="Optional lot/batch number"
                 />
               </FormField>
@@ -181,7 +158,7 @@ export const ReceiveInventoryTab = () => {
                   type="text"
                   value={binNumber}
                   onChange={e => setBinNumber(e.target.value)}
-                  style={inputStyle}
+                  className="rcv-input"
                   placeholder="Storage bin number"
                 />
               </FormField>
@@ -190,32 +167,22 @@ export const ReceiveInventoryTab = () => {
                 <textarea
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  style={{ ...inputStyle, height: 72, resize: 'vertical' }}
+                  className="rcv-textarea"
                   placeholder="Optional notes about this receipt"
                 />
               </FormField>
 
-              <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
+              <div className="rcv-actions">
                 <button
                   onClick={handleReceive}
                   disabled={saving}
-                  style={{
-                    height: 34, padding: '0 20px', fontSize: 13, fontWeight: 700,
-                    background: saving ? 'var(--muted)' : 'var(--navy)', color: 'var(--card)',
-                    border: 'none', borderRadius: 6, cursor: saving ? 'default' : 'pointer',
-                    fontFamily: 'inherit',
-                  }}
+                  className={`rcv-save-btn${saving ? ' rcv-save-btn--saving' : ''}`}
                 >
                   {saving ? 'Receiving...' : 'Receive'}
                 </button>
                 <button
                   onClick={() => setSelected(null)}
-                  style={{
-                    height: 34, padding: '0 16px', fontSize: 13, fontWeight: 600,
-                    background: 'var(--card)', color: 'var(--muted)',
-                    border: '1px solid var(--border-dk)', borderRadius: 6, cursor: 'pointer',
-                    fontFamily: 'inherit',
-                  }}
+                  className="rcv-cancel-btn"
                 >
                   Cancel
                 </button>
@@ -230,26 +197,7 @@ export const ReceiveInventoryTab = () => {
 
 const FormField = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div>
-    <label style={{
-      display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--muted)',
-      textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4,
-    }}>
-      {label}
-    </label>
+    <label className="rcv-field-label">{label}</label>
     {children}
   </div>
 );
-
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  height: 32,
-  padding: '0 10px',
-  fontSize: 12,
-  fontFamily: 'inherit',
-  border: '1.5px solid var(--border-dk)',
-  borderRadius: 6,
-  background: 'var(--card)',
-  color: 'var(--text)',
-  outline: 'none',
-  boxSizing: 'border-box',
-};

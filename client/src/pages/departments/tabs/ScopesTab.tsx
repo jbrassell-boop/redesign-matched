@@ -3,6 +3,7 @@ import { Spin, message, Modal } from 'antd';
 import { getDepartmentScopes, addDeptScope } from '../../../api/departments';
 import { getScopeTypes, type LookupOption } from '../../../api/lookups';
 import type { DepartmentScope } from '../types';
+import './ScopesTab.css';
 
 interface ScopesTabProps {
   deptKey: number;
@@ -70,64 +71,43 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
     );
   }, [scopes, search]);
 
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
+  if (loading) return <div className="sct-loading"><Spin /></div>;
 
   return (
-    <div style={{ padding: 16 }}>
+    <div className="sct-container">
       {/* Toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+      <div className="sct-toolbar">
         <input
           placeholder="Search model, serial..."
           aria-label="Search scopes by model or serial number"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{
-            width: 240, padding: '5px 10px', fontSize: 12,
-            border: '1px solid var(--neutral-200)', borderRadius: 4,
-            outline: 'none', background: 'var(--card)', color: 'var(--text)',
-          }}
+          className="sct-search"
         />
-        <span style={{ fontSize: 11, color: 'var(--muted)' }}>
+        <span className="sct-count">
           {filtered.length} of {scopes.length} scopes
         </span>
-        <div style={{ flex: 1 }} />
-        <button
-          onClick={openAdd}
-          style={{
-            height: 28, padding: '0 12px', fontSize: 11, fontWeight: 700,
-            background: 'var(--navy)', color: 'var(--card)', border: 'none',
-            borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit',
-            display: 'flex', alignItems: 'center', gap: 4,
-          }}
-        >
+        <div className="sct-spacer" />
+        <button onClick={openAdd} className="sct-add-btn">
           + Add Scope
         </button>
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
+        <div className="sct-empty">
           {scopes.length === 0 ? 'No scopes on record for this department.' : 'No scopes match your search.'}
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div className="sct-list">
           {filtered.map(s => (
             <div
               key={s.scopeKey}
               onClick={() => onScopeClick(s.scopeKey)}
-              style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                padding: '8px 12px', background: 'var(--card)',
-                border: '1px solid var(--neutral-200)', borderRadius: 6,
-                cursor: 'pointer', transition: 'background 0.1s',
-              }}
-              className="scope-card-hover"
+              className="sct-card scope-card-hover"
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                {/* Type badge */}
-                <span style={{
-                  width: 28, height: 28, borderRadius: 6, display: 'flex',
-                  alignItems: 'center', justifyContent: 'center',
-                  fontSize: 11, fontWeight: 700,
+              <div className="sct-card-left">
+                {/* Type badge — bg/color dynamic on scope type */}
+                <span className="sct-type-badge" style={{
                   background: s.type === 'F' || s.type === 'Flexible' ? 'rgba(var(--success-rgb), 0.1)' :
                               s.type === 'R' || s.type === 'Rigid' ? 'rgba(var(--primary-rgb), 0.1)' :
                               s.type === 'I' || s.type === 'Instrument' ? 'rgba(var(--amber-rgb), 0.1)' :
@@ -141,20 +121,16 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
                 </span>
                 {/* Model — SN# */}
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>
-                    {s.model || '—'}
-                  </div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>
-                    SN# {s.serialNumber || '—'}
-                  </div>
+                  <div className="sct-model">{s.model || '—'}</div>
+                  <div className="sct-serial">SN# {s.serialNumber || '—'}</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>{s.manufacturer || ''}</div>
-                  <div style={{ fontSize: 11, color: 'var(--muted)' }}>{s.category || ''}</div>
+              <div className="sct-card-right">
+                <div className="sct-right-info">
+                  <div className="sct-right-text">{s.manufacturer || ''}</div>
+                  <div className="sct-right-text">{s.category || ''}</div>
                 </div>
-                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" style={{ width: 14, height: 14, opacity: 0.4 }}>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="2" className="sct-chevron">
                   <polyline points="9 18 15 12 9 6" />
                 </svg>
               </div>
@@ -167,41 +143,35 @@ export const ScopesTab = ({ deptKey, onScopeClick }: ScopesTabProps) => {
       <Modal
         open={addOpen}
         onCancel={() => setAddOpen(false)}
-        title={<span style={{ color: 'var(--navy)', fontWeight: 700 }}>Add Scope</span>}
+        title={<span className="sct-modal-title">Add Scope</span>}
         width={400}
         footer={null}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '8px 0' }}>
+        <div className="sct-modal-body">
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 4 }}>
-              Serial Number
-            </div>
+            <div className="sct-modal-label">Serial Number</div>
             <input
               value={serial}
               onChange={e => setSerial(e.target.value)}
               placeholder="Enter serial number"
               aria-label="Scope serial number"
-              style={{ width: '100%', height: 30, border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '0 8px', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
+              className="sct-modal-input"
             />
           </div>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 4 }}>
-              Scope Type
-            </div>
+            <div className="sct-modal-label">Scope Type</div>
             <select
               value={typeKey ?? ''}
               onChange={e => setTypeKey(Number(e.target.value) || null)}
-              style={{ width: '100%', height: 30, border: '1px solid var(--neutral-200)', borderRadius: 3, padding: '0 8px', fontSize: 12, outline: 'none', fontFamily: 'inherit' }}
+              className="sct-modal-input"
             >
               <option value="">— select scope type —</option>
               {scopeTypes.map(st => <option key={st.key} value={st.key}>{st.name}</option>)}
             </select>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
-            <button onClick={() => setAddOpen(false)} style={{ height: 30, padding: '0 14px', fontSize: 12, fontWeight: 600, background: 'var(--neutral-100)', color: 'var(--navy)', border: '1px solid var(--border)', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>
-              Cancel
-            </button>
-            <button onClick={handleAdd} disabled={saving} style={{ height: 30, padding: '0 18px', fontSize: 12, fontWeight: 700, background: 'var(--primary)', color: 'var(--card)', border: 'none', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' }}>
+          <div className="sct-modal-footer">
+            <button onClick={() => setAddOpen(false)} className="sct-cancel-btn">Cancel</button>
+            <button onClick={handleAdd} disabled={saving} className="sct-save-btn">
               {saving ? 'Adding…' : 'Add Scope'}
             </button>
           </div>

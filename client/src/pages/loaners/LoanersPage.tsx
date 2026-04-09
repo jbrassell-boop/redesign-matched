@@ -26,41 +26,6 @@ const DaysChip = ({ days, status }: { days: number; status: string }) => {
 };
 
 
-// ── Extracted static styles (performance: avoid re-creating objects each render) ──
-const loanerPageContainerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' };
-const loanerToolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)', flexWrap: 'wrap', flexShrink: 0 };
-const loanerSubToolbarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'var(--card)', borderBottom: '1px solid var(--neutral-200)' };
-const loanerSeparatorStyle: React.CSSProperties = { width: 1, height: 22, background: 'var(--border-dk)' };
-const loanerThStyle: React.CSSProperties = {
-  background: 'var(--neutral-50)', color: 'var(--muted)', fontWeight: 600, padding: '8px 10px',
-  textAlign: 'left', whiteSpace: 'nowrap', borderRight: '1px solid rgba(var(--primary-rgb), 0.15)',
-  borderBottom: '1px solid var(--neutral-200)', letterSpacing: '0.04em', textTransform: 'uppercase', fontSize: 11,
-};
-const loanerCheckboxThStyle: React.CSSProperties = {
-  background: 'var(--neutral-50)', padding: '8px 6px', borderBottom: '1px solid var(--neutral-200)',
-  borderRight: '1px solid rgba(var(--primary-rgb), 0.15)', width: 36, textAlign: 'center',
-};
-const loanerFooterStyle: React.CSSProperties = { background: 'var(--card)', borderTop: '1px solid var(--border)', padding: '6px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 };
-const loanerTabContentStyle: React.CSSProperties = { flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' };
-const loanerTabInnerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
-const loanerFilterLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em' };
-const loanerDetailLoadingStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: 40 };
-const loanerDetailScrollStyle: React.CSSProperties = { overflow: 'auto', height: '100%' };
-const loanerDetailHeaderBarStyle: React.CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 16px', borderBottom: '1px solid var(--neutral-200)', flexShrink: 0 };
-const loanerDetailTitleStyle: React.CSSProperties = { fontSize: 13, fontWeight: 700, color: 'var(--navy)' };
-const loanerDetailCloseBtnStyle: React.CSSProperties = { background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: 'var(--muted)', lineHeight: 1, padding: '0 4px' };
-const loanerDetailBodyStyle: React.CSSProperties = { padding: '0 0 16px' };
-const loanerDetailFieldsStyle: React.CSSProperties = { padding: '0 16px' };
-const loanerDetailPanelStyle: React.CSSProperties = { width: 400, minWidth: 400, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: 'var(--card)' };
-const loadingCellStyle: React.CSSProperties = { textAlign: 'center', padding: 24 };
-const emptyCellStyle: React.CSSProperties = { textAlign: 'center', padding: 30, color: 'var(--muted)', fontSize: 12 };
-const woLinkStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--primary-dark)' };
-const serialMonoStyle: React.CSSProperties = { fontFamily: 'monospace', fontSize: 11 };
-const fulfillBtnStyle: React.CSSProperties = { width: 28, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer', background: 'rgba(var(--success-rgb), 0.1)', color: 'var(--success)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.1s' };
-const declineBtnStyle: React.CSSProperties = { width: 28, height: 28, border: 'none', borderRadius: 4, cursor: 'pointer', background: 'rgba(var(--danger-rgb), 0.1)', color: 'var(--danger)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.1s' };
-const actionCenterStyle: React.CSSProperties = { display: 'flex', gap: 4, justifyContent: 'center' };
-const statusSmallStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
-const scopeTypeNameStyle: React.CSSProperties = { fontWeight: 600, color: 'var(--navy)' };
 
 const ACTIVE_COLS = [
   { key: 'workOrder', label: 'Work Order', width: 130 },
@@ -150,8 +115,8 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
   }, [search, loadActive]);
 
   return (
-    <div style={loanerTabInnerStyle}>
-      <div style={loanerSubToolbarStyle}>
+    <div className="lp-tab-inner">
+      <div className="lp-sub-toolbar">
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
           placeholder="Search active loaners..."
@@ -170,7 +135,7 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
           <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
             <tr>
               {ACTIVE_COLS.map(col => (
-                <th key={col.key} style={{ ...loanerThStyle, width: col.width }}>
+                <th key={col.key} className="lp-th" style={{ width: col.width }}>
                   {col.label}
                 </th>
               ))}
@@ -178,9 +143,9 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={ACTIVE_COLS.length} style={loadingCellStyle}><Spin size="small" /></td></tr>
+              <tr><td colSpan={ACTIVE_COLS.length} className="lp-loading-cell"><Spin size="small" /></td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={ACTIVE_COLS.length} style={emptyCellStyle}>No active loaners currently out</td></tr>
+              <tr><td colSpan={ACTIVE_COLS.length} className="lp-empty-cell">No active loaners currently out</td></tr>
             ) : items.map((item, idx) => (
               <tr
                 key={item.loanerTranKey}
@@ -188,15 +153,15 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
                 className="hover-row-light"
                 style={{ cursor: 'pointer', background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }}
               >
-                <td style={activeTdStyle}><span style={woLinkStyle}>{item.workOrder || '\u2014'}</span></td>
-                <td style={activeTdStyle}>{item.scopeType || '\u2014'}</td>
-                <td style={activeTdStyle}><span style={serialMonoStyle}>{item.serial || '\u2014'}</span></td>
-                <td style={activeTdStyle}>{item.client || '\u2014'}</td>
-                <td style={activeTdStyle}>{item.dept || '\u2014'}</td>
-                <td style={activeTdStyle}><StatusBadge status={item.status} /></td>
-                <td style={activeTdStyle}>{item.dateOut || '\u2014'}</td>
-                <td style={activeTdStyle}>{item.dateOut ? <DaysChip days={item.daysOut} status={item.status} /> : '\u2014'}</td>
-                <td style={activeTdStyle}>{item.trackingNumber || '\u2014'}</td>
+                <td className="lp-td"><span className="lp-wo-link">{item.workOrder || '\u2014'}</span></td>
+                <td className="lp-td">{item.scopeType || '\u2014'}</td>
+                <td className="lp-td"><span className="lp-serial">{item.serial || '\u2014'}</span></td>
+                <td className="lp-td">{item.client || '\u2014'}</td>
+                <td className="lp-td">{item.dept || '\u2014'}</td>
+                <td className="lp-td"><StatusBadge status={item.status} /></td>
+                <td className="lp-td">{item.dateOut || '\u2014'}</td>
+                <td className="lp-td">{item.dateOut ? <DaysChip days={item.daysOut} status={item.status} /> : '\u2014'}</td>
+                <td className="lp-td">{item.trackingNumber || '\u2014'}</td>
               </tr>
             ))}
           </tbody>
@@ -206,9 +171,6 @@ const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) =
   );
 };
 
-const activeTdStyle: React.CSSProperties = {
-  padding: '6px 8px', fontSize: 12, borderBottom: '1px solid var(--border)', verticalAlign: 'middle', color: 'var(--text)',
-};
 
 /* ═════════════════════════════════════════════════════════════ */
 /*  SCOPE NEEDS TAB                                             */
@@ -229,8 +191,8 @@ const ScopeNeedsTab = () => {
   }, []);
 
   return (
-    <div style={loanerTabInnerStyle}>
-      <div style={loanerSubToolbarStyle}>
+    <div className="lp-tab-inner">
+      <div className="lp-sub-toolbar">
         <span style={{ fontSize: 12, color: 'var(--muted)' }}>
           Scope types currently in repair with loaner requests — estimated need dates based on average turnaround time.
         </span>
@@ -243,7 +205,7 @@ const ScopeNeedsTab = () => {
           <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
             <tr>
               {SCOPE_NEEDS_COLS.map(col => (
-                <th key={col.key} style={{ ...loanerThStyle, width: col.width, textAlign: col.align || 'left' }}>
+                <th key={col.key} className="lp-th" style={{ width: col.width, textAlign: col.align || 'left' }}>
                   {col.label}
                 </th>
               ))}
@@ -251,19 +213,19 @@ const ScopeNeedsTab = () => {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={SCOPE_NEEDS_COLS.length} style={loadingCellStyle}><Spin size="small" /></td></tr>
+              <tr><td colSpan={SCOPE_NEEDS_COLS.length} className="lp-loading-cell"><Spin size="small" /></td></tr>
             ) : items.length === 0 ? (
-              <tr><td colSpan={SCOPE_NEEDS_COLS.length} style={emptyCellStyle}>No active loaner-requested repairs in progress</td></tr>
+              <tr><td colSpan={SCOPE_NEEDS_COLS.length} className="lp-empty-cell">No active loaner-requested repairs in progress</td></tr>
             ) : items.map((item, idx) => (
               <tr
                 key={`${item.scopeType}-${item.deptName}-${idx}`}
                 className="hover-row-light"
                 style={{ background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }}
               >
-                <td style={needsTdStyle}><span style={scopeTypeNameStyle}>{item.scopeType}</span></td>
-                <td style={needsTdStyle}>{item.clientName || '\u2014'}</td>
-                <td style={needsTdStyle}>{item.deptName || '\u2014'}</td>
-                <td style={{ ...needsTdStyle, textAlign: 'center' }}>
+                <td className="lp-td lp-td--needs"><span className="lp-scope-type">{item.scopeType}</span></td>
+                <td className="lp-td lp-td--needs">{item.clientName || '\u2014'}</td>
+                <td className="lp-td lp-td--needs">{item.deptName || '\u2014'}</td>
+                <td className="lp-td lp-td--needs lp-td--center">
                   <span style={{
                     display: 'inline-block', padding: '1px 8px', borderRadius: 4,
                     fontSize: 11, fontWeight: 700, fontFamily: 'monospace',
@@ -281,10 +243,10 @@ const ScopeNeedsTab = () => {
                     {item.repairsInProgress}
                   </span>
                 </td>
-                <td style={{ ...needsTdStyle, textAlign: 'center', fontFamily: 'monospace', fontWeight: 600 }}>
+                <td className="lp-td lp-td--needs lp-td--center lp-td--mono-bold">
                   {item.avgTat.toFixed(1)}d
                 </td>
-                <td style={{ ...needsTdStyle, color: 'var(--muted)' }}>{item.estimatedNeedDate}</td>
+                <td className="lp-td lp-td--needs lp-td--muted">{item.estimatedNeedDate}</td>
               </tr>
             ))}
           </tbody>
@@ -294,9 +256,6 @@ const ScopeNeedsTab = () => {
   );
 };
 
-const needsTdStyle: React.CSSProperties = {
-  padding: '6px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', verticalAlign: 'middle', color: 'var(--text)',
-};
 
 /* ═════════════════════════════════════════════════════════════ */
 /*  REQUESTS TAB                                                */
@@ -415,10 +374,10 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
   }).length;
 
   return (
-    <div style={loanerTabInnerStyle}>
-      <div style={{ ...loanerSubToolbarStyle, flexWrap: 'wrap' }}>
+    <div className="lp-tab-inner">
+      <div className="lp-sub-toolbar" style={{ flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={loanerFilterLabelStyle}>Status</span>
+          <span className="lp-filter-label">Status</span>
           <div style={{ display: 'flex', gap: 0 }}>
             {['All', 'Pending', 'Fulfilled', 'Declined'].map(s => (
               <button
@@ -437,7 +396,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
             <div style={{ width: 0, borderRight: '1px solid var(--border-dk)' }} />
           </div>
         </div>
-        <div style={loanerSeparatorStyle} />
+        <div className="lp-separator" />
         <Input
           prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
           placeholder="Search requests..."
@@ -499,7 +458,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
           <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
             <tr>
-              <th style={loanerCheckboxThStyle}>
+              <th className="lp-th--checkbox">
                 <input
                   type="checkbox"
                   checked={requests.length > 0 && selectedKeys.size === requests.length}
@@ -508,7 +467,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                 />
               </th>
               {REQ_COLS.slice(1).map(col => (
-                <th key={col.key} style={{ ...loanerThStyle, width: col.width }}>
+                <th key={col.key} className="lp-th" style={{ width: col.width }}>
                   {col.label}
                 </th>
               ))}
@@ -516,9 +475,9 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={REQ_COLS.length} style={loadingCellStyle}><Spin size="small" /></td></tr>
+              <tr><td colSpan={REQ_COLS.length} className="lp-loading-cell"><Spin size="small" /></td></tr>
             ) : requests.length === 0 ? (
-              <tr><td colSpan={REQ_COLS.length} style={emptyCellStyle}>No loaner requests match your filters</td></tr>
+              <tr><td colSpan={REQ_COLS.length} className="lp-empty-cell">No loaner requests match your filters</td></tr>
             ) : requests.map((req, idx) => {
               const isSelected = selectedKeys.has(req.repairKey);
               return (
@@ -528,7 +487,7 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                     background: isSelected ? 'rgba(var(--primary-rgb), 0.06)' : idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)',
                   }}
                 >
-                  <td style={{ ...reqTdStyle, textAlign: 'center', padding: '6px' }}>
+                  <td className="lp-td lp-td--center" style={{ padding: '6px' }}>
                     <input
                       type="checkbox"
                       checked={isSelected}
@@ -536,22 +495,21 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                       style={{ cursor: 'pointer' }}
                     />
                   </td>
-                  <td style={reqTdStyle}><span style={woLinkStyle}>{req.workOrder || '\u2014'}</span></td>
-                  <td style={reqTdStyle}>{req.scopeType || '\u2014'}</td>
-                  <td style={reqTdStyle}><span style={serialMonoStyle}>{req.serialNumber || '\u2014'}</span></td>
-                  <td style={reqTdStyle}>{req.client || '\u2014'}</td>
-                  <td style={reqTdStyle}>{req.department || '\u2014'}</td>
-                  <td style={reqTdStyle}>{fmtDate(req.dateRequested)}</td>
-                  <td style={reqTdStyle}><StatusBadge status={req.status} /></td>
-                  <td style={{ ...reqTdStyle, textAlign: 'center' }}>
+                  <td className="lp-td"><span className="lp-wo-link">{req.workOrder || '\u2014'}</span></td>
+                  <td className="lp-td">{req.scopeType || '\u2014'}</td>
+                  <td className="lp-td"><span className="lp-serial">{req.serialNumber || '\u2014'}</span></td>
+                  <td className="lp-td">{req.client || '\u2014'}</td>
+                  <td className="lp-td">{req.department || '\u2014'}</td>
+                  <td className="lp-td">{fmtDate(req.dateRequested)}</td>
+                  <td className="lp-td"><StatusBadge status={req.status} /></td>
+                  <td className="lp-td lp-td--center">
                     {req.status === 'Pending' ? (
-                      <div style={actionCenterStyle}>
+                      <div className="lp-action-center">
                         <button
                           onClick={() => handleAction(req.repairKey, 'fulfill')}
                           disabled={actionLoading === req.repairKey}
                           title="Fulfill"
-                          className="loaner-accept-btn"
-                          style={fulfillBtnStyle}
+                          className="loaner-accept-btn lp-fulfill-btn"
                         >
                           <CheckCircleOutlined style={{ fontSize: 14 }} />
                         </button>
@@ -559,14 +517,13 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
                           onClick={() => handleAction(req.repairKey, 'decline')}
                           disabled={actionLoading === req.repairKey}
                           title="Decline"
-                          className="loaner-decline-btn"
-                          style={declineBtnStyle}
+                          className="loaner-decline-btn lp-decline-btn"
                         >
                           <CloseCircleOutlined style={{ fontSize: 14 }} />
                         </button>
                       </div>
                     ) : (
-                      <span style={statusSmallStyle}>{req.status}</span>
+                      <span className="lp-status-small">{req.status}</span>
                     )}
                   </td>
                 </tr>
@@ -577,10 +534,6 @@ const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => 
       </div>
     </div>
   );
-};
-
-const reqTdStyle: React.CSSProperties = {
-  padding: '6px 8px', fontSize: 12, borderBottom: '1px solid var(--border)', verticalAlign: 'middle', color: 'var(--text)',
 };
 
 /* ═════════════════════════════════════════════════════════════ */
@@ -683,9 +636,9 @@ export const LoanersPage = () => {
   );
   /* ── Toolbar ─────────────────────────────────────────────── */
   const toolbar = (
-    <div style={loanerToolbarStyle}>
+    <div className="lp-toolbar">
       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={loanerFilterLabelStyle}>Status</span>
+        <span className="lp-filter-label">Status</span>
         <div style={{ display: 'flex', gap: 0 }}>
           {['All', 'Out', 'Overdue', 'Returned', 'Declined'].map(s => (
             <button
@@ -704,7 +657,7 @@ export const LoanersPage = () => {
           <div style={{ width: 0, borderRight: '1px solid var(--border-dk)' }} />
         </div>
       </div>
-      <div style={loanerSeparatorStyle} />
+      <div className="lp-separator" />
       <Input
         prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
         placeholder="Search loaners..."
@@ -736,7 +689,7 @@ export const LoanersPage = () => {
       <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: selectedKey ? 800 : 1200 }}>
         <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
           <tr>
-            <th style={loanerCheckboxThStyle}>
+            <th className="lp-th--checkbox">
               <input
                 type="checkbox"
                 checked={bulk.isAllSelected(items.map(i => i.loanerTranKey))}
@@ -745,7 +698,7 @@ export const LoanersPage = () => {
               />
             </th>
             {MAIN_COLS.map(col => (
-              <th key={col.key} style={{ ...loanerThStyle, width: col.width }}>
+              <th key={col.key} className="lp-th" style={{ width: col.width }}>
                 {col.label}
               </th>
             ))}
@@ -753,9 +706,9 @@ export const LoanersPage = () => {
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={colCount} style={loadingCellStyle}><Spin size="small" /></td></tr>
+            <tr><td colSpan={colCount} className="lp-loading-cell"><Spin size="small" /></td></tr>
           ) : items.length === 0 ? (
-            <tr><td colSpan={colCount} style={emptyCellStyle}>No loaner records match your filters</td></tr>
+            <tr><td colSpan={colCount} className="lp-empty-cell">No loaner records match your filters</td></tr>
           ) : items.map((item, idx) => {
             const selected = bulk.isSelected(item.loanerTranKey);
             const isDetailSelected = item.loanerTranKey === selectedKey;
@@ -770,7 +723,7 @@ export const LoanersPage = () => {
                 }}
                 className={isDetailSelected ? 'selected' : 'hover-row-light'}
               >
-                <td style={{ ...tdStyle, textAlign: 'center', padding: '6px' }} onClick={e => e.stopPropagation()}>
+                <td className="lp-td lp-td--center" style={{ padding: '6px' }} onClick={e => e.stopPropagation()}>
                   <input
                     type="checkbox"
                     checked={selected}
@@ -778,16 +731,16 @@ export const LoanersPage = () => {
                     style={{ cursor: 'pointer' }}
                   />
                 </td>
-                <td style={tdStyle}><span style={woLinkStyle}>{item.workOrder || '\u2014'}</span></td>
-                <td style={tdStyle}>{item.scopeType || '\u2014'}</td>
-                <td style={tdStyle}><span style={serialMonoStyle}>{item.serial || '\u2014'}</span></td>
-                <td style={tdStyle}>{item.client || '\u2014'}</td>
-                <td style={tdStyle}>{item.dept || '\u2014'}</td>
-                <td style={tdStyle}><StatusBadge status={item.status} /></td>
-                <td style={tdStyle}>{item.dateOut || '\u2014'}</td>
-                <td style={tdStyle}>{item.dateIn || '\u2014'}</td>
-                <td style={tdStyle}>{item.dateOut ? <DaysChip days={item.daysOut} status={item.status} /> : '\u2014'}</td>
-                <td style={tdStyle}>{item.trackingNumber || '\u2014'}</td>
+                <td className="lp-td"><span className="lp-wo-link">{item.workOrder || '\u2014'}</span></td>
+                <td className="lp-td">{item.scopeType || '\u2014'}</td>
+                <td className="lp-td"><span className="lp-serial">{item.serial || '\u2014'}</span></td>
+                <td className="lp-td">{item.client || '\u2014'}</td>
+                <td className="lp-td">{item.dept || '\u2014'}</td>
+                <td className="lp-td"><StatusBadge status={item.status} /></td>
+                <td className="lp-td">{item.dateOut || '\u2014'}</td>
+                <td className="lp-td">{item.dateIn || '\u2014'}</td>
+                <td className="lp-td">{item.dateOut ? <DaysChip days={item.daysOut} status={item.status} /> : '\u2014'}</td>
+                <td className="lp-td">{item.trackingNumber || '\u2014'}</td>
               </tr>
             );
           })}
@@ -798,7 +751,7 @@ export const LoanersPage = () => {
 
   /* ── Pagination Footer ───────────────────────────────────── */
   const footer = (
-    <div style={loanerFooterStyle}>
+    <div className="lp-footer">
       <div style={{ fontSize: 11, color: 'var(--muted)' }} aria-live="polite" aria-atomic="true">
         Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{totalCount}</strong>
       </div>
@@ -818,20 +771,20 @@ export const LoanersPage = () => {
 
   /* ── Inline Detail Pane content ──────────────────────────── */
   const detailPane = detailLoading ? (
-    <div style={loanerDetailLoadingStyle}><Spin /></div>
+    <div className="lp-detail-loading"><Spin /></div>
   ) : detail ? (
-    <div style={loanerDetailScrollStyle}>
+    <div className="lp-detail-scroll">
       {/* Close button */}
-      <div style={loanerDetailHeaderBarStyle}>
-        <span style={loanerDetailTitleStyle}>{detail.workOrder || `Loaner #${detail.loanerTranKey}`}</span>
+      <div className="lp-detail-header">
+        <span className="lp-detail-title">{detail.workOrder || `Loaner #${detail.loanerTranKey}`}</span>
         <button
           onClick={() => { setSelectedKey(null); setDetail(null); }}
-          style={loanerDetailCloseBtnStyle}
+          className="lp-detail-close"
         >
           &times;
         </button>
       </div>
-      <div style={loanerDetailBodyStyle}>
+      <div className="lp-detail-body">
         <DetailHeader
           headingLevel="h2"
           title={detail.workOrder || `Loaner #${detail.loanerTranKey}`}
@@ -842,7 +795,7 @@ export const LoanersPage = () => {
             </>
           }
         />
-        <div style={loanerDetailFieldsStyle}>
+        <div className="lp-detail-fields">
           <FormGrid cols={2}>
             <Field label="Scope Type" value={detail.scopeType} />
             <Field label="Serial #" value={detail.serial} />
@@ -886,7 +839,7 @@ export const LoanersPage = () => {
 
             {/* Right panel — detail */}
             {selectedKey && (
-              <section aria-label="Loaner details" style={loanerDetailPanelStyle}>
+              <section aria-label="Loaner details" className="lp-detail-panel">
                 {detailPane}
               </section>
             )}
@@ -904,20 +857,16 @@ export const LoanersPage = () => {
   };
 
   return (
-    <div style={loanerPageContainerStyle}>
+    <div className="lp-page">
       {statStrip}
       <TabBar tabs={PAGE_TABS} activeKey={activeTab} onChange={tab => { setActiveTab(tab); setSelectedKey(null); setDetail(null); }} />
-      <div style={loanerTabContentStyle}>
+      <div className="lp-tab-content">
         {renderTab()}
       </div>
     </div>
   );
 };
 
-/* ── Shared styles ─────────────────────────────────────────── */
-const tdStyle: React.CSSProperties = {
-  padding: '6px 8px', fontSize: 12, borderBottom: '1px solid var(--border)', verticalAlign: 'middle', color: 'var(--text)',
-};
 
 const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (
   <button

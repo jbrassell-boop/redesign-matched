@@ -1,0 +1,48 @@
+/* ── ReceiveInventoryTab styles ──
+   Extracted from inline styles. Uses design tokens from tokens.css.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Page shell */
+.rcv-shell         { display: flex; height: 100%; min-height: 400px; }
+.rcv-loading       { display: flex; justify-content: center; padding: 40px; }
+
+/* Left panel */
+.rcv-left          { width: 320px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--neutral-50); }
+.rcv-left-head     { padding: 8px 14px; background: var(--neutral-50); border-bottom: 1px solid var(--border); font-size: 11px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.04em; display: flex; justify-content: space-between; align-items: center; }
+.rcv-left-count    { font-weight: 600; color: var(--muted); text-transform: none; letter-spacing: 0; }
+.rcv-left-scroll   { flex: 1; overflow: auto; }
+.rcv-empty         { padding: 24px; text-align: center; color: var(--muted); font-size: 12px; }
+
+/* List item */
+.rcv-item          { padding: 9px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.1s; }
+.rcv-item-name     { font-size: 12px; font-weight: 600; color: var(--navy); }
+.rcv-item-size     { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.rcv-item-levels   { display: flex; gap: 10px; margin-top: 4px; font-size: 11px; font-weight: 600; }
+.rcv-level-danger  { color: var(--danger); }
+.rcv-level-muted   { color: var(--muted); }
+.rcv-bin-badge     { color: var(--primary); background: var(--primary-light); padding: 0 4px; border-radius: 3px; }
+
+/* Right panel */
+.rcv-right         { flex: 1; padding: 20px 24px; overflow: auto; }
+.rcv-placeholder   { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--muted); gap: 8px; }
+.rcv-placeholder-icon { opacity: 0.3; }
+.rcv-placeholder-text { font-size: 13px; }
+.rcv-form-wrap     { max-width: 480px; }
+
+/* Item header card */
+.rcv-item-card     { background: rgba(var(--primary-rgb), 0.06); border: 1px solid rgba(var(--primary-rgb), 0.15); border-radius: 6px; padding: 10px 14px; margin-bottom: 18px; }
+.rcv-item-card-name { font-size: 13px; font-weight: 700; color: var(--navy); }
+.rcv-item-card-size { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.rcv-item-card-levels { display: flex; gap: 16px; margin-top: 6px; font-size: 11px; font-weight: 600; }
+
+/* Form fields */
+.rcv-fields        { display: flex; flex-direction: column; gap: 14px; }
+.rcv-field-label   { display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.rcv-input         { width: 100%; height: 32px; padding: 0 10px; font-size: 12px; font-family: inherit; border: 1.5px solid var(--border-dk); border-radius: 6px; background: var(--card); color: var(--text); outline: none; box-sizing: border-box; }
+.rcv-textarea      { width: 100%; height: 72px; padding: 0 10px; font-size: 12px; font-family: inherit; border: 1.5px solid var(--border-dk); border-radius: 6px; background: var(--card); color: var(--text); outline: none; box-sizing: border-box; resize: vertical; }
+
+/* Action buttons */
+.rcv-actions       { display: flex; gap: 10px; padding-top: 4px; }
+.rcv-save-btn      { height: 34px; padding: 0 20px; font-size: 13px; font-weight: 700; background: var(--navy); color: var(--card); border: none; border-radius: 6px; cursor: pointer; font-family: inherit; }
+.rcv-save-btn--saving { background: var(--muted); cursor: default; }
+.rcv-cancel-btn    { height: 34px; padding: 0 16px; font-size: 13px; font-weight: 600; background: var(--card); color: var(--muted); border: 1px solid var(--border-dk); border-radius: 6px; cursor: pointer; font-family: inherit; }

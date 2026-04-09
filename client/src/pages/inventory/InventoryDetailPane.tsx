@@ -6,6 +6,7 @@ import { ReceiveInventoryTab } from './tabs/ReceiveInventoryTab';
 import type { InventoryDetail } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar, SectionCard } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
+import './InventoryDetailPane.css';
 
 interface InventoryDetailPaneProps {
   detail: InventoryDetail | null;
@@ -46,32 +47,13 @@ function StatChip({
   valueColor: string;
 }) {
   return (
-    <div style={{
-      flex: 1,
-      display: 'flex',
-      alignItems: 'center',
-      gap: 8,
-      padding: '8px 12px',
-      borderRight: '1px solid var(--border)',
-    }}>
-      <div style={{
-        width: 24,
-        height: 24,
-        borderRadius: 4,
-        background: iconBg,
-        color: iconColor,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-        fontSize: 13,
-        fontWeight: 800,
-      }}>
+    <div className="idp-stat-chip">
+      <div className="idp-stat-icon" style={{ background: iconBg, color: iconColor }}>
         #
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-        <span style={{ fontSize: 16, fontWeight: 800, color: valueColor, lineHeight: 1 }}>{value}</span>
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+      <div className="idp-stat-col">
+        <span className="idp-stat-value" style={{ color: valueColor }}>{value}</span>
+        <span className="idp-stat-label">{label}</span>
       </div>
     </div>
   );
@@ -88,9 +70,9 @@ const TABS: TabDef[] = [
 export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProps) => {
   const [activeTab, setActiveTab] = useState('inventory');
 
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>;
+  if (loading) return <div className="idp-loading"><Spin /></div>;
   if (!detail) return (
-    <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
+    <div className="idp-empty">
       Select an inventory item to view details
     </div>
   );
@@ -99,10 +81,10 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
   const isAtMin = detail.currentLevel === detail.minLevel && detail.minLevel > 0;
 
   const inventoryTab = (
-    <div style={{ padding: '16px 20px' }}>
+    <div className="idp-inv-tab">
       <SectionCard title="Item Details">
         <FormGrid cols={2}>
-          <div style={{ gridColumn: 'span 2' }}>
+          <div className="idp-span-2">
             <Field label="Description" value={detail.description} />
           </div>
           <Field label="Category" value={getCategoryLabel(detail.category)} />
@@ -116,9 +98,9 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
         </FormGrid>
       </SectionCard>
 
-      <div style={{ marginTop: 14 }}>
+      <div className="idp-section-spacer">
       <SectionCard title="Flags">
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16 }}>
+        <div className="idp-flags-wrap">
           {[
             { label: 'No Count Adjustment', value: detail.noCountAdjustment },
             { label: 'Not Used by Repair', value: detail.notUsedByRepair },
@@ -126,7 +108,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
             { label: 'Large Diameter', value: detail.largeDiameter },
             { label: 'Skip Pick List', value: detail.skipPickList },
           ].map(flag => (
-            <div key={flag.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div key={flag.label} className="idp-flag-item">
               <span style={{
                 display: 'inline-flex',
                 width: 14,
@@ -142,7 +124,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
               }}>
                 {flag.value ? '✓' : ''}
               </span>
-              <span style={{ fontSize: 12, color: 'var(--text)' }}>{flag.label}</span>
+              <span className="idp-flag-label">{flag.label}</span>
             </div>
           ))}
         </div>
@@ -152,25 +134,25 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
   );
 
   const sizesTab = (
-    <div style={{ padding: '12px 16px' }}>
+    <div className="idp-sizes-tab">
       {detail.sizes.length === 0 ? (
-        <div style={{ padding: 32, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>
+        <div className="idp-sizes-empty">
           No sizes defined for this item
         </div>
       ) : (
-        <div style={{ border: '1px solid var(--border)', borderRadius: 6, overflow: 'hidden' }}>
+        <div className="idp-sizes-table-wrap">
           <Table
             size="small"
             dataSource={detail.sizes}
             rowKey="sizeKey"
             pagination={false}
-            style={{ fontSize: 12 }}
+            className="idp-table"
             columns={[
               {
                 title: 'Description',
                 dataIndex: 'sizeDescription',
                 key: 'sizeDescription',
-                render: (v: string) => <span style={{ fontWeight: 600, fontSize: 12 }}>{v || '—'}</span>,
+                render: (v: string) => <span className="idp-size-desc">{v || '—'}</span>,
               },
               {
                 title: 'Bin #',
@@ -178,17 +160,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
                 key: 'binNumber',
                 width: 80,
                 render: (v: string | null) => (
-                  <span style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: 'var(--primary)',
-                    background: 'var(--primary-light)',
-                    padding: '1px 5px',
-                    borderRadius: 3,
-                    border: '1px solid var(--primary-light)',
-                  }}>
-                    {v || '—'}
-                  </span>
+                  <span className="idp-bin-badge">{v || '—'}</span>
                 ),
               },
               {
@@ -207,14 +179,14 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
                 dataIndex: 'minLevel',
                 key: 'minLevel',
                 width: 55,
-                render: (v: number) => <span style={{ fontSize: 12 }}>{v}</span>,
+                render: (v: number) => <span className="idp-size-plain">{v}</span>,
               },
               {
                 title: 'Max',
                 dataIndex: 'maxLevel',
                 key: 'maxLevel',
                 width: 55,
-                render: (v: number) => <span style={{ fontSize: 12 }}>{v}</span>,
+                render: (v: number) => <span className="idp-size-plain">{v}</span>,
               },
               {
                 title: 'Unit Cost',
@@ -222,7 +194,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
                 key: 'unitCost',
                 width: 85,
                 render: (v: number) => (
-                  <span style={{ fontSize: 12, fontWeight: 600 }}>
+                  <span className="idp-size-cost">
                     ${v.toFixed(2)}
                   </span>
                 ),
@@ -244,7 +216,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
   );
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--bg)' }}>
+    <div className="idp-container">
       <DetailHeader
         headingLevel="h2"
         title={detail.description}
@@ -259,11 +231,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
       />
 
       {/* Per-item stat strip */}
-      <div style={{
-        display: 'flex',
-        background: 'var(--card)',
-        borderBottom: '1px solid var(--border)',
-      }}>
+      <div className="idp-stat-strip">
         <StatChip
           value={detail.sizes.length || 1}
           label="Total Items"
@@ -302,7 +270,7 @@ export const InventoryDetailPane = ({ detail, loading }: InventoryDetailPaneProp
       </div>
 
       <TabBar tabs={TABS} activeKey={activeTab} onChange={setActiveTab} />
-      <div style={{ flex: 1, overflow: 'auto' }}>
+      <div className="idp-tab-body">
         {activeTab === 'inventory'       && inventoryTab}
         {activeTab === 'sizes'           && sizesTab}
         {activeTab === 'receive'          && <ReceiveInventoryTab />}

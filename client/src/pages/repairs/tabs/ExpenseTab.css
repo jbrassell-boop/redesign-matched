@@ -1,0 +1,36 @@
+/* ── ExpenseTab styles ──
+   Extracted from inline styles. Uses design tokens from tokens.css.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Page layout */
+.exp-root              { padding: 12px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* Loading / unavailable */
+.exp-loading           { display: flex; justify-content: center; padding: 40px; }
+.exp-unavailable       { padding: 20px; color: var(--muted); font-size: 13px; }
+
+/* Panel card */
+.exp-panel             { background: var(--card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+.exp-panel-head        { background: var(--neutral-50); padding: 6px 10px; font-size: 11.5px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+.exp-panel-body        { padding: 10px; }
+
+/* Row */
+.exp-row               { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 11px; }
+.exp-row-total         { display: flex; justify-content: space-between; padding-top: 8px; border-bottom: 2px solid var(--navy); font-size: 11px; }
+.exp-row-label         { color: var(--navy); font-weight: 500; }
+.exp-row-value         { font-weight: 700; color: var(--navy); }
+.exp-row-total-label   { font-weight: 700; font-size: 12px; color: var(--navy); }
+.exp-row-total-value   { font-weight: 700; font-size: 14px; color: var(--primary); }
+
+/* Margin section inside revenue panel */
+.exp-margin-section    { margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border); }
+.exp-margin-label      { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+.exp-margin-row        { display: flex; gap: 6px; align-items: flex-end; }
+.exp-margin-suffix     { font-size: 11px; color: var(--muted); margin-bottom: 5px; }
+
+/* Navy margin card (third panel) */
+.exp-navy-card         { background: var(--navy); color: var(--card); border-radius: 6px; padding: 16px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; min-height: 200px; }
+.exp-navy-label        { font-size: 11px; opacity: 0.6; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
+.exp-navy-detail-row   { margin-top: 10px; display: flex; flex-direction: column; gap: 3px; align-items: center; }
+.exp-navy-detail-item  { font-size: 11px; opacity: 0.7; }
+.exp-navy-formula      { margin-top: 10px; padding: 5px 10px; background: rgba(255,255,255,0.08); border-radius: 4px; font-size: 11px; opacity: 0.7; text-align: center; }

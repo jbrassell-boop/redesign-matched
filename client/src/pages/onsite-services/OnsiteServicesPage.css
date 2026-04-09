@@ -1,0 +1,70 @@
+/* ── OnsiteServicesPage styles ──
+   Extracted from inline styles. Uses design tokens from tokens.css.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Page shell */
+.os-root               { display: flex; flex-direction: column; height: calc(100vh - 64px); overflow: hidden; background: var(--bg); }
+
+/* Stat strip */
+.os-stat-strip         { display: flex; background: var(--card); border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; }
+
+/* StatChip — static parts only; dynamic active/cursor stay inline */
+.os-stat-chip-inner    { flex: 1; display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-right: 1px solid var(--neutral-200); transition: background 0.12s; }
+.os-chip-icon          { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.os-chip-value         { font-size: 16px; font-weight: 800; line-height: 1.2; }
+.os-chip-label         { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.os-chip-text          { /* value + label wrapper — no extra styles needed */ }
+
+/* Toolbar */
+.os-toolbar            { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--card); border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; flex-wrap: wrap; }
+
+/* New Visit button */
+.os-new-btn            { height: 30px; padding: 0 14px; font-size: 12px; font-weight: 700; font-family: inherit; background: var(--navy); color: var(--card); border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+
+/* Toolbar divider */
+.os-divider            { width: 1px; height: 22px; background: var(--border-dk); flex-shrink: 0; }
+
+/* Status label */
+.os-status-label       { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+
+/* Segmented control wrapper */
+.os-seg-wrap           { display: inline-flex; border: 1px solid var(--border-dk); border-radius: 6px; overflow: hidden; }
+
+/* Date inputs */
+.os-date-input         { height: 30px; border: 1.5px solid var(--border-dk); border-radius: 6px; padding: 0 8px; font-size: 11px; font-family: inherit; color: var(--text); background: var(--card); outline: none; cursor: pointer; width: 120px; }
+.os-date-sep           { font-size: 11px; color: var(--muted); }
+
+/* Search input */
+.os-search-input       {
+  margin-left: auto; height: 30px; width: 220px;
+  border: 1.5px solid var(--border-dk); border-radius: 6px; padding: 0 10px 0 30px;
+  font-size: 11px; font-family: inherit; outline: none;
+  background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='13' height='13' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='M21 21l-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center;
+}
+
+/* Split pane */
+.os-split              { flex: 1; overflow: hidden; display: flex; }
+
+/* Left aside */
+.os-list-pane          { display: flex; flex-direction: column; background: var(--card); transition: width 0.2s ease; will-change: width; overflow: hidden; }
+.os-list-scroll        { flex: 1; overflow: auto; }
+
+/* List state messages */
+.os-list-empty         { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+
+/* List row — static parts; isSelected states stay inline */
+.os-list-row-header    { display: flex; justify-content: space-between; align-items: flex-start; }
+.os-list-invoice       { font-size: 12px; font-weight: 700; color: var(--navy); }
+.os-list-client        { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.os-list-row2          { display: flex; justify-content: space-between; margin-top: 3px; font-size: 11px; color: var(--muted); }
+.os-list-row3          { display: flex; justify-content: space-between; margin-top: 2px; font-size: 11px; color: var(--muted); }
+.os-list-billed        { font-weight: 600; color: var(--navy); }
+
+/* Pagination footer */
+.os-footer             { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--neutral-50); border-top: 1.5px solid var(--border-dk); flex-shrink: 0; font-size: 11px; color: var(--muted); }
+.os-footer-count       { font-weight: 500; }
+.os-pager-wrap         { display: flex; gap: 3px; align-items: center; }
+.os-pager-btn          { height: 36px; min-width: 36px; padding: 0 6px; border: 1px solid var(--border-dk); border-radius: 4px; background: var(--card); font-size: 11px; color: var(--label); font-family: inherit; }
+
+/* Right detail panel */
+.os-detail-pane        { flex: 1; overflow: hidden; display: flex; flex-direction: column; background: var(--card); }

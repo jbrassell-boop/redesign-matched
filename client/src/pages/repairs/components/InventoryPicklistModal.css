@@ -1,0 +1,233 @@
+/* ── InventoryPicklistModal styles ──
+   Extracted from inline styles. Uses design tokens from tokens.css.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Print button wrapper */
+.ipm-print-bar {
+  text-align: center;
+  margin-bottom: 12px;
+}
+.ipm-btn-print {
+  padding: 7px 20px;
+  background: var(--primary);
+  color: var(--card);
+  border: none;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Form body */
+.ipm-body {
+  background: var(--card);
+  font-family: Inter, Arial, sans-serif;
+  font-size: 11px;
+  color: var(--print-text);
+}
+
+/* Form header */
+.ipm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.ipm-header__logo {
+  height: 44px;
+}
+.ipm-header__right {
+  text-align: right;
+}
+.ipm-header__title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navy);
+}
+.ipm-header__subtitle {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-top: 1px;
+}
+.ipm-header__doc {
+  font-size: 11px;
+  color: var(--print-light);
+  margin-top: 2px;
+}
+
+/* Section bar */
+.ipm-sbar {
+  background: var(--primary);
+  color: var(--card);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  margin: 8px 0 0;
+}
+
+/* Field label */
+.ipm-fl {
+  font-size: 8.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--print-muted);
+  letter-spacing: 0.04em;
+}
+
+/* Field value */
+.ipm-fv {
+  border-bottom: 1px solid var(--neutral-500);
+  min-height: 17px;
+  font-size: 11px;
+  padding: 1px 2px;
+}
+
+/* Repair info grid */
+.ipm-info-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 5px 12px;
+  padding: 6px 0 2px;
+}
+.ipm-field {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* Empty state */
+.ipm-empty {
+  padding: 12px 0;
+  color: var(--muted);
+  font-style: italic;
+  font-size: 11px;
+}
+
+/* Parts table */
+.ipm-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 2px;
+  font-size: 11px;
+}
+.ipm-th {
+  background: var(--primary);
+  color: var(--card);
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 4px 8px;
+  letter-spacing: 0.03em;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+.ipm-th--left {
+  text-align: left;
+}
+.ipm-th--center {
+  text-align: center;
+}
+.ipm-td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--print-border-md);
+  border-right: 1px solid var(--print-border-xlt);
+}
+.ipm-td--center {
+  text-align: center;
+}
+.ipm-td--no-right {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--print-border-md);
+}
+.ipm-check-box {
+  width: 12px;
+  height: 12px;
+  border: 1px solid var(--print-check-border);
+  border-radius: 2px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+/* Signature block */
+.ipm-sig-row {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+}
+.ipm-sig-block {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ipm-sig__line {
+  border-bottom: 1px solid var(--print-check-border);
+  min-height: 26px;
+}
+.ipm-sig__label {
+  font-size: 8.5px;
+  color: var(--print-muted);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* Barcode footer */
+.ipm-barcode-footer {
+  margin-top: 12px;
+  border: 1px dashed var(--print-border);
+  border-radius: 3px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg);
+}
+.ipm-barcode-box {
+  width: 180px;
+  height: 44px;
+  background: var(--print-input-bg);
+  border: 1px solid var(--print-border);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  color: var(--print-placeholder);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.ipm-barcode-fields {
+  display: flex;
+  gap: 16px;
+}
+.ipm-barcode-field {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.ipm-barcode-label {
+  font-size: 8px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--print-muted);
+  letter-spacing: 0.04em;
+}
+.ipm-barcode-val {
+  border-bottom: 1px solid var(--print-check-border);
+  min-height: 16px;
+  font-size: 11px;
+}
+
+/* Form footer */
+.ipm-form-footer {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--print-border);
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  color: var(--print-footer);
+}

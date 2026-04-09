@@ -1,6 +1,7 @@
 import { Spin, Table } from 'antd';
 import type { InstrumentRepairDetail, InstrumentCatalogDetail } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader } from '../../components/shared';
+import './InstrumentsDetailPane.css';
 
 const fmt$ = (v: number) =>
   '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -11,22 +12,14 @@ const fmtDate = (d: string | null) => {
   return isNaN(dt.getTime()) ? '\u2014' : dt.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 };
 
-/* ── Shared inline header ──────────────────────────────────── */
+/* ── Shared inline header ──────────────────────────────────────── */
 const InlineHeader = ({ title, badge, onClose }: { title: React.ReactNode; badge?: React.ReactNode; onClose: () => void }) => (
-  <div style={{
-    background: 'var(--navy)', padding: '12px 16px',
-    display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0,
-  }}>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <h2 style={{ fontWeight: 700, color: 'var(--card)', fontSize: 14, margin: 0 }}>{title}</h2>
+  <div className="indp-header">
+    <div className="indp-header-left">
+      <h2 className="indp-header-title">{title}</h2>
       {badge}
     </div>
-    <button
-      onClick={onClose}
-      style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: '2px 6px' }}
-    >
-      &times;
-    </button>
+    <button onClick={onClose} className="indp-close-btn">&times;</button>
   </div>
 );
 
@@ -45,7 +38,7 @@ export const RepairDetailPane = ({ detail, loading, onClose }: RepairPaneProps) 
       dataIndex: 'repairPrice',
       key: 'repairPrice',
       align: 'right' as const,
-      render: (v: number) => <span style={{ fontWeight: 600 }}>{fmt$(v)}</span>,
+      render: (v: number) => <span className="indp-price-bold">{fmt$(v)}</span>,
     },
     {
       title: 'Approved',
@@ -55,7 +48,7 @@ export const RepairDetailPane = ({ detail, loading, onClose }: RepairPaneProps) 
         if (v === 'Y') return <StatusBadge status="Yes" variant="green" />;
         if (v === 'N') return <StatusBadge status="No" variant="red" />;
         if (v === 'P') return <StatusBadge status="Pending" variant="amber" />;
-        return <span style={{ color: 'var(--muted)' }}>\u2014</span>;
+        return <span className="indp-muted-dash">\u2014</span>;
       },
     },
     { title: 'Fix', dataIndex: 'fixType', key: 'fixType', render: (v: string | null) => v || '\u2014' },
@@ -63,37 +56,35 @@ export const RepairDetailPane = ({ detail, loading, onClose }: RepairPaneProps) 
   ];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div className="indp-container">
       <InlineHeader
         title={detail ? `Order ${detail.orderNumber}` : 'Repair Detail'}
         badge={detail ? <StatusBadge status={detail.status} /> : undefined}
         onClose={onClose}
       />
-      <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px' }}>
+      <div className="indp-body">
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+          <div className="indp-loading"><Spin /></div>
         ) : !detail ? (
-          <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No repair selected</div>
+          <div className="indp-empty">No repair selected</div>
         ) : (
           <>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--neutral-200)' }}>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Items</div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>{detail.items.length}</div>
+            <div className="indp-stat-strip">
+              <div className="indp-stat-item">
+                <div className="indp-stat-label">Items</div>
+                <div className="indp-stat-value">{detail.items.length}</div>
               </div>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Days Open</div>
-                <div style={{
-                  fontSize: 20,
-                  fontWeight: 800,
+                <div className="indp-stat-label">Days Open</div>
+                <div className="indp-stat-value" style={{
                   color: detail.daysOpen > 14 ? 'var(--danger)' : detail.daysOpen > 7 ? 'var(--amber)' : 'var(--muted)',
                 }}>
                   {detail.daysOpen}d
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 2 }}>Total Value</div>
-                <div style={{ fontSize: 20, fontWeight: 800, color: 'var(--navy)' }}>
+                <div className="indp-stat-label">Total Value</div>
+                <div className="indp-stat-value">
                   {fmt$(detail.items.reduce((s, i) => s + i.repairPrice, 0))}
                 </div>
               </div>
@@ -110,14 +101,14 @@ export const RepairDetailPane = ({ detail, loading, onClose }: RepairPaneProps) 
             </FormGrid>
 
             {detail.notes && (
-              <div style={{ marginTop: 8 }}>
+              <div className="indp-notes-spacer">
                 <Field label="Notes" value={detail.notes} />
               </div>
             )}
 
             {detail.items.length > 0 && (
-              <div style={{ marginTop: 16 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <div className="indp-table-spacer">
+                <div className="indp-section-head">
                   Line Items ({detail.items.length})
                 </div>
                 <Table
@@ -126,7 +117,7 @@ export const RepairDetailPane = ({ detail, loading, onClose }: RepairPaneProps) 
                   rowKey="tranKey"
                   size="small"
                   pagination={false}
-                  style={{ fontSize: 12 }}
+                  className="indp-table-wrap"
                 />
               </div>
             )}
@@ -145,17 +136,17 @@ interface CatalogPaneProps {
 }
 
 export const CatalogDetailPane = ({ detail, loading, onClose }: CatalogPaneProps) => (
-  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+  <div className="indp-container">
     <InlineHeader
       title={detail ? detail.itemDescription : 'Instrument Detail'}
       badge={detail ? <StatusBadge status={detail.isActive ? 'Active' : 'Inactive'} /> : undefined}
       onClose={onClose}
     />
-    <div style={{ flex: 1, overflow: 'auto', padding: '16px 20px' }}>
+    <div className="indp-body">
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Spin /></div>
+        <div className="indp-loading"><Spin /></div>
       ) : !detail ? (
-        <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 13 }}>No instrument selected</div>
+        <div className="indp-empty">No instrument selected</div>
       ) : (
         <>
           <FormGrid cols={2}>
@@ -171,7 +162,7 @@ export const CatalogDetailPane = ({ detail, loading, onClose }: CatalogPaneProps
             <Field label="Major Repair" value={detail.isMajorRepair ? 'Yes' : 'No'} />
           </FormGrid>
 
-          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', marginTop: 16, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div className="indp-costs-label">
             Costs &amp; Time
           </div>
           <FormGrid cols={3}>
@@ -183,9 +174,9 @@ export const CatalogDetailPane = ({ detail, loading, onClose }: CatalogPaneProps
               { label: 'Tech 1 Hrs', value: String(detail.hoursTech1), color: 'var(--muted)' },
               { label: 'Tech 2 Hrs', value: String(detail.hoursTech2), color: 'var(--muted)' },
             ].map((card) => (
-              <div key={card.label} style={{ background: 'var(--neutral-50)', border: '1px solid var(--border)', borderRadius: 6, padding: 12, textAlign: 'center' }}>
-                <div style={{ fontSize: 18, fontWeight: 800, color: card.color }}>{card.value}</div>
-                <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginTop: 2 }}>{card.label}</div>
+              <div key={card.label} className="indp-cost-card">
+                <div className="indp-cost-value" style={{ color: card.color }}>{card.value}</div>
+                <div className="indp-cost-label">{card.label}</div>
               </div>
             ))}
           </FormGrid>

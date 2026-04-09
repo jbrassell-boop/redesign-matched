@@ -31,3 +31,28 @@
 .rit-th { background: var(--neutral-50); color: var(--muted); padding: 6px 10px; text-align: left; font-size: 11px; font-weight: 700; white-space: nowrap; letter-spacing: 0.04em; text-transform: uppercase; border-bottom: 1px solid var(--border); position: sticky; top: 0; }
 .rit-td { padding: 5px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 12px; }
 .rit-add-td { padding: 5px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 12px; background: var(--neutral-50); }
+
+/* Add row separator */
+.rit-add-row            { border-top: 2px dashed var(--border); }
+
+/* Row cursor */
+.rit-data-row           { cursor: default; }
+
+/* Column-specific cell modifiers */
+.rit-td--center         { text-align: center; }
+.rit-td--right          { text-align: right; }
+.rit-td--center-ptr     { text-align: center; cursor: pointer; }
+.rit-td--right-ptr      { text-align: right; cursor: pointer; }
+.rit-td--amount         { text-align: right; font-weight: 700; font-size: 13px; cursor: pointer; }
+.rit-td--desc           { font-weight: 500; }
+
+/* Comment cell */
+.rit-comment-cell--set  { color: var(--label); font-size: 11px; }
+.rit-comment-cell--empty { color: var(--muted); font-size: 11px; }
+.rit-comment-edit       {
+  width: 100%; font-size: 11px;
+  border: 1px solid var(--primary); border-radius: 2px; padding: 1px 4px;
+}
+.rit-comment-span       { cursor: pointer; }
+
+/* Add button state — dynamic bg/color stays inline */

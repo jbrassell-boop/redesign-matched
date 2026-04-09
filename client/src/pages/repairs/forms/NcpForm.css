@@ -1,0 +1,302 @@
+/* ── NcpForm styles ──
+   Extracted from inline styles. Uses design tokens from tokens.css.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Overlay */
+.ncp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+}
+
+/* Action bar */
+.ncp-action-bar {
+  position: fixed;
+  top: 16px;
+  right: 32px;
+  display: flex;
+  gap: 8px;
+  z-index: 1200;
+}
+.ncp-btn-print {
+  height: 32px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 5px;
+  background: var(--primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+}
+.ncp-btn-close {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #fff;
+  color: #888;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Print page */
+.ncp-page {
+  width: 8.5in;
+  min-height: 11in;
+  background: #fff;
+  padding: 0.4in;
+  font-family: 'Inter', Arial, sans-serif;
+  font-size: 9px;
+  color: #222;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Page header */
+.ncp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 5px;
+}
+.ncp-header__logo {
+  height: 44px;
+}
+.ncp-header__right {
+  text-align: right;
+}
+.ncp-header__title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--navy);
+}
+.ncp-header__subtitle {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-top: 1px;
+}
+.ncp-header__doc {
+  font-size: 8px;
+  color: #aaa;
+  margin-top: 1px;
+}
+
+/* NCP red stripe */
+.ncp-stripe {
+  background: var(--danger);
+  color: #fff;
+  font-size: 8.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  padding: 4px 8px;
+  text-align: center;
+  border-radius: 3px;
+  margin-bottom: 4px;
+}
+
+/* Section bar */
+.ncp-sb {
+  background: var(--primary);
+  color: #fff;
+  font-size: 7.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  margin-bottom: 2px;
+}
+
+/* Field label */
+.ncp-fl {
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #888;
+  letter-spacing: 0.04em;
+}
+
+/* Field value */
+.ncp-fv {
+  border-bottom: 1px solid #ccc;
+  font-size: 9px;
+  padding: 0 2px;
+  min-height: 13px;
+}
+
+/* Identification grid */
+.ncp-id-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 5px 12px;
+  padding: 5px 0 4px;
+  margin-bottom: 6px;
+}
+
+/* Fld sub-component internals */
+.ncp-fld {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+/* Text field (blank write-in box) */
+.ncp-text-field {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 4px 6px;
+  font-size: 8.5px;
+  margin-top: 3px;
+}
+
+/* Panel sub-component */
+.ncp-panel {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.ncp-panel__head {
+  background: var(--neutral-50);
+  border-bottom: 1px solid #ddd;
+  padding: 4px 8px;
+  font-size: 7.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--navy);
+  letter-spacing: 0.05em;
+}
+.ncp-panel__body {
+  padding: 7px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* Corrective action / vendor complaint rows */
+.ncp-ca-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.ncp-ca-label {
+  font-size: 8px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.ncp-ca-ref {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  margin-left: 8px;
+}
+.ncp-ca-ref-label {
+  font-size: 7px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #888;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.ncp-ca-ref-line {
+  border-bottom: 1px solid #ccc;
+  min-width: 100px;
+  min-height: 15px;
+  display: inline-block;
+}
+
+/* Checkbox item */
+.ncp-cb-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8.5px;
+  font-weight: 600;
+}
+.ncp-cb-box {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid #999;
+  border-radius: 2px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Disposition strip */
+.ncp-disposition-strip {
+  display: flex;
+  gap: 0;
+  border: 1.5px solid var(--primary);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 4px;
+  margin-top: 3px;
+}
+.ncp-disposition-circle {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #999;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* Sig sub-component */
+.ncp-sig {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ncp-sig--flex {
+  flex: 1;
+}
+.ncp-sig--narrow {
+  max-width: 130px;
+}
+.ncp-sig__line {
+  border-bottom: 1px solid #ccc;
+  min-height: 24px;
+}
+.ncp-sig__label {
+  font-size: 7.5px;
+  color: #888;
+  font-weight: 600;
+}
+
+/* Sig row */
+.ncp-sig-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+/* QA review inner row */
+.ncp-qa-sig-row {
+  display: flex;
+  gap: 16px;
+}
+
+/* Footer */
+.ncp-footer {
+  margin-top: auto;
+  padding-top: 6px;
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 7px;
+  color: #aaa;
+}

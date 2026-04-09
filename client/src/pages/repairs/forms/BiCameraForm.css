@@ -1,0 +1,129 @@
+/* ── BiCameraForm styles ──
+   Extracted from inline styles. Uses design tokens from tokens.css.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Layout — modal overlay */
+.bic-overlay {
+  position: fixed; inset: 0; z-index: 1100;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 24px 16px; overflow-y: auto;
+}
+
+/* Action bar (no-print) */
+.bic-action-bar {
+  position: fixed; top: 16px; right: 32px;
+  display: flex; gap: 8px; z-index: 1200;
+}
+.bic-btn-print {
+  height: 32px; padding: 0 16px; border: none; border-radius: 5px;
+  background: var(--primary); color: #fff;
+  font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+}
+.bic-btn-close {
+  height: 32px; padding: 0 14px; border: 1px solid #ddd; border-radius: 5px;
+  background: #fff; color: #888;
+  font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+
+/* Printable page */
+.bic-page {
+  width: 8.5in; min-height: 11in; background: #fff; padding: 0.4in;
+  font-family: 'Inter', Arial, sans-serif; font-size: 9px; color: #222;
+  box-sizing: border-box; display: flex; flex-direction: column;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+}
+
+/* Form header */
+.bic-form-header    { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8px; }
+.bic-logo           { height: 40px; }
+.bic-form-title     { text-align: right; }
+.bic-form-title-h   { font-size: 14px; font-weight: 800; color: var(--navy); }
+.bic-form-title-sub { font-size: 10px; font-weight: 600; color: var(--primary); margin-top: 1px; }
+.bic-form-title-doc { font-size: 9px; color: var(--muted); margin-top: 1px; }
+
+/* Section bar */
+.bic-sb {
+  background: var(--primary); color: #fff;
+  font-size: 7.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.06em; padding: 2px 6px; margin-bottom: 3px;
+}
+
+/* Field label / value tokens */
+.bic-fl { font-size: 7px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.04em; }
+.bic-fv { border-bottom: 1px solid #ccc; font-size: 9px; padding: 0 2px; min-height: 13px; }
+
+/* Camera info grid */
+.bic-info-grid      { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px 10px; margin-bottom: 6px; }
+.bic-field          { display: flex; flex-direction: column; gap: 1px; }
+
+/* Camera includes row */
+.bic-includes-row   { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; padding: 5px 0; margin-bottom: 6px; }
+.bic-cb-item        { display: flex; align-items: center; gap: 4px; font-size: 8.5px; }
+
+/* Checkbox box */
+.bic-cb-box         {
+  display: inline-block; width: 10px; height: 10px;
+  border: 1px solid #999; border-radius: 2px;
+  vertical-align: middle; flex-shrink: 0;
+}
+
+/* Tables */
+.bic-table          { width: 100%; border-collapse: collapse; font-size: 8.5px; margin-bottom: 6px; }
+
+/* Table header cell */
+.bic-th             {
+  background: var(--primary); color: #fff; font-size: 7.5px; font-weight: 700;
+  text-transform: uppercase; padding: 3px 6px; text-align: left;
+  letter-spacing: 0.03em; border-right: 1px solid rgba(255,255,255,0.2);
+}
+.bic-th--center     { text-align: center; }
+
+/* Table data cell */
+.bic-td             {
+  padding: 3px 6px; border-bottom: 1px solid #eee;
+  vertical-align: middle; border-right: 1px solid #eee; font-size: 8.5px;
+}
+.bic-td--center     { text-align: center; }
+
+/* Cost / signature fill-in lines */
+.bic-cost-field     { border-bottom: 1px solid #aaa; min-width: 54px; display: inline-block; height: 12px; vertical-align: middle; }
+.bic-sig-mini       { border-bottom: 1px solid #aaa; min-width: 90px; display: inline-block; height: 12px; vertical-align: middle; }
+
+/* Pass/Fail/NA buttons */
+.bic-pf-p  {
+  display: inline-block; width: 20px; height: 13px;
+  border: 1px solid var(--success); border-radius: 2px;
+  text-align: center; line-height: 13px; font-size: 7px; font-weight: 700;
+  color: var(--success); margin: 0 1px;
+}
+.bic-pf-f  {
+  display: inline-block; width: 20px; height: 13px;
+  border: 1px solid var(--danger); border-radius: 2px;
+  text-align: center; line-height: 13px; font-size: 7px; font-weight: 700;
+  color: var(--danger); margin: 0 1px;
+}
+.bic-pf-na {
+  display: inline-block; width: 24px; height: 13px;
+  border: 1px solid #aaa; border-radius: 2px;
+  text-align: center; line-height: 13px; font-size: 7px; font-weight: 700;
+  color: var(--muted); margin: 0 1px;
+}
+
+/* QC Sign-Off box */
+.bic-qc-box {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px 10px;
+  border: 1px solid #ddd; border-radius: 3px;
+  padding: 8px 10px; background: var(--neutral-50); margin-bottom: 6px;
+}
+.bic-qc-field       { display: flex; flex-direction: column; gap: 2px; }
+.bic-qc-line        { border-bottom: 1px solid #ccc; min-height: 16px; margin-top: 2px; }
+.bic-qc-cb-row      { display: flex; gap: 10px; padding: 2px 0; }
+.bic-qc-pf-row      { display: flex; gap: 6px; padding: 2px 0; }
+
+/* Footer */
+.bic-footer {
+  margin-top: auto; padding-top: 6px; border-top: 1px solid #ddd;
+  display: flex; justify-content: space-between;
+  font-size: 7.5px; color: var(--muted);
+}

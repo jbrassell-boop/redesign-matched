@@ -1,0 +1,74 @@
+/* ── RequisitionForm styles ──
+   Extracted from inline styles. Uses design tokens from tokens.css.
+   ──────────────────────────────────────────────────────────────── */
+
+/* Overlay / modal backdrop */
+.req-overlay       { position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,0.5); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+
+/* Floating action bar (no-print) */
+.req-action-bar    { position: fixed; top: 16px; right: 32px; display: flex; gap: 8px; z-index: 1200; }
+.req-btn-print     { height: 32px; padding: 0 16px; border: none; border-radius: 5px; background: var(--primary); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
+.req-btn-close     { height: 32px; padding: 0 14px; border: 1px solid #ddd; border-radius: 5px; background: #fff; color: #888; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+/* Printable page */
+.req-page          { width: 8.5in; min-height: 11in; background: #fff; padding: 0.4in; font-family: 'Inter', Arial, sans-serif; font-size: 9px; color: #222; box-sizing: border-box; box-shadow: 0 4px 24px rgba(0,0,0,0.18); display: flex; flex-direction: column; }
+
+/* Header row */
+.req-header        { display: flex; justify-content: space-between; align-items: flex-start; }
+.req-logo          { height: 44px; }
+.req-title-block   { text-align: right; }
+.req-title         { font-size: 14px; font-weight: 800; color: #1B3A5C; }
+.req-subtitle      { font-size: 9px; font-weight: 600; color: var(--primary); }
+.req-doc-num       { font-size: 8px; color: #aaa; }
+
+/* Section bar */
+.req-sb            { background: var(--primary); color: #fff; font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 6px; }
+
+/* Field label */
+.req-fl            { font-size: 7px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.04em; }
+
+/* Field value underline */
+.req-fv            { border-bottom: 1px solid #ccc; font-size: 9px; padding: 0 2px; min-height: 13px; }
+.req-fv--tall      { border-bottom: 1px solid #ccc; font-size: 9px; padding: 0 2px; min-height: 20px; }
+
+/* Info grid */
+.req-info-grid     { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px 10px; padding: 4px 0; }
+.req-span2         { grid-column: span 2; }
+
+/* Repair items table */
+.req-items-table   { width: 100%; border-collapse: collapse; margin-top: 4px; }
+.req-th            { font-size: 7.5px; font-weight: 700; color: #888; text-transform: uppercase; border-bottom: 1px solid #ccc; padding: 1px 4px; text-align: left; }
+.req-th--center    { font-size: 7.5px; font-weight: 700; color: #888; text-transform: uppercase; border-bottom: 1px solid #ccc; padding: 1px 4px; text-align: center; width: 60px; }
+.req-th-sub        { font-size: 6.5px; font-weight: 400; }
+.req-td            { padding: 3px 4px; font-size: 8.5px; border-bottom: 1px solid #eee; vertical-align: middle; }
+.req-td--center    { padding: 3px 4px; font-size: 8.5px; border-bottom: 1px solid #eee; vertical-align: middle; text-align: center; }
+
+/* Y/N checkbox */
+.req-yn-box        { display: inline-block; width: 18px; height: 14px; border: 1px solid #ccc; border-radius: 2px; text-align: center; line-height: 14px; margin: 0 2px; font-size: 9px; font-weight: 700; }
+
+/* Totals table */
+.req-totals-wrap   { display: flex; justify-content: flex-end; }
+.req-totals-table  { width: 260px; border-collapse: collapse; }
+.req-tot-label     { padding: 2px 6px; font-size: 8.5px; border-bottom: 1px solid #eee; color: #888; font-weight: 600; text-align: right; width: 140px; }
+.req-tot-val       { padding: 2px 6px; font-size: 8.5px; border-bottom: 1px solid #ccc; text-align: right; font-weight: 700; }
+.req-tot-row-final { border-top: 2px solid var(--primary); background: #f0f4fc; }
+.req-tot-label--total { padding: 2px 6px; color: #888; font-weight: 600; text-align: right; font-size: 9px; }
+.req-tot-val--total   { padding: 2px 6px; text-align: right; font-weight: 800; font-size: 10px; }
+
+/* Disclaimer */
+.req-disclaimer    { font-size: 7.5px; color: #888; line-height: 1.4; padding: 5px 8px; background: #f8f9fb; border: 1px solid #eee; border-radius: 3px; }
+
+/* Signature row */
+.req-sig-row       { display: flex; gap: 16px; margin-top: 8px; }
+.req-sig-block     { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.req-sig-block--180 { flex: 1; max-width: 180px; display: flex; flex-direction: column; gap: 2px; }
+.req-sig-block--130 { flex: 1; max-width: 130px; display: flex; flex-direction: column; gap: 2px; }
+.req-sig-block--110 { flex: 1; max-width: 110px; display: flex; flex-direction: column; gap: 2px; }
+.req-sig-line      { border-bottom: 1px solid #ccc; min-height: 28px; }
+.req-sig-label     { font-size: 7px; color: #888; font-weight: 600; margin-top: 1px; }
+
+/* Footer */
+.req-footer        { margin-top: auto; padding-top: 4px; border-top: 1px solid #ddd; font-size: 7px; color: #999; text-align: center; }
+.req-footer-name   { font-weight: 600; margin-bottom: 2px; }
+.req-footer-doc    { float: right; font-weight: 400; }
+.req-footer-addrs  { display: flex; justify-content: center; gap: 16px; font-size: 6.5px; color: #aaa; }

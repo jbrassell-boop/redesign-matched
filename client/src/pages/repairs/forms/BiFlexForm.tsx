@@ -1,50 +1,32 @@
 import React from 'react';
 import './print.css';
+import './BiFlexForm.css';
 import type { RepairFull } from '../types';
 
 interface Props { repair: RepairFull; onClose: () => void; }
 
-const sb: React.CSSProperties = { background: 'var(--primary)', color: '#fff', fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '2px 6px' };
-const fl: React.CSSProperties = { fontSize: 7, fontWeight: 700, textTransform: 'uppercase', color: '#888', letterSpacing: '0.04em' };
-const fv: React.CSSProperties = { borderBottom: '1px solid #ccc', fontSize: 9, padding: '0 2px', minHeight: 13 };
 const em = '—';
-const cbBox: React.CSSProperties = { display: 'inline-block', width: 10, height: 10, border: '1px solid #999', borderRadius: 2, verticalAlign: 'middle', flexShrink: 0 };
-const costField: React.CSSProperties = { borderBottom: '1px solid #aaa', minWidth: 54, display: 'inline-block', height: 12, verticalAlign: 'middle' };
-const sigMini: React.CSSProperties = { borderBottom: '1px solid #aaa', minWidth: 90, display: 'inline-block', height: 12, verticalAlign: 'middle' };
-const pfBtnP: React.CSSProperties = { display: 'inline-block', width: 20, height: 13, border: '1px solid var(--success)', borderRadius: 2, textAlign: 'center', lineHeight: '13px', fontSize: 7, fontWeight: 700, color: 'var(--success)', margin: '0 1px' };
-const pfBtnF: React.CSSProperties = { display: 'inline-block', width: 20, height: 13, border: '1px solid var(--danger)', borderRadius: 2, textAlign: 'center', lineHeight: '13px', fontSize: 7, fontWeight: 700, color: 'var(--danger)', margin: '0 1px' };
-const pfBtnNA: React.CSSProperties = { display: 'inline-block', width: 24, height: 13, border: '1px solid #aaa', borderRadius: 2, textAlign: 'center', lineHeight: '13px', fontSize: 7, fontWeight: 700, color: 'var(--muted)', margin: '0 1px' };
-
-const pageStyle: React.CSSProperties = {
-  width: '8.5in', minHeight: '11in', background: '#fff', padding: '0.4in',
-  fontFamily: "'Inter', Arial, sans-serif", fontSize: 9, color: '#222',
-  boxSizing: 'border-box', display: 'flex', flexDirection: 'column',
-  boxShadow: '0 4px 24px rgba(0,0,0,0.18)', marginBottom: 24,
-};
 
 const fmt = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })
     : new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
 
 const Bar = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ ...sb, marginBottom: 3 }}>{children}</div>
+  <div className="bf-sb">{children}</div>
 );
 
 const Fld = ({ label, value, span2, h }: { label: string; value?: string | null; span2?: boolean; h?: number }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: 1, ...(span2 ? { gridColumn: 'span 2' } : {}) }}>
-    <span style={fl}>{label}</span>
-    <div style={{ ...fv, minHeight: h ?? 13 }}>{value ?? em}</div>
+  <div className={span2 ? 'bf-fld-col--s2' : 'bf-fld-col'}>
+    <span className="bf-fl">{label}</span>
+    <div className="bf-fv" style={h ? { minHeight: h } : undefined}>{value ?? em}</div>
   </div>
 );
 
 const Cb = ({ label }: { label: string }) => (
-  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 8.5 }}>
-    <span style={cbBox} />{label}
+  <span className="bf-cb">
+    <span className="bf-cb-box" />{label}
   </span>
 );
-
-const tdC: React.CSSProperties = { padding: '3px 6px', borderBottom: '1px solid #eee', verticalAlign: 'middle', borderRight: '1px solid #eee', fontSize: 8.5 };
-const thC: React.CSSProperties = { background: 'var(--primary)', color: '#fff', fontSize: 7.5, fontWeight: 700, textTransform: 'uppercase', padding: '3px 6px', textAlign: 'left', letterSpacing: '0.03em', borderRight: '1px solid rgba(255,255,255,0.2)' };
 
 const REPAIR_ITEMS = [
   'Pressure Test / Leak Test',
@@ -78,7 +60,7 @@ const FINAL_ITEMS: { cat: string; items: string[] }[] = [
 ];
 
 const Footer = ({ page }: { page: string }) => (
-  <div style={{ marginTop: 'auto', paddingTop: 6, borderTop: '1px solid #ddd', display: 'flex', justifyContent: 'space-between', fontSize: 7.5, color: 'var(--muted)' }}>
+  <div className="bf-footer">
     <span>ISO 13485 Certified</span>
     <span>Total Scope Inc. | 17 Creek Pkwy, Upper Chichester PA 19061 | (610) 485-3838</span>
     <span>{page}</span>
@@ -86,98 +68,95 @@ const Footer = ({ page }: { page: string }) => (
 );
 
 const FormHeader = ({ subtitle }: { subtitle: string }) => (
-  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 8 }}>
-    <img src="/assets/logo-color.jpg" alt="TSI Logo" style={{ height: 40 }} />
-    <div style={{ textAlign: 'right' }}>
-      <div style={{ fontSize: 14, fontWeight: 800, color: 'var(--navy)' }}>Blank Inspection Report</div>
-      <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--primary)', marginTop: 1 }}>Flexible Endoscope{subtitle ? ` — ${subtitle}` : ''}</div>
-      <div style={{ fontSize: 9, color: 'var(--muted)', marginTop: 1 }}>OM07-3</div>
+  <div className="bf-header">
+    <img src="/assets/logo-color.jpg" alt="TSI Logo" className="bf-header-logo" />
+    <div className="bf-header-right">
+      <div className="bf-header-title">Blank Inspection Report</div>
+      <div className="bf-header-sub">Flexible Endoscope{subtitle ? ` — ${subtitle}` : ''}</div>
+      <div className="bf-header-form">OM07-3</div>
     </div>
   </div>
 );
 
 export const BiFlexForm = ({ repair, onClose }: Props) => (
-  <div
-    onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-    style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '24px 16px', overflowY: 'auto', flexDirection: 'column' }}
-  >
-    <div className="no-print" style={{ position: 'fixed', top: 16, right: 32, display: 'flex', gap: 8, zIndex: 1200 }}>
-      <button onClick={() => window.print()} style={{ height: 32, padding: '0 16px', border: 'none', borderRadius: 5, background: 'var(--primary)', color: '#fff', fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>Print</button>
-      <button onClick={onClose} style={{ height: 32, padding: '0 14px', border: '1px solid #ddd', borderRadius: 5, background: '#fff', color: '#888', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>Close</button>
+  <div className="bf-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="no-print bf-action-bar">
+      <button onClick={() => window.print()} className="bf-btn-print">Print</button>
+      <button onClick={onClose} className="bf-btn-close">Close</button>
     </div>
 
     {/* PAGE 1 — Items Found / Approved + Comments */}
-    <div className="print-form" style={{ ...pageStyle, alignSelf: 'center' }}>
+    <div className="print-form bf-page">
       <FormHeader subtitle="" />
 
       <Bar>Scope Information</Bar>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 10px', marginBottom: 6 }}>
+      <div className="bf-grid-3col">
         <Fld label="Client / Facility" value={repair.client} span2 />
         <Fld label="Date" value={fmt(repair.dateIn)} />
         <Fld label="Work Order #" value={repair.wo} />
         <Fld label="Serial #" value={repair.serial} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <span style={fl}>Technician</span>
-          <div style={fv}>{repair.tech ?? '—'}</div>
+        <div className="bf-fld-col">
+          <span className="bf-fl">Technician</span>
+          <div className="bf-fv">{repair.tech ?? '—'}</div>
         </div>
         <Fld label="Scope Model" value={repair.scopeModel} span2 />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <span style={fl}>Rack #</span><div style={fv}></div>
+        <div className="bf-fld-col">
+          <span className="bf-fl">Rack #</span><div className="bf-fv"></div>
         </div>
         <Fld label="Complaint" value={repair.complaint} span2 h={22} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <span style={fl}>Cust. Expected Delivery</span><div style={fv}></div>
+        <div className="bf-fld-col">
+          <span className="bf-fl">Cust. Expected Delivery</span><div className="bf-fv"></div>
         </div>
       </div>
 
       <Bar>Items Found to be in Need of Repair</Bar>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 8.5, marginBottom: 4 }}>
+      <table className="bf-table">
         <thead>
           <tr>
-            <th style={{ ...thC, width: 20 }}></th>
-            <th style={thC}>Item</th>
-            <th style={{ ...thC, textAlign: 'center', width: 74 }}>Est. Cost</th>
-            <th style={{ ...thC, textAlign: 'center', width: 54 }}>Approved</th>
+            <th className="bf-th--w20"></th>
+            <th className="bf-th">Item</th>
+            <th className="bf-th--center74">Est. Cost</th>
+            <th className="bf-th--center54">Approved</th>
           </tr>
         </thead>
         <tbody>
           {REPAIR_ITEMS.map((item, i) => (
             <tr key={item} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : '#fff' }}>
-              <td style={{ ...tdC, textAlign: 'center' }}><span style={cbBox} /></td>
-              <td style={tdC}>{item}</td>
-              <td style={{ ...tdC, textAlign: 'center' }}><span style={costField} /></td>
-              <td style={{ ...tdC, textAlign: 'center' }}><span style={cbBox} /></td>
+              <td className="bf-td--center"><span className="bf-cb-box" /></td>
+              <td className="bf-td">{item}</td>
+              <td className="bf-td--center"><span className="bf-cost-field" /></td>
+              <td className="bf-td--center"><span className="bf-cb-box" /></td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6, gap: 20 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
-          <span style={fl}>Subtotal Estimate</span>
-          <div style={{ borderBottom: '1px solid #ccc', minWidth: 90, height: 15 }}></div>
+      <div className="bf-total-wrap">
+        <div className="bf-total-inner">
+          <span className="bf-fl">Subtotal Estimate</span>
+          <div className="bf-total-line"></div>
         </div>
       </div>
 
       <Bar>Comments / Additional Notes</Bar>
-      <div style={{ border: '1px solid #ddd', borderRadius: 3, minHeight: 32, padding: '3px 6px', fontSize: 8.5, marginBottom: 6 }}></div>
+      <div className="bf-notes"></div>
 
-      <div style={{ display: 'flex', gap: 14, marginTop: 4 }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ borderBottom: '1px solid #ccc', minHeight: 22 }} />
-          <div style={{ fontSize: 7.5, color: '#888', fontWeight: 600 }}>Technician / Estimator</div>
+      <div className="bf-sig-row" style={{ marginTop: 4 }}>
+        <div className="bf-sig-flex">
+          <div className="bf-sig-line" />
+          <div className="bf-sig-lbl">Technician / Estimator</div>
         </div>
-        <div style={{ maxWidth: 120, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ borderBottom: '1px solid #ccc', minHeight: 22 }} />
-          <div style={{ fontSize: 7.5, color: '#888', fontWeight: 600 }}>Date</div>
+        <div className="bf-sig-fixed">
+          <div className="bf-sig-line" />
+          <div className="bf-sig-lbl">Date</div>
         </div>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ borderBottom: '1px solid #ccc', minHeight: 22 }} />
-          <div style={{ fontSize: 7.5, color: '#888', fontWeight: 600 }}>Customer Authorization</div>
+        <div className="bf-sig-flex">
+          <div className="bf-sig-line" />
+          <div className="bf-sig-lbl">Customer Authorization</div>
         </div>
-        <div style={{ maxWidth: 120, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ borderBottom: '1px solid #ccc', minHeight: 22 }} />
-          <div style={{ fontSize: 7.5, color: '#888', fontWeight: 600 }}>Date</div>
+        <div className="bf-sig-fixed">
+          <div className="bf-sig-line" />
+          <div className="bf-sig-lbl">Date</div>
         </div>
       </div>
 
@@ -185,55 +164,55 @@ export const BiFlexForm = ({ repair, onClose }: Props) => (
     </div>
 
     {/* PAGE 2 — Items Approved and Repaired */}
-    <div className="print-form" style={{ ...pageStyle, alignSelf: 'center' }}>
+    <div className="print-form bf-page">
       <FormHeader subtitle="Items Approved & Repaired" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 12px', marginBottom: 6 }}>
+      <div className="bf-grid-3mini">
         <Fld label="Work Order #" value={repair.wo} />
         <Fld label="Serial #" value={repair.serial} />
         <Fld label="Date" value={fmt(repair.dateIn)} />
       </div>
 
       <Bar>Items Approved and Repaired</Bar>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 8.5, marginBottom: 4 }}>
+      <table className="bf-table">
         <thead>
           <tr>
-            <th style={{ ...thC, width: 20 }}></th>
-            <th style={thC}>Item Repaired</th>
-            <th style={{ ...thC, textAlign: 'center', width: 74 }}>Actual Cost</th>
-            <th style={thC}>Repaired By (Initials)</th>
+            <th className="bf-th--w20"></th>
+            <th className="bf-th">Item Repaired</th>
+            <th className="bf-th--center74">Actual Cost</th>
+            <th className="bf-th">Repaired By (Initials)</th>
           </tr>
         </thead>
         <tbody>
           {REPAIR_ITEMS.map((item, i) => (
             <tr key={item} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : '#fff' }}>
-              <td style={{ ...tdC, textAlign: 'center' }}><span style={cbBox} /></td>
-              <td style={tdC}>{item}</td>
-              <td style={{ ...tdC, textAlign: 'center' }}><span style={costField} /></td>
-              <td style={tdC}><span style={sigMini} /></td>
+              <td className="bf-td--center"><span className="bf-cb-box" /></td>
+              <td className="bf-td">{item}</td>
+              <td className="bf-td--center"><span className="bf-cost-field" /></td>
+              <td className="bf-td"><span className="bf-sig-mini" /></td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 6, gap: 20 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
-          <span style={fl}>Total Repair Cost</span>
-          <div style={{ borderBottom: '2px solid var(--primary)', minWidth: 90, height: 15, fontWeight: 700 }}></div>
+      <div className="bf-total-wrap">
+        <div className="bf-total-inner">
+          <span className="bf-fl">Total Repair Cost</span>
+          <div className="bf-total-bold"></div>
         </div>
       </div>
 
       <Bar>Additional Repair Notes</Bar>
-      <div style={{ border: '1px solid #ddd', borderRadius: 3, minHeight: 44, padding: '3px 6px', fontSize: 8.5, marginBottom: 8 }}></div>
+      <div className="bf-notes--lg"></div>
 
-      <div style={{ display: 'flex', gap: 14, marginTop: 8 }}>
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ borderBottom: '1px solid #ccc', minHeight: 22 }} />
-          <div style={{ fontSize: 7.5, color: '#888', fontWeight: 600 }}>Lead Technician / Signature</div>
+      <div className="bf-sig-row" style={{ marginTop: 8 }}>
+        <div className="bf-sig-flex">
+          <div className="bf-sig-line" />
+          <div className="bf-sig-lbl">Lead Technician / Signature</div>
         </div>
-        <div style={{ maxWidth: 120, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <div style={{ borderBottom: '1px solid #ccc', minHeight: 22 }} />
-          <div style={{ fontSize: 7.5, color: '#888', fontWeight: 600 }}>Date</div>
+        <div className="bf-sig-fixed">
+          <div className="bf-sig-line" />
+          <div className="bf-sig-lbl">Date</div>
         </div>
       </div>
 
@@ -241,39 +220,39 @@ export const BiFlexForm = ({ repair, onClose }: Props) => (
     </div>
 
     {/* PAGE 3 — Final Inspection */}
-    <div className="print-form" style={{ ...pageStyle, alignSelf: 'center' }}>
+    <div className="print-form bf-page">
       <FormHeader subtitle="Final Inspection" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px 12px', marginBottom: 6 }}>
+      <div className="bf-grid-3mini">
         <Fld label="Work Order #" value={repair.wo} />
         <Fld label="Serial #" value={repair.serial} />
         <Fld label="Date" value={fmt(repair.dateIn)} />
       </div>
 
       <Bar>Final Inspection Checklist — 24-Point</Bar>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 8.5, marginBottom: 6 }}>
+      <table className="bf-table" style={{ marginBottom: 6 }}>
         <thead>
           <tr>
-            <th style={{ ...thC, width: '46%' }}>Item</th>
-            <th style={{ ...thC, textAlign: 'center', width: 32 }}>Y</th>
-            <th style={{ ...thC, textAlign: 'center', width: 32 }}>N</th>
-            <th style={{ ...thC, textAlign: 'center', width: 38 }}>N/A</th>
-            <th style={thC}>Notes</th>
+            <th className="bf-th--w46pct">Item</th>
+            <th className="bf-th--center32">Y</th>
+            <th className="bf-th--center32">N</th>
+            <th className="bf-th--center38">N/A</th>
+            <th className="bf-th">Notes</th>
           </tr>
         </thead>
         <tbody>
           {FINAL_ITEMS.map(g => (
             <React.Fragment key={g.cat}>
               <tr>
-                <td colSpan={5} style={{ padding: '2px 6px', fontSize: 8, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '0.04em', borderBottom: '1px solid #ddd', background: 'var(--primary-light)' }}>{g.cat}</td>
+                <td colSpan={5} className="bf-cat-row">{g.cat}</td>
               </tr>
               {g.items.map((item, i) => (
                 <tr key={item} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : '#fff' }}>
-                  <td style={tdC}>{item}</td>
-                  <td style={{ ...tdC, textAlign: 'center' }}><span style={pfBtnP}>Y</span></td>
-                  <td style={{ ...tdC, textAlign: 'center' }}><span style={pfBtnF}>N</span></td>
-                  <td style={{ ...tdC, textAlign: 'center' }}><span style={pfBtnNA}>N/A</span></td>
-                  <td style={tdC}></td>
+                  <td className="bf-td">{item}</td>
+                  <td className="bf-td--center"><span className="bf-pf-p">Y</span></td>
+                  <td className="bf-td--center"><span className="bf-pf-f">N</span></td>
+                  <td className="bf-td--center"><span className="bf-pf-na">N/A</span></td>
+                  <td className="bf-td"></td>
                 </tr>
               ))}
             </React.Fragment>
@@ -282,53 +261,53 @@ export const BiFlexForm = ({ repair, onClose }: Props) => (
       </table>
 
       <Bar>Scope Includes</Bar>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px 12px', padding: '5px 0', marginBottom: 6 }}>
+      <div className="bf-acc-grid">
         {['Scope Only', 'Light Cable', 'Soak Cap', 'Elevator Cap', 'Suction Valve', 'A/W Valve', 'Biopsy Cap', 'Storage Case', 'Other: ___________'].map(item => (
           <Cb key={item} label={item} />
         ))}
       </div>
 
       <Bar>QC Sign-Off</Bar>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '6px 10px', border: '1px solid #ddd', borderRadius: 3, padding: '8px 10px', background: 'var(--neutral-50)', marginBottom: 6 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={fl}>Scope Usable</span>
-          <div style={{ display: 'flex', gap: 10, padding: '2px 0' }}>
+      <div className="bf-qc-grid">
+        <div className="bf-qc-cell">
+          <span className="bf-fl">Scope Usable</span>
+          <div className="bf-qc-yn">
             <Cb label="Y" /><Cb label="N" />
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={fl}>Rework Required</span>
-          <div style={{ display: 'flex', gap: 10, padding: '2px 0' }}>
+        <div className="bf-qc-cell">
+          <span className="bf-fl">Rework Required</span>
+          <div className="bf-qc-yn">
             <Cb label="Y" /><Cb label="N" />
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={fl}>Alcohol Wipe</span>
-          <div style={{ display: 'flex', gap: 10, padding: '2px 0' }}>
+        <div className="bf-qc-cell">
+          <span className="bf-fl">Alcohol Wipe</span>
+          <div className="bf-qc-yn">
             <Cb label="Done" />
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={fl}>Responsible Tech</span>
-          <div style={{ borderBottom: '1px solid #ccc', minHeight: 16, marginTop: 2 }}></div>
+        <div className="bf-qc-cell">
+          <span className="bf-fl">Responsible Tech</span>
+          <div className="bf-qc-line"></div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={fl}>QC Initials</span>
-          <div style={{ borderBottom: '1px solid #ccc', minHeight: 16, marginTop: 2 }}></div>
+        <div className="bf-qc-cell">
+          <span className="bf-fl">QC Initials</span>
+          <div className="bf-qc-line"></div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, gridColumn: 'span 2' }}>
-          <span style={fl}>Test Equipment Used</span>
-          <div style={{ borderBottom: '1px solid #ccc', minHeight: 16, marginTop: 2 }}></div>
+        <div className="bf-qc-cell--s2">
+          <span className="bf-fl">Test Equipment Used</span>
+          <div className="bf-qc-line"></div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={fl}>Commercial QC</span>
+        <div className="bf-qc-cell">
+          <span className="bf-fl">Commercial QC</span>
           <div style={{ display: 'flex', gap: 6, padding: '2px 0' }}>
-            <span style={pfBtnP}>P</span><span style={pfBtnF}>F</span>
+            <span className="bf-pf-p">P</span><span className="bf-pf-f">F</span>
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <span style={fl}>Inspected By</span>
-          <div style={{ borderBottom: '1px solid #ccc', minHeight: 16, marginTop: 2 }}></div>
+        <div className="bf-qc-cell">
+          <span className="bf-fl">Inspected By</span>
+          <div className="bf-qc-line"></div>
         </div>
       </div>
 

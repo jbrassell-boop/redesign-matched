@@ -568,15 +568,15 @@ export const ScopeModelPage = () => {
                     }}
                     className={isSelected ? 'selected' : 'hover-row-light'}
                   >
-                    <td style={tdStyle}><span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{item.description || '\u2014'}</span></td>
-                    <td style={tdStyle}><TypeBadge type={item.type} /></td>
-                    <td style={tdStyle}>{item.manufacturer || '\u2014'}</td>
-                    <td style={tdStyle}>{item.category || '\u2014'}</td>
-                    <td style={tdStyle}><StatusBadge status={item.active ? 'Active' : 'Inactive'} /></td>
-                    <td style={tdStyle}>{item.insertTubeLength || '\u2014'}</td>
-                    <td style={tdStyle}>{item.insertTubeDiameter || '\u2014'}</td>
-                    <td style={tdStyle}>{item.fieldOfView || '\u2014'}</td>
-                    <td style={tdStyle}>{item.directionOfView || '\u2014'}</td>
+                    <td className="sm-td"><span style={{ fontWeight: 700, color: 'var(--navy)', cursor: 'pointer' }}>{item.description || '\u2014'}</span></td>
+                    <td className="sm-td"><TypeBadge type={item.type} /></td>
+                    <td className="sm-td">{item.manufacturer || '\u2014'}</td>
+                    <td className="sm-td">{item.category || '\u2014'}</td>
+                    <td className="sm-td"><StatusBadge status={item.active ? 'Active' : 'Inactive'} /></td>
+                    <td className="sm-td">{item.insertTubeLength || '\u2014'}</td>
+                    <td className="sm-td">{item.insertTubeDiameter || '\u2014'}</td>
+                    <td className="sm-td">{item.fieldOfView || '\u2014'}</td>
+                    <td className="sm-td">{item.directionOfView || '\u2014'}</td>
                   </tr>
                 );
               })}
@@ -668,10 +668,6 @@ export const ScopeModelPage = () => {
   );
 };
 
-/* ── Shared ───────────────────────────────────────────────── */
-const tdStyle: React.CSSProperties = {
-  padding: '7px 10px', fontSize: 12, borderBottom: '1px solid var(--border)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', verticalAlign: 'middle', color: 'var(--text)',
-};
 
 const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (
   <button

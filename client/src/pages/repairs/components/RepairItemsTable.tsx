@@ -317,7 +317,7 @@ export const RepairItemsTable = ({
             ))}
 
             {/* Fast add row */}
-            <tr style={{ borderTop: '2px dashed var(--border)' }}>
+            <tr className="rit-add-row">
               {/* Approval dot — empty for new row */}
               <td className="rit-add-td"></td>
               {/* Autocomplete search spans Code + Description */}
@@ -329,7 +329,7 @@ export const RepairItemsTable = ({
                 />
               </td>
               {/* Cause toggles */}
-              <td className="rit-add-td" style={{ textAlign: 'center' }}>
+              <td className="rit-add-td rit-td--center">
                 <div className="rit-cause-row">
                   {(['UA', 'NW'] as CauseType[]).map(c => (
                     <button key={c} title={c === 'UA' ? 'User Abuse' : 'Normal Wear'} onClick={() => setAddRow(r => ({ ...r, cause: r.cause === c ? '' : c }))}
@@ -346,7 +346,7 @@ export const RepairItemsTable = ({
                 </div>
               </td>
               {/* Fix Type button group */}
-              <td className="rit-add-td" style={{ textAlign: 'center' }}>
+              <td className="rit-add-td rit-td--center">
                 <div className="rit-fix-row">
                   {fixTypeButtons.map(({ label, value, title }) => (
                     <button key={value} title={title} onClick={() => handleFixType(value)}
@@ -365,7 +365,7 @@ export const RepairItemsTable = ({
               {/* Approval — empty */}
               <td className="rit-add-td"></td>
               {/* Amount */}
-              <td className="rit-add-td" style={{ textAlign: 'right' }}>
+              <td className="rit-add-td rit-td--right">
                 <input
                   className="rit-amount-input"
                   type="number" min="0" step="0.01"
@@ -442,14 +442,14 @@ const RepairItemRow = ({ item, fmt, onDelete, onOpenAmendments, onPatchCause, on
   const [commentDraft, setCommentDraft] = useState(item.comments);
 
   return (
-    <tr className="repair-items-add-btn" style={{ cursor: 'default' }}>
-      <td className="rit-td" style={{ textAlign: 'center' }}>
+    <tr className="repair-items-add-btn rit-data-row">
+      <td className="rit-td rit-td--center">
         {approvalDot(item.approved)}
       </td>
       <td className="rit-td">{item.itemCode}</td>
-      <td className="rit-td" style={{ fontWeight: 500 }}>{item.description}</td>
+      <td className="rit-td rit-td--desc">{item.description}</td>
       {/* Cause — click to cycle UA → NW → blank */}
-      <td className="rit-td" style={{ textAlign: 'center', cursor: 'pointer' }}
+      <td className="rit-td rit-td--center-ptr"
         onClick={() => {
           const next = item.cause === '' ? 'UA' : item.cause === 'UA' ? 'NW' : '';
           onPatchCause(next);
@@ -458,17 +458,17 @@ const RepairItemRow = ({ item, fmt, onDelete, onOpenAmendments, onPatchCause, on
         {causeBadge(item.cause)}
       </td>
       {/* Fix Type — click to open amendments */}
-      <td className="rit-td" style={{ textAlign: 'center', cursor: 'pointer' }}
+      <td className="rit-td rit-td--center-ptr"
         onClick={onOpenAmendments} title="Click to amend">
         {fixBadge(item.fixType)}
       </td>
-      <td className="rit-td" style={{ textAlign: 'center' }}>
+      <td className="rit-td rit-td--center">
         {item.approved === 'Y'
           ? <span className="rit-approved">✓ Approved</span>
           : <span className="rit-pending">Pending</span>}
       </td>
       {/* Amount — click to amend */}
-      <td className="rit-td" style={{ textAlign: 'right', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+      <td className="rit-td rit-td--amount"
         onClick={onOpenAmendments} title="Click to amend">
         {fmt(item.amount ?? 0)}
         {item.fixType?.toUpperCase() === 'W' && item.baseAmount > 0 && (
@@ -479,11 +479,11 @@ const RepairItemRow = ({ item, fmt, onDelete, onOpenAmendments, onPatchCause, on
       </td>
       <td className="rit-td">{item.tech || '—'}</td>
       {/* Comment — click to edit inline */}
-      <td className="rit-td" style={{ color: item.comments ? 'var(--label)' : 'var(--muted)', fontSize: 11 }}>
+      <td className={`rit-td ${item.comments ? 'rit-comment-cell--set' : 'rit-comment-cell--empty'}`}>
         {editingComment ? (
           <input
             autoFocus
-            style={{ width: '100%', fontSize: 11, border: '1px solid var(--primary)', borderRadius: 2, padding: '1px 4px' }}
+            className="rit-comment-edit"
             maxLength={80}
             value={commentDraft}
             onChange={e => setCommentDraft(e.target.value)}
@@ -491,13 +491,13 @@ const RepairItemRow = ({ item, fmt, onDelete, onOpenAmendments, onPatchCause, on
             onKeyDown={e => { if (e.key === 'Enter') { setEditingComment(false); onPatchComment(commentDraft); } }}
           />
         ) : (
-          <span style={{ cursor: 'pointer' }} onClick={() => { setCommentDraft(item.comments); setEditingComment(true); }} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCommentDraft(item.comments); setEditingComment(true); } }}
+          <span className="rit-comment-span" onClick={() => { setCommentDraft(item.comments); setEditingComment(true); }} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setCommentDraft(item.comments); setEditingComment(true); } }}
             title="Click to edit">
             {item.comments || '—'}
           </span>
         )}
       </td>
-      <td className="rit-td" style={{ textAlign: 'center' }}>
+      <td className="rit-td rit-td--center">
         <button onClick={onDelete}
           className="rit-delete-btn"
           title="Remove item">×</button>

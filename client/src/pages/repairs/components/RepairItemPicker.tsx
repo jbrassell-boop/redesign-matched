@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { message } from 'antd';
 import type { RepairCatalogItem } from '../types';
 import { getRepairItemCatalog, addRepairLineItem } from '../../../api/repairs';
+import './RepairItemPicker.css';
 
 interface Props {
   repairKey: number;
@@ -103,61 +104,38 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
   return (
     <div
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,0.4)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 16,
-      }}
+      className="rpk-overlay"
     >
-      <div style={{
-        width: '90vw', maxWidth: 700, height: '80vh',
-        background: 'var(--card)', borderRadius: 10,
-        display: 'flex', flexDirection: 'column',
-        boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-        overflow: 'hidden',
-      }}>
+      <div className="rpk-panel">
         {/* Header */}
-        <div style={{
-          padding: '12px 16px', background: 'var(--navy)', color: 'var(--card)',
-          display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
-        }}>
+        <div className="rpk-header">
           <input
             ref={searchRef}
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search repair items..."
             aria-label="Search repair items catalog"
-            style={{
-              flex: 1, height: 32, border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: 4, padding: '0 10px', fontSize: 12,
-              background: 'rgba(255,255,255,0.1)', color: 'var(--card)',
-              outline: 'none',
-            }}
+            className="rpk-search"
           />
-          <div style={{ display: 'flex', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 4, overflow: 'hidden' }}>
+          <div className="rpk-type-tabs">
             {['all', 'Flexible', 'Rigid', 'Camera'].map(t => (
-              <button key={t} onClick={() => setTypeFilter(t)} style={{
-                height: 28, padding: '0 10px', border: 'none', fontSize: 11, fontWeight: 600,
-                background: typeFilter === t ? 'rgba(255,255,255,0.2)' : 'transparent',
-                color: 'var(--card)', cursor: 'pointer', fontFamily: 'inherit',
-              }}>
+              <button
+                key={t}
+                onClick={() => setTypeFilter(t)}
+                className={`rpk-type-btn${typeFilter === t ? ' rpk-type-btn--on' : ' rpk-type-btn--off'}`}
+              >
                 {t === 'all' ? 'All' : t}
               </button>
             ))}
           </div>
-          <button onClick={onClose} style={{
-            width: 28, height: 28, border: '1px solid rgba(255,255,255,0.3)',
-            borderRadius: 4, background: 'transparent', color: 'var(--card)',
-            fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>×</button>
+          <button onClick={onClose} className="rpk-close-btn">×</button>
         </div>
 
         {/* Item list */}
-        <div style={{ flex: 1, overflow: 'auto' }}>
-          {loading && <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>Loading catalog...</div>}
+        <div className="rpk-list">
+          {loading && <div className="rpk-list-msg">Loading catalog...</div>}
           {!loading && filtered.length === 0 && (
-            <div style={{ padding: 40, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>No items match your search</div>
+            <div className="rpk-list-msg">No items match your search</div>
           )}
           {filtered.map(item => {
             const isSelected = selected.has(item.itemKey);
@@ -166,42 +144,30 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
               <div key={item.itemKey}>
                 <div
                   onClick={() => toggleItem(item)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '8px 16px', cursor: 'pointer',
-                    borderBottom: '1px solid var(--neutral-100)',
-                    background: isSelected ? 'rgba(var(--primary-rgb), 0.06)' : 'var(--card)',
-                    borderLeft: isSelected ? '3px solid var(--primary)' : '3px solid transparent',
-                  }}
-                  className={isSelected ? 'selected' : 'hover-row'}
+                  className={`rpk-row${isSelected ? ' rpk-row--on' : ' rpk-row--off'} ${isSelected ? 'selected' : 'hover-row'}`}
                 >
-                  <input type="checkbox" checked={isSelected} readOnly style={{ width: 16, height: 16, cursor: 'pointer', accentColor: 'var(--primary)' }} />
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--navy)', minWidth: 60 }}>{item.itemCode}</span>
-                  <span style={{ flex: 1, fontSize: 12, color: 'var(--label)' }}>{item.description}</span>
+                  <input type="checkbox" checked={isSelected} readOnly className="rpk-checkbox" />
+                  <span className="rpk-code">{item.itemCode}</span>
+                  <span className="rpk-desc">{item.description}</span>
                   {item.minutesTech1 != null && (
-                    <span style={{ fontSize: 11, color: 'var(--muted)', minWidth: 44, textAlign: 'right' }} title="Est. minutes (T1/T2/T3)">
+                    <span className="rpk-mins" title="Est. minutes (T1/T2/T3)">
                       {item.minutesTech1}m
                     </span>
                   )}
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--primary)', minWidth: 60, textAlign: 'right' }}>
+                  <span className="rpk-price">
                     {item.defaultPrice > 0 ? fmt$(item.defaultPrice) : '—'}
                   </span>
                 </div>
                 {/* Expanded row for selected items — fix type + comment */}
                 {isSelected && entry && (
-                  <div style={{
-                    padding: '6px 16px 8px 45px', background: 'rgba(var(--primary-rgb), 0.04)',
-                    borderBottom: '1px solid var(--neutral-200)',
-                    display: 'flex', gap: 10, alignItems: 'center',
-                  }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--muted)' }}>Fix:</span>
+                  <div className="rpk-detail">
+                    <span className="rpk-fix-label">Fix:</span>
                     {['R', 'W', 'N', 'C', 'A'].map(ft => (
-                      <button key={ft} onClick={() => updateFixType(item.itemKey, ft)} style={{
-                        padding: '2px 8px', fontSize: 11, fontWeight: 700, borderRadius: 3, cursor: 'pointer',
-                        border: entry.fixType === ft ? '1px solid var(--primary)' : '1px solid var(--border)',
-                        background: entry.fixType === ft ? 'var(--primary)' : 'var(--card)',
-                        color: entry.fixType === ft ? 'var(--card)' : 'var(--muted)',
-                      }}>{ft}</button>
+                      <button
+                        key={ft}
+                        onClick={() => updateFixType(item.itemKey, ft)}
+                        className={`rpk-ft-btn${entry.fixType === ft ? ' rpk-ft-btn--on' : ' rpk-ft-btn--off'}`}
+                      >{ft}</button>
                     ))}
                     <input
                       value={entry.comment}
@@ -210,10 +176,7 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
                       placeholder="Comment..."
                       aria-label="Item comment"
                       maxLength={80}
-                      style={{
-                        flex: 1, height: 36, border: '1px solid var(--border)', borderRadius: 3,
-                        fontSize: 11, padding: '0 6px', outline: 'none',
-                      }}
+                      className="rpk-comment"
                     />
                   </div>
                 )}
@@ -224,24 +187,13 @@ export const RepairItemPicker = ({ repairKey, open, onClose, onItemsAdded }: Pro
 
         {/* Footer */}
         {selected.size > 0 && (
-          <div style={{
-            padding: '10px 16px', borderTop: '1px solid var(--border)',
-            background: 'var(--neutral-50)',
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--navy)' }}>
+          <div className="rpk-footer">
+            <span className="rpk-footer-label">
               {selected.size} item{selected.size > 1 ? 's' : ''} selected
             </span>
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setSelected(new Map())} style={{
-                padding: '5px 14px', borderRadius: 4, border: '1px solid var(--border)',
-                background: 'var(--card)', fontSize: 12, cursor: 'pointer',
-              }}>Clear</button>
-              <button onClick={handleAddAll} disabled={adding} style={{
-                padding: '5px 14px', borderRadius: 4, border: 'none',
-                background: 'var(--success)', color: 'var(--card)', fontSize: 12,
-                fontWeight: 700, cursor: 'pointer',
-              }}>{adding ? 'Adding...' : 'Add Items'}</button>
+            <div className="rpk-footer-btns">
+              <button onClick={() => setSelected(new Map())} className="rpk-clear-btn">Clear</button>
+              <button onClick={handleAddAll} disabled={adding} className="rpk-add-btn">{adding ? 'Adding...' : 'Add Items'}</button>
             </div>
           </div>
         )}
