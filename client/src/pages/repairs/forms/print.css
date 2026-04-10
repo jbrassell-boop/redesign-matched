@@ -1,6 +1,19 @@
 @media print {
   body * { visibility: hidden; }
   .print-form, .print-form * { visibility: visible; }
+
+  /* Break .print-form out of any fixed/scrollable overlay parent.
+     Without this, Chrome's print engine traps the form inside the
+     fixed-position overlay and renders a blank page. */
+  *:has(> .print-form) {
+    position: static !important;
+    overflow: visible !important;
+    display: block !important;
+    background: none !important;
+    padding: 0 !important;
+    inset: auto !important;
+  }
+
   .print-form {
     position: absolute;
     left: 0;
