@@ -3,32 +3,32 @@
    ──────────────────────────────────────────────────────────────── */
 
 /* Overlay / modal backdrop */
-.dir-overlay       { position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,0.5); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+.dir-overlay       { position: fixed; inset: 0; z-index: 1100; background: var(--overlay-bg); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
 
 /* Floating action bar (no-print) */
 .dir-action-bar    { position: fixed; top: 16px; right: 32px; display: flex; gap: 8px; z-index: 1200; }
 .dir-btn-print     { height: 32px; padding: 0 16px; border: none; border-radius: 5px; background: var(--primary); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
-.dir-btn-close     { height: 32px; padding: 0 14px; border: 1px solid #ddd; border-radius: 5px; background: #fff; color: #888; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.dir-btn-close     { height: 32px; padding: 0 14px; border: 1px solid var(--print-border-lt); border-radius: 5px; background: var(--card); color: var(--print-footer); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
 
 /* Printable page */
-.dir-page          { width: 8.5in; height: 11in; background: #fff; padding: 0.4in; font-family: 'Inter', Arial, sans-serif; font-size: 9px; color: #222; box-sizing: border-box; box-shadow: 0 4px 24px rgba(0,0,0,0.18); display: flex; flex-direction: column; overflow: hidden; }
+.dir-page          { width: 8.5in; height: 11in; background: var(--card); padding: 0.4in; font-family: 'Inter', Arial, sans-serif; font-size: 9px; color: var(--print-body-text); box-sizing: border-box; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; }
 
 /* Header row */
 .dir-header        { display: flex; justify-content: space-between; align-items: flex-start; }
 .dir-logo          { height: 44px; }
 .dir-title-block   { text-align: right; }
-.dir-title         { font-size: 14px; font-weight: 800; color: #1B3A5C; }
+.dir-title         { font-size: 14px; font-weight: 800; color: var(--navy); }
 .dir-subtitle      { font-size: 9px; font-weight: 600; color: var(--primary); }
-.dir-doc-num       { font-size: 8px; color: #aaa; }
+.dir-doc-num       { font-size: 8px; color: var(--print-placeholder); }
 
 /* Section bar */
 .dir-sb            { background: var(--primary); color: #fff; font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 6px; margin-bottom: 2px; }
 
 /* Field label */
-.dir-fl            { font-size: 7px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.04em; }
+.dir-fl            { font-size: 7px; font-weight: 700; text-transform: uppercase; color: var(--print-footer); letter-spacing: 0.04em; }
 
 /* Field value underline */
-.dir-fv            { border-bottom: 1px solid #ccc; font-size: 9px; padding: 0 2px; min-height: 13px; }
+.dir-fv            { border-bottom: 1px solid var(--print-border); font-size: 9px; padding: 0 2px; min-height: 13px; }
 
 /* Field container (used in Fld sub-component) */
 .dir-fld           { display: flex; flex-direction: column; gap: 1px; }
@@ -38,8 +38,8 @@
 .dir-info-grid     { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px 12px; padding: 4px 0; }
 
 /* Checkbox */
-.dir-cb-box        { display: inline-block; width: 9px; height: 9px; border: 1px solid #ccc; border-radius: 1px; }
-.dir-cb-inline     { display: inline-block; width: 8px; height: 8px; border: 1px solid #ccc; border-radius: 1px; }
+.dir-cb-box        { display: inline-block; width: 9px; height: 9px; border: 1px solid var(--print-border); border-radius: 1px; }
+.dir-cb-inline     { display: inline-block; width: 8px; height: 8px; border: 1px solid var(--print-border); border-radius: 1px; }
 
 /* Checkbox row */
 .dir-cb-row        { display: flex; gap: 12px; align-items: center; padding: 3px 0; flex-wrap: wrap; }
@@ -48,8 +48,8 @@
 .dir-cb-label      { display: flex; align-items: center; gap: 4px; font-size: 8.5px; }
 
 /* Received condition row */
-.dir-received-label { font-size: 7.5px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.04em; margin-right: 4px; }
-.dir-unclean-warn  { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 3px; padding: 3px 7px; font-size: 8px; color: #92400e; font-weight: 600; margin-left: 6px; }
+.dir-received-label { font-size: 7.5px; font-weight: 700; text-transform: uppercase; color: var(--print-footer); letter-spacing: 0.04em; margin-right: 4px; }
+.dir-unclean-warn  { background: var(--amber-light); border: 1px solid var(--print-amber-warn-border); border-radius: 3px; padding: 3px 7px; font-size: 8px; color: var(--badge-amber-text); font-weight: 600; margin-left: 6px; }
 
 /* Diagnosis / specs grids */
 .dir-diag-grid     { display: grid; grid-template-columns: 1fr 1fr; gap: 5px 14px; padding: 4px 0; }
@@ -62,23 +62,23 @@
 
 /* 33-point rigid table */
 .dir-rigid-table   { width: 100%; border-collapse: collapse; font-size: 8px; }
-.dir-table-th      { padding: 1px 4px; font-size: 7.5px; font-weight: 700; color: #888; text-transform: uppercase; border-bottom: 1px solid #ccc; vertical-align: middle; border-right: 1px solid #f0f0f0; }
+.dir-table-th      { padding: 1px 4px; font-size: 7.5px; font-weight: 700; color: var(--print-footer); text-transform: uppercase; border-bottom: 1px solid var(--print-border); vertical-align: middle; border-right: 1px solid var(--print-row-divider); }
 .dir-table-th--left  { text-align: left; width: 34%; }
 .dir-table-th--center { text-align: center; width: 20px; }
-.dir-table-td      { padding: 1px 4px; font-size: 8px; border-bottom: 1px solid #eee; vertical-align: middle; border-right: 1px solid #f0f0f0; }
-.dir-table-td--center { padding: 1px 4px; font-size: 8px; border-bottom: 1px solid #eee; vertical-align: middle; border-right: 1px solid #f0f0f0; text-align: center; }
-.dir-group-row     { padding: 2px 4px; font-size: 7.5px; font-weight: 700; color: #1B3A5C; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #ddd; text-decoration: underline; }
+.dir-table-td      { padding: 1px 4px; font-size: 8px; border-bottom: 1px solid var(--print-border-xlt); vertical-align: middle; border-right: 1px solid var(--print-row-divider); }
+.dir-table-td--center { padding: 1px 4px; font-size: 8px; border-bottom: 1px solid var(--print-border-xlt); vertical-align: middle; border-right: 1px solid var(--print-row-divider); text-align: center; }
+.dir-group-row     { padding: 2px 4px; font-size: 7.5px; font-weight: 700; color: var(--navy); text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid var(--print-border-lt); text-decoration: underline; }
 
 /* Text field (blank write-in area) */
-.dir-text-field    { border: 1px solid #e0e0e0; border-radius: 3px; padding: 3px 6px; font-size: 8.5px; }
+.dir-text-field    { border: 1px solid var(--print-cell-border); border-radius: 3px; padding: 3px 6px; font-size: 8.5px; }
 
 /* Signature row */
 .dir-sig-row       { display: flex; gap: 16px; }
-.dir-sig-line      { border-bottom: 1px solid #ccc; min-height: 22px; }
-.dir-sig-label     { font-size: 7.5px; color: #888; font-weight: 600; }
+.dir-sig-line      { border-bottom: 1px solid var(--print-border); min-height: 22px; }
+.dir-sig-label     { font-size: 7.5px; color: var(--print-footer); font-weight: 600; }
 
 /* Footer */
-.dir-footer        { margin-top: auto; padding-top: 4px; border-top: 1px solid #ddd; font-size: 7px; color: #999; text-align: center; }
+.dir-footer        { margin-top: auto; padding-top: 4px; border-top: 1px solid var(--print-border-lt); font-size: 7px; color: var(--print-footer); text-align: center; }
 .dir-footer-name   { font-weight: 600; margin-bottom: 2px; }
 .dir-footer-doc    { float: right; font-weight: 400; }
-.dir-footer-addrs  { display: flex; justify-content: center; gap: 16px; font-size: 6.5px; color: #aaa; }
+.dir-footer-addrs  { display: flex; justify-content: center; gap: 16px; font-size: 6.5px; color: var(--print-placeholder); }

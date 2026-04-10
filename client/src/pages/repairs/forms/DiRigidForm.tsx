@@ -52,7 +52,7 @@ const Sig = ({ label, narrow }: { label: string; narrow?: boolean }) => (
 );
 
 const PfBtn = ({ pass }: { pass?: boolean }) => (
-  <span className="dir-pf-btn" style={{ background: pass ? '#16a34a' : '#dc2626', color: '#fff' }}>{pass ? 'P' : 'F'}</span>
+  <span className="dir-pf-btn" style={{ background: pass ? 'var(--print-success-btn)' : 'var(--print-danger-btn)', color: '#fff' }}>{pass ? 'P' : 'F'}</span>
 );
 
 const TextField = ({ h }: { h: number }) => (
@@ -78,10 +78,10 @@ const RigidTable = () => (
             <td colSpan={11} className="dir-group-row">{grp.cat}</td>
           </tr>
           {grp.items.map((item, i) => (
-            <tr key={item} style={{ background: i % 2 === 1 ? '#fafafa' : '#fff' }}>
+            <tr key={item} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : 'var(--card)' }}>
               <td className="dir-table-td">{item}</td>
-              <td className="dir-table-td--center"><span className="dir-pf-btn" style={{ background: '#16a34a', color: '#fff' }}>P</span></td>
-              <td className="dir-table-td--center"><span className="dir-pf-btn" style={{ background: '#dc2626', color: '#fff' }}>F</span></td>
+              <td className="dir-table-td--center"><span className="dir-pf-btn" style={{ background: 'var(--success)', color: '#fff' }}>P</span></td>
+              <td className="dir-table-td--center"><span className="dir-pf-btn" style={{ background: 'var(--danger)', color: '#fff' }}>F</span></td>
               {DEF_COLS.map(c => (
                 <td key={c} className="dir-table-td--center">
                   <span className="dir-cb-inline" />

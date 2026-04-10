@@ -88,10 +88,10 @@ export function FieldVerifierPage() {
   if (loading) return <div style={{ padding: 32 }}>Loading field registry...</div>;
 
   return (
-    <div style={{ display: 'flex', height: '100vh', fontFamily: 'Inter, sans-serif', background: '#f0f2f5' }}>
+    <div style={{ display: 'flex', height: '100vh', fontFamily: 'Inter, sans-serif', background: 'var(--neutral-100)' }}>
       {/* Sidebar */}
-      <div style={{ width: 220, background: '#fff', borderRight: '1px solid #DDE3EE', padding: '16px 0', overflowY: 'auto' }}>
-        <div style={{ padding: '0 16px 12px', fontWeight: 700, fontSize: 13, color: '#00257A', textTransform: 'uppercase', letterSpacing: 1 }}>
+      <div style={{ width: 220, background: 'var(--card)', borderRight: '1px solid var(--border)', padding: '16px 0', overflowY: 'auto' }}>
+        <div style={{ padding: '0 16px 12px', fontWeight: 700, fontSize: 13, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: 1 }}>
           Field Verifier
         </div>
         {Object.keys(SCREEN_FILES).map(screenName => {
@@ -99,7 +99,7 @@ export function FieldVerifierPage() {
           const fields = s?.fields ?? [];
           const confirmed = fields.filter(f => f.status === 'confirmed').length;
           const status = getScreenStatus(fields);
-          const color = status === 'green' ? '#16A34A' : status === 'amber' ? '#D97706' : '#8896AA';
+          const color = status === 'green' ? 'var(--success)' : status === 'amber' ? 'var(--amber)' : 'var(--muted)';
           return (
             <div
               key={screenName}
@@ -107,15 +107,15 @@ export function FieldVerifierPage() {
               style={{
                 padding: '8px 16px',
                 cursor: 'pointer',
-                background: activeScreen === screenName ? '#DDE6F5' : 'transparent',
-                borderLeft: activeScreen === screenName ? '3px solid #00257A' : '3px solid transparent',
+                background: activeScreen === screenName ? 'var(--primary-light)' : 'transparent',
+                borderLeft: activeScreen === screenName ? '3px solid var(--navy)' : '3px solid transparent',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 fontSize: 13,
               }}
             >
-              <span style={{ color: activeScreen === screenName ? '#00257A' : '#1A202C' }}>{screenName}</span>
+              <span style={{ color: activeScreen === screenName ? 'var(--navy)' : 'var(--text-near-black)' }}>{screenName}</span>
               <Tag style={{ fontSize: 10, padding: '0 5px', margin: 0, color, borderColor: color, background: 'transparent' }}>
                 {confirmed}/{fields.length}
               </Tag>
@@ -127,11 +127,11 @@ export function FieldVerifierPage() {
       {/* Main content */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {/* Top progress bar */}
-        <div style={{ padding: '12px 24px', background: '#fff', borderBottom: '1px solid #DDE3EE' }}>
-          <div style={{ fontSize: 12, color: '#4A5568', marginBottom: 4 }}>
+        <div style={{ padding: '12px 24px', background: '#fff', borderBottom: '1px solid var(--border)' }}>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 4 }}>
             Overall: {confirmedFields} / {totalFields} fields confirmed
           </div>
-          <Progress percent={overallPct} strokeColor="#00257A" trailColor="#DDE3EE" showInfo size="small" />
+          <Progress percent={overallPct} strokeColor="var(--navy)" trailColor="var(--border)" showInfo size="small" />
         </div>
 
         {/* Tabs */}
@@ -152,7 +152,7 @@ export function FieldVerifierPage() {
                     onNavigate={setActiveFieldIndex}
                   />
                 ) : (
-                  <div style={{ color: '#8896AA', padding: 32 }}>No fields for this screen.</div>
+                  <div style={{ color: 'var(--muted)', padding: 32 }}>No fields for this screen.</div>
                 ),
               },
               {

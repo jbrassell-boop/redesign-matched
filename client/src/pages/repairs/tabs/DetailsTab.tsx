@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { message, Modal } from 'antd';
 import type { RepairFull, RepairLineItem } from '../types';
 import type { ClientFlag } from '../../clients/types';
@@ -90,7 +90,7 @@ const dtCancelBtnStyle: React.CSSProperties = { padding: '5px 14px', borderRadiu
 const dtSaveBtnStyle: React.CSSProperties = { padding: '5px 14px', borderRadius: 4, border: 'none', background: 'var(--primary)', color: 'var(--card)', cursor: 'pointer', fontSize: 12, fontWeight: 700 };
 const dtOutsourceGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px' };
 
-export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
+export const DetailsTab = memo(({ repair, flags }: DetailsTabProps) => {
   const [items, setItems] = useState<RepairLineItem[]>([]);
   const [amendOpen, setAmendOpen] = useState(false);
   const [amendTranKey, setAmendTranKey] = useState<number | undefined>(undefined);
@@ -139,8 +139,8 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
     setAmendOpen(true);
   };
 
-  const actionButtons = [
-    { label: 'Consumption',     style: { background: 'var(--primary)', color: 'var(--card)' }, action: async () => {
+  const actionButtons = useMemo(() => [
+    { label: 'Consumption',     style: { background: 'var(--primary)', color: 'var(--card)' } as React.CSSProperties, action: async () => {
       try { await bulkApproveLineItems(repair.repairKey, 'Y'); loadItems(); message.success('All items approved (consumption)'); }
       catch { message.error('Failed to approve items'); }
     } },
@@ -169,11 +169,11 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
       setSelectedTech2(null);
       setTechModalOpen(true);
     } },
-    { label: 'Inventory',       style: { background: 'var(--neutral-50, var(--bg))', color: 'var(--navy)', border: '1px solid var(--border)' }, action: () => {
+    { label: 'Inventory',       style: { background: 'var(--neutral-50, var(--bg))', color: 'var(--navy)', border: '1px solid var(--border)' } as React.CSSProperties, action: () => {
       getRepairInventoryUsage(repair.repairKey).then(setInvData).catch(() => message.error('Failed to load inventory'));
       setInvModalOpen(true);
     } },
-  ];
+  ], [repair.repairKey, loadItems]);
 
   return (
     <div style={detailsContainerStyle}>
@@ -208,6 +208,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
             <div>
               <div style={lblStyle}>Repair Reason</div>
               <select
+                aria-label="Repair Reason"
                 style={{ ...fieldStyle, width: '100%', appearance: 'auto', fontFamily: 'inherit' }}
                 value={repairReason}
                 onChange={e => { setRepairReason(e.target.value); detailsChange('repairReason', e.target.value || undefined); }}
@@ -219,6 +220,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
             <div>
               <div style={lblStyle}>PS Level</div>
               <select
+                aria-label="PS Level"
                 style={{ ...fieldStyle, width: '100%', appearance: 'auto', fontFamily: 'inherit' }}
                 value={psLevel}
                 onChange={e => { setPsLevel(e.target.value); detailsChange('psLevel', e.target.value || undefined); }}
@@ -282,7 +284,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
 
       {/* Outsource */}
       <div style={dtCardStyle}>
-        <div style={sectionHd}>Outsource</div>
+        <h3 style={sectionHd}>Outsource</h3>
         <div style={dtFormPadStyle}>
           <div style={dtOutsourceGridStyle}>
             {[
@@ -304,7 +306,7 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
 
       {/* Comments */}
       <div style={dtCardStyle}>
-        <div style={sectionHd}>Comments</div>
+        <h3 style={sectionHd}>Comments</h3>
         <div style={dtFormPadStyle}>
           <div style={dtCommentPlaceholderStyle}>
             Add a comment…
@@ -399,4 +401,4 @@ export const DetailsTab = ({ repair, flags }: DetailsTabProps) => {
       />
     </div>
   );
-};
+});

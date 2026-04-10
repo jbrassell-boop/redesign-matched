@@ -295,7 +295,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
             <Button
               icon={<LinkOutlined />}
               size="small"
-              style={{ background: '#FFF7E6', borderColor: '#F6AD55', color: '#744210', fontSize: 11 }}
+              style={{ background: 'var(--amber-light)', borderColor: 'var(--amber)', color: 'var(--badge-amber-text)', fontSize: 11 }}
               onClick={showJoin ? () => setShowJoin(false) : buildJoin}
               loading={loadingJoin}
             >
@@ -348,7 +348,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
                         type="primary"
                         size="small"
                         icon={<CheckOutlined />}
-                        style={{ background: '#D97706', borderColor: '#D97706' }}
+                        style={{ background: 'var(--amber)', borderColor: 'var(--amber)' }}
                         onClick={useJoinSql}
                       >
                         Looks right — use this SQL
@@ -369,7 +369,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
               type="link"
               size="small"
               icon={<TableOutlined />}
-              style={{ padding: '0 0', fontSize: 11, color: '#2E74B5' }}
+              style={{ padding: '0 0', fontSize: 11, color: 'var(--primary)' }}
               onClick={() => showPreview && previewRows.length > 0 ? setShowPreview(false) : fetchPreviewRows()}
               loading={loadingPreview}
             >
@@ -399,7 +399,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
                     </thead>
                     <tbody>
                       {previewRows.map((row, ri) => (
-                        <tr key={ri} style={{ background: ri % 2 === 0 ? 'transparent' : '#E8F0FC' }}>
+                        <tr key={ri} style={{ background: ri % 2 === 0 ? 'transparent' : 'var(--primary-light)' }}>
                           {row.map((cell, ci) => (
                             <td key={ci} className={cell === '(null)' ? 'vc-preview-td--null' : 'vc-preview-td'}>
                               {cell}
@@ -498,14 +498,14 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
         <div className="vc-actions">
           {editing ? (
             <>
-              <Button type="primary" icon={<CheckOutlined />} onClick={handleSaveEdit} style={{ background: '#00257A' }}>
+              <Button type="primary" icon={<CheckOutlined />} onClick={handleSaveEdit} style={{ background: 'var(--navy)' }}>
                 Save & Test
               </Button>
               <Button onClick={() => setEditing(false)}>Cancel</Button>
             </>
           ) : (
             <>
-              <Button type="primary" icon={<CheckOutlined />} onClick={handleConfirm} style={{ background: '#16A34A', borderColor: '#16A34A' }}>
+              <Button type="primary" icon={<CheckOutlined />} onClick={handleConfirm} style={{ background: 'var(--success)', borderColor: 'var(--success)' }}>
                 {field.status === 'confirmed' ? 'Re-verify' : 'Confirm'}
               </Button>
               <Button icon={<CloseOutlined />} onClick={handleFlag} danger>

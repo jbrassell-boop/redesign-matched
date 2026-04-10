@@ -186,6 +186,7 @@ const NavItemButton = ({ label, icon, isActive, collapsed, onClick }: NavItemBut
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       aria-current={isActive ? 'page' : undefined}
+      aria-label={collapsed ? label : undefined}
       title={collapsed ? label : undefined}
       style={{
         display: 'flex',
@@ -306,6 +307,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
         {/* Collapse toggle — always visible */}
         <button
           onClick={() => onCollapse(!collapsed)}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           style={{
             marginLeft: collapsed ? 0 : 'auto',

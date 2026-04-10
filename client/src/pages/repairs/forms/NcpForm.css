@@ -39,10 +39,10 @@
 .ncp-btn-close {
   height: 32px;
   padding: 0 14px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--print-border-lt);
   border-radius: 5px;
-  background: #fff;
-  color: #888;
+  background: var(--card);
+  color: var(--print-footer);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -53,11 +53,11 @@
 .ncp-page {
   width: 8.5in;
   min-height: 11in;
-  background: #fff;
+  background: var(--card);
   padding: 0.4in;
   font-family: 'Inter', Arial, sans-serif;
   font-size: 9px;
-  color: #222;
+  color: var(--print-body-text);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -89,7 +89,7 @@
 }
 .ncp-header__doc {
   font-size: 8px;
-  color: #aaa;
+  color: var(--print-placeholder);
   margin-top: 1px;
 }
 
@@ -124,13 +124,13 @@
   font-size: 7px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #888;
+  color: var(--print-footer);
   letter-spacing: 0.04em;
 }
 
 /* Field value */
 .ncp-fv {
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--print-border);
   font-size: 9px;
   padding: 0 2px;
   min-height: 13px;
@@ -154,7 +154,7 @@
 
 /* Text field (blank write-in box) */
 .ncp-text-field {
-  border: 1px solid #ccc;
+  border: 1px solid var(--print-border);
   border-radius: 3px;
   padding: 4px 6px;
   font-size: 8.5px;
@@ -163,14 +163,14 @@
 
 /* Panel sub-component */
 .ncp-panel {
-  border: 1px solid #ddd;
+  border: 1px solid var(--print-border-lt);
   border-radius: 4px;
   overflow: hidden;
   margin-bottom: 6px;
 }
 .ncp-panel__head {
   background: var(--neutral-50);
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--print-border-lt);
   padding: 4px 8px;
   font-size: 7.5px;
   font-weight: 700;
@@ -207,12 +207,12 @@
   font-size: 7px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #888;
+  color: var(--print-footer);
   letter-spacing: 0.04em;
   white-space: nowrap;
 }
 .ncp-ca-ref-line {
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--print-border);
   min-width: 100px;
   min-height: 15px;
   display: inline-block;
@@ -229,7 +229,7 @@
 .ncp-cb-box {
   width: 12px;
   height: 12px;
-  border: 1.5px solid #999;
+  border: 1.5px solid var(--print-check-border);
   border-radius: 2px;
   display: inline-block;
   flex-shrink: 0;
@@ -248,7 +248,7 @@
 .ncp-disposition-circle {
   width: 14px;
   height: 14px;
-  border: 1.5px solid #999;
+  border: 1.5px solid var(--print-check-border);
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
@@ -267,12 +267,12 @@
   max-width: 130px;
 }
 .ncp-sig__line {
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--print-border);
   min-height: 24px;
 }
 .ncp-sig__label {
   font-size: 7.5px;
-  color: #888;
+  color: var(--print-footer);
   font-weight: 600;
 }
 
@@ -293,10 +293,10 @@
 .ncp-footer {
   margin-top: auto;
   padding-top: 6px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--print-border-lt);
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 7px;
-  color: #aaa;
+  color: var(--print-placeholder);
 }

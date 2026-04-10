@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useState, useMemo } from 'react';
 import './SplitLayout.css';
 
 interface SplitLayoutProps {
@@ -9,12 +9,13 @@ interface SplitLayoutProps {
 
 export const SplitLayout = memo(({ left, right, leftWidth = 280 }: SplitLayoutProps) => {
   const [collapsed, setCollapsed] = useState(false);
+  const leftStyle = useMemo(() => collapsed ? undefined : { width: leftWidth }, [collapsed, leftWidth]);
 
   return (
     <div className="split-layout">
       <aside
         className={`split-layout__left${collapsed ? ' split-layout__left--collapsed' : ''}`}
-        style={!collapsed ? { width: leftWidth } : undefined}
+        style={leftStyle}
         aria-label="List panel"
       >
         {left}

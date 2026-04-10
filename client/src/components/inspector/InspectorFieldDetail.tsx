@@ -76,7 +76,7 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
       {/* Back */}
       <button
         onClick={onBack}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2E74B5', fontSize: 12, padding: '0 0 12px', display: 'flex', alignItems: 'center', gap: 4 }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: 12, padding: '0 0 12px', display: 'flex', alignItems: 'center', gap: 4 }}
       >
         <ArrowLeftOutlined style={{ fontSize: 10 }} /> All fields
       </button>
@@ -84,47 +84,47 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: 11, color: '#8896AA', textTransform: 'uppercase', letterSpacing: 1 }}>Field</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#1A202C' }}>{field.label}</div>
+          <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 1 }}>Field</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-near-black)' }}>{field.label}</div>
         </div>
         <Tag color={statusColor} style={{ marginTop: 4 }}>{field.status}</Tag>
       </div>
 
       {/* SQL Table */}
       <div style={{ marginBottom: 10 }}>
-        <div style={{ fontSize: 10, color: '#8896AA', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>SQL Table</div>
-        <code style={{ fontSize: 12, color: '#00257A', background: '#EEF2F8', padding: '2px 6px', borderRadius: 3 }}>
+        <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>SQL Table</div>
+        <code style={{ fontSize: 12, color: 'var(--navy)', background: 'var(--primary-light)', padding: '2px 6px', borderRadius: 3 }}>
           {field.sqlTable || '—'}
         </code>
       </div>
 
       {/* SQL Query */}
       <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 10, color: '#8896AA', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>SQL Query</div>
-        <pre style={{ background: '#f8f9fa', padding: '8px 10px', borderRadius: 4, fontSize: 11, margin: 0, whiteSpace: 'pre-wrap', color: '#1A202C', maxHeight: 100, overflowY: 'auto' }}>
+        <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>SQL Query</div>
+        <pre style={{ background: 'var(--neutral-50)', padding: '8px 10px', borderRadius: 4, fontSize: 11, margin: 0, whiteSpace: 'pre-wrap', color: 'var(--text-near-black)', maxHeight: 100, overflowY: 'auto' }}>
           {field.sqlQuery || '(not set)'}
         </pre>
       </div>
 
       {/* API Endpoint */}
       <div style={{ marginBottom: 10 }}>
-        <div style={{ fontSize: 10, color: '#8896AA', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>API Endpoint</div>
-        <code style={{ fontSize: 12, color: '#2E74B5', background: '#EEF2F8', padding: '2px 6px', borderRadius: 3 }}>
+        <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 3 }}>API Endpoint</div>
+        <code style={{ fontSize: 12, color: 'var(--primary)', background: 'var(--primary-light)', padding: '2px 6px', borderRadius: 3 }}>
           {field.apiEndpoint || '—'}
         </code>
         {field.responseProperty && (
-          <span style={{ marginLeft: 8, fontSize: 11, color: '#8896AA' }}>→ <code style={{ fontSize: 11 }}>{field.responseProperty}</code></span>
+          <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--muted)' }}>→ <code style={{ fontSize: 11 }}>{field.responseProperty}</code></span>
         )}
       </div>
 
       {/* Live Value */}
-      <div style={{ marginBottom: 12, padding: '10px 12px', background: '#F0F7FF', border: '1px solid #BFD6F6', borderRadius: 6 }}>
-        <div style={{ fontSize: 10, color: '#44697D', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
+      <div style={{ marginBottom: 12, padding: '10px 12px', background: 'var(--info-section-bg)', border: '1px solid var(--info-section-border)', borderRadius: 6 }}>
+        <div style={{ fontSize: 10, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
           Live value from DB
           {!loadingValue && field.sqlQuery && (
             <button
               onClick={fetchLiveValue}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#2E74B5', fontSize: 10, marginLeft: 6, padding: 0 }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: 10, marginLeft: 6, padding: 0 }}
             >
               Refresh
             </button>
@@ -133,11 +133,11 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
         {loadingValue ? (
           <Spin size="small" />
         ) : liveError ? (
-          <span style={{ color: '#B71234', fontSize: 12 }}>{liveError}</span>
+          <span style={{ color: 'var(--danger)', fontSize: 12 }}>{liveError}</span>
         ) : liveValue ? (
-          <span style={{ fontSize: 22, fontWeight: 700, color: '#00257A' }}>{liveValue}</span>
+          <span style={{ fontSize: 22, fontWeight: 700, color: 'var(--navy)' }}>{liveValue}</span>
         ) : (
-          <span style={{ color: '#8896AA', fontSize: 12 }}>—</span>
+          <span style={{ color: 'var(--muted)', fontSize: 12 }}>—</span>
         )}
       </div>
 
@@ -148,7 +148,7 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
             type="link"
             size="small"
             icon={<TableOutlined />}
-            style={{ padding: 0, fontSize: 11, color: '#2E74B5' }}
+            style={{ padding: 0, fontSize: 11, color: 'var(--primary)' }}
             loading={loadingPreview}
             onClick={() => showPreview ? setShowPreview(false) : fetchPreviewRows()}
           >
@@ -157,15 +157,15 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
           {showPreview && !loadingPreview && (
             <div style={{ marginTop: 6, overflowX: 'auto' }}>
               {previewError ? (
-                <span style={{ color: '#B71234', fontSize: 11 }}>{previewError}</span>
+                <span style={{ color: 'var(--danger)', fontSize: 11 }}>{previewError}</span>
               ) : previewRows.length === 0 ? (
-                <span style={{ color: '#8896AA', fontSize: 11 }}>No rows</span>
+                <span style={{ color: 'var(--muted)', fontSize: 11 }}>No rows</span>
               ) : (
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
                   <thead>
                     <tr>
                       {previewColumns.map(col => (
-                        <th key={col} style={{ textAlign: 'left', padding: '2px 6px 2px 0', borderBottom: '2px solid #BFD6F6', color: '#00257A', fontFamily: 'monospace', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                        <th key={col} style={{ textAlign: 'left', padding: '2px 6px 2px 0', borderBottom: '2px solid var(--info-section-border)', color: 'var(--navy)', fontFamily: 'monospace', fontWeight: 700, whiteSpace: 'nowrap' }}>
                           {col}
                         </th>
                       ))}
@@ -173,9 +173,9 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
                   </thead>
                   <tbody>
                     {previewRows.map((row, ri) => (
-                      <tr key={ri} style={{ background: ri % 2 === 0 ? 'transparent' : '#EEF5FF' }}>
+                      <tr key={ri} style={{ background: ri % 2 === 0 ? 'transparent' : 'var(--primary-light)' }}>
                         {row.map((cell, ci) => (
-                          <td key={ci} style={{ padding: '2px 6px 2px 0', fontFamily: 'monospace', color: cell === '(null)' ? '#8896AA' : '#1A202C', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <td key={ci} style={{ padding: '2px 6px 2px 0', fontFamily: 'monospace', color: cell === '(null)' ? 'var(--muted)' : 'var(--text-near-black)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {cell}
                           </td>
                         ))}
@@ -191,7 +191,7 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
 
       {/* Notes */}
       {field.notes && (
-        <div style={{ marginBottom: 12, padding: '6px 10px', background: '#FFF3CD', borderRadius: 4, fontSize: 11, color: '#856404' }}>
+        <div style={{ marginBottom: 12, padding: '6px 10px', background: 'var(--amber-light)', borderRadius: 4, fontSize: 11, color: 'var(--badge-amber-text)' }}>
           {field.notes}
         </div>
       )}
@@ -201,7 +201,7 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
         href={deepLink}
         target="_blank"
         rel="noreferrer"
-        style={{ fontSize: 11, color: '#2E74B5', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+        style={{ fontSize: 11, color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}
       >
         Open in Field Verifier ↗
       </a>

@@ -7,7 +7,7 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-modal);
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--overlay-bg);
   display: flex;
   align-items: flex-start;
   justify-content: center;
@@ -39,10 +39,10 @@
 .us-btn-close {
   height: 32px;
   padding: 0 14px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--print-border-lt);
   border-radius: 5px;
-  background: #fff;
-  color: #888;
+  background: var(--card);
+  color: var(--print-footer);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -53,13 +53,13 @@
 .us-page {
   width: 8.5in;
   height: 11in;
-  background: #fff;
+  background: var(--card);
   padding: 0.4in;
   font-family: 'Inter', Arial, sans-serif;
   font-size: 9px;
-  color: #222;
+  color: var(--print-body-text);
   box-sizing: border-box;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -67,8 +67,8 @@
 
 /* Internal use banner */
 .us-banner {
-  background: #fef2f2;
-  border: 2px solid #b71234;
+  background: var(--danger-light);
+  border: 2px solid var(--danger);
   border-radius: 4px;
   padding: 6px 14px;
   text-align: center;
@@ -77,13 +77,13 @@
 .us-banner__title {
   font-size: 12px;
   font-weight: 800;
-  color: #b71234;
+  color: var(--danger);
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
 .us-banner__sub {
   font-size: 8px;
-  color: #991b1b;
+  color: var(--print-danger-text);
   margin-top: 2px;
   font-weight: 600;
 }
@@ -104,7 +104,7 @@
 .us-header__title {
   font-size: 14px;
   font-weight: 800;
-  color: #1B3A5C;
+  color: var(--navy);
 }
 .us-header__subtitle {
   font-size: 9px;
@@ -113,7 +113,7 @@
 }
 .us-header__doc {
   font-size: 8px;
-  color: #aaa;
+  color: var(--print-placeholder);
 }
 
 /* Section bar (shared sb pattern) */
@@ -132,13 +132,13 @@
   font-size: 7px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #888;
+  color: var(--print-footer);
   letter-spacing: 0.04em;
 }
 
 /* Field value (shared fv pattern) */
 .us-fv {
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--print-border);
   font-size: 9px;
   padding: 0 2px;
   min-height: 13px;
@@ -177,11 +177,11 @@
   color: var(--primary);
   letter-spacing: 0.05em;
   padding: 2px 6px;
-  background: #f0f4fc;
+  background: var(--info-section-bg);
   border-left: 3px solid var(--primary);
 }
 .us-reason-box {
-  border: 1px solid #ddd;
+  border: 1px solid var(--print-border-lt);
   border-radius: 3px;
   min-height: 48px;
   padding: 3px 6px;
@@ -208,12 +208,12 @@
   gap: 2px;
 }
 .us-sig-line {
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--print-border);
   min-height: 26px;
 }
 .us-sig-label {
   font-size: 7px;
-  color: #888;
+  color: var(--print-footer);
   font-weight: 600;
   margin-top: 1px;
 }
@@ -221,9 +221,9 @@
 /* Footer */
 .us-footer {
   padding-top: 4px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--print-border-lt);
   font-size: 7px;
-  color: #999;
+  color: var(--print-footer);
   text-align: center;
 }
 .us-footer__primary {
@@ -239,5 +239,5 @@
   justify-content: center;
   gap: 16px;
   font-size: 6.5px;
-  color: #aaa;
+  color: var(--print-placeholder);
 }

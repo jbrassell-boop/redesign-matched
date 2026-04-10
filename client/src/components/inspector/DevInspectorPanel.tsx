@@ -19,7 +19,7 @@ export function DevInspectorPanel() {
       width={420}
       mask={false}
       title={
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#00257A' }}>
+        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>
           {selectedField ? selectedField.label : activeScreen ? `${activeScreen} Fields` : 'Dev Inspector'}
         </span>
       }
@@ -29,22 +29,22 @@ export function DevInspectorPanel() {
       {loading && (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, paddingTop: 48 }}>
           <Spin size="small" />
-          <span style={{ fontSize: 13, color: '#8896AA' }}>Loading field registry…</span>
+          <span style={{ fontSize: 13, color: 'var(--muted)' }}>Loading field registry…</span>
         </div>
       )}
 
       {error && (
-        <div style={{ color: '#B71234', fontSize: 13, padding: 16 }}>{error}</div>
+        <div style={{ color: 'var(--danger)', fontSize: 13, padding: 16 }}>{error}</div>
       )}
 
       {!loading && !error && !activeScreen && (
-        <div style={{ color: '#8896AA', fontSize: 13 }}>
+        <div style={{ color: 'var(--muted)', fontSize: 13 }}>
           Navigate to a portal screen to see its fields.
         </div>
       )}
 
       {!loading && !error && activeScreen && !screen && (
-        <div style={{ color: '#8896AA', fontSize: 13 }}>
+        <div style={{ color: 'var(--muted)', fontSize: 13 }}>
           No field registry found for <strong>{activeScreen}</strong>.
         </div>
       )}
@@ -70,11 +70,11 @@ export function DevInspectorPanel() {
 function FieldList({ fields, onSelect }: { fields: FieldEntry[]; onSelect: (id: string) => void }) {
   return (
     <div>
-      <div style={{ fontSize: 11, color: '#8896AA', marginBottom: 12 }}>
+      <div style={{ fontSize: 11, color: 'var(--muted)', marginBottom: 12 }}>
         {fields.length} registered field{fields.length !== 1 ? 's' : ''}
       </div>
       {fields.map(field => {
-        const statusColor = field.status === 'confirmed' ? '#16A34A' : field.status === 'flagged' ? '#D97706' : '#8896AA';
+        const statusColor = field.status === 'confirmed' ? 'var(--success)' : field.status === 'flagged' ? 'var(--amber)' : 'var(--muted)';
         return (
           <div
             key={field.id}
@@ -84,27 +84,27 @@ function FieldList({ fields, onSelect }: { fields: FieldEntry[]; onSelect: (id: 
               borderRadius: 6,
               cursor: 'pointer',
               marginBottom: 4,
-              border: '1px solid #DDE3EE',
+              border: '1px solid var(--border)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              background: '#fff',
+              background: 'var(--card)',
               transition: 'background 0.1s',
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = '#EEF5FF')}
-            onMouseLeave={e => (e.currentTarget.style.background = '#fff')}
+            onMouseEnter={e => (e.currentTarget.style.background = 'var(--primary-light)')}
+            onMouseLeave={e => (e.currentTarget.style.background = 'var(--card)')}
           >
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#1A202C', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-near-black)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {field.label}
               </div>
-              <div style={{ fontSize: 11, color: '#8896AA', fontFamily: 'monospace', marginTop: 1 }}>
+              <div style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'monospace', marginTop: 1 }}>
                 {field.sqlTable}
               </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0, marginLeft: 8 }}>
               <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor, display: 'inline-block' }} />
-              <code style={{ fontSize: 10, color: '#44697D' }}>{field.responseProperty}</code>
+              <code style={{ fontSize: 10, color: 'var(--muted)' }}>{field.responseProperty}</code>
             </div>
           </div>
         );

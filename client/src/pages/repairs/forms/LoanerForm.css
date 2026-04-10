@@ -3,43 +3,43 @@
    ──────────────────────────────────────────────────────────────── */
 
 /* Overlay / modal backdrop */
-.lf-overlay        { position: fixed; inset: 0; z-index: 1100; background: rgba(0,0,0,0.5); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+.lf-overlay        { position: fixed; inset: 0; z-index: 1100; background: var(--overlay-bg); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
 
 /* Floating action bar (no-print) */
 .lf-action-bar     { position: fixed; top: 16px; right: 32px; display: flex; gap: 8px; z-index: 1200; }
 .lf-btn-print      { height: 32px; padding: 0 16px; border: none; border-radius: 5px; background: var(--primary); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
-.lf-btn-close      { height: 32px; padding: 0 14px; border: 1px solid #ddd; border-radius: 5px; background: #fff; color: #888; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
+.lf-btn-close      { height: 32px; padding: 0 14px; border: 1px solid var(--print-border-lt); border-radius: 5px; background: var(--card); color: var(--print-footer); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
 
 /* Printable page */
-.lf-page           { width: 8.5in; height: 11in; background: #fff; padding: 0.4in; font-family: 'Inter', Arial, sans-serif; font-size: 9px; color: #222; box-sizing: border-box; box-shadow: 0 4px 24px rgba(0,0,0,0.18); display: flex; flex-direction: column; overflow: hidden; }
+.lf-page           { width: 8.5in; height: 11in; background: var(--card); padding: 0.4in; font-family: 'Inter', Arial, sans-serif; font-size: 9px; color: var(--print-body-text); box-sizing: border-box; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; }
 
 /* Header row */
 .lf-header         { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
 .lf-logo           { height: 44px; }
 .lf-title-block    { text-align: right; }
-.lf-title          { font-size: 14px; font-weight: 800; color: #1B3A5C; }
+.lf-title          { font-size: 14px; font-weight: 800; color: var(--navy); }
 .lf-subtitle       { font-size: 9px; font-weight: 600; color: var(--primary); }
-.lf-doc-num        { font-size: 8px; color: #aaa; }
+.lf-doc-num        { font-size: 8px; color: var(--print-placeholder); }
 
 /* Section bar (navy/primary stripe) */
 .lf-sb             { background: var(--primary); color: #fff; font-size: 7.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 6px; }
 
 /* Field label */
-.lf-fl             { font-size: 7px; font-weight: 700; text-transform: uppercase; color: #888; letter-spacing: 0.04em; }
+.lf-fl             { font-size: 7px; font-weight: 700; text-transform: uppercase; color: var(--print-footer); letter-spacing: 0.04em; }
 
 /* Field value underline */
-.lf-fv             { border-bottom: 1px solid #ccc; font-size: 9px; padding: 0 2px; min-height: 13px; }
+.lf-fv             { border-bottom: 1px solid var(--print-border); font-size: 9px; padding: 0 2px; min-height: 13px; }
 
 /* Equipment table */
 .lf-eq-table       { width: 100%; border-collapse: collapse; margin-top: 4px; margin-bottom: 6px; }
-.lf-th             { font-size: 7.5px; font-weight: 700; color: #888; text-transform: uppercase; border-bottom: 1px solid #ccc; padding: 1px 4px; text-align: left; }
-.lf-th--center     { font-size: 7.5px; font-weight: 700; color: #888; text-transform: uppercase; border-bottom: 1px solid #ccc; padding: 1px 4px; text-align: center; }
-.lf-td             { padding: 4px; font-size: 8.5px; border-bottom: 1px solid #eee; vertical-align: middle; }
-.lf-td--center     { padding: 4px; font-size: 8.5px; border-bottom: 1px solid #eee; vertical-align: middle; text-align: center; }
+.lf-th             { font-size: 7.5px; font-weight: 700; color: var(--print-footer); text-transform: uppercase; border-bottom: 1px solid var(--print-border); padding: 1px 4px; text-align: left; }
+.lf-th--center     { font-size: 7.5px; font-weight: 700; color: var(--print-footer); text-transform: uppercase; border-bottom: 1px solid var(--print-border); padding: 1px 4px; text-align: center; }
+.lf-td             { padding: 4px; font-size: 8.5px; border-bottom: 1px solid var(--print-border-xlt); vertical-align: middle; }
+.lf-td--center     { padding: 4px; font-size: 8.5px; border-bottom: 1px solid var(--print-border-xlt); vertical-align: middle; text-align: center; }
 
 /* Policy / body text blocks */
-.lf-policy-warn    { background: #fffbeb; border: 1.5px solid #f59e0b; border-radius: 3px; padding: 5px 10px; font-size: 8.5px; font-weight: 700; color: #92400e; margin-bottom: 4px; }
-.lf-policy-body    { font-size: 8.5px; color: #444; line-height: 1.5; padding: 6px 10px; background: #f8f9fb; border: 1px solid #eee; border-radius: 3px; }
+.lf-policy-warn    { background: var(--amber-light); border: 1.5px solid var(--warning); border-radius: 3px; padding: 5px 10px; font-size: 8.5px; font-weight: 700; color: var(--badge-amber-text); margin-bottom: 4px; }
+.lf-policy-body    { font-size: 8.5px; color: var(--print-field-text); line-height: 1.5; padding: 6px 10px; background: var(--print-row-alt); border: 1px solid var(--print-border-xlt); border-radius: 3px; }
 .lf-policy-wrap    { margin-top: 4px; margin-bottom: 6px; }
 
 /* Borrower info grid */
@@ -47,7 +47,7 @@
 .lf-span2          { grid-column: span 2; }
 
 /* Acknowledgment note */
-.lf-ack            { margin-bottom: 6px; font-size: 8.5px; color: #666; padding: 5px 10px; background: #f8f9fb; border: 1px solid #eee; border-radius: 3px; }
+.lf-ack            { margin-bottom: 6px; font-size: 8.5px; color: var(--print-ack-text); padding: 5px 10px; background: var(--print-row-alt); border: 1px solid var(--print-border-xlt); border-radius: 3px; }
 
 /* Signature rows */
 .lf-sig-row        { display: flex; gap: 16px; margin-bottom: 6px; }
@@ -56,11 +56,11 @@
 .lf-sig-block--120 { max-width: 120px; display: flex; flex-direction: column; gap: 2px; }
 .lf-sig-block--100 { max-width: 100px; display: flex; flex-direction: column; gap: 2px; }
 .lf-sig-block--220 { max-width: 220px; display: flex; flex-direction: column; gap: 2px; }
-.lf-sig-line       { border-bottom: 1px solid #ccc; min-height: 26px; }
-.lf-sig-label      { font-size: 7px; color: #888; font-weight: 600; margin-top: 1px; }
+.lf-sig-line       { border-bottom: 1px solid var(--print-border); min-height: 26px; }
+.lf-sig-label      { font-size: 7px; color: var(--print-footer); font-weight: 600; margin-top: 1px; }
 
 /* Footer */
-.lf-footer         { margin-top: auto; padding-top: 4px; border-top: 1px solid #ddd; font-size: 7px; color: #999; text-align: center; }
+.lf-footer         { margin-top: auto; padding-top: 4px; border-top: 1px solid var(--print-border-lt); font-size: 7px; color: var(--print-footer); text-align: center; }
 .lf-footer-name    { font-weight: 600; margin-bottom: 2px; }
 .lf-footer-doc     { float: right; font-weight: 400; }
-.lf-footer-addrs   { display: flex; justify-content: center; gap: 16px; font-size: 6.5px; color: #aaa; }
+.lf-footer-addrs   { display: flex; justify-content: center; gap: 16px; font-size: 6.5px; color: var(--print-placeholder); }

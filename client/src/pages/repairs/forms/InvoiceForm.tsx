@@ -120,7 +120,7 @@ export const InvoiceForm = ({ repair, lineItems, onClose }: Props) => {
           </thead>
           <tbody>
             {rows.map((row, i) => (
-              <tr key={i} style={{ background: i % 2 === 1 ? '#F9FAFB' : '#fff' }}>
+              <tr key={i} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : 'var(--card)' }}>
                 <td className="inv-td">
                   {row?.description ?? ''}
                 </td>

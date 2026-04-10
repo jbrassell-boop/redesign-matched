@@ -117,7 +117,7 @@ export const ReturnVerificationForm = ({ repair, onClose }: Props) => {
           </thead>
           <tbody>
             {Array.from({ length: 6 }).map((_, i) => (
-              <tr key={i} style={{ background: i % 2 === 1 ? '#f8f9fb' : '#fff' }}>
+              <tr key={i} style={{ background: i % 2 === 1 ? 'var(--print-row-alt)' : 'var(--card)' }}>
                 <td className="rv-td">&nbsp;</td>
                 <td className="rv-td rv-td--center">&nbsp;</td>
                 <td className="rv-td rv-td--center">

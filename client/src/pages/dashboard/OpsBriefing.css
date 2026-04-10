@@ -1,0 +1,68 @@
+/* ── OpsBriefing responsive grids ── */
+
+.ops-briefing__two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.ops-briefing__priorities-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.ops-briefing__prod-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.ops-briefing__delay-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 8px;
+  text-align: center;
+}
+
+.ops-briefing__kpi-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--neutral-100);
+}
+
+.ops-briefing__kpi-grid-2--no-border {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 768px) {
+  .ops-briefing__two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-briefing__priorities-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ops-briefing__prod-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .ops-briefing__delay-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .ops-briefing__priorities-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-briefing__prod-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ops-briefing__delay-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -39,10 +39,10 @@
 .saq-btn-close {
   height: 32px;
   padding: 0 14px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--print-border-lt);
   border-radius: 5px;
-  background: #fff;
-  color: #888;
+  background: var(--card);
+  color: var(--print-footer);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -53,11 +53,11 @@
 .saq-page {
   width: 8.5in;
   min-height: 11in;
-  background: #fff;
+  background: var(--card);
   padding: 0.4in;
   font-family: 'Inter', Arial, sans-serif;
   font-size: 9px;
-  color: #222;
+  color: var(--print-body-text);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -83,7 +83,7 @@
 }
 .saq-header__doc {
   font-size: 8px;
-  color: #aaa;
+  color: var(--print-placeholder);
   margin-top: 2px;
 }
 
@@ -104,13 +104,13 @@
   font-size: 7px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #888;
+  color: var(--print-footer);
   letter-spacing: 0.04em;
 }
 
 /* Field value */
 .saq-fv {
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--print-border);
   font-size: 9px;
   padding: 0 2px;
   min-height: 13px;
@@ -157,7 +157,7 @@
 .saq-td {
   padding: 3px 6px;
   font-size: 8px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--print-border-xlt);
 }
 .saq-td--mono {
   font-family: 'Courier New', monospace;
@@ -205,7 +205,7 @@
   align-items: center;
   padding: 5px 8px;
   background: var(--neutral-50);
-  border: 1px solid #ddd;
+  border: 1px solid var(--print-border-lt);
   border-radius: 3px;
   margin-bottom: 4px;
 }
@@ -213,7 +213,7 @@
   font-size: 7.5px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #888;
+  color: var(--print-footer);
   letter-spacing: 0.04em;
   margin-right: 4px;
 }
@@ -237,7 +237,7 @@
   font-size: 7.5px;
   font-weight: 700;
   text-transform: uppercase;
-  color: #888;
+  color: var(--print-footer);
   letter-spacing: 0.04em;
   margin-right: 4px;
   white-space: nowrap;
@@ -251,7 +251,7 @@
 .saq-disposition-box {
   width: 12px;
   height: 12px;
-  border: 1.5px solid #999;
+  border: 1.5px solid var(--print-check-border);
   border-radius: 2px;
   display: inline-block;
   flex-shrink: 0;
@@ -259,7 +259,7 @@
 
 /* QC notes box */
 .saq-notes-box {
-  border: 1px solid #ccc;
+  border: 1px solid var(--print-border);
   border-radius: 3px;
   min-height: 40px;
   padding: 4px 6px;
@@ -280,12 +280,12 @@
   max-width: 130px;
 }
 .saq-sig__line {
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid var(--print-border);
   min-height: 24px;
 }
 .saq-sig__label {
   font-size: 7.5px;
-  color: #888;
+  color: var(--print-footer);
   font-weight: 600;
 }
 
@@ -301,10 +301,10 @@
 .saq-footer {
   margin-top: auto;
   padding-top: 6px;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--print-border-lt);
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 7px;
-  color: #aaa;
+  color: var(--print-placeholder);
 }

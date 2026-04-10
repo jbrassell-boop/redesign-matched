@@ -48,7 +48,7 @@ export function DeveloperView({ screens }: Props) {
           <pre style={{ margin: 0, fontSize: 11, whiteSpace: 'pre-wrap', flex: 1 }}>{sql}</pre>
           <Button size="small" icon={<CopyOutlined />} onClick={() => copyToClipboard(sql)} />
         </div>
-      ) : <span style={{ color: '#8896AA' }}>—</span>,
+      ) : <span style={{ color: 'var(--muted)' }}>—</span>,
     },
     { title: 'API Endpoint', dataIndex: 'apiEndpoint', key: 'apiEndpoint', width: 200 },
     { title: 'Response Property', dataIndex: 'responseProperty', key: 'responseProperty', width: 140 },
@@ -66,7 +66,7 @@ export function DeveloperView({ screens }: Props) {
       dataIndex: 'notes',
       key: 'notes',
       width: 180,
-      render: (notes: string) => notes ? <span style={{ color: '#856404', fontSize: 12 }}>{notes}</span> : null,
+      render: (notes: string) => notes ? <span style={{ color: 'var(--badge-amber-text)', fontSize: 12 }}>{notes}</span> : null,
     },
   ];
 
@@ -91,7 +91,7 @@ export function DeveloperView({ screens }: Props) {
             { value: 'unverified', label: 'Unverified' },
           ]}
         />
-        <span style={{ fontSize: 12, color: '#8896AA' }}>{filtered.length} fields</span>
+        <span style={{ fontSize: 12, color: 'var(--muted)' }}>{filtered.length} fields</span>
       </div>
 
       {/* Export buttons */}
@@ -112,7 +112,7 @@ export function DeveloperView({ screens }: Props) {
         rowClassName={record => record.status === 'flagged' ? 'flagged-row' : ''}
       />
 
-      <style>{`.flagged-row td { background: #FFFBEB !important; }`}</style>
+      <style>{`.flagged-row td { background: var(--amber-light) !important; }`}</style>
     </div>
   );
 }

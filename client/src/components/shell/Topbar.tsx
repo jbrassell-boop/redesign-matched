@@ -82,7 +82,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
         height: 64,
         background: 'var(--topbar)',
         borderBottom: '1px solid var(--topbar-border)',
-        boxShadow: '0 2px 12px rgba(0,0,0,0.18)',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -98,7 +98,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
         </div>
 
         {/* Right: controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'rgba(255,255,255,0.7)', fontSize: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--topbar-text)', fontSize: 12 }}>
           {/* Work Orders dropdown */}
           <div ref={menuRef} style={{ position: 'relative', marginRight: 12 }}>
             <button
@@ -132,6 +132,7 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
                   <div
                     key={item.type}
                     role="menuitem"
+                    aria-label={`${item.label}: ${item.desc}`}
                     tabIndex={0}
                     onClick={handleAction}
                     onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAction(); } }}
@@ -172,8 +173,8 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
                 height: 28,
                 padding: '0 10px',
                 borderRadius: 5,
-                border: inspectorEnabled ? '1px solid rgba(255,255,255,0.6)' : '1px solid rgba(255,255,255,0.25)',
-                background: inspectorEnabled ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.1)',
+                border: inspectorEnabled ? `1px solid var(--topbar-ctrl-active-border)` : `1px solid var(--topbar-ctrl-border)`,
+                background: inspectorEnabled ? 'var(--topbar-ctrl-active-bg)' : 'var(--topbar-ctrl-bg)',
                 color: 'var(--card)',
                 fontSize: 11,
                 fontWeight: inspectorEnabled ? 700 : 400,
@@ -204,8 +205,8 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
               height: 28,
               padding: '0 8px',
               borderRadius: 5,
-              border: '1px solid rgba(255,255,255,0.25)',
-              background: 'rgba(255,255,255,0.12)',
+              border: `1px solid var(--topbar-ctrl-border)`,
+              background: 'var(--topbar-ctrl-bg)',
               color: 'var(--card)',
               fontSize: 12,
               cursor: 'pointer',
@@ -222,11 +223,12 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
           {/* Density toggle */}
           <button
             onClick={toggleDensity}
+            aria-label={density === 'compact' ? 'Switch to comfortable density' : 'Switch to compact density'}
             title={density === 'compact' ? 'Switch to comfortable' : 'Switch to compact'}
             style={{
               height: 28, width: 28, padding: 0, borderRadius: 5,
-              border: '1px solid rgba(255,255,255,0.25)',
-              background: 'rgba(255,255,255,0.12)',
+              border: `1px solid var(--topbar-ctrl-border)`,
+              background: 'var(--topbar-ctrl-bg)',
               color: 'var(--card)', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
@@ -245,22 +247,23 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
           {/* User avatar + welcome */}
           <div style={{
             width: 32, height: 32, borderRadius: 8,
-            background: 'rgba(255,255,255,0.15)',
+            background: 'var(--topbar-ctrl-bg-hover)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'var(--card)', fontSize: 13, fontWeight: 700, flexShrink: 0, letterSpacing: '0.03em',
           }}>
             {initials}
           </div>
-          <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, whiteSpace: 'nowrap' }}>
+          <span style={{ color: 'var(--topbar-text-strong)', fontSize: 13, whiteSpace: 'nowrap' }}>
             Welcome back, <strong style={{ color: 'var(--card)' }}>{username ?? 'User'}</strong>
           </span>
 
           {/* Sign out */}
           <button
             onClick={logout}
+            aria-label="Sign out"
             style={{
-              background: 'rgba(255,255,255,0.15)',
-              border: '1px solid rgba(255,255,255,0.25)',
+              background: 'var(--topbar-ctrl-bg-hover)',
+              border: `1px solid var(--topbar-ctrl-border)`,
               color: 'var(--card)', padding: '4px 10px', borderRadius: 5,
               fontSize: 11, cursor: 'pointer', fontFamily: 'inherit',
             }}

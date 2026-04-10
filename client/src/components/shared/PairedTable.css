@@ -9,7 +9,7 @@
 .paired-table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 800px;
+  min-width: min(800px, 100%);
 }
 
 /* Scroll shadow hint when table overflows */

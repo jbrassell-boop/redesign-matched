@@ -11,6 +11,29 @@ const STATUS_COLORS: Record<string, string> = {
   'Cancelled': 'var(--muted)',
 };
 
+// ── Extracted static styles (outside render) ──
+const containerStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', height: '100%' };
+const searchWrapStyle: React.CSSProperties = { padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)' };
+const searchIconStyle: React.CSSProperties = { color: 'var(--muted)', fontSize: 12 };
+const listWrapStyle: React.CSSProperties = { flex: 1, overflow: 'hidden' };
+const spinWrapStyle: React.CSSProperties = { display: 'flex', justifyContent: 'center', padding: 24 };
+const emptyStyle: React.CSSProperties = { padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 12 };
+const rowTopStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 };
+const clientLineStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+const bottomRowStyle: React.CSSProperties = { display: 'flex', justifyContent: 'space-between', marginTop: 2 };
+const scopeTypeStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)' };
+
+const selectedRowStyle: React.CSSProperties = {
+  padding: '8px 12px', borderBottom: '1px solid var(--neutral-200)', cursor: 'pointer',
+  background: 'var(--amber-light)', borderLeft: '2px solid var(--amber)',
+  transition: 'background 0.1s', height: '100%', boxSizing: 'border-box',
+};
+const defaultRowStyle: React.CSSProperties = {
+  padding: '8px 12px', borderBottom: '1px solid var(--neutral-200)', cursor: 'pointer',
+  background: 'var(--card)', borderLeft: '2px solid transparent',
+  transition: 'background 0.1s', height: '100%', boxSizing: 'border-box',
+};
+
 interface RepairsListProps {
   repairs: RepairListItem[];
   loading: boolean;
@@ -36,11 +59,11 @@ export const RepairsList = ({ repairs, loading, selectedKey, search, onSearchCha
   }, []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={containerStyle}>
       {/* Search */}
-      <div style={{ padding: '10px 12px', borderBottom: '1px solid var(--neutral-200)' }}>
+      <div style={searchWrapStyle}>
         <Input
-          prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+          prefix={<SearchOutlined style={searchIconStyle} />}
           placeholder="Search repairs..."
           aria-label="Search repairs"
           value={search}
@@ -51,13 +74,13 @@ export const RepairsList = ({ repairs, loading, selectedKey, search, onSearchCha
       </div>
 
       {/* List */}
-      <div ref={repairListRef} style={{ flex: 1, overflow: 'hidden' }}>
+      <div ref={repairListRef} style={listWrapStyle}>
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 24 }}>
+          <div style={spinWrapStyle}>
             <Spin size="small" />
           </div>
         ) : repairs.length === 0 ? (
-          <div style={{ padding: 24, textAlign: 'center', color: 'var(--muted)', fontSize: 12 }}>
+          <div style={emptyStyle}>
             No repairs found
           </div>
         ) : listHeight > 0 ? (
@@ -71,47 +94,31 @@ export const RepairsList = ({ repairs, loading, selectedKey, search, onSearchCha
           >
             {({ index, style }) => {
               const r = repairs[index];
+              const isSelected = selectedKey === r.repairKey;
               return (
                 <div style={style} key={r.repairKey}>
                   <div
                     role="option"
-                    aria-selected={selectedKey === r.repairKey}
+                    aria-selected={isSelected}
                     tabIndex={0}
                     onClick={() => onSelect(r)}
                     onDoubleClick={() => onDoubleClick?.(r)}
                     onKeyDown={e => { if (e.key === 'Enter') onSelect(r); if (e.key === 'Enter' && e.ctrlKey) onDoubleClick?.(r); }}
-                    style={{
-                      padding: '8px 12px',
-                      borderBottom: '1px solid var(--neutral-200)',
-                      cursor: 'pointer',
-                      background: selectedKey === r.repairKey ? 'var(--amber-light)' : 'var(--card)',
-                      borderLeft: selectedKey === r.repairKey ? '2px solid var(--amber)' : '2px solid transparent',
-                      transition: 'background 0.1s',
-                      height: '100%',
-                      boxSizing: 'border-box',
-                    }}
+                    style={isSelected ? selectedRowStyle : defaultRowStyle}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
-                      <span style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: r.isUrgent ? 'var(--danger)' : 'var(--primary-dark)',
-                      }}>
+                    <div style={rowTopStyle}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: r.isUrgent ? 'var(--danger)' : 'var(--primary-dark)' }}>
                         {r.wo}
                       </span>
-                      <span style={{
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: STATUS_COLORS[r.status] ?? 'var(--muted)',
-                      }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: STATUS_COLORS[r.status] ?? 'var(--muted)' }}>
                         {r.status}
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <div style={clientLineStyle}>
                       {r.client} — {r.dept}
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 2 }}>
-                      <span style={{ fontSize: 11, color: 'var(--muted)' }}>{r.scopeType}</span>
+                    <div style={bottomRowStyle}>
+                      <span style={scopeTypeStyle}>{r.scopeType}</span>
                       <span style={{ fontSize: 11, color: r.daysIn > 14 ? 'var(--danger)' : r.daysIn > 7 ? 'var(--amber)' : 'var(--muted)' }}>
                         {r.daysIn}d
                       </span>

@@ -94,6 +94,7 @@ function PairedTableInner<T extends Record<string, unknown>>({
                 className={sortCol === col.key ? `sorted ${sortDir}` : ''}
                 onClick={() => handleSort(col)}
                 tabIndex={col.sortable ? 0 : undefined}
+                aria-label={col.sortable ? `Sort by ${col.title}` : undefined}
                 aria-sort={col.sortable && sortCol === col.key ? (sortDir === 'asc' ? 'ascending' : sortDir === 'desc' ? 'descending' : 'none') : undefined}
                 onKeyDown={col.sortable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleSort(col); } } : undefined}
               >

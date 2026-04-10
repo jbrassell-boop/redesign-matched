@@ -56,7 +56,7 @@ function PF({ value }: { value?: string }) {
   const v = (value ?? '').toUpperCase().trim();
   if (v === 'P') return <span className="fi-pf-btn" style={{ background: 'var(--success)', color: '#fff' }}>P</span>;
   if (v === 'F') return <span className="fi-pf-btn" style={{ background: 'var(--danger)', color: '#fff' }}>F</span>;
-  return <span className="fi-pf-btn" style={{ background: '#f3f4f6', color: '#aaa' }}>—</span>;
+  return <span className="fi-pf-btn" style={{ background: 'var(--neutral-100)', color: '#aaa' }}>—</span>;
 }
 
 // ── Rigid P/F/N/A row ──
@@ -456,7 +456,7 @@ function FlexFinalInspection({ repair, inspections, lineItems }: { repair: Repai
         <span className="fi-safety-label">Patient Safety</span>
         <span className="fi-safety-level">{repair.psLevel || 'N/A'}</span>
         <span className="fi-safety-arrow">&rarr;</span>
-        <span style={{ padding: '2px 10px', borderRadius: 3, fontSize: 9, fontWeight: 700, background: scopeUsable === 'Y' ? '#f0fdf4' : '#fef2f2', color: scopeUsable === 'Y' ? '#166534' : '#991b1b', border: scopeUsable === 'Y' ? '1px solid #bbf7d0' : '1px solid #fca5a5' }}>{scopeUsable === 'Y' ? 'USABLE' : scopeUsable === 'N' ? 'UNUSABLE' : 'Pending'}</span>
+        <span style={{ padding: '2px 10px', borderRadius: 3, fontSize: 9, fontWeight: 700, background: scopeUsable === 'Y' ? 'var(--print-success-bg)' : 'var(--danger-light)', color: scopeUsable === 'Y' ? 'var(--print-success-text)' : 'var(--print-danger-text)', border: scopeUsable === 'Y' ? '1px solid var(--print-success-border)' : '1px solid var(--print-danger-border)' }}>{scopeUsable === 'Y' ? 'USABLE' : scopeUsable === 'N' ? 'UNUSABLE' : 'Pending'}</span>
         <div className="fi-includes-wrap">
           <span className="fi-safety-label">Includes</span>
           {included.length > 0 ? included.map(a => (
@@ -478,7 +478,7 @@ function FlexFinalInspection({ repair, inspections, lineItems }: { repair: Repai
                 <table className="fi-table">
                   <tbody>
                     {cat.items.map((t, i) => (
-                      <tr key={t.field} style={{ background: i % 2 === 1 ? '#f8f9fb' : '#fff' }}>
+                      <tr key={t.field} style={{ background: i % 2 === 1 ? 'var(--print-row-alt)' : 'var(--card)' }}>
                         <td className="fi-td">{t.label}</td>
                         <td className="fi-td--w30c"><PF value={ins[t.field] as string | undefined} /></td>
                       </tr>
@@ -499,7 +499,7 @@ function FlexFinalInspection({ repair, inspections, lineItems }: { repair: Repai
             <thead><tr><th className="fi-th fi-th--left">Repair Item</th><th className="fi-td--w50c fi-th fi-th--left">Fix</th><th className="fi-td--w160 fi-th fi-th--left">Comments</th></tr></thead>
             <tbody>
               {approvedItems.map((li, i) => (
-                <tr key={li.tranKey} style={{ background: i % 2 === 1 ? '#f8f9fb' : '#fff' }}>
+                <tr key={li.tranKey} style={{ background: i % 2 === 1 ? 'var(--print-row-alt)' : 'var(--card)' }}>
                   <td className="fi-td">{li.description}</td>
                   <td className="fi-td">{li.fixType || em}</td>
                   <td className="fi-td--small">{li.comments || em}</td>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { Modal, message } from 'antd';
 import { createNewClient, type CreateClientPayload } from '../../api/clients';
 import { createDepartment } from '../../api/departments';
@@ -21,16 +21,16 @@ const secHead: React.CSSProperties = {
 const g2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px' };
 const g3: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 10px' };
 
-const F = ({ label: l, children }: { label: string; children: React.ReactNode }) => (
-  <label style={{ display: 'block' }}><span style={lbl}>{l}</span>{children}</label>
+const F = ({ label: l, id, children }: { label: string; id?: string; children: React.ReactNode }) => (
+  <div style={{ display: 'block' }}><label htmlFor={id} style={lbl}>{l}</label>{children}</div>
 );
 
-const Inp = ({ value, onChange, placeholder, type }: { value: string | undefined; onChange: (v: string) => void; placeholder?: string; type?: string }) => (
-  <input type={type ?? 'text'} value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={fld} />
+const Inp = ({ value, onChange, placeholder, type, required, id }: { value: string | undefined; onChange: (v: string) => void; placeholder?: string; type?: string; required?: boolean; id?: string }) => (
+  <input id={id} type={type ?? 'text'} value={value ?? ''} onChange={e => onChange(e.target.value)} placeholder={placeholder} style={fld} aria-required={required || undefined} />
 );
 
-const Sel = ({ value, onChange, options, placeholder }: { value: number | string | undefined; onChange: (v: string) => void; options: LookupOption[]; placeholder?: string }) => (
-  <select value={value ?? ''} onChange={e => onChange(e.target.value)} style={fld}>
+const Sel = ({ value, onChange, options, placeholder, required, id }: { value: number | string | undefined; onChange: (v: string) => void; options: LookupOption[]; placeholder?: string; required?: boolean; id?: string }) => (
+  <select id={id} value={value ?? ''} onChange={e => onChange(e.target.value)} style={fld} aria-required={required || undefined}>
     <option value="">{placeholder ?? '— select —'}</option>
     {options.map(o => <option key={o.key} value={o.key}>{o.name}</option>)}
   </select>
@@ -69,6 +69,7 @@ const DEPT_DEFAULTS: DeptForm = {
 };
 
 export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
+  const uid = useId();
   const [form, setForm]             = useState<Partial<CreateClientPayload>>(CLIENT_DEFAULTS);
   const [dept, setDept]             = useState<DeptForm>(DEPT_DEFAULTS);
   const [newScope, setNewScope]     = useState(false);
@@ -176,10 +177,10 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
       styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', padding: '12px 16px' } }}
     >
       {/* ── Client Information ── */}
-      <div style={secHead}>Client Information</div>
+      <h3 style={secHead}>Client Information</h3>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '6px 10px' }}>
-        <F label="Client Name *">
-          <Inp value={form.name} onChange={v => set('name', v)} placeholder="Required" />
+        <F label="Client Name *" id={`${uid}-name`}>
+          <Inp id={`${uid}-name`} value={form.name} onChange={v => set('name', v)} placeholder="Required" required />
         </F>
         <F label="Client Since">
           <Inp value={form.clientSince ?? ''} onChange={v => set('clientSince', v)} type="date" />
@@ -217,7 +218,7 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
       </div>
 
       {/* ── Account Defaults ── */}
-      <div style={secHead}>Account Defaults</div>
+      <h3 style={secHead}>Account Defaults</h3>
       <div style={g3}>
         <F label="Pricing Category">
           <Sel value={form.pricingCategoryKey ?? undefined} onChange={v => set('pricingCategoryKey', Number(v) || null)} options={pricingCats} />
@@ -240,7 +241,7 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
       </div>
 
       {/* ── Billing Address ── */}
-      <div style={secHead}>Billing Address</div>
+      <h3 style={secHead}>Billing Address</h3>
       <div style={g2}>
         <F label="Bill Address">
           <Inp value={form.billAddr1 ?? ''} onChange={v => set('billAddr1', v)} />
@@ -265,7 +266,7 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
       </div>
 
       {/* ── First Department ── */}
-      <div style={secHead}>First Department</div>
+      <h3 style={secHead}>First Department</h3>
       <div style={g2}>
         <F label="Department Name">
           <Inp value={dept.name} onChange={v => setD('name', v)} placeholder="e.g. Endoscopy, Surgery…" />
@@ -298,7 +299,7 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
       </div>
 
       {/* ── New Scope ── */}
-      <div style={secHead}>New Scope</div>
+      <h3 style={secHead}>New Scope</h3>
       <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, cursor: 'pointer', marginBottom: 8 }}>
         <input type="checkbox" checked={newScope} onChange={e => setNewScope(e.target.checked)} />
         Add a scope for this department
@@ -318,7 +319,7 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
       )}
 
       {/* ── Options ── */}
-      <div style={secHead}>Options</div>
+      <h3 style={secHead}>Options</h3>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 0' }}>
         {chk('blindPS3',          'Blind PS3')}
         {chk('reqTotalsOnly',     'Req. Totals Only')}
@@ -331,7 +332,7 @@ export const NewClientModal = ({ open, onClose, onCreated }: Props) => {
       </div>
 
       {/* ── Additional ── */}
-      <div style={secHead}>Additional</div>
+      <h3 style={secHead}>Additional</h3>
       <div style={g2}>
         <F label="Secondary Name / AP Contact">
           <Inp value={form.secondaryName ?? ''} onChange={v => set('secondaryName', v)} />

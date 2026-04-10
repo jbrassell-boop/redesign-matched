@@ -122,7 +122,7 @@ export const RequisitionForm = ({ repair, lineItems, onClose }: Props) => {
           </thead>
           <tbody>
             {displayRows.map((row, i) => (
-              <tr key={i} style={{ background: i % 2 === 1 ? '#f8f9fb' : '#fff' }}>
+              <tr key={i} style={{ background: i % 2 === 1 ? 'var(--print-row-alt)' : 'var(--card)' }}>
                 <td className="req-td">
                   {row?.problem ?? ''}
                 </td>

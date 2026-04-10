@@ -3,6 +3,7 @@ import { message } from 'antd';
 import { getDashboardBriefing } from '../../api/dashboard';
 import apiClient from '../../api/client';
 import type { BriefingStats, DashboardStats } from './types';
+import './OpsBriefing.css';
 
 interface Props {
   stats: DashboardStats | null;
@@ -30,16 +31,15 @@ const headerStatLabelStyle: React.CSSProperties = { fontSize: 11, opacity: .5, t
 const urgentBoxStyle: React.CSSProperties = { textAlign: 'center', background: 'rgba(var(--red-500-rgb), 0.2)', padding: '8px 16px', borderRadius: 6 };
 const urgentValueStyle: React.CSSProperties = { fontSize: 28, fontWeight: 900, color: 'var(--danger-text-lt)' };
 const urgentLabelStyle: React.CSSProperties = { fontSize: 11, opacity: .7, textTransform: 'uppercase' };
-const twoColGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 };
+// twoColGridStyle moved to OpsBriefing.css as .ops-briefing__two-col
 const flowTableStyle: React.CSSProperties = { width: '100%', borderCollapse: 'collapse' };
 const flowThBaseStyle: React.CSSProperties = { padding: '6px 12px', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: 'var(--muted)', letterSpacing: '.04em', borderBottom: '1px solid var(--neutral-200)', background: 'linear-gradient(180deg, var(--gradient-blue-start), var(--gradient-blue-end))' };
-const kpiGrid2Style: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid var(--neutral-100)' };
-const kpiGrid2NoBorderStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr' };
-const prioritiesGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' };
+// kpiGrid2Style, kpiGrid2NoBorderStyle, prioritiesGridStyle moved to OpsBriefing.css
+
 const prodPlanPadStyle: React.CSSProperties = { padding: '12px 14px', fontSize: 12, color: 'var(--muted)', textAlign: 'center' };
-const prodGrid3Style: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 };
+// prodGrid3Style moved to OpsBriefing.css as .ops-briefing__prod-grid
 const delayPadStyle: React.CSSProperties = { padding: '12px 14px' };
-const delayGrid4Style: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 8, textAlign: 'center' };
+// delayGrid4Style moved to OpsBriefing.css as .ops-briefing__delay-grid
 const bigNumStyle: React.CSSProperties = { fontSize: 22, fontWeight: 900 };
 const smallLabelStyle: React.CSSProperties = { fontSize: 11, textTransform: 'uppercase' };
 const delayNumStyle: React.CSSProperties = { fontSize: 18, fontWeight: 900 };
@@ -151,7 +151,7 @@ export const OpsBriefing = ({ stats }: Props) => {
       </div>
 
       {/* Two-column layout */}
-      <div style={twoColGridStyle}>
+      <div className="ops-briefing__two-col">
         {/* Left: Flow table */}
         <Section title="Overall Flow — Previous Work Day" accent="var(--primary)">
           <table style={flowTableStyle}>
@@ -176,14 +176,14 @@ export const OpsBriefing = ({ stats }: Props) => {
 
         {/* Right: KPI Summary */}
         <Section title="Key Performance Indicators" accent="var(--navy)">
-          <div style={kpiGrid2Style}>
+          <div className="ops-briefing__kpi-grid-2">
             <Kpi label="Avg TAT" value={`${(briefing?.avgTat ?? 0).toFixed(1)}d`}
               color={(briefing?.avgTat ?? 0) > 14 ? 'var(--danger)' : 'var(--success)'}
               sub="Target: ≤14 days" />
             <Kpi label="Revenue Yesterday" value={fmt$(briefing?.revenue ?? 0)}
               color="var(--navy)" />
           </div>
-          <div style={kpiGrid2NoBorderStyle}>
+          <div className="ops-briefing__kpi-grid-2--no-border">
             <Kpi label="Overdue (>14d)" value={`${briefing?.overdue ?? 0}`}
               color={(briefing?.overdue ?? 0) > 0 ? 'var(--danger)' : 'var(--success)'}
               sub="Repairs past target" />
@@ -195,7 +195,7 @@ export const OpsBriefing = ({ stats }: Props) => {
 
       {/* Today's Priorities */}
       <Section title="Today's Priorities" accent="var(--amber)">
-        <div style={prioritiesGridStyle}>
+        <div className="ops-briefing__priorities-grid">
           {urgent > 0 && (
             <Kpi label="Hot List" value={`${urgent}`} color="var(--danger)" sub="Immediate attention" />
           )}
@@ -211,10 +211,10 @@ export const OpsBriefing = ({ stats }: Props) => {
       </Section>
 
       {/* Production Plan */}
-      <div style={twoColGridStyle}>
+      <div className="ops-briefing__two-col">
         <Section title="In-House Production Plan">
           <div style={prodPlanPadStyle}>
-            <div style={prodGrid3Style}>
+            <div className="ops-briefing__prod-grid">
               <div>
                 <div style={{ ...bigNumStyle, color: 'var(--navy)' }}>{open.toLocaleString()}</div>
                 <div style={smallLabelStyle}>In House</div>
@@ -232,7 +232,7 @@ export const OpsBriefing = ({ stats }: Props) => {
         </Section>
         <Section title="Delay Tracking">
           <div style={delayPadStyle}>
-            <div style={delayGrid4Style}>
+            <div className="ops-briefing__delay-grid">
               <div>
                 <div style={{ ...delayNumStyle, color: 'var(--success)' }}>{kpi?.backlog1to7 ?? '—'}</div>
                 <div style={delayLabelStyle}>1-7 Days</div>

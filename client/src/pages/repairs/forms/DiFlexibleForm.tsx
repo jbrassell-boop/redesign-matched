@@ -165,7 +165,7 @@ export const DiFlexibleForm = ({ repair, lineItems, onClose }: Props) => {
             </thead>
             <tbody>
               {REPAIR_ITEMS.map((item, i) => (
-                <tr key={i} style={{ background: i % 2 === 1 ? '#fafafa' : '#fff' }}>
+                <tr key={i} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : 'var(--card)' }}>
                   <td className="dif-td--center"><span className="dif-cb-box" /></td>
                   <td className="dif-td">{item}</td>
                   <td className="dif-td--center"><span className="dif-cost-stub" /></td>
@@ -234,7 +234,7 @@ export const DiFlexibleForm = ({ repair, lineItems, onClose }: Props) => {
             </thead>
             <tbody>
               {approvedItems.map((li, i) => (
-                <tr key={li.tranKey} style={{ background: i % 2 === 1 ? '#fafafa' : '#fff' }}>
+                <tr key={li.tranKey} style={{ background: i % 2 === 1 ? 'var(--neutral-50)' : 'var(--card)' }}>
                   <td className="dif-td--center"><span style={{ display: 'inline-block', width: 9, height: 9, background: 'var(--primary)', border: 'none', color: '#fff', lineHeight: '9px', fontSize: 7, fontWeight: 700, borderRadius: 1, textAlign: 'center' }}>✓</span></td>
                   <td className="dif-td">{li.description || li.itemCode}</td>
                   <td className="dif-td--center">{li.amount != null ? `$${li.amount.toFixed(2)}` : em}</td>
@@ -242,7 +242,7 @@ export const DiFlexibleForm = ({ repair, lineItems, onClose }: Props) => {
                 </tr>
               ))}
               {Array.from({ length: blankRows }).map((_, i) => (
-                <tr key={`blank-${i}`} style={{ background: (approvedItems.length + i) % 2 === 1 ? '#fafafa' : '#fff' }}>
+                <tr key={`blank-${i}`} style={{ background: (approvedItems.length + i) % 2 === 1 ? 'var(--neutral-50)' : 'var(--card)' }}>
                   <td className="dif-td--center"><span className="dif-cb-box" /></td>
                   <td className="dif-td">&nbsp;</td>
                   <td className="dif-td--center"><span className="dif-cost-stub" /></td>
@@ -309,7 +309,7 @@ export const DiFlexibleForm = ({ repair, lineItems, onClose }: Props) => {
                     <td colSpan={5} className="dif-pfcat-td">{cat.cat}</td>
                   </tr>
                   {cat.items.map((item, ii) => (
-                    <tr key={`${cat.cat}-${ii}`} style={{ background: ii % 2 === 1 ? '#fafafa' : '#fff' }}>
+                    <tr key={`${cat.cat}-${ii}`} style={{ background: ii % 2 === 1 ? 'var(--neutral-50)' : 'var(--card)' }}>
                       <td className="dif-td">{item}</td>
                       <td className="dif-td--center"><span className="dif-pf-yn">Y</span></td>
                       <td className="dif-td--center"><span className="dif-pf-yn">N</span></td>
@@ -370,8 +370,8 @@ export const DiFlexibleForm = ({ repair, lineItems, onClose }: Props) => {
             <div className="dif-qc-cell">
               <span className="dif-fl">Commercial QC</span>
               <div className="dif-qc-pf">
-                <span className="dif-pf-btn" style={{ background: '#16a34a', color: '#fff' }}>P</span>
-                <span className="dif-pf-btn" style={{ background: '#dc2626', color: '#fff' }}>F</span>
+                <span className="dif-pf-btn" style={{ background: 'var(--success)', color: '#fff' }}>P</span>
+                <span className="dif-pf-btn" style={{ background: 'var(--danger)', color: '#fff' }}>F</span>
               </div>
             </div>
             <div className="dif-qc-cell">

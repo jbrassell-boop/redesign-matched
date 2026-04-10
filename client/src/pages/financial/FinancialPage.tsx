@@ -237,7 +237,7 @@ export const FinancialPage = () => {
     { title: 'Date', dataIndex: 'transactionDate', key: 'transactionDate', width: 100, render: (v: string | null) => fmtDate(v) },
     { title: 'Debit', dataIndex: 'debitAmount', key: 'debitAmount', width: 110, align: 'right' as const, render: (v: number) => v ? fmt$(v) : '\u2014' },
     { title: 'Credit', dataIndex: 'creditAmount', key: 'creditAmount', width: 110, align: 'right' as const, render: (v: number) => v ? fmt$(v) : '\u2014' },
-    { title: 'Balance', dataIndex: 'balance', key: 'balance', width: 120, align: 'right' as const, render: (v: number) => <span style={{ fontWeight: 600, color: v < 0 ? '#c0392b' : undefined }}>{fmt$(v)}</span> },
+    { title: 'Balance', dataIndex: 'balance', key: 'balance', width: 120, align: 'right' as const, render: (v: number) => <span style={{ fontWeight: 600, color: v < 0 ? 'var(--print-neg-balance)' : undefined }}>{fmt$(v)}</span> },
   ];
 
   // ─── Executive summary banner ───────────────────────────────────────────────

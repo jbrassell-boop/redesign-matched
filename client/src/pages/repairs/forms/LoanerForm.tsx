@@ -58,7 +58,7 @@ export const LoanerForm = ({ repair, onClose }: Props) => {
           </thead>
           <tbody>
             {Array.from({ length: 3 }).map((_, i) => (
-              <tr key={i} style={{ background: i % 2 === 1 ? '#f8f9fb' : '#fff' }}>
+              <tr key={i} style={{ background: i % 2 === 1 ? 'var(--print-row-alt)' : 'var(--card)' }}>
                 <td className="lf-td">&nbsp;</td>
                 <td className="lf-td">&nbsp;</td>
                 <td className="lf-td--center">&nbsp;</td>

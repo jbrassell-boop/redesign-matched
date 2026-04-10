@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
 import apiClient from '../../api/client';
+import './ExecutiveKpi.css';
 
 interface KpiData {
   receivedThisWeek: number;
@@ -59,10 +60,12 @@ export const ExecutiveKpi = () => {
   }, []);
 
   if (loading) return (
-    <div style={{ padding: '12px 16px', display: 'flex', gap: 10 }}>
-      {[1, 2, 3, 4, 5, 6].map(i => (
-        <div key={i} style={{ flex: 1, height: 72, background: 'var(--neutral-100)', borderRadius: 8, animation: 'pulse 1.5s infinite' }} />
-      ))}
+    <div className="exec-kpi" style={{ padding: '12px 16px' }}>
+      <div className="exec-kpi__skeleton-grid">
+        {[1, 2, 3, 4, 5, 6].map(i => (
+          <div key={i} style={{ height: 72, background: 'var(--neutral-100)', borderRadius: 8, animation: 'pulse 1.5s infinite' }} />
+        ))}
+      </div>
     </div>
   );
 
@@ -77,13 +80,9 @@ export const ExecutiveKpi = () => {
   const warrantyPct = data.totalItemsMonth > 0 ? Math.round((data.warrantyItemsMonth / data.totalItemsMonth) * 100) : 0;
 
   return (
-    <div style={{
-      padding: '12px 16px',
-      background: 'var(--navy)',
-      borderBottom: '2px solid var(--primary)',
-    }}>
+    <div className="exec-kpi">
       {/* Title row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+      <div className="exec-kpi__header">
         <h2 style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,.7)', textTransform: 'uppercase', letterSpacing: '.08em', margin: 0 }}>
           Executive Dashboard
         </h2>
@@ -93,7 +92,7 @@ export const ExecutiveKpi = () => {
       </div>
 
       {/* KPI Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10 }}>
+      <div className="exec-kpi__grid">
         <KpiCard
           label="Throughput (Month)"
           value={`${data.shippedThisMonth}`}

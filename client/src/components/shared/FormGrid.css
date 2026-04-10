@@ -9,3 +9,17 @@
 
 .form-grid .span-2 { grid-column: span 2; }
 .form-grid .span-3 { grid-column: span 3; }
+
+@media (max-width: 768px) {
+  .form-grid--3,
+  .form-grid--4 { grid-template-columns: 1fr 1fr; }
+  .form-grid .span-3 { grid-column: span 2; }
+}
+
+@media (max-width: 480px) {
+  .form-grid--2,
+  .form-grid--3,
+  .form-grid--4 { grid-template-columns: 1fr; }
+  .form-grid .span-2,
+  .form-grid .span-3 { grid-column: span 1; }
+}
