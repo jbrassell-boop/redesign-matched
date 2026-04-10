@@ -8,7 +8,6 @@ interface Props {
 }
 
 const em = '—';
-const g = 6;
 
 const SubBar = ({ children }: { children: React.ReactNode }) => (
   <div className="difd-subbar">{children}</div>

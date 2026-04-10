@@ -8,7 +8,6 @@ interface Props {
 }
 
 const em = '—';
-const g = 6;
 
 const Cb = ({ label }: { label: string }) => (
   <span className="dii-cbx"><span className="dii-cbx-box" />{label}</span>

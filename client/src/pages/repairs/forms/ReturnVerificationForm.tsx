@@ -9,7 +9,6 @@ interface Props {
 
 // Canonical field tokens (used as className references — see ReturnVerificationForm.css)
 const em = '—';
-const g = 6;
 
 export const ReturnVerificationForm = ({ repair, onClose }: Props) => {
   const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });

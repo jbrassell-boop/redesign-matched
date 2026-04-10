@@ -8,7 +8,6 @@ interface Props {
 }
 
 const em = '—';
-const g = 6;
 
 export const UpdateSlipForm = ({ repair, onClose }: Props) => {
   const today = new Date().toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
