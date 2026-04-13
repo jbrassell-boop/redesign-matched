@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Drawer, Spin, message } from 'antd';
+import { Drawer, Spin, message, Tooltip } from 'antd';
 import {
   StatusBadge,
   TabBar,
@@ -9,7 +9,7 @@ import {
   CategoryPicker,
 } from '../../components/shared';
 import type { TabDef, PipelineStep, CategoryItem, SizeItem } from '../../components/shared';
-import type { ProductSaleDetail } from './types';
+import type { ProductSaleDetail, ProductSaleLineItem } from './types';
 import {
   getProductSaleDetail,
   addLineItem,
@@ -74,6 +74,15 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
   const [activeTab, setActiveTab] = useState('items');
   const [advancing, setAdvancing] = useState(false);
 
+  // Item selection for fulfillment
+  const [selectedItems, setSelectedItems] = useState<number[]>([]);
+
+  const toggleItemSelect = (key: number) => {
+    setSelectedItems(prev =>
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+  };
+
   // Category picker state
   const [categories, setCategories] = useState<CategoryItem[]>([]);
   const [sizes, setSizes] = useState<SizeItem[]>([]);
@@ -97,6 +106,7 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
       loadDetail(productSaleKey);
       setActiveTab('items');
       setSelectedCatName(null);
+      setSelectedItems([]);
     }
     if (!open) {
       setDetail(null);
@@ -268,55 +278,100 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                     <table className="ps-line-items">
                       <thead>
                         <tr>
+                          <th style={{ width: 20 }}></th>
                           <th>Description</th>
                           <th style={{ width: 56 }} className="ps-li-center">Qty</th>
                           <th style={{ width: 80 }} className="ps-li-right">Unit Price</th>
                           <th style={{ width: 80 }} className="ps-li-right">Total</th>
+                          <th style={{ width: 80 }} className="ps-li-center">Status</th>
                           <th style={{ width: 36 }}></th>
                         </tr>
                       </thead>
                       <tbody>
-                        {detail.lineItems.map(li => (
-                          <tr key={li.productSaleInventoryKey}>
-                            <td>
-                              <div style={{ fontWeight: 600, color: 'var(--navy)' }}>
-                                {li.itemDescription}
-                              </div>
-                              {li.sizeDescription && (
-                                <div style={{ fontSize: 11, color: 'var(--muted)' }}>
-                                  {li.sizeDescription}
-                                  {li.sizeDescription2 ? ` / ${li.sizeDescription2}` : ''}
+                        {detail.lineItems.map(li => {
+                          const itemStatus = (li as ProductSaleLineItem & { itemStatus?: string }).itemStatus || 'Pending';
+                          return (
+                            <tr key={li.productSaleInventoryKey} className={itemStatus === 'Shipped' ? 'ps-li-row--shipped' : itemStatus === 'Backordered' ? 'ps-li-row--backordered' : ''}>
+                              <td className="ps-li-center">
+                                <input
+                                  type="checkbox"
+                                  className="ps-li-check"
+                                  checked={selectedItems.includes(li.productSaleInventoryKey)}
+                                  onChange={() => toggleItemSelect(li.productSaleInventoryKey)}
+                                  aria-label={`Select ${li.itemDescription}`}
+                                />
+                              </td>
+                              <td>
+                                <div className="ps-li-desc-primary">
+                                  {li.itemDescription}
                                 </div>
-                              )}
-                            </td>
-                            <td className="ps-li-center">
-                              <input
-                                type="number"
-                                className="ps-qty-input"
-                                defaultValue={li.quantity}
-                                min={1}
-                                onBlur={e => {
-                                  const val = parseInt(e.target.value) || 1;
-                                  if (val !== li.quantity) handleQtyChange(li.productSaleInventoryKey, val);
-                                }}
-                              />
-                            </td>
-                            <td className="ps-li-right">{fmt$(li.unitCost)}</td>
-                            <td className="ps-li-right ps-li-bold">{fmt$(li.totalCost)}</td>
-                            <td>
-                              <button
-                                className="ps-remove-btn"
-                                onClick={() => handleRemoveItem(li.productSaleInventoryKey)}
-                                title="Remove item"
-                                type="button"
-                              >
-                                &times;
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
+                                {li.sizeDescription && (
+                                  <div className="ps-li-desc-secondary">
+                                    {li.sizeDescription}
+                                    {li.sizeDescription2 ? ` / ${li.sizeDescription2}` : ''}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="ps-li-center">
+                                <input
+                                  type="number"
+                                  className="ps-qty-input"
+                                  defaultValue={li.quantity}
+                                  min={1}
+                                  onBlur={e => {
+                                    const val = parseInt(e.target.value) || 1;
+                                    if (val !== li.quantity) handleQtyChange(li.productSaleInventoryKey, val);
+                                  }}
+                                />
+                              </td>
+                              <td className="ps-li-right">{fmt$(li.unitCost)}</td>
+                              <td className="ps-li-right ps-li-bold">{fmt$(li.totalCost)}</td>
+                              <td className="ps-li-center">
+                                <span className={`ps-item-status ps-item-status--${itemStatus.toLowerCase()}`}>
+                                  {itemStatus}
+                                </span>
+                              </td>
+                              <td>
+                                <button
+                                  className="ps-remove-btn"
+                                  onClick={() => handleRemoveItem(li.productSaleInventoryKey)}
+                                  title="Remove item"
+                                  type="button"
+                                  aria-label={`Remove ${li.itemDescription}`}
+                                >
+                                  &times;
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
+
+                    {/* Fulfillment actions */}
+                    {selectedItems.length > 0 && (
+                      <div className="ps-fulfill-bar">
+                        <span className="ps-fulfill-bar__count">{selectedItems.length} item{selectedItems.length > 1 ? 's' : ''} selected</span>
+                        <Tooltip title="Requires DB migration: ALTER TABLE tblProductSalesInventory ADD sItemStatus nvarchar(20) DEFAULT 'Pending'">
+                          <button
+                            className="ps-fulfill-btn ps-fulfill-btn--ship"
+                            type="button"
+                            onClick={() => message.warning('Ship Items: Requires sItemStatus column on tblProductSalesInventory. See Steve for DB migration.')}
+                          >
+                            Mark Shipped
+                          </button>
+                        </Tooltip>
+                        <Tooltip title="Requires DB migration: ALTER TABLE tblProductSalesInventory ADD sItemStatus nvarchar(20) DEFAULT 'Pending'">
+                          <button
+                            className="ps-fulfill-btn ps-fulfill-btn--backorder"
+                            type="button"
+                            onClick={() => message.warning('Backorder: Requires sItemStatus column on tblProductSalesInventory. See Steve for DB migration.')}
+                          >
+                            Mark Backordered
+                          </button>
+                        </Tooltip>
+                      </div>
+                    )}
 
                     {/* Totals */}
                     <div className="ps-totals">
@@ -366,14 +421,23 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                     Print Quote
                   </button>
                   {canAdvance(detail.status) && (
-                    <button
-                      className="ps-advance-btn"
-                      onClick={handleAdvance}
-                      disabled={advancing}
-                      type="button"
-                    >
-                      {advancing ? 'Processing...' : getAdvanceLabel(detail.status)}
-                    </button>
+                    <Tooltip title={
+                      detail.status.toLowerCase() === 'approved'
+                        ? 'Invoice: Requires tblProductSaleInvoiceDetail snapshot creation. See Steve for backend implementation.'
+                        : undefined
+                    }>
+                      <button
+                        className="ps-advance-btn"
+                        onClick={detail.status.toLowerCase() === 'approved'
+                          ? () => message.warning('Create Invoice: Requires tblProductSaleInvoiceDetail snapshot + invoice number generation. See Steve for backend work.')
+                          : handleAdvance
+                        }
+                        disabled={advancing}
+                        type="button"
+                      >
+                        {advancing ? 'Processing...' : getAdvanceLabel(detail.status)}
+                      </button>
+                    </Tooltip>
                   )}
                 </div>
               </div>

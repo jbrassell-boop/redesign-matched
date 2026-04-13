@@ -88,6 +88,43 @@
   color: var(--navy);
 }
 
+/* Line item description */
+.ps-li-desc-primary { font-weight: 600; color: var(--navy); }
+.ps-li-desc-secondary { font-size: 11px; color: var(--muted); }
+
+/* Line item checkbox */
+.ps-li-check { cursor: pointer; }
+
+/* Item status badges */
+.ps-item-status {
+  display: inline-block; padding: 1px 8px; border-radius: 9999px;
+  font-size: 10px; font-weight: 600; white-space: nowrap;
+}
+.ps-item-status--pending { background: rgba(var(--amber-rgb), 0.1); color: var(--amber); }
+.ps-item-status--shipped { background: rgba(var(--success-rgb), 0.1); color: var(--success); }
+.ps-item-status--backordered { background: rgba(var(--danger-rgb), 0.1); color: var(--danger); }
+
+/* Row status tints */
+.ps-li-row--shipped { background: rgba(var(--success-rgb), 0.03); }
+.ps-li-row--backordered { background: rgba(var(--danger-rgb), 0.03); }
+
+/* Fulfillment action bar */
+.ps-fulfill-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 0; margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.ps-fulfill-bar__count {
+  font-size: 11px; font-weight: 600; color: var(--navy); margin-right: auto;
+}
+.ps-fulfill-btn {
+  padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 600;
+  font-family: inherit; cursor: pointer; border: none; transition: opacity 0.15s;
+}
+.ps-fulfill-btn:hover { opacity: 0.85; }
+.ps-fulfill-btn--ship { background: rgba(var(--success-rgb), 0.12); color: var(--success); }
+.ps-fulfill-btn--backorder { background: rgba(var(--danger-rgb), 0.12); color: var(--danger); }
+
 /* Qty inline input */
 .ps-qty-input {
   width: 48px;
