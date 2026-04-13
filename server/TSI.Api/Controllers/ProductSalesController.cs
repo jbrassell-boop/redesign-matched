@@ -736,7 +736,7 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
                     isz.lInventoryKey, psi.lInventorySizeKey,
                     ISNULL(i.sItemDescription, ''), ISNULL(isz.sSizeDescription, ''),
                     isz.sSizeDescription2, isz.sSizeDescription3,
-                    i.sSubDescription,
+                    NULL,
                     psi.lQuantity, psi.nUnitCost, psi.nTotalCost, psi.sLotNumber
                 FROM tblProductSalesInventory psi
                 LEFT JOIN tblInventorySize isz ON isz.lInventorySizeKey = psi.lInventorySizeKey
