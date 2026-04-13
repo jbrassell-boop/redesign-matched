@@ -51,9 +51,6 @@ export const ProductSalePage = () => {
   const [drawerKey, setDrawerKey] = useState<number | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Create modal
-  const [createModalOpen, setCreateModalOpen] = useState(false);
-
   const loadStats = useCallback(() => {
     getProductSaleStats()
       .then(setStats)
@@ -107,11 +104,6 @@ export const ProductSalePage = () => {
     setPage(1);
   };
 
-  const handleCreate = async () => {
-    message.info('New order creation requires client/department selection — coming soon');
-    setCreateModalOpen(false);
-  };
-
   const chips = buildChips(stats);
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
@@ -132,7 +124,7 @@ export const ProductSalePage = () => {
           type="primary"
           size="small"
           style={{ background: 'var(--primary)', borderColor: 'var(--primary)', fontSize: 12, height: 30 }}
-          onClick={() => setCreateModalOpen(true)}
+          onClick={() => message.info('New order creation requires client/department selection — coming soon')}
         >
           + New Order
         </Button>

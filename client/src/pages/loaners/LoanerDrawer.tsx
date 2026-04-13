@@ -68,7 +68,7 @@ export const LoanerDrawer = ({ scopeKey, open, onClose }: LoanerDrawerProps) => 
       <div className="loaner-drawer__details">
         <FormGrid cols={2}>
           <Field label="Scope Type" value={detail.scopeType} />
-          <Field label="Serial #" value={detail.serial} mono />
+          <Field label="Serial #" value={detail.serial} />
           <Field label="Status" value={detail.status} />
           <Field label="Category" value={detail.category} />
           <Field label="Client" value={detail.client} />
