@@ -62,10 +62,9 @@ public class LoanersController(IConfiguration config) : ControllerBase
                        ISNULL(st.sScopeTypeDesc, '') AS ScopeType,
                        ISNULL(s.sSerialNumber, '') AS Serial,
                        CASE
-                           WHEN lt.lRepairKey IS NOT NULL AND r.sWorkOrderNumber IS NOT NULL THEN 'Repair'
-                           WHEN lt.sDateIn IS NOT NULL THEN 'Returned'
-                           WHEN lt.sDateOut IS NOT NULL AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 21 THEN 'Overdue'
-                           WHEN lt.sDateOut IS NOT NULL THEN 'Out'
+                           WHEN lt.lRepairKey IS NOT NULL AND r.sWorkOrderNumber IS NOT NULL AND lt.sDateIn IS NULL THEN 'Repair'
+                           WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 21 THEN 'Overdue'
+                           WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL THEN 'Out'
                            ELSE 'Available'
                        END AS Status,
                        ISNULL(c.sClientName1, '') AS Client,
