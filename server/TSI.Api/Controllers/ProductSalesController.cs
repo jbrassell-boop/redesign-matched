@@ -706,24 +706,25 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
         try
         {
             var today = DateTime.Today;
-            var yearDay = today.ToString("yyMMdd");
+            // Format: yy + day-of-year (3 digits), e.g. "26103" for April 13, 2026
+            var yearDay = today.ToString("yy") + today.DayOfYear.ToString("D3");
 
-            // A. Generate invoice number
+            // A. Generate invoice number — type 'P' for product sale (1 char max)
             const string mergeSql = """
                 MERGE tblInvoiceNumbersDaily AS target
-                USING (SELECT @yearDay AS sYearDay, 'PS' AS sInvoiceType) AS source
+                USING (SELECT @yearDay AS sYearDay, 'P' AS sInvoiceType) AS source
                 ON target.sYearDay = source.sYearDay AND target.sInvoiceType = source.sInvoiceType
                 WHEN MATCHED THEN
                     UPDATE SET lNextInvoiceNumber = target.lNextInvoiceNumber + 1
                 WHEN NOT MATCHED THEN
-                    INSERT (sYearDay, sInvoiceType, lNextInvoiceNumber) VALUES (@yearDay, 'PS', 2)
+                    INSERT (sYearDay, sInvoiceType, lNextInvoiceNumber) VALUES (@yearDay, 'P', 2)
                 OUTPUT CASE WHEN $action = 'UPDATE' THEN INSERTED.lNextInvoiceNumber - 1 ELSE 1 END;
                 """;
             await using var mergeCmd = new SqlCommand(mergeSql, conn, txn);
             mergeCmd.CommandTimeout = 30;
             mergeCmd.Parameters.AddWithValue("@yearDay", yearDay);
             var seqNum = Convert.ToInt32(await mergeCmd.ExecuteScalarAsync());
-            var invoiceNumber = $"PS{yearDay}-{seqNum:D3}";
+            var invoiceNumber = $"NP{yearDay}{seqNum:D2}";
 
             // B. Snapshot shipped items into tblProductSaleInvoiceDetail
             const string snapshotSql = """
