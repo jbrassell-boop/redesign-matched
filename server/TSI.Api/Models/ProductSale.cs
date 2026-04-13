@@ -125,6 +125,11 @@ public record UpdateLineItemRequest(
     string? LotNumber
 );
 
+// ── Related orders ─────────────────────────────────────────────────────────
+
+public record RelatedOrderItem(int ProductSaleKey, string InvoiceNumber, string Status, int ItemCount);
+public record RelatedOrdersResponse(RelatedOrderItem? Parent, IEnumerable<RelatedOrderItem> Children);
+
 // ── Bulk operations ────────────────────────────────────────────────────────
 
 public record BulkItemStatusRequest(int[] ItemKeys, string Status);

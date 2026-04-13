@@ -581,6 +581,75 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
         return Ok(new { updated = rowCount });
     }
 
+    // ── Related Orders ───────────────────────────────────────────────────────
+
+    [HttpGet("{key:int}/related")]
+    public async Task<IActionResult> GetRelatedOrders(int key)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Get this order's parent key
+        await using var parentKeyCmd = new SqlCommand(
+            "SELECT ISNULL(lParentProductSaleKey, 0) FROM tblProductSales WHERE lProductSaleKey = @key", conn);
+        parentKeyCmd.CommandTimeout = 30;
+        parentKeyCmd.Parameters.AddWithValue("@key", key);
+        var parentKeyObj = await parentKeyCmd.ExecuteScalarAsync();
+        var parentKey = parentKeyObj == null || parentKeyObj == DBNull.Value ? 0 : Convert.ToInt32(parentKeyObj);
+
+        RelatedOrderItem? parent = null;
+        if (parentKey > 0)
+        {
+            var parentSql = $"""
+                SELECT ps.lProductSaleKey, ISNULL(ps.sInvoiceNumber, '') AS sInvoiceNumber,
+                       {StatusCaseSql} AS Status,
+                       (SELECT COUNT(*) FROM tblProductSalesInventory psi WHERE psi.lProductSaleKey = ps.lProductSaleKey) AS ItemCount
+                FROM tblProductSales ps
+                WHERE ps.lProductSaleKey = @parentKey
+                """;
+            await using var parentCmd = new SqlCommand(parentSql, conn);
+            parentCmd.CommandTimeout = 30;
+            parentCmd.Parameters.AddWithValue("@parentKey", parentKey);
+            await using var parentReader = await parentCmd.ExecuteReaderAsync();
+            if (await parentReader.ReadAsync())
+            {
+                parent = new RelatedOrderItem(
+                    ProductSaleKey: Convert.ToInt32(parentReader["lProductSaleKey"]),
+                    InvoiceNumber: parentReader["sInvoiceNumber"]?.ToString() ?? "",
+                    Status: parentReader["Status"]?.ToString() ?? "Draft",
+                    ItemCount: Convert.ToInt32(parentReader["ItemCount"])
+                );
+            }
+        }
+
+        // Query children where lParentProductSaleKey = this order's key
+        var childSql = $"""
+            SELECT ps.lProductSaleKey, ISNULL(ps.sInvoiceNumber, '') AS sInvoiceNumber,
+                   {StatusCaseSql} AS Status,
+                   (SELECT COUNT(*) FROM tblProductSalesInventory psi WHERE psi.lProductSaleKey = ps.lProductSaleKey) AS ItemCount
+            FROM tblProductSales ps
+            WHERE ps.lParentProductSaleKey = @key
+            ORDER BY ps.lProductSaleKey
+            """;
+        await using var childCmd = new SqlCommand(childSql, conn);
+        childCmd.CommandTimeout = 30;
+        childCmd.Parameters.AddWithValue("@key", key);
+        await using var childReader = await childCmd.ExecuteReaderAsync();
+
+        var children = new List<RelatedOrderItem>();
+        while (await childReader.ReadAsync())
+        {
+            children.Add(new RelatedOrderItem(
+                ProductSaleKey: Convert.ToInt32(childReader["lProductSaleKey"]),
+                InvoiceNumber: childReader["sInvoiceNumber"]?.ToString() ?? "",
+                Status: childReader["Status"]?.ToString() ?? "Draft",
+                ItemCount: Convert.ToInt32(childReader["ItemCount"])
+            ));
+        }
+
+        return Ok(new RelatedOrdersResponse(parent, children));
+    }
+
     // ── Lifecycle Transitions ────────────────────────────────────────────────
 
     [HttpPost("{key:int}/quote")]
