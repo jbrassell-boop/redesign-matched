@@ -79,7 +79,8 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
                    ISNULL(ps.nTotalAmount, 0) AS nTotalAmount,
                    {StatusCaseSql} AS Status,
                    ISNULL(ps.sPurchaseOrder, '') AS sPurchaseOrder,
-                   (SELECT COUNT(*) FROM tblProductSalesInventory psi WHERE psi.lProductSaleKey = ps.lProductSaleKey) AS ItemCount
+                   (SELECT COUNT(*) FROM tblProductSalesInventory psi WHERE psi.lProductSaleKey = ps.lProductSaleKey) AS ItemCount,
+                   ISNULL(ps.lParentProductSaleKey, 0) AS lParentProductSaleKey
             FROM tblProductSales ps
             LEFT JOIN tblClient c ON c.lClientKey = ps.lClientKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = ps.lDepartmentKey
@@ -117,7 +118,8 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
                 OrderDate: (reader["dtOrderDate"] as DateTime?)?.ToString("yyyy-MM-dd"),
                 Total: Convert.ToDecimal(reader["nTotalAmount"]),
                 ItemCount: Convert.ToInt32(reader["ItemCount"]),
-                BackorderedCount: 0
+                BackorderedCount: 0,
+                ParentProductSaleKey: Convert.ToInt32(reader["lParentProductSaleKey"]) == 0 ? null : Convert.ToInt32(reader["lParentProductSaleKey"])
             ));
         }
 
@@ -182,12 +184,14 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
                    ISNULL(d.sDepartmentName, '') AS sDepartmentName,
                    ISNULL(sr.sRepFirst, '') + ' ' + ISNULL(sr.sRepLast, '') AS SalesRep,
                    pl.sInventoryPricingList,
+                   parent.sInvoiceNumber AS ParentInvoiceNumber,
                    {StatusCaseSql} AS Status
             FROM tblProductSales ps
             LEFT JOIN tblClient c ON c.lClientKey = ps.lClientKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = ps.lDepartmentKey
             LEFT JOIN tblSalesRep sr ON sr.lSalesRepKey = ps.lSalesRepKey
             LEFT JOIN tblInventoryPricingLists pl ON pl.lInventoryPricingListKey = ps.lInventoryPricingListKey
+            LEFT JOIN tblProductSales parent ON parent.lProductSaleKey = ps.lParentProductSaleKey
             WHERE ps.lProductSaleKey = @key
             """;
 
@@ -301,6 +305,8 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
             DenialReason: r["sDenialReason"]?.ToString(),
             EstimatedShipDateFrom: (r["dtEstimatedShipDateFrom"] as DateTime?)?.ToString("yyyy-MM-dd"),
             EstimatedShipDateTo: (r["dtEstimatedShipDateTo"] as DateTime?)?.ToString("yyyy-MM-dd"),
+            ParentProductSaleKey: r["lParentProductSaleKey"] == DBNull.Value ? null : Convert.ToInt32(r["lParentProductSaleKey"]),
+            ParentInvoiceNumber: r["ParentInvoiceNumber"]?.ToString(),
             LineItems: Array.Empty<ProductSaleLineItem>()
         );
     }

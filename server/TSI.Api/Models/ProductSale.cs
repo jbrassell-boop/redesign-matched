@@ -13,7 +13,8 @@ public record ProductSaleListItem(
     string? OrderDate,
     decimal Total,
     int ItemCount,
-    int BackorderedCount
+    int BackorderedCount,
+    int? ParentProductSaleKey
 );
 
 public record ProductSaleStats(
@@ -91,6 +92,9 @@ public record ProductSaleDetail(
     // estimated ship dates
     string? EstimatedShipDateFrom,
     string? EstimatedShipDateTo,
+    // parent order
+    int? ParentProductSaleKey,
+    string? ParentInvoiceNumber,
     // line items
     IEnumerable<ProductSaleLineItem> LineItems
 );
