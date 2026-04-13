@@ -13,3 +13,5 @@ export { PairedTable } from './PairedTable';
 export type { PairedColumn, PairedTableProps } from './PairedTable';
 export { ModalShell } from './ModalShell';
 export { EmptyState } from './EmptyState';
+export { PipelineBar } from './PipelineBar';
+export type { PipelineStep } from './PipelineBar';
