@@ -683,12 +683,167 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
     {
         await using var conn = CreateConnection();
         await conn.OpenAsync();
-        await using var cmd = new SqlCommand(
-            "UPDATE tblProductSales SET dtInvoiceDate = GETDATE() WHERE lProductSaleKey = @key", conn);
-        cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@key", key);
-        await cmd.ExecuteNonQueryAsync();
-        return Ok(new { invoiced = true });
+
+        // ── Preconditions ───────────────────────────────────────────────────
+        await using var checkCmd = new SqlCommand(
+            $"SELECT {StatusCaseSql} AS Status FROM tblProductSales ps WHERE ps.lProductSaleKey = @key", conn);
+        checkCmd.CommandTimeout = 30;
+        checkCmd.Parameters.AddWithValue("@key", key);
+        var status = (await checkCmd.ExecuteScalarAsync())?.ToString();
+        if (status != "Approved")
+            return BadRequest(new { error = $"Order must be Approved to invoice (current status: {status})." });
+
+        await using var shippedCheckCmd = new SqlCommand(
+            "SELECT COUNT(*) FROM tblProductSalesInventory WHERE lProductSaleKey = @key AND sItemStatus = 'Shipped'", conn);
+        shippedCheckCmd.CommandTimeout = 30;
+        shippedCheckCmd.Parameters.AddWithValue("@key", key);
+        var shippedCount = Convert.ToInt32(await shippedCheckCmd.ExecuteScalarAsync());
+        if (shippedCount == 0)
+            return BadRequest(new { error = "No items are marked as Shipped. Mark at least one item Shipped before invoicing." });
+
+        // ── Begin transaction ───────────────────────────────────────────────
+        await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            var today = DateTime.Today;
+            var yearDay = today.ToString("yyMMdd");
+
+            // A. Generate invoice number
+            const string mergeSql = """
+                MERGE tblInvoiceNumbersDaily AS target
+                USING (SELECT @yearDay AS sYearDay, 'PS' AS sInvoiceType) AS source
+                ON target.sYearDay = source.sYearDay AND target.sInvoiceType = source.sInvoiceType
+                WHEN MATCHED THEN
+                    UPDATE SET lNextInvoiceNumber = target.lNextInvoiceNumber + 1
+                WHEN NOT MATCHED THEN
+                    INSERT (sYearDay, sInvoiceType, lNextInvoiceNumber) VALUES (@yearDay, 'PS', 2)
+                OUTPUT CASE WHEN $action = 'UPDATE' THEN INSERTED.lNextInvoiceNumber - 1 ELSE 1 END;
+                """;
+            await using var mergeCmd = new SqlCommand(mergeSql, conn, txn);
+            mergeCmd.CommandTimeout = 30;
+            mergeCmd.Parameters.AddWithValue("@yearDay", yearDay);
+            var seqNum = Convert.ToInt32(await mergeCmd.ExecuteScalarAsync());
+            var invoiceNumber = $"PS{yearDay}-{seqNum:D3}";
+
+            // B. Snapshot shipped items into tblProductSaleInvoiceDetail
+            const string snapshotSql = """
+                INSERT INTO tblProductSaleInvoiceDetail
+                    (lProductSalesKey, lProductSaleInventoryKey, lInventoryKey, lInventorySizeKey,
+                     sItemDescription, sSizeDescription, sSizeDescription2, sSizeDescription3,
+                     sSubDescription, lQty, nUnitCost, nTotalCost, sLotNumber)
+                SELECT
+                    psi.lProductSaleKey, psi.lProductSaleInventoryKey,
+                    isz.lInventoryKey, psi.lInventorySizeKey,
+                    ISNULL(i.sItemDescription, ''), ISNULL(isz.sSizeDescription, ''),
+                    isz.sSizeDescription2, isz.sSizeDescription3,
+                    i.sSubDescription,
+                    psi.lQuantity, psi.nUnitCost, psi.nTotalCost, psi.sLotNumber
+                FROM tblProductSalesInventory psi
+                LEFT JOIN tblInventorySize isz ON isz.lInventorySizeKey = psi.lInventorySizeKey
+                LEFT JOIN tblInventory i ON i.lInventoryKey = isz.lInventoryKey
+                WHERE psi.lProductSaleKey = @key AND psi.sItemStatus = 'Shipped'
+                """;
+            await using var snapCmd = new SqlCommand(snapshotSql, conn, txn);
+            snapCmd.CommandTimeout = 30;
+            snapCmd.Parameters.AddWithValue("@key", key);
+            await snapCmd.ExecuteNonQueryAsync();
+
+            // C. Stamp the order — invoice date, number, recalc totals for shipped only
+            const string stampSql = """
+                UPDATE tblProductSales
+                SET dtInvoiceDate = GETDATE(),
+                    sInvoiceNumber = @invoiceNumber,
+                    nQuoteAmount = ISNULL((SELECT SUM(nTotalCost) FROM tblProductSalesInventory WHERE lProductSaleKey = @key AND sItemStatus = 'Shipped'), 0),
+                    nTotalAmount = ISNULL((SELECT SUM(nTotalCost) FROM tblProductSalesInventory WHERE lProductSaleKey = @key AND sItemStatus = 'Shipped'), 0)
+                                 + ISNULL(nShippingAmount, 0) + ISNULL(nTaxAmount, 0)
+                WHERE lProductSaleKey = @key
+                """;
+            await using var stampCmd = new SqlCommand(stampSql, conn, txn);
+            stampCmd.CommandTimeout = 30;
+            stampCmd.Parameters.AddWithValue("@key", key);
+            stampCmd.Parameters.AddWithValue("@invoiceNumber", invoiceNumber);
+            await stampCmd.ExecuteNonQueryAsync();
+
+            // D. Check for backordered items
+            await using var boCountCmd = new SqlCommand(
+                "SELECT COUNT(*) FROM tblProductSalesInventory WHERE lProductSaleKey = @key AND sItemStatus = 'Backordered'", conn, txn);
+            boCountCmd.CommandTimeout = 30;
+            boCountCmd.Parameters.AddWithValue("@key", key);
+            var backorderedCount = Convert.ToInt32(await boCountCmd.ExecuteScalarAsync());
+
+            int? childKey = null;
+            var childItemCount = 0;
+
+            if (backorderedCount > 0)
+            {
+                // D1. Create child order
+                const string childSql = """
+                    INSERT INTO tblProductSales
+                        (lClientKey, lDepartmentKey, lSalesRepKey, dtOrderDate, dtApprovalDate,
+                         sPurchaseOrder, sNote, lInventoryPricingListKey,
+                         lContactKey, sContactName, sContactEmailAddress, sClientPhoneNumber,
+                         sShipName1, sShipName2, sAddressLine1, sAddressLine2, sCity, sState, sZipCode, sShipCountry,
+                         sBillName1, sBillName2, sBillAddressLine1, sBillAddressLine2, sBillCity, sBillState, sBillZipCode, sBillCountry,
+                         lBillType, sBillEmail, sBillEmailName,
+                         nQuoteAmount, nShippingAmount, nTaxAmount, nTotalAmount,
+                         lParentProductSaleKey, sInvoiceNumber)
+                    OUTPUT INSERTED.lProductSaleKey
+                    SELECT
+                        lClientKey, lDepartmentKey, lSalesRepKey, GETDATE(), GETDATE(),
+                        sPurchaseOrder, CONCAT('Split from order ', sInvoiceNumber, ' — backordered items'), lInventoryPricingListKey,
+                        lContactKey, sContactName, sContactEmailAddress, sClientPhoneNumber,
+                        sShipName1, sShipName2, sAddressLine1, sAddressLine2, sCity, sState, sZipCode, sShipCountry,
+                        sBillName1, sBillName2, sBillAddressLine1, sBillAddressLine2, sBillCity, sBillState, sBillZipCode, sBillCountry,
+                        lBillType, sBillEmail, sBillEmailName,
+                        0, 0, 0, 0,
+                        @key, ''
+                    FROM tblProductSales WHERE lProductSaleKey = @key
+                    """;
+                await using var childCmd = new SqlCommand(childSql, conn, txn);
+                childCmd.CommandTimeout = 30;
+                childCmd.Parameters.AddWithValue("@key", key);
+                childKey = Convert.ToInt32(await childCmd.ExecuteScalarAsync());
+
+                // D2. Copy backordered items to child with Pending status
+                const string copyItemsSql = """
+                    INSERT INTO tblProductSalesInventory
+                        (lProductSaleKey, lInventorySizeKey, lQuantity, nUnitCost, nTotalCost, sLotNumber, sItemStatus)
+                    SELECT
+                        @childKey, lInventorySizeKey, lQuantity, nUnitCost, nTotalCost, sLotNumber, 'Pending'
+                    FROM tblProductSalesInventory
+                    WHERE lProductSaleKey = @parentKey AND sItemStatus = 'Backordered'
+                    """;
+                await using var copyCmd = new SqlCommand(copyItemsSql, conn, txn);
+                copyCmd.CommandTimeout = 30;
+                copyCmd.Parameters.AddWithValue("@childKey", childKey.Value);
+                copyCmd.Parameters.AddWithValue("@parentKey", key);
+                childItemCount = await copyCmd.ExecuteNonQueryAsync();
+
+                // D3. Recalc child totals
+                await RecalcTotals(conn, childKey.Value, txn);
+
+                // D4. Delete backordered items from parent
+                await using var delCmd = new SqlCommand(
+                    "DELETE FROM tblProductSalesInventory WHERE lProductSaleKey = @key AND sItemStatus = 'Backordered'", conn, txn);
+                delCmd.CommandTimeout = 30;
+                delCmd.Parameters.AddWithValue("@key", key);
+                await delCmd.ExecuteNonQueryAsync();
+            }
+
+            await txn.CommitAsync();
+
+            return Ok(new InvoiceResponse(
+                InvoiceNumber: invoiceNumber,
+                InvoiceDate: today.ToString("yyyy-MM-dd"),
+                ChildOrderKey: childKey,
+                ChildOrderItemCount: childItemCount
+            ));
+        }
+        catch
+        {
+            await txn.RollbackAsync();
+            throw;
+        }
     }
 
     [HttpPost("{key:int}/void")]

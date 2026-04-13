@@ -134,6 +134,13 @@ public record RelatedOrdersResponse(RelatedOrderItem? Parent, IEnumerable<Relate
 
 public record BulkItemStatusRequest(int[] ItemKeys, string Status);
 
+public record InvoiceResponse(
+    string InvoiceNumber,
+    string InvoiceDate,
+    int? ChildOrderKey,
+    int ChildOrderItemCount
+);
+
 // ── Inventory picker ────────────────────────────────────────────────────────
 
 public record InventoryCategoryDto(
