@@ -5,6 +5,8 @@ import type {
   ProductSaleStats,
   InventoryCategory,
   InventorySize,
+  RelatedOrdersResponse,
+  InvoiceResponse,
 } from '../pages/product-sale/types';
 
 /* ── List / Stats ────────────────────────────────────────────────────────── */
@@ -89,12 +91,27 @@ export const approveOrder = (key: number) =>
 
 export const invoiceOrder = (key: number) =>
   apiClient
-    .post<{ invoiced: boolean }>(`/product-sales/${key}/invoice`)
+    .post<InvoiceResponse>(`/product-sales/${key}/invoice`)
     .then((r) => r.data);
 
 export const voidOrder = (key: number) =>
   apiClient
     .post<{ voided: boolean }>(`/product-sales/${key}/void`)
+    .then((r) => r.data);
+
+/* ── Bulk Status / Related ──────────────────────────────────────────────── */
+
+export const bulkUpdateItemStatus = (
+  key: number,
+  body: { itemKeys: number[]; status: string },
+) =>
+  apiClient
+    .post<{ updated: number }>(`/product-sales/${key}/items/bulk-status`, body)
+    .then((r) => r.data);
+
+export const getRelatedOrders = (key: number) =>
+  apiClient
+    .get<RelatedOrdersResponse>(`/product-sales/${key}/related`)
     .then((r) => r.data);
 
 /* ── Inventory Picker ────────────────────────────────────────────────────── */

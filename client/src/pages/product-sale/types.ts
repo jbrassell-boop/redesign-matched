@@ -12,6 +12,7 @@ export interface ProductSaleListItem {
   total: number;
   itemCount: number;
   backorderedCount: number;
+  parentProductSaleKey: number | null;
 }
 
 export interface ProductSaleStats {
@@ -89,6 +90,9 @@ export interface ProductSaleDetail {
   // estimated ship
   estimatedShipDateFrom: string | null;
   estimatedShipDateTo: string | null;
+  // parent reference
+  parentProductSaleKey: number | null;
+  parentInvoiceNumber: string | null;
   // line items
   lineItems: ProductSaleLineItem[];
 }
@@ -106,6 +110,7 @@ export interface ProductSaleLineItem {
   unitCost: number;
   totalCost: number;
   lotNumber: string | null;
+  itemStatus: string;
 }
 
 /* ── Inventory Picker ────────────────────────────────────────────────────── */
@@ -122,4 +127,27 @@ export interface InventorySize {
   sizeDescription3: string | null;
   status: string | null;
   unitCost: number;
+}
+
+/* ── Related Orders ─────────────────────────────────────────────────────── */
+
+export interface RelatedOrderItem {
+  productSaleKey: number;
+  invoiceNumber: string;
+  status: string;
+  itemCount: number;
+}
+
+export interface RelatedOrdersResponse {
+  parent: RelatedOrderItem | null;
+  children: RelatedOrderItem[];
+}
+
+/* ── Invoice Response ───────────────────────────────────────────────────── */
+
+export interface InvoiceResponse {
+  invoiceNumber: string;
+  invoiceDate: string;
+  childOrderKey: number | null;
+  childOrderItemCount: number;
 }
