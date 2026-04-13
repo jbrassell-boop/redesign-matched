@@ -211,7 +211,8 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
                    ISNULL(psi.lQuantity, 0) AS lQuantity,
                    ISNULL(psi.nUnitCost, 0) AS nUnitCost,
                    ISNULL(psi.nTotalCost, 0) AS nTotalCost,
-                   psi.sLotNumber
+                   psi.sLotNumber,
+                   ISNULL(psi.sItemStatus, 'Pending') AS sItemStatus
             FROM tblProductSalesInventory psi
             LEFT JOIN tblInventorySize isz ON isz.lInventorySizeKey = psi.lInventorySizeKey
             LEFT JOIN tblInventory i ON i.lInventoryKey = isz.lInventoryKey
@@ -237,7 +238,8 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
                 Quantity: Convert.ToInt32(linesReader["lQuantity"]),
                 UnitCost: Convert.ToDecimal(linesReader["nUnitCost"]),
                 TotalCost: Convert.ToDecimal(linesReader["nTotalCost"]),
-                LotNumber: linesReader["sLotNumber"]?.ToString()
+                LotNumber: linesReader["sLotNumber"]?.ToString(),
+                ItemStatus: linesReader["sItemStatus"]?.ToString() ?? "Pending"
             ));
         }
 

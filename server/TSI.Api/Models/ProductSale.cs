@@ -107,7 +107,8 @@ public record ProductSaleLineItem(
     int Quantity,
     decimal UnitCost,
     decimal TotalCost,
-    string? LotNumber
+    string? LotNumber,
+    string ItemStatus
 );
 
 public record AddLineItemRequest(
