@@ -3,7 +3,7 @@ import { Input, Spin, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { getLoaners, getLoanerStats, checkOutLoaner, checkInLoaner } from '../../api/loaners';
 import type { LoanerListItem, LoanerStats, CheckOutPayload, CheckInPayload } from './types';
-import { StatStrip, InlineExpandRow } from '../../components/shared';
+import { StatStrip, InlineExpandRow, DevNotice } from '../../components/shared';
 import type { StatChipDef } from '../../components/shared';
 import { LoanerDrawer } from './LoanerDrawer';
 import './LoanersPage.css';
@@ -346,13 +346,15 @@ export const LoanersPage = () => {
                   onChange={e => setExpandForm(f => ({ ...f, onSiteLoaner: e.target.checked }))}
                 />
               </div>
-              <button
-                className="loaners-expand-save"
-                onClick={handleExpandSave}
-                disabled={expandSaving}
+              <DevNotice
+                title="Check Out — Lookup Dropdowns"
+                requirement="Dropdowns are empty. Create lookup endpoints to populate Department (filtered by client), Delivery Method, and Sales Rep selects."
+                sql={'GET /api/lookups/departments?clientKey=@key\nGET /api/lookups/delivery-methods\nGET /api/lookups/sales-reps'}
               >
-                {expandSaving ? 'Saving...' : 'Save'}
-              </button>
+                <button className="loaners-expand-save">
+                  {expandSaving ? 'Saving...' : 'Save'}
+                </button>
+              </DevNotice>
             </div>
           </InlineExpandRow>
         )}

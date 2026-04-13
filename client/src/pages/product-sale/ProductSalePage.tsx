@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Input, Button, message } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
-import { StatStrip, StatusBadge } from '../../components/shared';
+import { StatStrip, StatusBadge, DevNotice } from '../../components/shared';
 import type { StatChipDef } from '../../components/shared';
 import { getProductSales, getProductSaleStats } from '../../api/product-sales';
 import { ProductSaleDrawer } from './ProductSaleDrawer';
@@ -119,15 +119,20 @@ export const ProductSalePage = () => {
 
       {/* Controls row */}
       <div className="ps-controls">
-        <Button
-          icon={<PlusOutlined />}
-          type="primary"
-          size="small"
-          style={{ background: 'var(--primary)', borderColor: 'var(--primary)', fontSize: 12, height: 30 }}
-          onClick={() => message.info('New order creation requires client/department selection — coming soon')}
+        <DevNotice
+          title="New Order"
+          requirement="Build a create-order modal with Client dropdown (search tblClient), Department dropdown (filtered by client from tblDepartment), and Sales Rep dropdown. POST /api/product-sales endpoint exists but needs clientKey + departmentKey."
+          sql={'-- Lookups needed:\nGET /api/clients?search=&pageSize=50 (exists)\nGET /api/departments?clientKey=@key (needs filter param)\nGET /api/lookups/sales-reps (new endpoint)'}
         >
-          + New Order
-        </Button>
+          <Button
+            icon={<PlusOutlined />}
+            type="primary"
+            size="small"
+            style={{ background: 'var(--primary)', borderColor: 'var(--primary)', fontSize: 12, height: 30 }}
+          >
+            + New Order
+          </Button>
+        </DevNotice>
         <div className="ps-controls__search">
           <Input
             prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}

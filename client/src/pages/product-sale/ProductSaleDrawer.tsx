@@ -414,13 +414,19 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
 
                 {/* Action buttons */}
                 <div className="ps-actions">
-                  <button
-                    className="ps-print-btn"
-                    disabled={!detail.quoteDate}
-                    type="button"
+                  <DevNotice
+                    title="Print Quote"
+                    requirement="Generate quote PDF from tblProductSaleQuote + tblProductSaleQuoteDetail snapshot data. Return PDF binary for download."
+                    sql={'POST /api/product-sales/:key/quote/print\n-- Reads from tblProductSaleQuote (header) + tblProductSaleQuoteDetail (line items)\n-- Returns application/pdf'}
                   >
-                    Print Quote
-                  </button>
+                    <button
+                      className="ps-print-btn"
+                      disabled={!detail.quoteDate}
+                      type="button"
+                    >
+                      Print Quote
+                    </button>
+                  </DevNotice>
                   {canAdvance(detail.status) && detail.status.toLowerCase() === 'approved' ? (
                     <DevNotice
                       title="Create Invoice"
@@ -509,7 +515,25 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
             {/* Documents tab */}
             {activeTab === 'documents' && (
               <div className="ps-drawer__tab-content">
-                <div className="ps-placeholder">Documents coming soon</div>
+                <div className="ps-placeholder">
+                  <div style={{ marginBottom: 12, color: 'var(--muted)', fontSize: 13 }}>Generated quotes, invoices, and uploaded documents.</div>
+                  <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                    <DevNotice
+                      title="Documents Tab"
+                      requirement="Create document storage and retrieval endpoints. List generated quote/invoice PDFs, allow file uploads."
+                      sql={'GET /api/product-sales/:key/documents\nPOST /api/product-sales/:key/documents/upload\nDELETE /api/product-sales/:key/documents/:docKey'}
+                    >
+                      <button className="ps-print-btn" type="button">View Documents</button>
+                    </DevNotice>
+                    <DevNotice
+                      title="Upload Document"
+                      requirement="Add file upload endpoint with Azure Blob Storage or local file system storage."
+                      sql="POST /api/product-sales/:key/documents/upload (multipart/form-data)"
+                    >
+                      <button className="ps-print-btn" type="button">Upload Document</button>
+                    </DevNotice>
+                  </div>
+                </div>
               </div>
             )}
           </div>
