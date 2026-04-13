@@ -15,3 +15,4 @@ export { ModalShell } from './ModalShell';
 export { EmptyState } from './EmptyState';
 export { PipelineBar } from './PipelineBar';
 export type { PipelineStep } from './PipelineBar';
+export { InlineExpandRow } from './InlineExpandRow';

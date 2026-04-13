@@ -1,0 +1,23 @@
+.inline-expand-row td {
+  padding: 0 !important;
+  border-left: 3px solid var(--primary);
+}
+
+.inline-expand-row__body {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: rgba(var(--amber-rgb), 0.06);
+}
+
+.inline-expand-row__cancel {
+  padding: 5px 12px;
+  background: var(--card);
+  color: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
