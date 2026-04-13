@@ -8,6 +8,9 @@ import type {
   CheckOutPayload,
   CheckInPayload,
   LoanerScopeNeedItem,
+  AvailableScope,
+  BookOutPayload,
+  EvalFailPayload,
 } from '../pages/loaners/types';
 
 export const getLoaners = (params: {
@@ -59,3 +62,16 @@ export const getLoanerScopeNeeds = async (): Promise<LoanerScopeNeedItem[]> => {
   const { data } = await apiClient.get<LoanerScopeNeedItem[]>('/loaners/scope-needs');
   return data;
 };
+
+export const getAvailableScopes = (scopeTypeKey?: number) =>
+  apiClient.get<AvailableScope[]>('/loaners/available', {
+    params: scopeTypeKey ? { scopeTypeKey } : undefined,
+  }).then((r) => r.data);
+
+export const bookOutLoaner = (payload: BookOutPayload) =>
+  apiClient.post<{ loanerTranKey: number }>('/loaners/book-out', payload).then((r) => r.data);
+
+export const evalFailLoaner = (payload: EvalFailPayload) =>
+  apiClient.post<{ repairKey: number; loanerTranKey: number; workOrder: string }>(
+    '/loaners/eval-fail', payload
+  ).then((r) => r.data);

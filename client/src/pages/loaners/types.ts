@@ -102,3 +102,41 @@ export interface LoanerScopeNeedItem {
   avgTat: number;
   estimatedNeedDate: string;
 }
+
+export interface AvailableScope {
+  scopeKey: number;
+  serial: string;
+  scopeType: string;
+  category: string;
+  rackPosition: string;
+  onSiteLoaner: boolean;
+}
+
+export interface BookOutPayload {
+  scopeKey: number;
+  departmentKey: number;
+  deliveryMethodKey: number;
+  salesRepKey: number;
+  taskKey?: number;
+  purchaseOrder?: string;
+  trackingNumber?: string;
+  onSiteLoaner: boolean;
+  outgoingInspection?: string;
+}
+
+export interface EvalFailPayload {
+  scopeKey: number;
+  taskKey?: number;
+  failedItems?: string;
+}
+
+export interface InspectionItem {
+  label: string;
+  field: string;
+  result: 'P' | 'F' | '';
+}
+
+export interface DeliveryMethod {
+  key: number;
+  description: string;
+}
