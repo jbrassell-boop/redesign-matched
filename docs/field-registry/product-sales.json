@@ -1,0 +1,486 @@
+{
+  "screen": "Product Sales",
+  "route": "/product-sales",
+  "description": "Product sales order and quote management. Creates invoices/quotes for inventory items sold to clients. Two-panel layout: top form (header + line items grid) and bottom inventory picker (item list + size list). Generates printable quote PDFs. Toolbar buttons change based on order state (new vs saved vs quoted).",
+  "legacyForm": "Product Sales",
+  "primaryTable": "tblProductSales",
+  "supportingTables": ["tblProductSalesInventory", "tblProductSaleQuote", "tblProductSaleQuoteDetail", "tblProductSaleInvoiceDetail", "tblInventory", "tblInventorySize", "tblInventoryPricingLists", "tblInventoryPricingListDetails", "tblClient", "tblDepartment", "tblSalesRep"],
+  "printForms": ["Instrument Quote PDF — TSI letterhead, customer/contact/rep/dates, line items with Qty/Unit Price/Total, notes, Sub Total/Shipping/Sales Tax/Total, barcode"],
+  "fieldCount": 52,
+  "sections": [
+    {
+      "name": "Header Bar (top row)",
+      "description": "Top toolbar row — client/department/invoice selection + action buttons",
+      "fields": [
+        {
+          "label": "Client",
+          "inputType": "dropdown",
+          "sqlColumn": "tblProductSales.lClientKey",
+          "lookupTable": "tblClient",
+          "lookupDisplay": "sClientName",
+          "notes": "e.g. '1Medical - FL', 'Testing Client'"
+        },
+        {
+          "label": "Department",
+          "inputType": "dropdown",
+          "sqlColumn": "tblProductSales.lDepartmentKey",
+          "lookupTable": "tblDepartment",
+          "lookupDisplay": "sDepartmentName",
+          "notes": "Filtered by selected client; e.g. 'Office', 'Endo'"
+        },
+        {
+          "label": "Invoice #",
+          "inputType": "dropdown",
+          "sqlColumn": "tblProductSales.sInvoiceNumber",
+          "dataType": "nvarchar(50)",
+          "notes": "Select existing order/quote (e.g. NI26103002) or blank for new"
+        },
+        {
+          "label": "(checkbox next to Invoice #)",
+          "inputType": "checkbox",
+          "sqlColumn": null,
+          "notes": "Purpose unclear — may toggle invoice/quote mode or filter"
+        },
+        {
+          "label": "Search",
+          "inputType": "button",
+          "action": "Search for existing product sales orders"
+        },
+        {
+          "label": "Save",
+          "inputType": "button",
+          "action": "Save current order"
+        },
+        {
+          "label": "New",
+          "inputType": "button",
+          "action": "Create a new product sales order",
+          "notes": "Highlighted blue when active"
+        },
+        {
+          "label": "Quote",
+          "inputType": "button",
+          "action": "Generate a quote PDF for this order",
+          "notes": "Generates the printable quote document; sets dtQuoteDate"
+        },
+        {
+          "label": "Pick List",
+          "inputType": "button",
+          "action": "Generate pick list for warehouse fulfillment"
+        },
+        {
+          "label": "Void",
+          "inputType": "button",
+          "action": "Void this order",
+          "notes": "Grayed out until order is saved"
+        },
+        {
+          "label": "Invoice",
+          "inputType": "button",
+          "action": "Convert quote to invoice",
+          "notes": "Only visible after quote is generated"
+        },
+        {
+          "label": "Packing List",
+          "inputType": "button",
+          "action": "Generate packing list",
+          "notes": "Only visible after quote is generated"
+        },
+        {
+          "label": "Delete",
+          "inputType": "button",
+          "action": "Delete this order",
+          "notes": "Only visible after quote is generated"
+        },
+        {
+          "label": "Close",
+          "inputType": "button",
+          "action": "Close the product sales form",
+          "notes": "Only visible after quote is generated"
+        }
+      ]
+    },
+    {
+      "name": "Sub-Header Row",
+      "description": "Second row — sales rep, pricing, dates",
+      "fields": [
+        {
+          "label": "Sales Rep",
+          "inputType": "dropdown",
+          "sqlColumn": "tblProductSales.lSalesRepKey",
+          "lookupTable": "tblSalesRep",
+          "lookupDisplay": "sSalesRepName",
+          "notes": "e.g. 'John VanBuren'"
+        },
+        {
+          "label": "Price List",
+          "inputType": "dropdown",
+          "sqlColumn": "tblProductSales.lInventoryPricingListKey",
+          "lookupTable": "tblInventoryPricingLists",
+          "lookupDisplay": "sInventoryPricingList",
+          "notes": "e.g. 'Local'; drives unit pricing from tblInventoryPricingListDetails"
+        },
+        {
+          "label": "Order Date",
+          "inputType": "date",
+          "sqlColumn": "tblProductSales.dtOrderDate",
+          "dataType": "date"
+        },
+        {
+          "label": "Quote Date",
+          "inputType": "date",
+          "sqlColumn": "tblProductSales.dtQuoteDate",
+          "dataType": "date",
+          "notes": "Set when Quote button is clicked"
+        },
+        {
+          "label": "Approval Date",
+          "inputType": "date",
+          "sqlColumn": "tblProductSales.dtApprovalDate",
+          "dataType": "date"
+        },
+        {
+          "label": "Denial Date",
+          "inputType": "date",
+          "sqlColumn": "tblProductSales.dtDeniedDate",
+          "dataType": "date"
+        },
+        {
+          "label": "Invoice Date",
+          "inputType": "date",
+          "sqlColumn": "tblProductSales.dtInvoiceDate",
+          "dataType": "date",
+          "notes": "Only visible after quote is generated"
+        }
+      ]
+    },
+    {
+      "name": "Main Tab — Contact & Notes",
+      "description": "Left side of Main tab — contact info, phone, and notes",
+      "tabName": "Main",
+      "fields": [
+        {
+          "label": "Contact",
+          "inputType": "dropdown",
+          "sqlColumn": "tblProductSales.lContactKey",
+          "notes": "Contact person at the department; populates sContactName"
+        },
+        {
+          "label": "Contact Name (display)",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSales.sContactName",
+          "dataType": "nvarchar(100)",
+          "notes": "Text line below Contact dropdown"
+        },
+        {
+          "label": "Phone",
+          "inputType": "phone",
+          "sqlColumn": "tblProductSales.sClientPhoneNumber",
+          "dataType": "nvarchar(50)",
+          "notes": "Phone mask format (__) ___-____"
+        },
+        {
+          "label": "Note",
+          "inputType": "textarea",
+          "sqlColumn": "tblProductSales.sNote",
+          "dataType": "nvarchar(max)",
+          "notes": "Large free-text area for order notes"
+        }
+      ]
+    },
+    {
+      "name": "Main Tab — Line Items Grid (right side)",
+      "description": "Right side shows selected items for this order. Columns expand after quote: Description, Description 2, Lot Number, Quantity (before quote) → adds Unit Price, Total Price (after quote).",
+      "fields": [
+        {
+          "label": "Description",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblProductSalesInventory → tblInventorySize.sSizeDescription",
+          "notes": "Item size description (e.g. '5CH/FR, WL 60cm, for Scissors Handle')"
+        },
+        {
+          "label": "Description 2",
+          "inputType": "editable-grid",
+          "sqlColumn": "tblInventorySize.sSizeDescription2",
+          "dataType": "nvarchar(300)"
+        },
+        {
+          "label": "Lot Number",
+          "inputType": "editable-grid",
+          "sqlColumn": "tblProductSalesInventory.sLotNumber",
+          "dataType": "nvarchar(50)",
+          "notes": "Lot/batch tracking number"
+        },
+        {
+          "label": "Quantity",
+          "inputType": "editable-grid",
+          "sqlColumn": "tblProductSalesInventory.lQuantity",
+          "dataType": "int"
+        },
+        {
+          "label": "Unit Price",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblProductSalesInventory.nUnitCost",
+          "dataType": "decimal",
+          "notes": "Visible after quote; from pricing list or manual entry (e.g. $289.72)"
+        },
+        {
+          "label": "Total Price",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblProductSalesInventory.nTotalCost",
+          "dataType": "decimal",
+          "notes": "Visible after quote; Quantity × Unit Price"
+        },
+        {
+          "label": "Grid Total (footer)",
+          "inputType": "readonly",
+          "sqlColumn": null,
+          "notes": "Sum of all line Total Price values, shown at bottom-right of grid"
+        }
+      ]
+    },
+    {
+      "name": "Main Tab — Shipping & Totals Row",
+      "description": "Row between form area and inventory picker — shipping, PO, charges",
+      "fields": [
+        {
+          "label": "Tracking Number",
+          "inputType": "text",
+          "sqlColumn": "tblProductSales.sShipTrackingNumber",
+          "dataType": "nvarchar(50)"
+        },
+        {
+          "label": "Est. Ship Range (from)",
+          "inputType": "date",
+          "sqlColumn": "tblProductSales.dtEstimatedShipDateFrom",
+          "dataType": "date"
+        },
+        {
+          "label": "Est. Ship Range (to)",
+          "inputType": "date",
+          "sqlColumn": "tblProductSales.dtEstimatedShipDateTo",
+          "dataType": "date"
+        },
+        {
+          "label": "Purchase Order",
+          "inputType": "text",
+          "sqlColumn": "tblProductSales.sPurchaseOrder",
+          "dataType": "nvarchar(50)"
+        },
+        {
+          "label": "Shipping Charge",
+          "inputType": "currency",
+          "sqlColumn": "tblProductSales.nShippingAmount",
+          "dataType": "decimal"
+        },
+        {
+          "label": "Tax",
+          "inputType": "currency",
+          "sqlColumn": "tblProductSales.nTaxAmount",
+          "dataType": "decimal",
+          "notes": "e.g. $17.38"
+        },
+        {
+          "label": "Total Charge",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSales.nTotalAmount",
+          "dataType": "decimal",
+          "notes": "Only visible after quote; Sub Total + Shipping + Tax"
+        }
+      ]
+    },
+    {
+      "name": "Inventory Picker — Left List (Inventory Items)",
+      "description": "Bottom-left panel — searchable list of inventory item categories. Selecting an item loads its sizes in the right panel.",
+      "fields": [
+        {
+          "label": "Search Term (left)",
+          "inputType": "text",
+          "notes": "Client-side filter for inventory items list"
+        },
+        {
+          "label": "Refresh (left)",
+          "inputType": "button",
+          "action": "Reload inventory items list"
+        },
+        {
+          "label": "Clear (left)",
+          "inputType": "button",
+          "action": "Clear search term"
+        },
+        {
+          "label": "Inventory Item",
+          "inputType": "readonly-list",
+          "sqlColumn": "tblInventory.sItemDescription",
+          "dataType": "nvarchar(50)",
+          "notes": "Scrollable list: e.g. '!! IT ASSEMBLY (LD)', 'ACHROMAT', 'INSTRUMENT TUBE ASSEMBLY'"
+        }
+      ]
+    },
+    {
+      "name": "Inventory Picker — Right Grid (Inventory Sizes)",
+      "description": "Bottom-right panel — sizes/variants for the selected inventory item. Each row can be added to the order with quantity.",
+      "fields": [
+        {
+          "label": "Search Term (right)",
+          "inputType": "text",
+          "notes": "Client-side filter for sizes grid"
+        },
+        {
+          "label": "Status (filter)",
+          "inputType": "dropdown",
+          "notes": "Filter sizes by status (Active/Inactive); defaults to 'Active'"
+        },
+        {
+          "label": "Refresh (right)",
+          "inputType": "button"
+        },
+        {
+          "label": "Clear (right)",
+          "inputType": "button"
+        },
+        {
+          "label": "Inventory Size",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblInventorySize.sSizeDescription",
+          "dataType": "nvarchar(200)",
+          "notes": "Size/variant description (e.g. 'CF 140L', 'GIF H180', '5CH/FR, WL 60cm, for Scissors Handle')"
+        },
+        {
+          "label": "Description 2",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblInventorySize.sSizeDescription2",
+          "dataType": "nvarchar(300)"
+        },
+        {
+          "label": "Description 3",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblInventorySize.sSizeDescription3",
+          "dataType": "nvarchar(300)"
+        },
+        {
+          "label": "Status",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblInventorySize.sStatus",
+          "dataType": "nvarchar(50)",
+          "notes": "Active/Inactive"
+        },
+        {
+          "label": "Quantity",
+          "inputType": "editable-grid",
+          "sqlColumn": null,
+          "notes": "Enter quantity to add; triggers adding to order line items"
+        },
+        {
+          "label": "Add",
+          "inputType": "checkbox-grid",
+          "action": "Add this size to the order with entered quantity",
+          "notes": "Checkbox column — click to add item to the line items grid above"
+        }
+      ]
+    },
+    {
+      "name": "Tabs",
+      "description": "Three tabs: Main (default), Addresses, Documents",
+      "fields": [
+        {
+          "label": "Main",
+          "inputType": "tab",
+          "notes": "Default tab — contact, notes, line items, inventory picker"
+        },
+        {
+          "label": "Addresses",
+          "inputType": "tab",
+          "notes": "Ship-to and bill-to addresses",
+          "sqlColumns": "tblProductSales: sShipName1, sShipName2, sAddressLine1, sAddressLine2, sCity, sState, sZipCode, sShipCountry, sBillName1, sBillName2, sBillAddressLine1, sBillAddressLine2, sBillCity, sBillState, sBillZipCode, sBillCountry, sBillEmail, sBillEmailName, lBillType"
+        },
+        {
+          "label": "Documents",
+          "inputType": "tab",
+          "notes": "Attached documents for this order"
+        }
+      ]
+    },
+    {
+      "name": "Quote PDF Output",
+      "description": "Generated quote document (PDF) — TSI letterhead with customer details, line items, and totals",
+      "fields": [
+        {
+          "label": "Quote Number",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSales.sInvoiceNumber",
+          "notes": "Header: 'Quote: NI26103002'"
+        },
+        {
+          "label": "Customer block",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSaleQuote: custAddressLine1-5",
+          "notes": "Client name, department, address lines"
+        },
+        {
+          "label": "Contact",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSaleQuote.sContactName"
+        },
+        {
+          "label": "Email / Phone",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSaleQuote.sContactEmailAddress + sClientPhoneNumber"
+        },
+        {
+          "label": "Rep ID",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSaleQuote.sRepName"
+        },
+        {
+          "label": "Quote Date",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSaleQuote.dtQuoteDate"
+        },
+        {
+          "label": "Expire Date",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSaleQuote.dtExpireDate",
+          "notes": "Auto-calculated: quote date + 6 months"
+        },
+        {
+          "label": "Line Items: Description, Qty, Unit Price, Total Price",
+          "inputType": "readonly-table",
+          "sqlColumn": "tblProductSaleQuoteDetail: sItemDescription, sSizeDescription, lQty, nUnitCost, nTotalCost"
+        },
+        {
+          "label": "Notes",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSaleQuote.sNote",
+          "notes": "Standard: 'All items come standard with a 1 year warranty. Items will ship 4 weeks after PO is received. NET 30 Terms'"
+        },
+        {
+          "label": "Sub Total",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSaleQuote.nQuoteAmount"
+        },
+        {
+          "label": "Shipping",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSaleQuote.nShippingAmount"
+        },
+        {
+          "label": "Sales Tax",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSaleQuote.nSalesTax"
+        },
+        {
+          "label": "Total",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSaleQuote.nTotalAmount"
+        },
+        {
+          "label": "Barcode",
+          "inputType": "readonly",
+          "sqlColumn": "tblProductSaleQuote.sBarCode",
+          "notes": "Barcode at bottom of PDF"
+        }
+      ]
+    }
+  ]
+}
