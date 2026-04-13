@@ -1,70 +1,29 @@
 namespace TSI.Api.Models;
 
+// ── List / Stats ────────────────────────────────────────────────────────────
+
 public record ProductSaleListItem(
     int ProductSaleKey,
     string InvoiceNumber,
     string ClientName,
     string DepartmentName,
+    string Status,
+    string Source,
     string SalesRep,
     string? OrderDate,
-    string Status,
-    int ItemCount,
-    string PurchaseOrder,
     decimal Total,
-    string Location
-);
-
-public record ProductSaleDetail(
-    int ProductSaleKey,
-    string InvoiceNumber,
-    string ClientName,
-    string DepartmentName,
-    string SalesRep,
-    string? OrderDate,
-    string? QuoteDate,
-    string? InvoiceDate,
-    string? CanceledDate,
-    string Status,
-    string PurchaseOrder,
-    string ContactName,
-    string ContactEmail,
-    string ContactPhone,
-    string BillName,
-    string BillAddress,
-    string BillCity,
-    string BillState,
-    string BillZip,
-    string ShipName,
-    string ShipAddress,
-    string ShipCity,
-    string ShipState,
-    string ShipZip,
-    string? TrackingNumber,
-    decimal SubTotal,
-    decimal ShippingAmount,
-    decimal TaxAmount,
-    decimal TotalAmount,
-    string? Notes,
-    IEnumerable<ProductSaleLineItem> LineItems
-);
-
-public record ProductSaleLineItem(
-    int InvoiceKey,
-    string ItemDescription,
-    string SizeDescription,
-    int Quantity,
-    decimal UnitPrice,
-    decimal ExtendedPrice
+    int ItemCount,
+    int BackorderedCount
 );
 
 public record ProductSaleStats(
-    int TotalOrders,
-    int OpenCount,
-    int InvoicedCount,
-    int DraftCount,
-    int QuotedCount,
-    int CancelledCount,
-    decimal TotalRevenue
+    int Total,
+    int Draft,
+    int Quoted,
+    int Approved,
+    int Invoiced,
+    int Cancelled,
+    decimal Revenue
 );
 
 public record ProductSaleListResponse(
@@ -72,7 +31,154 @@ public record ProductSaleListResponse(
     int TotalCount
 );
 
+// ── Detail ──────────────────────────────────────────────────────────────────
+
+public record ProductSaleDetail(
+    int ProductSaleKey,
+    string InvoiceNumber,
+    string Status,
+    int? ClientKey,
+    string ClientName,
+    int? DepartmentKey,
+    string DepartmentName,
+    int? SalesRepKey,
+    string SalesRep,
+    string? OrderDate,
+    string? QuoteDate,
+    string? ExpirationDate,
+    string? ApprovalDate,
+    string? DeniedDate,
+    string? CanceledDate,
+    string? InvoiceDate,
+    string PurchaseOrder,
+    string? ShipTrackingNumber,
+    decimal ShippingAmount,
+    decimal TaxAmount,
+    decimal TotalAmount,
+    decimal QuoteAmount,
+    int? PricingListKey,
+    string? PricingListName,
+    string? Note,
+    // contact
+    int? ContactKey,
+    string? ContactName,
+    string? ContactEmail,
+    string? ContactPhone,
+    // ship address
+    string? ShipName1,
+    string? ShipName2,
+    string? ShipAddressLine1,
+    string? ShipAddressLine2,
+    string? ShipCity,
+    string? ShipState,
+    string? ShipZipCode,
+    string? ShipCountry,
+    // bill address
+    string? BillName1,
+    string? BillName2,
+    string? BillAddressLine1,
+    string? BillAddressLine2,
+    string? BillCity,
+    string? BillState,
+    string? BillZipCode,
+    string? BillCountry,
+    int? BillType,
+    string? BillEmail,
+    string? BillEmailName,
+    // denial
+    string? DeniedBy,
+    string? DenialReason,
+    // estimated ship dates
+    string? EstimatedShipDateFrom,
+    string? EstimatedShipDateTo,
+    // line items
+    IEnumerable<ProductSaleLineItem> LineItems
+);
+
+// ── Line items ──────────────────────────────────────────────────────────────
+
+public record ProductSaleLineItem(
+    int ProductSaleInventoryKey,
+    int? InventorySizeKey,
+    string ItemDescription,
+    string SizeDescription,
+    string? SizeDescription2,
+    string? SizeDescription3,
+    int Quantity,
+    decimal UnitCost,
+    decimal TotalCost,
+    string? LotNumber
+);
+
+public record AddLineItemRequest(
+    int InventorySizeKey,
+    int Quantity
+);
+
+public record UpdateLineItemRequest(
+    int? Quantity,
+    string? LotNumber
+);
+
+// ── Inventory picker ────────────────────────────────────────────────────────
+
+public record InventoryCategoryDto(
+    int InventoryKey,
+    string ItemDescription
+);
+
+public record InventorySizeDto(
+    int InventorySizeKey,
+    string SizeDescription,
+    string? SizeDescription2,
+    string? SizeDescription3,
+    string? Status,
+    decimal UnitCost
+);
+
+// ── Requests ────────────────────────────────────────────────────────────────
+
 public record CreateProductSaleRequest(
-    string? PurchaseOrder,
-    string? Note
+    int ClientKey,
+    int DepartmentKey,
+    int? SalesRepKey = null,
+    string? PurchaseOrder = null,
+    string? Note = null
+);
+
+public record UpdateProductSaleRequest(
+    int? ClientKey = null,
+    int? DepartmentKey = null,
+    int? SalesRepKey = null,
+    string? PurchaseOrder = null,
+    string? Note = null,
+    decimal? ShippingAmount = null,
+    decimal? TaxAmount = null,
+    int? PricingListKey = null,
+    string? ShipTrackingNumber = null,
+    int? ContactKey = null,
+    string? ContactName = null,
+    string? ContactEmail = null,
+    string? ContactPhone = null,
+    string? ShipName1 = null,
+    string? ShipName2 = null,
+    string? ShipAddressLine1 = null,
+    string? ShipAddressLine2 = null,
+    string? ShipCity = null,
+    string? ShipState = null,
+    string? ShipZipCode = null,
+    string? ShipCountry = null,
+    string? BillName1 = null,
+    string? BillName2 = null,
+    string? BillAddressLine1 = null,
+    string? BillAddressLine2 = null,
+    string? BillCity = null,
+    string? BillState = null,
+    string? BillZipCode = null,
+    string? BillCountry = null,
+    string? BillEmail = null,
+    string? BillEmailName = null,
+    int? BillType = null,
+    string? EstimatedShipDateFrom = null,
+    string? EstimatedShipDateTo = null
 );
