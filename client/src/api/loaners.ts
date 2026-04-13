@@ -1,27 +1,41 @@
 import apiClient from './client';
-import type { LoanerDetail, LoanerListResponse, LoanerStats, LoanersFilters, LoanerScopeNeedItem } from '../pages/loaners/types';
+import type {
+  LoanerListResponse,
+  LoanerDetail,
+  LoanerStats,
+  LoanerHistoryItem,
+  CategoryAvailability,
+  CheckOutPayload,
+  CheckInPayload,
+  LoanerScopeNeedItem,
+} from '../pages/loaners/types';
 
-export const getLoaners = async (filters: LoanersFilters): Promise<LoanerListResponse> => {
-  const { data } = await apiClient.get<LoanerListResponse>('/loaners', {
-    params: {
-      search: filters.search || undefined,
-      page: filters.page,
-      pageSize: filters.pageSize,
-      statusFilter: filters.statusFilter !== 'All' ? filters.statusFilter : undefined,
-    },
-  });
-  return data;
-};
+export const getLoaners = (params: {
+  search?: string;
+  statusFilter?: string;
+  salesRepKey?: number;
+  page?: number;
+  pageSize?: number;
+}) =>
+  apiClient.get<LoanerListResponse>('/loaners', { params }).then((r) => r.data);
 
-export const getLoanerDetail = async (id: number): Promise<LoanerDetail> => {
-  const { data } = await apiClient.get<LoanerDetail>(`/loaners/${id}`);
-  return data;
-};
+export const getLoanerStats = () =>
+  apiClient.get<LoanerStats>('/loaners/stats').then((r) => r.data);
 
-export const getLoanerStats = async (): Promise<LoanerStats> => {
-  const { data } = await apiClient.get<LoanerStats>('/loaners/stats');
-  return data;
-};
+export const getLoanerDetail = (scopeKey: number) =>
+  apiClient.get<LoanerDetail>(`/loaners/${scopeKey}`).then((r) => r.data);
+
+export const getLoanerHistory = (scopeKey: number) =>
+  apiClient.get<LoanerHistoryItem[]>(`/loaners/${scopeKey}/history`).then((r) => r.data);
+
+export const getCategoryAvailability = () =>
+  apiClient.get<CategoryAvailability[]>('/loaners/category-availability').then((r) => r.data);
+
+export const checkOutLoaner = (payload: CheckOutPayload) =>
+  apiClient.post('/loaners/check-out', payload);
+
+export const checkInLoaner = (payload: CheckInPayload) =>
+  apiClient.post('/loaners/check-in', payload);
 
 export const getLoanerRequests = async (params?: { search?: string; statusFilter?: string }) => {
   const { data } = await apiClient.get('/loaners/requests', { params });
