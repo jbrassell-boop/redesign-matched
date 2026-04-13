@@ -156,15 +156,15 @@ export const ProductSalePage = () => {
           <table className="ps-table">
             <thead>
               <tr>
-                <th>Invoice #</th>
-                <th>Client</th>
-                <th>Department</th>
-                <th>Status</th>
-                <th>Source</th>
-                <th>Sales Rep</th>
-                <th>Order Date</th>
-                <th className="ps-col-right">Total</th>
-                <th>Items</th>
+                <th scope="col">Invoice #</th>
+                <th scope="col">Client</th>
+                <th scope="col">Department</th>
+                <th scope="col">Status</th>
+                <th scope="col">Source</th>
+                <th scope="col">Sales Rep</th>
+                <th scope="col">Order Date</th>
+                <th scope="col" className="ps-col-right">Total</th>
+                <th scope="col">Items</th>
               </tr>
             </thead>
             <tbody>
@@ -172,6 +172,10 @@ export const ProductSalePage = () => {
                 <tr
                   key={item.productSaleKey}
                   onClick={() => handleRowClick(item.productSaleKey)}
+                  onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleRowClick(item.productSaleKey); } }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`Open order ${item.invoiceNumber || item.productSaleKey}`}
                   className={item.productSaleKey === drawerKey ? 'ps-row--selected' : ''}
                 >
                   <td className="ps-col-bold">{item.invoiceNumber || '\u2014'}</td>
@@ -210,6 +214,7 @@ export const ProductSalePage = () => {
               className="ps-pg-btn"
               disabled={page <= 1}
               onClick={() => setPage(p => p - 1)}
+              aria-label="Previous page"
             >{'\u2039'}</button>
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               const start = Math.max(1, Math.min(page - 2, totalPages - 4));
@@ -226,6 +231,7 @@ export const ProductSalePage = () => {
               className="ps-pg-btn"
               disabled={page >= totalPages}
               onClick={() => setPage(p => p + 1)}
+              aria-label="Next page"
             >{'\u203A'}</button>
           </div>
         </div>

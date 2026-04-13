@@ -260,7 +260,7 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
     <Drawer
       open={open}
       onClose={onClose}
-      width={600}
+      width="min(600px, 100vw)"
       closable={false}
       styles={{ body: { padding: 0 } }}
       destroyOnClose
@@ -301,9 +301,9 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                 {related.parent && (
                   <span className="ps-related-orders__link">
                     Split from:{' '}
-                    <a href="#" onClick={e => { e.preventDefault(); loadDetail(related.parent!.productSaleKey); }} className="ps-related-orders__anchor">
+                    <button type="button" onClick={() => loadDetail(related.parent!.productSaleKey)} className="ps-related-orders__anchor">
                       {related.parent.invoiceNumber || `PS-${related.parent.productSaleKey}`}
-                    </a>
+                    </button>
                   </span>
                 )}
                 {related.children.length > 0 && (
@@ -312,9 +312,9 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                     {related.children.map((c, idx) => (
                       <span key={c.productSaleKey}>
                         {idx > 0 && ', '}
-                        <a href="#" onClick={e => { e.preventDefault(); loadDetail(c.productSaleKey); }} className="ps-related-orders__anchor">
+                        <button type="button" onClick={() => loadDetail(c.productSaleKey)} className="ps-related-orders__anchor">
                           {c.invoiceNumber || `PS-${c.productSaleKey}`}
-                        </a>
+                        </button>
                         {' '}
                         <StatusBadge status={c.status} />
                       </span>
@@ -336,13 +336,13 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                     <table className="ps-line-items">
                       <thead>
                         <tr>
-                          <th style={{ width: 20 }}></th>
-                          <th>Description</th>
-                          <th style={{ width: 56 }} className="ps-li-center">Qty</th>
-                          <th style={{ width: 80 }} className="ps-li-right">Unit Price</th>
-                          <th style={{ width: 80 }} className="ps-li-right">Total</th>
-                          <th style={{ width: 80 }} className="ps-li-center">Status</th>
-                          <th style={{ width: 36 }}></th>
+                          <th scope="col" style={{ width: 20 }}><span className="sr-only">Select</span></th>
+                          <th scope="col">Description</th>
+                          <th scope="col" style={{ width: 56 }} className="ps-li-center">Qty</th>
+                          <th scope="col" style={{ width: 80 }} className="ps-li-right">Unit Price</th>
+                          <th scope="col" style={{ width: 80 }} className="ps-li-right">Total</th>
+                          <th scope="col" style={{ width: 80 }} className="ps-li-center">Status</th>
+                          <th scope="col" style={{ width: 36 }}><span className="sr-only">Actions</span></th>
                         </tr>
                       </thead>
                       <tbody>
@@ -376,6 +376,7 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                                   className="ps-qty-input"
                                   defaultValue={li.quantity}
                                   min={1}
+                                  aria-label={`Quantity for ${li.itemDescription}`}
                                   onBlur={e => {
                                     const val = parseInt(e.target.value) || 1;
                                     if (val !== li.quantity) handleQtyChange(li.productSaleInventoryKey, val);
