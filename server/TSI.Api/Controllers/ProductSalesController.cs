@@ -726,14 +726,20 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
             var seqNum = Convert.ToInt32(await mergeCmd.ExecuteScalarAsync());
             var invoiceNumber = $"NP{yearDay}{seqNum:D2}";
 
-            // B. Snapshot shipped items into tblProductSaleInvoiceDetail
+            // B. Generate a unique lInvoiceKey for the snapshot detail rows
+            await using var maxKeyCmd = new SqlCommand(
+                "SELECT ISNULL(MAX(lInvoiceKey), 0) + 1 FROM tblProductSaleInvoiceDetail", conn, txn);
+            maxKeyCmd.CommandTimeout = 30;
+            var invoiceKey = Convert.ToInt32(await maxKeyCmd.ExecuteScalarAsync());
+
+            // C. Snapshot shipped items into tblProductSaleInvoiceDetail
             const string snapshotSql = """
                 INSERT INTO tblProductSaleInvoiceDetail
-                    (lProductSalesKey, lProductSaleInventoryKey, lInventoryKey, lInventorySizeKey,
+                    (lInvoiceKey, lProductSalesKey, lProductSaleInventoryKey, lInventoryKey, lInventorySizeKey,
                      sItemDescription, sSizeDescription, sSizeDescription2, sSizeDescription3,
                      sSubDescription, lQty, nUnitCost, nTotalCost, sLotNumber)
                 SELECT
-                    psi.lProductSaleKey, psi.lProductSaleInventoryKey,
+                    @invoiceKey, psi.lProductSaleKey, psi.lProductSaleInventoryKey,
                     isz.lInventoryKey, psi.lInventorySizeKey,
                     ISNULL(i.sItemDescription, ''), ISNULL(isz.sSizeDescription, ''),
                     isz.sSizeDescription2, isz.sSizeDescription3,
@@ -746,6 +752,7 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
                 """;
             await using var snapCmd = new SqlCommand(snapshotSql, conn, txn);
             snapCmd.CommandTimeout = 30;
+            snapCmd.Parameters.AddWithValue("@invoiceKey", invoiceKey);
             snapCmd.Parameters.AddWithValue("@key", key);
             await snapCmd.ExecuteNonQueryAsync();
 
