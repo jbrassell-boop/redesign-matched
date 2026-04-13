@@ -20,12 +20,16 @@ tblTasks, tblTaskLoaners, tblTaskTypes, tblTaskPriorities, tblTaskStatuses, and 
 .\scripts\migrate-data.ps1 -AzurePassword "TsiDev2026!" -Tables @("tblTaskTypes","tblTaskPriorities","tblTaskStatuses","tblTaskStatusHistory","tblTasks","tblTaskLoaners")
 ```
 
-Also run the schema changes on Azure SQL:
+## Schema Changes (Steve Deploys)
+
+The following ALTER TABLE statements are required. They must be surfaced as **DevNotice** components in the UI so Steve knows what to run. The backend endpoints should use `ISNULL()` / null-safe patterns so they still work before the columns are added.
 
 ```sql
 ALTER TABLE tblLoanerTran ADD lTaskKey int NULL;
 ALTER TABLE tblLoanerTran ADD sOutgoingInspection nvarchar(max) NULL;
 ```
+
+**Implementation rule:** Every UI action that depends on these columns (FulfillLoanerModal "Book Out & Ship" button, eval-fail "Report Failure" button) must be wrapped in a `<DevNotice>` explaining the required schema changes until Steve confirms they are deployed.
 
 ---
 
@@ -765,6 +769,7 @@ import { Spin, message } from 'antd';
 import { getAvailableScopes, bookOutLoaner, evalFailLoaner } from '../../api/loaners';
 import { getDeliveryMethods } from '../../api/deliveryMethods';
 import { InspectionChecklist } from './InspectionChecklist';
+import { DevNotice } from '../../components/shared';
 import type { AvailableScope, DeliveryMethod } from './types';
 import './FulfillLoanerModal.css';
 
@@ -1013,13 +1018,19 @@ export const FulfillLoanerModal = ({
                 >
                   Back
                 </button>
-                <button
-                  className="fulfill-modal__btn fulfill-modal__btn--primary"
-                  onClick={handleBookOut}
-                  disabled={saving}
+                <DevNotice
+                  title="Book Out — Schema Changes Required"
+                  requirement="Two new columns needed on tblLoanerTran before book-out can persist task link and inspection results."
+                  sql={'ALTER TABLE tblLoanerTran ADD lTaskKey int NULL;\nALTER TABLE tblLoanerTran ADD sOutgoingInspection nvarchar(max) NULL;'}
                 >
-                  {saving ? 'Booking out...' : 'Book Out & Ship'}
-                </button>
+                  <button
+                    className="fulfill-modal__btn fulfill-modal__btn--primary"
+                    onClick={handleBookOut}
+                    disabled={saving}
+                  >
+                    {saving ? 'Booking out...' : 'Book Out & Ship'}
+                  </button>
+                </DevNotice>
               </div>
             </div>
           )}
@@ -1317,7 +1328,21 @@ const [fulfillModal, setFulfillModal] = useState<{
 } | null>(null);
 ```
 
-Add a "Fulfill Loaner" button in the task row rendering for tasks where `hasLoanerRequest` is true. When clicked, open the modal with the task's data.
+Add a "Fulfill Loaner" button in the task row rendering for tasks where `hasLoanerRequest` is true. Wrap it in a `<DevNotice>` explaining the tblTaskLoaners migration dependency:
+
+```tsx
+<DevNotice
+  title="Fulfill Loaner — Data Migration Required"
+  requirement="tblTasks and tblTaskLoaners must be migrated to Azure SQL. Run migrate-data.ps1 with these tables."
+  sql={'-- Migration (PowerShell):\n.\\scripts\\migrate-data.ps1 -Tables @("tblTaskTypes","tblTaskPriorities","tblTaskStatuses","tblTaskStatusHistory","tblTasks","tblTaskLoaners")'}
+>
+  <button onClick={e => { e.stopPropagation(); setFulfillModal({...}); }}>
+    Fulfill Loaner
+  </button>
+</DevNotice>
+```
+
+When clicked, open the modal with the task's data.
 
 Add the modal at the bottom of the component JSX:
 
