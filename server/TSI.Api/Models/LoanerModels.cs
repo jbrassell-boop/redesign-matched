@@ -83,3 +83,21 @@ public record CheckInRequest(
     string? RackPosition,
     string? TrackingNumber
 );
+
+public record BookOutRequest(
+    int ScopeKey,
+    int DepartmentKey,
+    int DeliveryMethodKey,
+    int SalesRepKey,
+    int? TaskKey,
+    string? PurchaseOrder,
+    string? TrackingNumber,
+    bool OnSiteLoaner,
+    string? OutgoingInspection
+);
+
+public record EvalFailRequest(
+    int ScopeKey,
+    int? TaskKey,
+    string? FailedItems
+);

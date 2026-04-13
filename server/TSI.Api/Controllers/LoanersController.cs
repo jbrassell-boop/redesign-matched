@@ -520,6 +520,106 @@ public class LoanersController(IConfiguration config) : ControllerBase
         return Ok(new { loanerTranKey = newKey });
     }
 
+    // ── Book Out (task-driven fulfillment with inspection) ──────────────
+    [HttpPost("book-out")]
+    public async Task<IActionResult> BookOut([FromBody] BookOutRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var dateOut = DateTime.Now.ToString("yyyyMMddHHmmss");
+
+        var sql = """
+            INSERT INTO tblLoanerTran
+                (lScopeKey, lDepartmentKey, lDeliveryMethodKey, lSalesRepKey,
+                 sPurchaseOrder, sTrackingNumber, sDateOut, dtCreateDate, lCreateUser)
+            VALUES
+                (@scopeKey, @deptKey, @deliveryKey, @repKey,
+                 @po, @tracking, @dateOut, GETDATE(), 1);
+            SELECT SCOPE_IDENTITY();
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
+        cmd.Parameters.AddWithValue("@deptKey", body.DepartmentKey);
+        cmd.Parameters.AddWithValue("@deliveryKey", body.DeliveryMethodKey);
+        cmd.Parameters.AddWithValue("@repKey", body.SalesRepKey);
+        cmd.Parameters.AddWithValue("@po", (object?)body.PurchaseOrder ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@tracking", (object?)body.TrackingNumber ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@dateOut", dateOut);
+
+        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+
+        if (body.OnSiteLoaner)
+        {
+            await using var cmd2 = new SqlCommand(
+                "UPDATE tblScope SET bOnSiteLoaner = 1 WHERE lScopeKey = @scopeKey", conn);
+            cmd2.CommandTimeout = 30;
+            cmd2.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
+            await cmd2.ExecuteNonQueryAsync();
+        }
+
+        return Ok(new { loanerTranKey = newKey });
+    }
+
+    // ── Eval Fail (auto-create repair for failed inspection) ────────────
+    [HttpPost("eval-fail")]
+    public async Task<IActionResult> EvalFail([FromBody] EvalFailRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Step 1: Verify scope exists
+        await using var scopeCmd = new SqlCommand(
+            "SELECT lScopeTypeKey FROM tblScope WHERE lScopeKey = @scopeKey", conn);
+        scopeCmd.CommandTimeout = 30;
+        scopeCmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
+        var scopeTypeKeyObj = await scopeCmd.ExecuteScalarAsync();
+        if (scopeTypeKeyObj == null || scopeTypeKeyObj == DBNull.Value)
+            return NotFound("Scope not found");
+
+        // Step 2: Generate next WO number
+        await using var woCmd = new SqlCommand(
+            "SELECT ISNULL(MAX(CAST(sWorkOrderNumber AS INT)), 0) + 1 FROM tblRepair WHERE ISNUMERIC(sWorkOrderNumber) = 1", conn);
+        woCmd.CommandTimeout = 30;
+        var nextWo = Convert.ToInt32(await woCmd.ExecuteScalarAsync());
+
+        // Step 3: Create repair (disable triggers — tblRepair has triggers)
+        var repairSql = """
+            DISABLE TRIGGER ALL ON tblRepair;
+            INSERT INTO tblRepair
+                (lScopeKey, sWorkOrderNumber, bLoanerRequested, dtCreateDate, lCreateUser)
+            VALUES
+                (@scopeKey, @wo, 0, GETDATE(), 1);
+            ENABLE TRIGGER ALL ON tblRepair;
+            SELECT SCOPE_IDENTITY();
+            """;
+
+        await using var repairCmd = new SqlCommand(repairSql, conn);
+        repairCmd.CommandTimeout = 30;
+        repairCmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
+        repairCmd.Parameters.AddWithValue("@wo", nextWo.ToString());
+        var repairKey = Convert.ToInt32(await repairCmd.ExecuteScalarAsync());
+
+        // Step 4: Create loaner tran linked to repair (scope goes to "Repair" status)
+        var tranSql = """
+            INSERT INTO tblLoanerTran
+                (lScopeKey, lRepairKey, dtCreateDate, lCreateUser)
+            VALUES
+                (@scopeKey, @repairKey, GETDATE(), 1);
+            SELECT SCOPE_IDENTITY();
+            """;
+
+        await using var tranCmd = new SqlCommand(tranSql, conn);
+        tranCmd.CommandTimeout = 30;
+        tranCmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
+        tranCmd.Parameters.AddWithValue("@repairKey", repairKey);
+        var tranKey = Convert.ToInt32(await tranCmd.ExecuteScalarAsync());
+
+        return Ok(new { repairKey, loanerTranKey = tranKey, workOrder = nextWo.ToString() });
+    }
+
     // ── Check-In ─────────────────────────────────────────────────────────────
 
     [HttpPost("check-in")]
