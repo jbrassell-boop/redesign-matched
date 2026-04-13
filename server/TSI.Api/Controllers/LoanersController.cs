@@ -13,12 +13,15 @@ public class LoanersController(IConfiguration config) : ControllerBase
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
 
+    // ── List (latest transaction per scope) ──────────────────────────────────
+
     [HttpGet]
     public async Task<IActionResult> GetList(
         [FromQuery] string? search = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
-        [FromQuery] string? statusFilter = null)
+        [FromQuery] string? statusFilter = null,
+        [FromQuery] int? salesRepKey = null)
     {
         await using var conn = CreateConnection();
         await conn.OpenAsync();
@@ -35,184 +38,105 @@ public class LoanersController(IConfiguration config) : ControllerBase
                  OR r.sWorkOrderNumber LIKE @search)
                 """);
 
+        if (salesRepKey.HasValue)
+            where.Add("lt.lSalesRepKey = @salesRepKey");
+
+        // Status filtering applied after derivation via outer WHERE on CTE
+        var statusWhere = "";
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "All")
-        {
-            if (statusFilter == "Overdue")
-                where.Add("lt.sDateIn IS NULL AND lt.sDateOut IS NOT NULL AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 30");
-            else if (statusFilter == "Out")
-                where.Add("lt.sDateIn IS NULL AND lt.sDateOut IS NOT NULL");
-            else if (statusFilter == "Returned")
-                where.Add("lt.sDateIn IS NOT NULL");
-            else if (statusFilter == "Declined")
-                where.Add("lt.sRepairClosed = 'D'");
-        }
+            statusWhere = "AND derived.Status = @statusFilter";
 
         var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
 
-        var countSql = $"""
-            SELECT COUNT(*)
-            FROM tblLoanerTran lt
-            LEFT JOIN tblScope s ON s.lScopeKey = lt.lScopeKey
-            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
-            LEFT JOIN tblDepartment d ON d.lDepartmentKey = lt.lDepartmentKey
-            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
-            LEFT JOIN tblRepair r ON r.lRepairKey = lt.lRepairKey
-            {whereClause}
-            """;
-
-        var dataSql = $"""
-            SELECT lt.lLoanerTranKey, lt.lScopeKey, lt.lRepairKey, lt.lDepartmentKey,
-                   ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
-                   ISNULL(s.sSerialNumber, '') AS sSerialNumber,
-                   ISNULL(c.sClientName1, '') AS sClientName1,
-                   ISNULL(d.sDepartmentName, '') AS sDepartmentName,
-                   lt.sDateOut, lt.sDateIn,
-                   ISNULL(lt.sTrackingNumber, '') AS sTrackingNumber,
-                   ISNULL(lt.sPurchaseOrder, '') AS sPurchaseOrder,
-                   lt.sRepairClosed,
-                   ISNULL(r.sWorkOrderNumber, '') AS sWorkOrderNumber,
-                   CASE
-                       WHEN lt.sRepairClosed = 'D' THEN 'Declined'
-                       WHEN lt.sDateIn IS NOT NULL THEN 'Returned'
-                       WHEN lt.sDateOut IS NOT NULL AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 30 THEN 'Overdue'
-                       WHEN lt.sDateOut IS NOT NULL THEN 'Out'
-                       ELSE 'Pending'
-                   END AS sStatus,
-                   CASE
-                       WHEN lt.sDateOut IS NOT NULL THEN
-                           DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime),
-                               CASE WHEN lt.sDateIn IS NOT NULL THEN TRY_CAST(lt.sDateIn AS datetime) ELSE GETDATE() END)
-                       ELSE 0
-                   END AS DaysOut
-            FROM tblLoanerTran lt
-            LEFT JOIN tblScope s ON s.lScopeKey = lt.lScopeKey
-            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
-            LEFT JOIN tblDepartment d ON d.lDepartmentKey = lt.lDepartmentKey
-            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
-            LEFT JOIN tblRepair r ON r.lRepairKey = lt.lRepairKey
-            {whereClause}
-            ORDER BY lt.lLoanerTranKey DESC
+        // CTE: get latest lLoanerTranKey per lScopeKey
+        var sql = $"""
+            ;WITH LatestTran AS (
+                SELECT lScopeKey, MAX(lLoanerTranKey) AS MaxTranKey
+                FROM tblLoanerTran
+                WHERE lScopeKey IS NOT NULL
+                GROUP BY lScopeKey
+            ),
+            derived AS (
+                SELECT lt.lLoanerTranKey,
+                       lt.lScopeKey,
+                       ISNULL(st.sScopeTypeDesc, '') AS ScopeType,
+                       ISNULL(s.sSerialNumber, '') AS Serial,
+                       CASE
+                           WHEN lt.lRepairKey IS NOT NULL AND r.sWorkOrderNumber IS NOT NULL THEN 'Repair'
+                           WHEN lt.sDateIn IS NOT NULL THEN 'Returned'
+                           WHEN lt.sDateOut IS NOT NULL AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 21 THEN 'Overdue'
+                           WHEN lt.sDateOut IS NOT NULL THEN 'Out'
+                           ELSE 'Available'
+                       END AS Status,
+                       ISNULL(c.sClientName1, '') AS Client,
+                       ISNULL(d.sDepartmentName, '') AS Dept,
+                       ISNULL(sr.sRepFirst + ' ' + sr.sRepLast, '') AS Rep,
+                       CASE
+                           WHEN lt.sDateOut IS NOT NULL THEN
+                               DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime),
+                                   CASE WHEN lt.sDateIn IS NOT NULL THEN TRY_CAST(lt.sDateIn AS datetime) ELSE GETDATE() END)
+                           ELSE 0
+                       END AS DaysOut,
+                       ISNULL(lt.sPurchaseOrder, '') AS Agreement,
+                       ISNULL(lt.sTrackingNumber, '') AS TrackingNumber,
+                       ISNULL(lt.sPurchaseOrder, '') AS PurchaseOrder,
+                       ISNULL(stc.sScopeTypeCategory, '') AS Category,
+                       CAST(0 AS BIT) AS RecallNeeded
+                FROM LatestTran lat
+                INNER JOIN tblLoanerTran lt ON lt.lLoanerTranKey = lat.MaxTranKey
+                LEFT JOIN tblScope s ON s.lScopeKey = lt.lScopeKey
+                LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+                LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey
+                LEFT JOIN tblDepartment d ON d.lDepartmentKey = lt.lDepartmentKey
+                LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+                LEFT JOIN tblRepair r ON r.lRepairKey = lt.lRepairKey
+                LEFT JOIN tblSalesRep sr ON sr.lSalesRepKey = lt.lSalesRepKey
+                {whereClause}
+            )
+            SELECT *, COUNT(*) OVER() AS TotalCount
+            FROM derived
+            WHERE 1=1 {statusWhere}
+            ORDER BY derived.lLoanerTranKey DESC
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
-            """;
-
-        await using var countCmd = new SqlCommand(countSql, conn);
-        countCmd.CommandTimeout = 30;
-        if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
-        var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
-
-        await using var dataCmd = new SqlCommand(dataSql, conn);
-        dataCmd.CommandTimeout = 30;
-        if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
-        dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
-        dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
-
-        await using var reader = await dataCmd.ExecuteReaderAsync();
-        var items = new List<LoanerListItem>();
-        while (await reader.ReadAsync())
-        {
-            items.Add(new LoanerListItem(
-                LoanerTranKey: Convert.ToInt32(reader["lLoanerTranKey"]),
-                ScopeKey: reader["lScopeKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lScopeKey"]),
-                RepairKey: reader["lRepairKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lRepairKey"]),
-                DepartmentKey: reader["lDepartmentKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lDepartmentKey"]),
-                ScopeType: reader["sScopeTypeDesc"]?.ToString() ?? "",
-                Serial: reader["sSerialNumber"]?.ToString() ?? "",
-                Client: reader["sClientName1"]?.ToString() ?? "",
-                Dept: reader["sDepartmentName"]?.ToString() ?? "",
-                DateOut: reader["sDateOut"]?.ToString() ?? "",
-                DateIn: reader["sDateIn"]?.ToString() ?? "",
-                TrackingNumber: reader["sTrackingNumber"]?.ToString() ?? "",
-                PurchaseOrder: reader["sPurchaseOrder"]?.ToString() ?? "",
-                Status: reader["sStatus"]?.ToString() ?? "",
-                DaysOut: reader["DaysOut"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DaysOut"]),
-                WorkOrder: reader["sWorkOrderNumber"]?.ToString() ?? ""
-            ));
-        }
-
-        return Ok(new LoanerListResponse(items, totalCount));
-    }
-
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetDetail(int id)
-    {
-        await using var conn = CreateConnection();
-        await conn.OpenAsync();
-
-        var sql = """
-            SELECT lt.lLoanerTranKey, lt.lScopeKey, lt.lRepairKey, lt.lDepartmentKey,
-                   lt.lSalesRepKey, lt.lDeliveryMethodKey, lt.lContractKey,
-                   ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
-                   ISNULL(s.sSerialNumber, '') AS sSerialNumber,
-                   ISNULL(s.sLoanerRackPosition, '') AS sLoanerRackPosition,
-                   ISNULL(c.sClientName1, '') AS sClientName1,
-                   ISNULL(d.sDepartmentName, '') AS sDepartmentName,
-                   lt.sDateOut, lt.sDateIn,
-                   ISNULL(lt.sTrackingNumber, '') AS sTrackingNumber,
-                   ISNULL(lt.sPurchaseOrder, '') AS sPurchaseOrder,
-                   lt.sRepairClosed, lt.dtCreateDate,
-                   ISNULL(r.sWorkOrderNumber, '') AS sWorkOrderNumber,
-                   ISNULL(sr.sRepFirst + ' ' + sr.sRepLast, '') AS sSalesRepName,
-                   ISNULL(dm.sDeliveryDesc, '') AS sDeliveryMethodDesc,
-                   CASE
-                       WHEN lt.sRepairClosed = 'D' THEN 'Declined'
-                       WHEN lt.sDateIn IS NOT NULL THEN 'Returned'
-                       WHEN lt.sDateOut IS NOT NULL AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 30 THEN 'Overdue'
-                       WHEN lt.sDateOut IS NOT NULL THEN 'Out'
-                       ELSE 'Pending'
-                   END AS sStatus,
-                   CASE
-                       WHEN lt.sDateOut IS NOT NULL THEN
-                           DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime),
-                               CASE WHEN lt.sDateIn IS NOT NULL THEN TRY_CAST(lt.sDateIn AS datetime) ELSE GETDATE() END)
-                       ELSE 0
-                   END AS DaysOut
-            FROM tblLoanerTran lt
-            LEFT JOIN tblScope s ON s.lScopeKey = lt.lScopeKey
-            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
-            LEFT JOIN tblDepartment d ON d.lDepartmentKey = lt.lDepartmentKey
-            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
-            LEFT JOIN tblRepair r ON r.lRepairKey = lt.lRepairKey
-            LEFT JOIN tblSalesRep sr ON sr.lSalesRepKey = lt.lSalesRepKey
-            LEFT JOIN tblDeliveryMethod dm ON dm.lDeliveryMethodKey = lt.lDeliveryMethodKey
-            WHERE lt.lLoanerTranKey = @id
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@id", id);
+        if (!string.IsNullOrWhiteSpace(search)) cmd.Parameters.AddWithValue("@search", $"%{search}%");
+        if (salesRepKey.HasValue) cmd.Parameters.AddWithValue("@salesRepKey", salesRepKey.Value);
+        if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "All")
+            cmd.Parameters.AddWithValue("@statusFilter", statusFilter);
+        cmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
+        cmd.Parameters.AddWithValue("@pageSize", pageSize);
 
         await using var reader = await cmd.ExecuteReaderAsync();
-        if (!await reader.ReadAsync())
-            return NotFound();
+        var items = new List<LoanerListItemDto>();
+        var totalCount = 0;
+        while (await reader.ReadAsync())
+        {
+            totalCount = Convert.ToInt32(reader["TotalCount"]);
+            items.Add(new LoanerListItemDto(
+                LoanerTranKey: Convert.ToInt32(reader["lLoanerTranKey"]),
+                ScopeKey: reader["lScopeKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lScopeKey"]),
+                ScopeType: reader["ScopeType"]?.ToString() ?? "",
+                Serial: reader["Serial"]?.ToString() ?? "",
+                Status: reader["Status"]?.ToString() ?? "",
+                Client: reader["Client"]?.ToString() ?? "",
+                Dept: reader["Dept"]?.ToString() ?? "",
+                Rep: reader["Rep"]?.ToString() ?? "",
+                DaysOut: reader["DaysOut"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DaysOut"]),
+                Agreement: reader["Agreement"]?.ToString() ?? "",
+                TrackingNumber: reader["TrackingNumber"]?.ToString() ?? "",
+                PurchaseOrder: reader["PurchaseOrder"]?.ToString() ?? "",
+                Category: reader["Category"]?.ToString() ?? "",
+                RecallNeeded: Convert.ToBoolean(reader["RecallNeeded"])
+            ));
+        }
 
-        var detail = new LoanerDetail(
-            LoanerTranKey: Convert.ToInt32(reader["lLoanerTranKey"]),
-            ScopeKey: reader["lScopeKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lScopeKey"]),
-            RepairKey: reader["lRepairKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lRepairKey"]),
-            DepartmentKey: reader["lDepartmentKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lDepartmentKey"]),
-            SalesRepKey: reader["lSalesRepKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lSalesRepKey"]),
-            DeliveryMethodKey: reader["lDeliveryMethodKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lDeliveryMethodKey"]),
-            ContractKey: reader["lContractKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lContractKey"]),
-            ScopeType: reader["sScopeTypeDesc"]?.ToString() ?? "",
-            Serial: reader["sSerialNumber"]?.ToString() ?? "",
-            Client: reader["sClientName1"]?.ToString() ?? "",
-            Dept: reader["sDepartmentName"]?.ToString() ?? "",
-            DateOut: reader["sDateOut"]?.ToString() ?? "",
-            DateIn: reader["sDateIn"]?.ToString() ?? "",
-            TrackingNumber: reader["sTrackingNumber"]?.ToString() ?? "",
-            PurchaseOrder: reader["sPurchaseOrder"]?.ToString() ?? "",
-            Status: reader["sStatus"]?.ToString() ?? "",
-            DaysOut: reader["DaysOut"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DaysOut"]),
-            WorkOrder: reader["sWorkOrderNumber"]?.ToString() ?? "",
-            SalesRep: reader["sSalesRepName"]?.ToString() ?? "",
-            DeliveryMethod: reader["sDeliveryMethodDesc"]?.ToString() ?? "",
-            RackPosition: reader["sLoanerRackPosition"]?.ToString() ?? "",
-            RepairClosed: reader["sRepairClosed"]?.ToString() ?? "",
-            CreatedDate: reader["dtCreateDate"] == DBNull.Value ? "" : Convert.ToDateTime(reader["dtCreateDate"]).ToString("MM/dd/yyyy")
-        );
-
-        return Ok(detail);
+        return Ok(new LoanerListResponseDto(items, totalCount));
     }
+
+    // ── Stats ────────────────────────────────────────────────────────────────
 
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
@@ -220,16 +144,37 @@ public class LoanersController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // Stats based on latest transaction per scope
         var sql = """
+            ;WITH LatestTran AS (
+                SELECT lScopeKey, MAX(lLoanerTranKey) AS MaxTranKey
+                FROM tblLoanerTran
+                WHERE lScopeKey IS NOT NULL
+                GROUP BY lScopeKey
+            )
             SELECT
-                COUNT(*) AS Total,
-                SUM(CASE WHEN lt.sDateIn IS NULL AND lt.sDateOut IS NOT NULL AND lt.sRepairClosed IS NULL
-                         AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) <= 30 THEN 1 ELSE 0 END) AS OutCount,
-                SUM(CASE WHEN lt.sDateIn IS NULL AND lt.sDateOut IS NOT NULL AND lt.sRepairClosed IS NULL
-                         AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 30 THEN 1 ELSE 0 END) AS OverdueCount,
-                SUM(CASE WHEN lt.sDateIn IS NOT NULL THEN 1 ELSE 0 END) AS ReturnedCount,
-                SUM(CASE WHEN lt.sRepairClosed = 'D' THEN 1 ELSE 0 END) AS DeclinedCount
-            FROM tblLoanerTran lt
+                SUM(CASE
+                    WHEN lt.sDateIn IS NOT NULL OR lt.sDateOut IS NULL THEN 1 ELSE 0
+                END) AS Available,
+                0 AS Evaluating,
+                SUM(CASE
+                    WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL
+                         AND (lt.lRepairKey IS NULL OR r.sWorkOrderNumber IS NULL)
+                         AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) <= 21 THEN 1 ELSE 0
+                END) AS OutCount,
+                SUM(CASE
+                    WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL
+                         AND (lt.lRepairKey IS NULL OR r.sWorkOrderNumber IS NULL)
+                         AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 21 THEN 1 ELSE 0
+                END) AS OverdueCount,
+                SUM(CASE
+                    WHEN lt.lRepairKey IS NOT NULL AND r.sWorkOrderNumber IS NOT NULL AND lt.sDateIn IS NULL THEN 1 ELSE 0
+                END) AS RepairCount,
+                (SELECT COUNT(*) FROM tblRepair WHERE bLoanerRequested = 1
+                    AND (sWasLoanerProduced IS NULL OR sWasLoanerProduced = '')) AS AgreementsPending
+            FROM LatestTran lat
+            INNER JOIN tblLoanerTran lt ON lt.lLoanerTranKey = lat.MaxTranKey
+            LEFT JOIN tblRepair r ON r.lRepairKey = lt.lRepairKey
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
@@ -237,16 +182,327 @@ public class LoanersController(IConfiguration config) : ControllerBase
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
-        var total = Convert.ToInt32(reader["Total"]);
-        var outCount = Convert.ToInt32(reader["OutCount"]);
-        var overdue = Convert.ToInt32(reader["OverdueCount"]);
-        var returned = Convert.ToInt32(reader["ReturnedCount"]);
-        var declined = Convert.ToInt32(reader["DeclinedCount"]);
-        var fulfilled = outCount + overdue + returned;
-        var fillRate = total > 0 ? (int)Math.Round(100.0 * fulfilled / total) : 0;
-
-        return Ok(new LoanerStats(total, outCount, overdue, returned, declined, fillRate));
+        return Ok(new LoanerStatsDto(
+            Available: reader["Available"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Available"]),
+            Evaluating: reader["Evaluating"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Evaluating"]),
+            Out: reader["OutCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OutCount"]),
+            Overdue: reader["OverdueCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OverdueCount"]),
+            Repair: reader["RepairCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["RepairCount"]),
+            AgreementsPending: reader["AgreementsPending"] == DBNull.Value ? 0 : Convert.ToInt32(reader["AgreementsPending"])
+        ));
     }
+
+    // ── Detail (by scopeKey) ─────────────────────────────────────────────────
+
+    [HttpGet("{scopeKey:int}")]
+    public async Task<IActionResult> GetDetail(int scopeKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var sql = """
+            SELECT TOP 1
+                lt.lLoanerTranKey,
+                lt.lScopeKey,
+                ISNULL(st.sScopeTypeDesc, '') AS ScopeType,
+                ISNULL(s.sSerialNumber, '') AS Serial,
+                CASE
+                    WHEN lt.lRepairKey IS NOT NULL AND r.sWorkOrderNumber IS NOT NULL THEN 'Repair'
+                    WHEN lt.sDateIn IS NOT NULL THEN 'Returned'
+                    WHEN lt.sDateOut IS NOT NULL AND DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime), GETDATE()) > 21 THEN 'Overdue'
+                    WHEN lt.sDateOut IS NOT NULL THEN 'Out'
+                    ELSE 'Available'
+                END AS Status,
+                ISNULL(c.sClientName1, '') AS Client,
+                ISNULL(d.sDepartmentName, '') AS Dept,
+                ISNULL(sr.sRepFirst + ' ' + sr.sRepLast, '') AS Rep,
+                ISNULL(dm.sDeliveryDesc, '') AS DeliveryMethod,
+                ISNULL(lt.sPurchaseOrder, '') AS PurchaseOrder,
+                ISNULL(lt.sTrackingNumber, '') AS TrackingNumber,
+                ISNULL(s.sLoanerRackPosition, '') AS RackPosition,
+                ISNULL(lt.sDateOut, '') AS DateOut,
+                ISNULL(lt.sDateIn, '') AS DateIn,
+                ISNULL(CAST(lt.lCreateUser AS NVARCHAR), '') AS CreatedBy,
+                CASE WHEN lt.dtCreateDate IS NOT NULL THEN CONVERT(NVARCHAR, lt.dtCreateDate, 101) ELSE '' END AS CreatedDate,
+                ISNULL(stc.sScopeTypeCategory, '') AS Category,
+                ISNULL(s.bOnSiteLoaner, 0) AS OnSiteLoaner
+            FROM tblLoanerTran lt
+            LEFT JOIN tblScope s ON s.lScopeKey = lt.lScopeKey
+            LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = lt.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            LEFT JOIN tblRepair r ON r.lRepairKey = lt.lRepairKey
+            LEFT JOIN tblSalesRep sr ON sr.lSalesRepKey = lt.lSalesRepKey
+            LEFT JOIN tblDeliveryMethod dm ON dm.lDeliveryMethodKey = lt.lDeliveryMethodKey
+            WHERE lt.lScopeKey = @scopeKey
+            ORDER BY lt.lLoanerTranKey DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@scopeKey", scopeKey);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+            return NotFound();
+
+        return Ok(new LoanerDetailDto(
+            LoanerTranKey: Convert.ToInt32(reader["lLoanerTranKey"]),
+            ScopeKey: reader["lScopeKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lScopeKey"]),
+            ScopeType: reader["ScopeType"]?.ToString() ?? "",
+            Serial: reader["Serial"]?.ToString() ?? "",
+            Status: reader["Status"]?.ToString() ?? "",
+            Client: reader["Client"]?.ToString() ?? "",
+            Dept: reader["Dept"]?.ToString() ?? "",
+            Rep: reader["Rep"]?.ToString() ?? "",
+            DeliveryMethod: reader["DeliveryMethod"]?.ToString() ?? "",
+            PurchaseOrder: reader["PurchaseOrder"]?.ToString() ?? "",
+            TrackingNumber: reader["TrackingNumber"]?.ToString() ?? "",
+            RackPosition: reader["RackPosition"]?.ToString() ?? "",
+            DateOut: reader["DateOut"]?.ToString() ?? "",
+            DateIn: reader["DateIn"]?.ToString() ?? "",
+            CreatedBy: reader["CreatedBy"]?.ToString() ?? "",
+            CreatedDate: reader["CreatedDate"]?.ToString() ?? "",
+            Category: reader["Category"]?.ToString() ?? "",
+            OnSiteLoaner: Convert.ToBoolean(reader["OnSiteLoaner"])
+        ));
+    }
+
+    // ── History (all transactions for a scope) ───────────────────────────────
+
+    [HttpGet("{scopeKey:int}/history")]
+    public async Task<IActionResult> GetHistory(int scopeKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var sql = """
+            SELECT lt.lLoanerTranKey,
+                   ISNULL(lt.sDateOut, '') AS DateOut,
+                   ISNULL(lt.sDateIn, '') AS DateIn,
+                   ISNULL(c.sClientName1, '') AS Client,
+                   ISNULL(d.sDepartmentName, '') AS Dept,
+                   CASE
+                       WHEN lt.sDateOut IS NOT NULL THEN
+                           DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime),
+                               CASE WHEN lt.sDateIn IS NOT NULL THEN TRY_CAST(lt.sDateIn AS datetime) ELSE GETDATE() END)
+                       ELSE 0
+                   END AS DaysOut,
+                   ISNULL(lt.sPurchaseOrder, '') AS Agreement
+            FROM tblLoanerTran lt
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = lt.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+            WHERE lt.lScopeKey = @scopeKey
+            ORDER BY lt.lLoanerTranKey DESC
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@scopeKey", scopeKey);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<LoanerHistoryItemDto>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new LoanerHistoryItemDto(
+                LoanerTranKey: Convert.ToInt32(reader["lLoanerTranKey"]),
+                DateOut: reader["DateOut"]?.ToString() ?? "",
+                DateIn: reader["DateIn"]?.ToString() ?? "",
+                Client: reader["Client"]?.ToString() ?? "",
+                Dept: reader["Dept"]?.ToString() ?? "",
+                DaysOut: reader["DaysOut"] == DBNull.Value ? 0 : Convert.ToInt32(reader["DaysOut"]),
+                Agreement: reader["Agreement"]?.ToString() ?? ""
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    // ── Category Availability ────────────────────────────────────────────────
+
+    [HttpGet("category-availability")]
+    public async Task<IActionResult> GetCategoryAvailability()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Available: scopes where latest loaner tran has sDateIn set (returned) or no tran exists
+        // Out: scopes where latest loaner tran has sDateOut set but no sDateIn
+        // Needed: active repairs with bLoanerRequested = 1 grouped by scope category
+        var sql = """
+            ;WITH LatestTran AS (
+                SELECT lScopeKey, MAX(lLoanerTranKey) AS MaxTranKey
+                FROM tblLoanerTran
+                WHERE lScopeKey IS NOT NULL
+                GROUP BY lScopeKey
+            ),
+            ScopeStatus AS (
+                SELECT s.lScopeKey,
+                       ISNULL(stc.sScopeTypeCategory, 'Unknown') AS Category,
+                       CASE
+                           WHEN lt.sDateIn IS NOT NULL OR lat.MaxTranKey IS NULL THEN 'Available'
+                           WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL THEN 'Out'
+                           ELSE 'Available'
+                       END AS CurrentStatus
+                FROM tblScope s
+                INNER JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+                LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey
+                LEFT JOIN LatestTran lat ON lat.lScopeKey = s.lScopeKey
+                LEFT JOIN tblLoanerTran lt ON lt.lLoanerTranKey = lat.MaxTranKey
+                WHERE s.bOnSiteLoaner = 1 OR EXISTS (
+                    SELECT 1 FROM tblLoanerTran lt2 WHERE lt2.lScopeKey = s.lScopeKey
+                )
+            ),
+            Availability AS (
+                SELECT Category,
+                       SUM(CASE WHEN CurrentStatus = 'Available' THEN 1 ELSE 0 END) AS Available,
+                       SUM(CASE WHEN CurrentStatus = 'Out' THEN 1 ELSE 0 END) AS OutCount
+                FROM ScopeStatus
+                GROUP BY Category
+            ),
+            Needed AS (
+                SELECT ISNULL(stc.sScopeTypeCategory, 'Unknown') AS Category,
+                       COUNT(*) AS Needed
+                FROM tblRepair r
+                INNER JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+                INNER JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+                LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey
+                WHERE r.bLoanerRequested = 1
+                  AND r.dtDateOut IS NULL
+                  AND r.dtDateIn IS NOT NULL
+                  AND (r.sWasLoanerProduced IS NULL OR r.sWasLoanerProduced = '')
+                GROUP BY stc.sScopeTypeCategory
+            )
+            SELECT ISNULL(a.Category, n.Category) AS Category,
+                   ISNULL(a.Available, 0) AS Available,
+                   ISNULL(a.OutCount, 0) AS OutCount,
+                   ISNULL(n.Needed, 0) AS Needed
+            FROM Availability a
+            FULL OUTER JOIN Needed n ON a.Category = n.Category
+            ORDER BY Category
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<CategoryAvailabilityDto>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new CategoryAvailabilityDto(
+                Category: reader["Category"]?.ToString() ?? "",
+                Available: reader["Available"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Available"]),
+                Out: reader["OutCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OutCount"]),
+                Needed: reader["Needed"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Needed"])
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    // ── Check-Out ────────────────────────────────────────────────────────────
+
+    [HttpPost("check-out")]
+    public async Task<IActionResult> CheckOut([FromBody] CheckOutRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var dateOut = DateTime.Now.ToString("yyyyMMddHHmmss");
+
+        var sql = """
+            INSERT INTO tblLoanerTran
+                (lScopeKey, lDepartmentKey, lDeliveryMethodKey, lSalesRepKey, sPurchaseOrder, sDateOut, dtCreateDate, lCreateUser)
+            VALUES
+                (@scopeKey, @deptKey, @deliveryKey, @repKey, @po, @dateOut, GETDATE(), 1);
+            SELECT SCOPE_IDENTITY();
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
+        cmd.Parameters.AddWithValue("@deptKey", body.DepartmentKey);
+        cmd.Parameters.AddWithValue("@deliveryKey", body.DeliveryMethodKey);
+        cmd.Parameters.AddWithValue("@repKey", body.SalesRepKey);
+        cmd.Parameters.AddWithValue("@po", (object?)body.PurchaseOrder ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@dateOut", dateOut);
+
+        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+
+        // Update bOnSiteLoaner on the scope if requested
+        if (body.OnSiteLoaner)
+        {
+            await using var cmd2 = new SqlCommand(
+                "UPDATE tblScope SET bOnSiteLoaner = 1 WHERE lScopeKey = @scopeKey", conn);
+            cmd2.CommandTimeout = 30;
+            cmd2.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
+            await cmd2.ExecuteNonQueryAsync();
+        }
+
+        return Ok(new { loanerTranKey = newKey });
+    }
+
+    // ── Check-In ─────────────────────────────────────────────────────────────
+
+    [HttpPost("check-in")]
+    public async Task<IActionResult> CheckIn([FromBody] CheckInRequest body)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var dateIn = DateTime.Now.ToString("yyyyMMddHHmmss");
+
+        var sql = """
+            UPDATE tblLoanerTran
+            SET sDateIn = @dateIn, dtLastUpdate = GETDATE()
+            WHERE lLoanerTranKey = @tranKey AND sDateIn IS NULL
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@dateIn", dateIn);
+        cmd.Parameters.AddWithValue("@tranKey", body.LoanerTranKey);
+
+        var rows = await cmd.ExecuteNonQueryAsync();
+        if (rows == 0)
+            return NotFound("Transaction not found or already checked in");
+
+        // Update rack position if provided
+        if (!string.IsNullOrWhiteSpace(body.RackPosition))
+        {
+            // Get the scopeKey from the transaction
+            await using var cmd2 = new SqlCommand(
+                "SELECT lScopeKey FROM tblLoanerTran WHERE lLoanerTranKey = @tranKey", conn);
+            cmd2.CommandTimeout = 30;
+            cmd2.Parameters.AddWithValue("@tranKey", body.LoanerTranKey);
+            var scopeKeyObj = await cmd2.ExecuteScalarAsync();
+            if (scopeKeyObj != null && scopeKeyObj != DBNull.Value)
+            {
+                await using var cmd3 = new SqlCommand(
+                    "UPDATE tblScope SET sLoanerRackPosition = @rack WHERE lScopeKey = @scopeKey", conn);
+                cmd3.CommandTimeout = 30;
+                cmd3.Parameters.AddWithValue("@rack", body.RackPosition);
+                cmd3.Parameters.AddWithValue("@scopeKey", Convert.ToInt32(scopeKeyObj));
+                await cmd3.ExecuteNonQueryAsync();
+            }
+        }
+
+        // Update tracking number if provided
+        if (!string.IsNullOrWhiteSpace(body.TrackingNumber))
+        {
+            await using var cmd4 = new SqlCommand(
+                "UPDATE tblLoanerTran SET sTrackingNumber = @tracking WHERE lLoanerTranKey = @tranKey", conn);
+            cmd4.CommandTimeout = 30;
+            cmd4.Parameters.AddWithValue("@tracking", body.TrackingNumber);
+            cmd4.Parameters.AddWithValue("@tranKey", body.LoanerTranKey);
+            await cmd4.ExecuteNonQueryAsync();
+        }
+
+        return Ok();
+    }
+
+    // ── Legacy endpoints (kept for backward compat) ──────────────────────────
 
     [HttpGet("requests")]
     public async Task<IActionResult> GetRequests(
@@ -376,16 +632,12 @@ public class LoanersController(IConfiguration config) : ControllerBase
         return Ok(new { updated = rows });
     }
 
-    // ── Scope Needs ───────────────────────────────────────────────────────────
-
     [HttpGet("scope-needs")]
     public async Task<IActionResult> GetScopeNeeds()
     {
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Repairs currently in progress grouped by scope type + department
-        // Avg TAT = avg DATEDIFF(day, dtDateIn, GETDATE()) for open repairs
         const string sql = """
             SELECT
                 ISNULL(st.sScopeTypeDesc, 'Unknown') AS sScopeTypeDesc,
@@ -413,7 +665,6 @@ public class LoanersController(IConfiguration config) : ControllerBase
         while (await reader.ReadAsync())
         {
             var avgTat = reader["AvgTat"] == DBNull.Value ? 0.0 : Convert.ToDouble(reader["AvgTat"]);
-            // Estimated need date: today + avgTat days (when repair would complete and loaner return)
             var estimatedNeed = DateTime.Today.AddDays(avgTat).ToString("MM/dd/yyyy");
 
             items.Add(new LoanerScopeNeedItem(
