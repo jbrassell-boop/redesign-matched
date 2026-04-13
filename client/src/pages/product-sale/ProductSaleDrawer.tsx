@@ -10,7 +10,7 @@ import {
   DevNotice,
 } from '../../components/shared';
 import type { TabDef, PipelineStep, CategoryItem, SizeItem } from '../../components/shared';
-import type { ProductSaleDetail, ProductSaleLineItem } from './types';
+import type { ProductSaleDetail, RelatedOrdersResponse } from './types';
 import {
   getProductSaleDetail,
   addLineItem,
@@ -19,6 +19,8 @@ import {
   generateQuote,
   approveOrder,
   invoiceOrder,
+  bulkUpdateItemStatus,
+  getRelatedOrders,
   getInventoryCategories,
   getInventorySizes,
 } from '../../api/product-sales';
@@ -49,11 +51,11 @@ const TABS: TabDef[] = [
   { key: 'documents', label: 'Documents' },
 ];
 
-function getAdvanceLabel(status: string): string {
+function getAdvanceLabel(status: string, hasShippedItems: boolean): string {
   const s = (status ?? '').toLowerCase();
   if (s === 'draft') return 'Generate Quote \u2192';
   if (s === 'quoted' || s === 'quote sent') return 'Mark Approved \u2192';
-  if (s === 'approved') return 'Create Invoice \u2192';
+  if (s === 'approved') return hasShippedItems ? 'Invoice Shipped Items \u2192' : 'Create Invoice \u2192';
   return 'Advance \u2192';
 }
 
@@ -77,6 +79,7 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
 
   // Item selection for fulfillment
   const [selectedItems, setSelectedItems] = useState<number[]>([]);
+  const [related, setRelated] = useState<RelatedOrdersResponse | null>(null);
 
   const toggleItemSelect = (key: number) => {
     setSelectedItems(prev =>
@@ -95,6 +98,9 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
     try {
       const d = await getProductSaleDetail(key);
       setDetail(d);
+      getRelatedOrders(key)
+        .then(setRelated)
+        .catch(() => setRelated(null));
     } catch {
       message.error('Failed to load product sale detail');
     } finally {
@@ -181,15 +187,38 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
     }
   };
 
+  const handleBulkStatus = async (newStatus: string) => {
+    if (!productSaleKey || selectedItems.length === 0) return;
+    try {
+      await bulkUpdateItemStatus(productSaleKey, { itemKeys: selectedItems, status: newStatus });
+      message.success(`${selectedItems.length} item(s) marked as ${newStatus}`);
+      setSelectedItems([]);
+      loadDetail(productSaleKey);
+      onUpdated();
+    } catch {
+      message.error(`Failed to mark items as ${newStatus}`);
+    }
+  };
+
   const handleAdvance = async () => {
     if (!productSaleKey || !detail) return;
     setAdvancing(true);
     const s = detail.status.toLowerCase();
     try {
-      if (s === 'draft') await generateQuote(productSaleKey);
-      else if (s === 'quoted' || s === 'quote sent') await approveOrder(productSaleKey);
-      else if (s === 'approved') await invoiceOrder(productSaleKey);
-      message.success('Status updated');
+      if (s === 'draft') {
+        await generateQuote(productSaleKey);
+        message.success('Quote generated');
+      } else if (s === 'quoted' || s === 'quote sent') {
+        await approveOrder(productSaleKey);
+        message.success('Order approved');
+      } else if (s === 'approved') {
+        const result = await invoiceOrder(productSaleKey);
+        let msg = `Invoice ${result.invoiceNumber} created`;
+        if (result.childOrderKey) {
+          msg += `. ${result.childOrderItemCount} backordered item(s) moved to new order.`;
+        }
+        message.success(msg);
+      }
       loadDetail(productSaleKey);
       onUpdated();
     } catch {
@@ -267,6 +296,34 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
               />
             </div>
 
+            {related && (related.parent || related.children.length > 0) && (
+              <div className="ps-related-orders">
+                {related.parent && (
+                  <span className="ps-related-orders__link">
+                    Split from:{' '}
+                    <a href="#" onClick={e => { e.preventDefault(); loadDetail(related.parent!.productSaleKey); }} className="ps-related-orders__anchor">
+                      {related.parent.invoiceNumber || `PS-${related.parent.productSaleKey}`}
+                    </a>
+                  </span>
+                )}
+                {related.children.length > 0 && (
+                  <span className="ps-related-orders__link">
+                    Related:{' '}
+                    {related.children.map((c, idx) => (
+                      <span key={c.productSaleKey}>
+                        {idx > 0 && ', '}
+                        <a href="#" onClick={e => { e.preventDefault(); loadDetail(c.productSaleKey); }} className="ps-related-orders__anchor">
+                          {c.invoiceNumber || `PS-${c.productSaleKey}`}
+                        </a>
+                        {' '}
+                        <StatusBadge status={c.status} />
+                      </span>
+                    ))}
+                  </span>
+                )}
+              </div>
+            )}
+
             <TabBar tabs={tabs} activeKey={activeTab} onChange={setActiveTab} />
 
             {/* Items tab */}
@@ -290,7 +347,7 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                       </thead>
                       <tbody>
                         {detail.lineItems.map(li => {
-                          const itemStatus = (li as ProductSaleLineItem & { itemStatus?: string }).itemStatus || 'Pending';
+                          const itemStatus = li.itemStatus || 'Pending';
                           return (
                             <tr key={li.productSaleInventoryKey} className={itemStatus === 'Shipped' ? 'ps-li-row--shipped' : itemStatus === 'Backordered' ? 'ps-li-row--backordered' : ''}>
                               <td className="ps-li-center">
@@ -350,27 +407,15 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                     </table>
 
                     {/* Fulfillment actions */}
-                    {selectedItems.length > 0 && (
+                    {selectedItems.length > 0 && detail.status.toLowerCase() === 'approved' && (
                       <div className="ps-fulfill-bar">
                         <span className="ps-fulfill-bar__count">{selectedItems.length} item{selectedItems.length > 1 ? 's' : ''} selected</span>
-                        <DevNotice
-                          title="Mark Shipped"
-                          requirement="Add item-level status tracking to tblProductSalesInventory so individual line items can be marked as Shipped."
-                          sql="ALTER TABLE tblProductSalesInventory ADD sItemStatus nvarchar(20) NOT NULL DEFAULT 'Pending'"
-                        >
-                          <button className="ps-fulfill-btn ps-fulfill-btn--ship" type="button">
-                            Mark Shipped
-                          </button>
-                        </DevNotice>
-                        <DevNotice
-                          title="Mark Backordered"
-                          requirement="Add item-level status tracking to tblProductSalesInventory so individual line items can be marked as Backordered."
-                          sql="ALTER TABLE tblProductSalesInventory ADD sItemStatus nvarchar(20) NOT NULL DEFAULT 'Pending'"
-                        >
-                          <button className="ps-fulfill-btn ps-fulfill-btn--backorder" type="button">
-                            Mark Backordered
-                          </button>
-                        </DevNotice>
+                        <button className="ps-fulfill-btn ps-fulfill-btn--ship" type="button" onClick={() => handleBulkStatus('Shipped')}>
+                          Mark Shipped
+                        </button>
+                        <button className="ps-fulfill-btn ps-fulfill-btn--backorder" type="button" onClick={() => handleBulkStatus('Backordered')}>
+                          Mark Backordered
+                        </button>
                       </div>
                     )}
 
@@ -427,26 +472,16 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                       Print Quote
                     </button>
                   </DevNotice>
-                  {canAdvance(detail.status) && detail.status.toLowerCase() === 'approved' ? (
-                    <DevNotice
-                      title="Create Invoice"
-                      requirement="Invoice creation requires writing snapshot records to tblProductSaleInvoiceDetail and generating a sequential invoice number."
-                      sql="INSERT INTO tblProductSaleInvoiceDetail (...) SELECT ... FROM tblProductSalesInventory WHERE lProductSaleKey = @key"
-                    >
-                      <button className="ps-advance-btn" type="button">
-                        {getAdvanceLabel(detail.status)}
-                      </button>
-                    </DevNotice>
-                  ) : canAdvance(detail.status) ? (
+                  {canAdvance(detail.status) && (
                     <button
                       className="ps-advance-btn"
                       onClick={handleAdvance}
-                      disabled={advancing}
+                      disabled={advancing || (detail.status.toLowerCase() === 'approved' && !detail.lineItems.some(li => li.itemStatus === 'Shipped'))}
                       type="button"
                     >
-                      {advancing ? 'Processing...' : getAdvanceLabel(detail.status)}
+                      {advancing ? 'Processing...' : getAdvanceLabel(detail.status, detail.lineItems.some(li => li.itemStatus === 'Shipped'))}
                     </button>
-                  ) : null}
+                  )}
                 </div>
               </div>
             )}

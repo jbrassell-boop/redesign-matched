@@ -262,6 +262,25 @@
   padding-top: 12px;
 }
 
+/* Related orders */
+.ps-related-orders {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.ps-related-orders__anchor {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+}
+.ps-related-orders__anchor:hover {
+  text-decoration: underline;
+}
+
 /* Documents placeholder */
 .ps-placeholder {
   padding: 40px;
