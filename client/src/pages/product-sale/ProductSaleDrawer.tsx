@@ -193,7 +193,7 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
   if (detail) {
     if (detail.quoteDate) completedSteps.push('Draft');
     if (detail.approvalDate) completedSteps.push('Quoted');
-    if (detail.invoiceDate) completedSteps.push('Approved');
+    if (detail.invoiceDate) { completedSteps.push('Approved'); completedSteps.push('Invoiced'); }
   }
 
   const normalizedStatus = (() => {
@@ -293,11 +293,11 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                               <input
                                 type="number"
                                 className="ps-qty-input"
-                                value={li.quantity}
+                                defaultValue={li.quantity}
                                 min={1}
-                                onChange={e => {
+                                onBlur={e => {
                                   const val = parseInt(e.target.value) || 1;
-                                  handleQtyChange(li.productSaleInventoryKey, val);
+                                  if (val !== li.quantity) handleQtyChange(li.productSaleInventoryKey, val);
                                 }}
                               />
                             </td>

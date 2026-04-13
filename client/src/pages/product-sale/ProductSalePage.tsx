@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Modal, Button, message } from 'antd';
+import { Input, Button, message } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
 import { StatStrip, StatusBadge } from '../../components/shared';
 import type { StatChipDef } from '../../components/shared';
-import { getProductSales, getProductSaleStats, createProductSale } from '../../api/product-sales';
+import { getProductSales, getProductSaleStats } from '../../api/product-sales';
 import { ProductSaleDrawer } from './ProductSaleDrawer';
 import type { ProductSaleListItem, ProductSaleStats } from './types';
 import './ProductSalePage.css';
@@ -31,7 +31,7 @@ function buildChips(stats: ProductSaleStats | null): StatChipDef[] {
 
 const STATUS_FILTER_MAP: Record<string, string> = {
   draft: 'Draft',
-  quoted: 'Quote Sent',
+  quoted: 'Quoted',
   approved: 'Approved',
   invoiced: 'Invoiced',
   cancelled: 'Cancelled',
@@ -53,9 +53,6 @@ export const ProductSalePage = () => {
 
   // Create modal
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [createPO, setCreatePO] = useState('');
-  const [createNotes, setCreateNotes] = useState('');
-  const [creating, setCreating] = useState(false);
 
   const loadStats = useCallback(() => {
     getProductSaleStats()
@@ -111,30 +108,8 @@ export const ProductSalePage = () => {
   };
 
   const handleCreate = async () => {
-    setCreating(true);
-    try {
-      // Placeholder clientKey/deptKey — full modal coming later
-      const res = await createProductSale({
-        clientKey: 0,
-        departmentKey: 0,
-        purchaseOrder: createPO || null,
-        note: createNotes || null,
-      });
-      message.success('Product sale created');
-      setCreateModalOpen(false);
-      setCreatePO('');
-      setCreateNotes('');
-      loadData();
-      loadStats();
-      if (res?.productSaleKey) {
-        setDrawerKey(res.productSaleKey);
-        setDrawerOpen(true);
-      }
-    } catch {
-      message.error('Failed to create product sale');
-    } finally {
-      setCreating(false);
-    }
+    message.info('New order creation requires client/department selection — coming soon');
+    setCreateModalOpen(false);
   };
 
   const chips = buildChips(stats);
@@ -267,53 +242,7 @@ export const ProductSalePage = () => {
         onUpdated={handleUpdated}
       />
 
-      {/* New Product Sale Modal */}
-      <Modal
-        title="New Product Sale"
-        open={createModalOpen}
-        onCancel={() => setCreateModalOpen(false)}
-        footer={
-          <div className="ps-modal-footer">
-            <Button onClick={() => setCreateModalOpen(false)}>Cancel</Button>
-            <Button
-              type="primary"
-              loading={creating}
-              onClick={handleCreate}
-              style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}
-            >
-              Create
-            </Button>
-          </div>
-        }
-        width={440}
-      >
-        <div className="ps-modal-body">
-          <div>
-            <label className="ps-modal-label">Purchase Order #</label>
-            <Input
-              aria-label="Purchase Order #"
-              value={createPO}
-              onChange={e => setCreatePO(e.target.value)}
-              placeholder="Optional PO number"
-              style={{ fontSize: 12 }}
-            />
-          </div>
-          <div>
-            <label className="ps-modal-label">Notes</label>
-            <Input.TextArea
-              aria-label="Notes"
-              rows={3}
-              value={createNotes}
-              onChange={e => setCreateNotes(e.target.value)}
-              placeholder="Optional notes for this order"
-              style={{ fontSize: 12 }}
-            />
-          </div>
-          <p className="ps-modal-hint">
-            Client, department, and line items can be added after creation in the detail view.
-          </p>
-        </div>
-      </Modal>
+      {/* New Product Sale Modal — placeholder until client/dept picker is built */}
     </div>
   );
 };
