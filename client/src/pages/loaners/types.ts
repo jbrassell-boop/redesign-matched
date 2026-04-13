@@ -17,11 +17,10 @@ export interface LoanerListItem {
 
 export interface LoanerStats {
   available: number;
-  evaluating: number;
   out: number;
   overdue: number;
   repair: number;
-  agreementsPending: number;
+  requests: number;
 }
 
 export interface LoanerDetail {

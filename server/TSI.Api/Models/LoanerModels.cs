@@ -19,11 +19,10 @@ public record LoanerListItemDto(
 
 public record LoanerStatsDto(
     int Available,
-    int Evaluating,
     int Out,
     int Overdue,
     int Repair,
-    int AgreementsPending
+    int Requests
 );
 
 public record LoanerDetailDto(

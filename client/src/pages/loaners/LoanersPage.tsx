@@ -175,11 +175,11 @@ export const LoanersPage = () => {
 
   /* ── Stat Strip chips ──────────────────────────────────────── */
   const chips: StatChipDef[] = [
-    { id: 'Available',   label: 'Available',   value: stats?.available ?? 0,  color: 'green' },
-    { id: 'Evaluating',  label: 'Evaluating',  value: stats?.evaluating ?? 0, color: 'purple' },
-    { id: 'Out',         label: 'Out',         value: stats?.out ?? 0,        color: 'amber' },
-    { id: 'Overdue',     label: 'Overdue',     value: stats?.overdue ?? 0,    color: 'red', state: (stats?.overdue ?? 0) > 0 ? 'alert' : 'normal' },
-    { id: 'Repair',      label: 'Repair',      value: stats?.repair ?? 0,     color: 'muted' },
+    { id: 'Available',  label: 'Available',  value: stats?.available ?? 0,  color: 'green' },
+    { id: 'Out',        label: 'Out',        value: stats?.out ?? 0,        color: 'amber' },
+    { id: 'Overdue',    label: 'Overdue',    value: stats?.overdue ?? 0,    color: 'red', state: (stats?.overdue ?? 0) > 0 ? 'alert' : 'normal' },
+    { id: 'Repair',     label: 'Repair',     value: stats?.repair ?? 0,     color: 'muted' },
+    { id: 'Requests',   label: 'Requests',   value: stats?.requests ?? 0,   color: 'purple' },
   ];
 
   /* ── Render rows ───────────────────────────────────────────── */

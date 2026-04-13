@@ -164,7 +164,6 @@ public class LoanersController(IConfiguration config) : ControllerBase
                 SUM(CASE
                     WHEN lt.sDateIn IS NOT NULL OR lt.sDateOut IS NULL THEN 1 ELSE 0
                 END) AS Available,
-                0 AS Evaluating,
                 SUM(CASE
                     WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL
                          AND (lt.lRepairKey IS NULL OR r.sWorkOrderNumber IS NULL)
@@ -178,8 +177,7 @@ public class LoanersController(IConfiguration config) : ControllerBase
                 SUM(CASE
                     WHEN lt.lRepairKey IS NOT NULL AND r.sWorkOrderNumber IS NOT NULL AND lt.sDateIn IS NULL THEN 1 ELSE 0
                 END) AS RepairCount,
-                (SELECT COUNT(*) FROM tblRepair WHERE bLoanerRequested = 1
-                    AND (sWasLoanerProduced IS NULL OR sWasLoanerProduced = '')) AS AgreementsPending
+                (SELECT COUNT(*) FROM tblTaskLoaners) AS Requests
             FROM LatestTran lat
             INNER JOIN tblLoanerTran lt ON lt.lLoanerTranKey = lat.MaxTranKey
             LEFT JOIN tblRepair r ON r.lRepairKey = lt.lRepairKey
@@ -192,11 +190,10 @@ public class LoanersController(IConfiguration config) : ControllerBase
 
         return Ok(new LoanerStatsDto(
             Available: reader["Available"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Available"]),
-            Evaluating: reader["Evaluating"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Evaluating"]),
             Out: reader["OutCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OutCount"]),
             Overdue: reader["OverdueCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OverdueCount"]),
             Repair: reader["RepairCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["RepairCount"]),
-            AgreementsPending: reader["AgreementsPending"] == DBNull.Value ? 0 : Convert.ToInt32(reader["AgreementsPending"])
+            Requests: reader["Requests"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Requests"])
         ));
     }
 
