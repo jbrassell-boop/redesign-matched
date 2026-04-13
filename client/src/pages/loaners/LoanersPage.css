@@ -52,7 +52,7 @@
 .loaners-row--overdue .loaners-client { font-weight: 700; color: var(--danger); }
 .loaners-row--repair { color: var(--muted) !important; }
 .loaners-row--repair td { color: var(--muted); }
-.loaners-row--evaluating { background: rgba(var(--purple-rgb, 139, 92, 246), 0.04) !important; }
+.loaners-row--evaluating { background: rgba(var(--purple-rgb), 0.04) !important; }
 
 .loaners-row--stripe-even { background: var(--card); }
 .loaners-row--stripe-odd  { background: var(--neutral-50); }
@@ -72,7 +72,7 @@
 .loaners-status-badge--out       { background: rgba(var(--amber-rgb), 0.1); color: var(--amber); }
 .loaners-status-badge--overdue   { background: rgba(var(--danger-rgb), 0.1); color: var(--danger); }
 .loaners-status-badge--repair    { background: var(--neutral-100); color: var(--muted); }
-.loaners-status-badge--evaluating { background: rgba(139, 92, 246, 0.1); color: rgb(139, 92, 246); }
+.loaners-status-badge--evaluating { background: rgba(var(--purple-rgb), 0.1); color: var(--purple); }
 .loaners-status-badge--returned  { background: rgba(var(--success-rgb), 0.08); color: var(--success); }
 
 /* Days badge */
@@ -150,6 +150,15 @@
 .loaners-footer {
   background: var(--card); border-top: 1px solid var(--border); padding: 6px 16px;
   display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 1280px) {
+  .loaners-table { min-width: 900px; }
+}
+@media (max-width: 1024px) {
+  .loaners-controls { padding: 8px 12px; }
+  .loaners-controls__search { width: 180px; }
 }
 
 /* Empty / loading */

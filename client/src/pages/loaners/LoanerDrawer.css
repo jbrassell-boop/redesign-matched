@@ -25,7 +25,7 @@
   inset: 0;
   top: 64px;
   z-index: calc(var(--z-drawer, 1000) - 1);
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--overlay-bg, rgba(0, 0, 0, 0.15));
   opacity: 0;
   transition: opacity 0.25s ease;
   pointer-events: none;
@@ -128,7 +128,7 @@
   font-family: monospace;
 }
 .loaner-drawer__history-days--green { background: rgba(var(--success-rgb), 0.1); color: var(--success); }
-.loaner-drawer__history-days--amber { background: rgba(var(--amber-rgb), 0.1); color: var(--success); }
+.loaner-drawer__history-days--amber { background: rgba(var(--amber-rgb), 0.1); color: var(--amber); }
 .loaner-drawer__history-days--red   { background: rgba(var(--danger-rgb), 0.1); color: var(--danger); }
 
 .loaner-drawer__history-bottom {

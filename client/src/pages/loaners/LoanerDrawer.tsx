@@ -164,7 +164,7 @@ export const LoanerDrawer = ({ scopeKey, open, onClose }: LoanerDrawerProps) => 
               {detail?.scopeType || ''}
             </div>
           </div>
-          <button className="loaner-drawer__close" onClick={onClose}>&times;</button>
+          <button className="loaner-drawer__close" onClick={onClose} aria-label="Close drawer">&times;</button>
         </div>
         <TabBar
           tabs={DRAWER_TABS}

@@ -29,7 +29,8 @@
 .ps-drawer__close {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--card);
+  opacity: 0.7;
   font-size: 20px;
   cursor: pointer;
   line-height: 1;

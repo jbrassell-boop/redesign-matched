@@ -136,6 +136,15 @@
   border-color: var(--navy);
 }
 
+/* Responsive */
+@media (max-width: 1280px) {
+  .ps-controls__search { max-width: 240px; }
+}
+@media (max-width: 1024px) {
+  .ps-controls { padding: 8px 12px; }
+  .ps-controls__search { max-width: 200px; }
+}
+
 /* Modal */
 .ps-modal-footer { display: flex; justify-content: flex-end; gap: 8px; }
 .ps-modal-body { display: flex; flex-direction: column; gap: 14px; padding: 8px 0; }

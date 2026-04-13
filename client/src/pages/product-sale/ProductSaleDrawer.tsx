@@ -234,7 +234,7 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
             </h2>
             {detail && <StatusBadge status={detail.status} />}
           </div>
-          <button className="ps-drawer__close" onClick={onClose} type="button">
+          <button className="ps-drawer__close" onClick={onClose} type="button" aria-label="Close drawer">
             &times;
           </button>
         </div>

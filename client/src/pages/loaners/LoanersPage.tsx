@@ -278,6 +278,7 @@ export const LoanersPage = () => {
               <button
                 className="loaners-action-btn loaners-action-btn--checkout"
                 onClick={e => handleActionClick(e, item, 'checkout')}
+                aria-label={`Check out ${item.scopeType} ${item.serial}`}
               >
                 Check Out
               </button>
@@ -286,6 +287,7 @@ export const LoanersPage = () => {
               <button
                 className="loaners-action-btn loaners-action-btn--checkin"
                 onClick={e => handleActionClick(e, item, 'checkin')}
+                aria-label={`Check in ${item.scopeType} ${item.serial}`}
               >
                 Check In
               </button>
