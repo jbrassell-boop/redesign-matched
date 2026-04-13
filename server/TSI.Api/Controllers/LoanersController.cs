@@ -221,9 +221,18 @@ public class LoanersController(IConfiguration config) : ControllerBase
                     WHEN lt.sDateOut IS NOT NULL THEN 'Out'
                     ELSE 'Available'
                 END AS Status,
-                ISNULL(c.sClientName1, '') AS Client,
-                ISNULL(d.sDepartmentName, '') AS Dept,
-                ISNULL(sr.sRepFirst + ' ' + sr.sRepLast, '') AS Rep,
+                CASE
+                    WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL THEN ISNULL(c.sClientName1, '')
+                    ELSE ''
+                END AS Client,
+                CASE
+                    WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL THEN ISNULL(d.sDepartmentName, '')
+                    ELSE ''
+                END AS Dept,
+                CASE
+                    WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL THEN ISNULL(sr.sRepFirst + ' ' + sr.sRepLast, '')
+                    ELSE ''
+                END AS Rep,
                 ISNULL(dm.sDeliveryDesc, '') AS DeliveryMethod,
                 ISNULL(lt.sPurchaseOrder, '') AS PurchaseOrder,
                 ISNULL(lt.sTrackingNumber, '') AS TrackingNumber,
@@ -404,6 +413,66 @@ public class LoanersController(IConfiguration config) : ControllerBase
                 Out: reader["OutCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["OutCount"]),
                 Needed: reader["Needed"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Needed"])
             ));
+        }
+
+        return Ok(items);
+    }
+
+    // ── Available scopes for fulfillment ────────────────────────────────────
+    [HttpGet("available")]
+    public async Task<IActionResult> GetAvailable([FromQuery] int? scopeTypeKey = null)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        var scopeTypeFilter = scopeTypeKey.HasValue ? "AND s.lScopeTypeKey = @scopeTypeKey" : "";
+
+        var sql = $"""
+            ;WITH LatestTran AS (
+                SELECT lScopeKey, MAX(lLoanerTranKey) AS MaxTranKey
+                FROM tblLoanerTran
+                WHERE lScopeKey IS NOT NULL
+                GROUP BY lScopeKey
+            )
+            SELECT s.lScopeKey,
+                   ISNULL(s.sSerialNumber, '') AS Serial,
+                   ISNULL(st.sScopeTypeDesc, '') AS ScopeType,
+                   ISNULL(stc.sScopeTypeCategory, '') AS Category,
+                   ISNULL(s.sLoanerRackPosition, '') AS RackPosition,
+                   ISNULL(s.bOnSiteLoaner, 0) AS OnSiteLoaner
+            FROM tblScope s
+            INNER JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblScopeTypeCategories stc ON stc.lScopeTypeCategoryKey = st.lScopeTypeCatKey
+            LEFT JOIN LatestTran lat ON lat.lScopeKey = s.lScopeKey
+            LEFT JOIN tblLoanerTran lt ON lt.lLoanerTranKey = lat.MaxTranKey
+            WHERE (lat.MaxTranKey IS NULL OR lt.sDateIn IS NOT NULL OR lt.sDateOut IS NULL)
+              AND EXISTS (
+                  SELECT 1 FROM tblLoanerTran lt2 WHERE lt2.lScopeKey = s.lScopeKey
+                  UNION ALL
+                  SELECT 1 WHERE ISNULL(s.bOnSiteLoaner, 0) = 1
+              )
+              {scopeTypeFilter}
+            ORDER BY st.sScopeTypeDesc, s.sSerialNumber
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        if (scopeTypeKey.HasValue)
+            cmd.Parameters.AddWithValue("@scopeTypeKey", scopeTypeKey.Value);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<object>();
+        while (await reader.ReadAsync())
+        {
+            items.Add(new
+            {
+                scopeKey = Convert.ToInt32(reader["lScopeKey"]),
+                serial = reader["Serial"]?.ToString() ?? "",
+                scopeType = reader["ScopeType"]?.ToString() ?? "",
+                category = reader["Category"]?.ToString() ?? "",
+                rackPosition = reader["RackPosition"]?.ToString() ?? "",
+                onSiteLoaner = Convert.ToBoolean(reader["OnSiteLoaner"])
+            });
         }
 
         return Ok(items);
