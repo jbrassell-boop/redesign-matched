@@ -537,6 +537,44 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
         return Ok(new { updated = true });
     }
 
+    // ── Bulk Item Status ─────────────────────────────────────────────────────
+
+    [HttpPost("{key:int}/items/bulk-status")]
+    public async Task<IActionResult> BulkItemStatus(int key, [FromBody] BulkItemStatusRequest body)
+    {
+        var validStatuses = new[] { "Pending", "Shipped", "Backordered" };
+        if (!validStatuses.Contains(body.Status))
+            return BadRequest(new { message = $"Status must be one of: {string.Join(", ", validStatuses)}" });
+
+        if (body.ItemKeys == null || body.ItemKeys.Length == 0)
+            return BadRequest(new { message = "ItemKeys must be non-empty." });
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Build parameterized IN clause
+        var paramNames = new List<string>();
+        for (int i = 0; i < body.ItemKeys.Length; i++)
+            paramNames.Add($"@k{i}");
+
+        var sql = $"""
+            UPDATE tblProductSalesInventory
+            SET sItemStatus = @status
+            WHERE lProductSaleKey = @key
+              AND lProductSaleInventoryKey IN ({string.Join(", ", paramNames)})
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@status", body.Status);
+        cmd.Parameters.AddWithValue("@key", key);
+        for (int i = 0; i < body.ItemKeys.Length; i++)
+            cmd.Parameters.AddWithValue($"@k{i}", body.ItemKeys[i]);
+
+        var rowCount = await cmd.ExecuteNonQueryAsync();
+        return Ok(new { updated = rowCount });
+    }
+
     // ── Lifecycle Transitions ────────────────────────────────────────────────
 
     [HttpPost("{key:int}/quote")]

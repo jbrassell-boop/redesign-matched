@@ -121,6 +121,10 @@ public record UpdateLineItemRequest(
     string? LotNumber
 );
 
+// ── Bulk operations ────────────────────────────────────────────────────────
+
+public record BulkItemStatusRequest(int[] ItemKeys, string Status);
+
 // ── Inventory picker ────────────────────────────────────────────────────────
 
 public record InventoryCategoryDto(
