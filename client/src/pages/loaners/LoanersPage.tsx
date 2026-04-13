@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Input, Spin, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
-import { getLoaners, getLoanerStats, checkOutLoaner, checkInLoaner } from '../../api/loaners';
-import type { LoanerListItem, LoanerStats, CheckOutPayload, CheckInPayload } from './types';
-import { StatStrip, InlineExpandRow, DevNotice } from '../../components/shared';
+import { getLoaners, getLoanerStats, checkInLoaner } from '../../api/loaners';
+import type { LoanerListItem, LoanerStats, CheckInPayload } from './types';
+import { StatStrip, InlineExpandRow } from '../../components/shared';
 import type { StatChipDef } from '../../components/shared';
 import { LoanerDrawer } from './LoanerDrawer';
 import './LoanersPage.css';
@@ -67,13 +67,8 @@ export const LoanersPage = () => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Inline expand state
-  const [expandedRow, setExpandedRow] = useState<{ key: number; mode: 'checkout' | 'checkin' } | null>(null);
+  const [expandedRow, setExpandedRow] = useState<{ key: number; mode: 'checkin' } | null>(null);
   const [expandForm, setExpandForm] = useState({
-    departmentKey: 0,
-    deliveryMethodKey: 0,
-    salesRepKey: 0,
-    purchaseOrder: '',
-    onSiteLoaner: false,
     rackPosition: '',
     trackingNumber: '',
   });
@@ -142,19 +137,14 @@ export const LoanersPage = () => {
     setDrawerScopeKey(null);
   };
 
-  const handleActionClick = (e: React.MouseEvent, item: LoanerListItem, mode: 'checkout' | 'checkin') => {
+  const handleActionClick = (e: React.MouseEvent, item: LoanerListItem) => {
     e.stopPropagation();
-    if (expandedRow?.key === item.loanerTranKey && expandedRow?.mode === mode) {
+    if (expandedRow?.key === item.loanerTranKey) {
       setExpandedRow(null);
       return;
     }
-    setExpandedRow({ key: item.loanerTranKey, mode });
+    setExpandedRow({ key: item.loanerTranKey, mode: 'checkin' });
     setExpandForm({
-      departmentKey: 0,
-      deliveryMethodKey: 0,
-      salesRepKey: 0,
-      purchaseOrder: item.purchaseOrder || '',
-      onSiteLoaner: false,
       rackPosition: '',
       trackingNumber: item.trackingNumber || '',
     });
@@ -164,33 +154,18 @@ export const LoanersPage = () => {
     if (!expandedRow) return;
     setExpandSaving(true);
     try {
-      if (expandedRow.mode === 'checkout') {
-        const item = items.find(i => i.loanerTranKey === expandedRow.key);
-        if (!item?.scopeKey) { message.error('Missing scope key'); return; }
-        const payload: CheckOutPayload = {
-          scopeKey: item.scopeKey,
-          departmentKey: expandForm.departmentKey,
-          deliveryMethodKey: expandForm.deliveryMethodKey,
-          salesRepKey: expandForm.salesRepKey,
-          purchaseOrder: expandForm.purchaseOrder || undefined,
-          onSiteLoaner: expandForm.onSiteLoaner,
-        };
-        await checkOutLoaner(payload);
-        message.success('Loaner checked out');
-      } else {
-        const payload: CheckInPayload = {
-          loanerTranKey: expandedRow.key,
-          rackPosition: expandForm.rackPosition || undefined,
-          trackingNumber: expandForm.trackingNumber || undefined,
-        };
-        await checkInLoaner(payload);
-        message.success('Loaner checked in');
-      }
+      const payload: CheckInPayload = {
+        loanerTranKey: expandedRow.key,
+        rackPosition: expandForm.rackPosition || undefined,
+        trackingNumber: expandForm.trackingNumber || undefined,
+      };
+      await checkInLoaner(payload);
+      message.success('Loaner checked in');
       setExpandedRow(null);
       loadData(search, statusFilter, page, () => false);
       loadStats();
     } catch {
-      message.error(expandedRow.mode === 'checkout' ? 'Check out failed' : 'Check in failed');
+      message.error('Check in failed');
     } finally {
       setExpandSaving(false);
     }
@@ -211,7 +186,6 @@ export const LoanersPage = () => {
   const renderRow = (item: LoanerListItem, idx: number) => {
     const k = item.status.toLowerCase();
     const isRepair = k === 'repair' || k === 'in repair';
-    const isAvailable = k === 'available';
     const isOut = k === 'out' || k === 'overdue';
     const isExpanded = expandedRow?.key === item.loanerTranKey;
 
@@ -274,19 +248,10 @@ export const LoanersPage = () => {
 
           {/* Action */}
           <td onClick={e => e.stopPropagation()}>
-            {isAvailable && (
-              <button
-                className="loaners-action-btn loaners-action-btn--checkout"
-                onClick={e => handleActionClick(e, item, 'checkout')}
-                aria-label={`Check out ${item.scopeType} ${item.serial}`}
-              >
-                Check Out
-              </button>
-            )}
             {isOut && (
               <button
                 className="loaners-action-btn loaners-action-btn--checkin"
-                onClick={e => handleActionClick(e, item, 'checkin')}
+                onClick={e => handleActionClick(e, item)}
                 aria-label={`Check in ${item.scopeType} ${item.serial}`}
               >
                 Check In
@@ -299,66 +264,6 @@ export const LoanersPage = () => {
         </tr>
 
         {/* Inline expand row */}
-        {isExpanded && expandedRow.mode === 'checkout' && (
-          <InlineExpandRow colSpan={COL_COUNT} onCancel={() => setExpandedRow(null)}>
-            <div className="loaners-expand-fields">
-              <div className="loaners-expand-field">
-                <label>Department</label>
-                <select
-                  value={expandForm.departmentKey}
-                  onChange={e => setExpandForm(f => ({ ...f, departmentKey: Number(e.target.value) }))}
-                >
-                  <option value={0}>Select...</option>
-                </select>
-              </div>
-              <div className="loaners-expand-field">
-                <label>Delivery Method</label>
-                <select
-                  value={expandForm.deliveryMethodKey}
-                  onChange={e => setExpandForm(f => ({ ...f, deliveryMethodKey: Number(e.target.value) }))}
-                >
-                  <option value={0}>Select...</option>
-                </select>
-              </div>
-              <div className="loaners-expand-field">
-                <label>Sales Rep</label>
-                <select
-                  value={expandForm.salesRepKey}
-                  onChange={e => setExpandForm(f => ({ ...f, salesRepKey: Number(e.target.value) }))}
-                >
-                  <option value={0}>Select...</option>
-                </select>
-              </div>
-              <div className="loaners-expand-field">
-                <label>PO #</label>
-                <input
-                  type="text"
-                  value={expandForm.purchaseOrder}
-                  onChange={e => setExpandForm(f => ({ ...f, purchaseOrder: e.target.value }))}
-                  placeholder="PO#"
-                />
-              </div>
-              <div className="loaners-expand-field">
-                <label>On-Site</label>
-                <input
-                  type="checkbox"
-                  checked={expandForm.onSiteLoaner}
-                  onChange={e => setExpandForm(f => ({ ...f, onSiteLoaner: e.target.checked }))}
-                />
-              </div>
-              <DevNotice
-                title="Check Out — Lookup Dropdowns"
-                requirement="Dropdowns are empty. Create lookup endpoints to populate Department (filtered by client), Delivery Method, and Sales Rep selects."
-                sql={'GET /api/lookups/departments?clientKey=@key\nGET /api/lookups/delivery-methods\nGET /api/lookups/sales-reps'}
-              >
-                <button className="loaners-expand-save">
-                  {expandSaving ? 'Saving...' : 'Save'}
-                </button>
-              </DevNotice>
-            </div>
-          </InlineExpandRow>
-        )}
-
         {isExpanded && expandedRow.mode === 'checkin' && (
           <InlineExpandRow colSpan={COL_COUNT} onCancel={() => setExpandedRow(null)}>
             <div className="loaners-expand-fields">
