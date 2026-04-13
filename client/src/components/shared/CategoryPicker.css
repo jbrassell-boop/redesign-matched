@@ -1,0 +1,120 @@
+.category-picker {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 16px;
+}
+
+.category-picker__header {
+  padding: 8px 12px;
+  background: rgba(var(--amber-rgb), 0.06);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--navy);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category-picker__step {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.category-picker__back {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--navy);
+  cursor: pointer;
+  padding: 0;
+}
+
+.category-picker__search input {
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  outline: none;
+}
+
+.category-picker__list {
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.category-picker__item {
+  padding: 6px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--neutral-50);
+  font-size: 12px;
+}
+
+.category-picker__item:hover {
+  background: rgba(var(--amber-rgb), 0.06);
+  font-weight: 600;
+}
+
+.category-picker__loading {
+  padding: 20px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.category-picker__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.category-picker__table th {
+  padding: 4px 8px;
+  text-align: left;
+  background: var(--neutral-50);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.category-picker__table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid var(--neutral-50);
+}
+
+.category-picker__muted {
+  color: var(--muted);
+}
+
+.category-picker__status {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.category-picker__status--active {
+  color: var(--success);
+}
+
+.category-picker__qty {
+  width: 36px;
+  text-align: center;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-size: 11px;
+  padding: 2px;
+}
+
+.category-picker__add {
+  padding: 1px 8px;
+  font-size: 11px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.category-picker__title {
+  font-weight: 600;
+}
