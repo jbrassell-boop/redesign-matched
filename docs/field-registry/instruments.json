@@ -1,0 +1,547 @@
+{
+  "screen": "Instruments (Instrument Repair Workflow)",
+  "route": "/repairs (Instrument Repair scope type)",
+  "description": "Instrument repairs are a specialized repair workflow triggered when Scope is an 'Instrument Repair' type (e.g. T046). Uses tblRepairInstrumentModels for line items instead of tblRepairItemTran. Has its own 'New Repair' dialog, instrument picker shuttle, and extended Detail tab with 12-column line item grid + right-click context menu.",
+  "legacyForm": "Repair - Open (Instrument Repair)",
+  "primaryTable": "tblRepairInstrumentModels",
+  "supportingTables": ["tblRepair", "tblRepairItem", "tblScopeType", "tblInstrumentManufacturers", "tblInstrumentManufacturerModels", "tblManufacturers"],
+  "fieldCount": 67,
+  "sections": [
+    {
+      "name": "New Instrument Repair Dialog",
+      "description": "Modal for creating a new instrument repair work order. Includes credit limit and past-due warnings in red.",
+      "legacyForm": "Repair - New",
+      "fields": [
+        {
+          "label": "Date In",
+          "inputType": "date-dropdown",
+          "sqlColumn": "tblRepair.dtDateIn",
+          "notes": "Pre-populated with today's date"
+        },
+        {
+          "label": "Work Order #",
+          "inputType": "readonly",
+          "sqlColumn": "tblRepair.sWorkOrderNumber",
+          "notes": "Auto-generated (e.g. NR26103015)"
+        },
+        {
+          "label": "Complaint",
+          "inputType": "text",
+          "sqlColumn": "tblRepair.sCustomerComplaint",
+          "notes": "Free text complaint description"
+        },
+        {
+          "label": "Rack #",
+          "inputType": "text",
+          "sqlColumn": "tblRepair.sRackPosition",
+          "notes": "Physical rack location (e.g. 'N/A')"
+        },
+        {
+          "label": "Total Instrument #",
+          "inputType": "text",
+          "sqlColumn": "tblRepair.lInstrumentCount",
+          "dataType": "smallint",
+          "notes": "Total number of instruments in this repair (e.g. 15)"
+        },
+        {
+          "label": "Credit Limit Warning",
+          "inputType": "warning-banner",
+          "sqlColumn": null,
+          "notes": "Red text: 'This Clients Receivables EXCEED Credit Limit!' — derived from client A/R vs credit limit"
+        },
+        {
+          "label": "Past Due Warning",
+          "inputType": "warning-banner",
+          "sqlColumn": null,
+          "notes": "Red text: 'This Client has PAST DUE Invoices!' — derived from client invoice aging"
+        }
+      ]
+    },
+    {
+      "name": "Scope In Tab (Instrument Repair)",
+      "description": "Main repair form after creation. Same layout as standard repairs but with instrument-specific context. 12 tabs: Scope In, Flags, Shipping, Follow Up, Address, Comments, Detail, Expenses, Inventory, Status, Documents, Points.",
+      "fields": [
+        {
+          "label": "Date In",
+          "inputType": "readonly",
+          "sqlColumn": "tblRepair.dtDateIn",
+          "notes": "Displayed as text after creation"
+        },
+        {
+          "label": "Work Order #",
+          "inputType": "readonly",
+          "sqlColumn": "tblRepair.sWorkOrderNumber"
+        },
+        {
+          "label": "Repair Level",
+          "inputType": "readonly",
+          "sqlColumn": "tblRepair.lRepairLevelKey",
+          "joinPath": "tblRepair.lRepairLevelKey → tblRepairLevels",
+          "notes": "Shown as 'N/A' for instrument repairs"
+        },
+        {
+          "label": "Complaint",
+          "inputType": "text",
+          "sqlColumn": "tblRepair.sCustomerComplaint"
+        },
+        {
+          "label": "Repair Reason",
+          "inputType": "dropdown",
+          "sqlColumn": "tblRepair.lRepairReasonKey",
+          "lookupTable": "tblRepairReasons",
+          "lookupDisplay": "sRepairReason"
+        },
+        {
+          "label": "Pricing Category",
+          "inputType": "dropdown",
+          "sqlColumn": "tblRepair.lPricingCategoryKey",
+          "lookupTable": "tblPricingCategory",
+          "lookupDisplay": "sPricingCategory",
+          "notes": "e.g. 'Vizient 2021 - 2027 Access'"
+        },
+        {
+          "label": "Sales Rep",
+          "inputType": "dropdown",
+          "sqlColumn": "tblRepair.lSalesRepKey",
+          "lookupTable": "tblSalesRep",
+          "lookupDisplay": "sSalesRepName"
+        },
+        {
+          "label": "Distributor",
+          "inputType": "dropdown",
+          "sqlColumn": "tblRepair.lDistributorKey",
+          "lookupTable": "tblClient",
+          "lookupDisplay": "sClientName",
+          "notes": "e.g. 'Total Scope, Inc.'"
+        },
+        {
+          "label": "Delivery Method",
+          "inputType": "dropdown",
+          "sqlColumn": "tblRepair.lDeliveryMethodKey",
+          "lookupTable": "tblDeliveryMethod",
+          "lookupDisplay": "sDeliveryMethodName"
+        },
+        {
+          "label": "Shipping Amount",
+          "inputType": "currency",
+          "sqlColumn": "tblRepair.dblShippingClientIn",
+          "notes": "Inbound shipping cost"
+        },
+        {
+          "label": "P.O. #",
+          "inputType": "text",
+          "sqlColumn": "tblRepair.sPurchaseOrder"
+        },
+        {
+          "label": "Rack #",
+          "inputType": "text",
+          "sqlColumn": "tblRepair.sRackPosition"
+        },
+        {
+          "label": "Days Last In",
+          "inputType": "readonly",
+          "sqlColumn": null,
+          "notes": "Computed: days since scope was last repaired; shown as 'N/A' when no prior repair"
+        },
+        {
+          "label": "Avg. Daily Uses",
+          "inputType": "readonly",
+          "sqlColumn": null,
+          "notes": "Computed from scope usage data; shown as 'N/A' when unavailable"
+        },
+        {
+          "label": "Old Expected Delivery Date",
+          "inputType": "date",
+          "sqlColumn": "tblRepair.dtDeliveryDateGuaranteed",
+          "notes": "Previous delivery date promise"
+        },
+        {
+          "label": "Expected Delivery Date From",
+          "inputType": "date",
+          "sqlColumn": "tblRepair.dtDeliveryDateFrom",
+          "notes": "Delivery window start"
+        },
+        {
+          "label": "Expected Delivery Date To",
+          "inputType": "date",
+          "sqlColumn": "tblRepair.dtDeliveryDateTo",
+          "notes": "Delivery window end"
+        },
+        {
+          "label": "Required Rework",
+          "inputType": "checkbox+dropdown",
+          "sqlColumn": "tblRepair.bRequiredRework (checkbox) + dropdown FK",
+          "notes": "Checkbox + associated rework category dropdown"
+        },
+        {
+          "label": "Out Sourced",
+          "inputType": "checkbox+dropdown",
+          "sqlColumn": "tblRepair.bOutSourced (checkbox) + dropdown FK",
+          "notes": "Checkbox + outsource vendor dropdown"
+        },
+        {
+          "label": "Sales Tax",
+          "inputType": "dropdown",
+          "sqlColumn": "tblRepair.lSalesTaxKey",
+          "notes": "Tax rate selector (e.g. '<None>')"
+        },
+        {
+          "label": "Loaner Requested",
+          "inputType": "checkbox",
+          "sqlColumn": "tblRepair.bLoanerRequested",
+          "dataType": "bit"
+        },
+        {
+          "label": "Reset",
+          "inputType": "button",
+          "action": "Resets form fields to defaults",
+          "notes": "Reset button at bottom of form"
+        },
+        {
+          "label": "Labels",
+          "inputType": "button",
+          "action": "Print labels for this repair"
+        },
+        {
+          "label": "Integrate PO to GP",
+          "inputType": "button",
+          "action": "Push purchase order to Great Plains accounting",
+          "notes": "GP = Great Plains (accounting system integration)"
+        }
+      ]
+    },
+    {
+      "name": "Instruments Picker Dialog",
+      "description": "Shuttle-style dialog for selecting instruments to add to the repair. Top grid = Available Instruments (all active repair items), bottom grid = Selected Instruments (chosen for this repair). Drag from available to selected.",
+      "legacyForm": "Instruments",
+      "fields": [
+        {
+          "label": "Search Term",
+          "inputType": "text",
+          "sqlColumn": null,
+          "notes": "Client-side filter across available instruments grid"
+        },
+        {
+          "label": "Refresh",
+          "inputType": "button",
+          "action": "Reload available instruments list"
+        },
+        {
+          "label": "Clear",
+          "inputType": "button",
+          "action": "Clear search term"
+        },
+        {
+          "label": "Available: Category",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblRepairItem.sItemDescription",
+          "notes": "Instrument category name (e.g. Accessory, Adapter, Air Hose, Amputation Knife, Arm)"
+        },
+        {
+          "label": "Available: Item Code",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblRepairItem.sProductID",
+          "dataType": "nvarchar(6)",
+          "notes": "Product code (e.g. OS1475, OS1544)"
+        },
+        {
+          "label": "Available: Repairs Needed (manufacturer)",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblManufacturers.sManufacturer",
+          "joinPath": "tblInstrumentManufacturers.lManufacturerKey → tblManufacturers.lManufacturerKey",
+          "notes": "Column header says 'Repairs Needed' but displays manufacturer name (ACMI, Olympus, Stryker, Zimmer, etc.)"
+        },
+        {
+          "label": "Selected: Category",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblRepairItem.sItemDescription",
+          "notes": "Same as available grid"
+        },
+        {
+          "label": "Selected: Item Code",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblRepairItem.sProductID"
+        },
+        {
+          "label": "Selected: Repairs Needed",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblManufacturers.sManufacturer"
+        },
+        {
+          "label": "Selected: Quantity",
+          "inputType": "editable-grid",
+          "sqlColumn": "tblRepairInstrumentModels.lQuantity",
+          "dataType": "smallint",
+          "notes": "Defaults to 1; editable in selected grid"
+        }
+      ]
+    },
+    {
+      "name": "Detail Tab — Instrument Line Items Grid",
+      "description": "Two-row-per-item grid showing instrument repair line items. Row 1: Status, Item Code, Product Category, Repairs Needed, Quantity, Unit Cost, Base Unit Cost, Labor, Amount. Row 2: R/R/O, Product Manufacturer, Product Model, Product SN#, Outsourced Vendor, Tech.",
+      "fields": [
+        {
+          "label": "Status",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblRepairInstrumentModels.sApproved",
+          "notes": "Color-coded status indicator (orange = pending)"
+        },
+        {
+          "label": "Item Code",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblRepairInstrumentModels.sProductID",
+          "dataType": "nvarchar(100)",
+          "notes": "e.g. OS1544"
+        },
+        {
+          "label": "Product Category",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblRepairItem.sItemDescription",
+          "joinPath": "tblRepairInstrumentModels.lScopeTypeKey → tblRepairItem (via sProductID match)",
+          "notes": "e.g. 'Air Hose'"
+        },
+        {
+          "label": "Repairs Needed (manufacturer)",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblManufacturers.sManufacturer",
+          "joinPath": "tblRepairInstrumentModels.lManufacturerKey → tblManufacturers.lManufacturerKey",
+          "notes": "e.g. 'Zimmer'"
+        },
+        {
+          "label": "Quantity",
+          "inputType": "editable-grid",
+          "sqlColumn": "tblRepairInstrumentModels.lQuantity",
+          "dataType": "smallint"
+        },
+        {
+          "label": "Unit Cost",
+          "inputType": "editable-grid",
+          "sqlColumn": "tblRepairInstrumentModels.dblUnitCost",
+          "dataType": "money",
+          "notes": "Per-unit repair price"
+        },
+        {
+          "label": "Base Unit Cost",
+          "inputType": "editable-grid",
+          "sqlColumn": "tblRepairInstrumentModels.dblUnitCostBase",
+          "dataType": "decimal",
+          "notes": "Base/list price before adjustments"
+        },
+        {
+          "label": "Labor",
+          "inputType": "readonly-grid",
+          "sqlColumn": null,
+          "notes": "Computed labor cost column; derivation TBD"
+        },
+        {
+          "label": "Amount",
+          "inputType": "readonly-grid",
+          "sqlColumn": null,
+          "notes": "Computed: Quantity × Unit Cost"
+        },
+        {
+          "label": "R/R/O",
+          "inputType": "editable-grid",
+          "sqlColumn": "tblRepairInstrumentModels.sRRO",
+          "dataType": "nvarchar(50)",
+          "notes": "Row 2 — Repair/Replace/Other designation (e.g. 'Repair')"
+        },
+        {
+          "label": "Product Manufacturer",
+          "inputType": "readonly-grid",
+          "sqlColumn": "tblManufacturers.sManufacturer",
+          "joinPath": "tblRepairInstrumentModels.lManufacturerKey → tblManufacturers",
+          "notes": "Row 2 — same as Repairs Needed"
+        },
+        {
+          "label": "Product Model",
+          "inputType": "editable-grid",
+          "sqlColumn": "tblInstrumentManufacturerModels.sModel",
+          "joinPath": "tblRepairInstrumentModels.lModelKey → tblInstrumentManufacturerModels.lModelKey",
+          "dataType": "nvarchar(200)"
+        },
+        {
+          "label": "Product SN#",
+          "inputType": "editable-grid",
+          "sqlColumn": "tblRepairInstrumentModels.sSerialNumber",
+          "dataType": "nvarchar(50)",
+          "notes": "Row 2 — individual instrument serial number"
+        },
+        {
+          "label": "Outsourced Vendor",
+          "inputType": "editable-grid",
+          "sqlColumn": "tblRepairInstrumentModels.lVendorKey",
+          "joinPath": "lVendorKey → vendor lookup",
+          "notes": "Row 2 — vendor if outsourced"
+        },
+        {
+          "label": "Tech",
+          "inputType": "editable-grid",
+          "sqlColumn": "tblRepairInstrumentModels.lTechnicianKey",
+          "joinPath": "lTechnicianKey → tblTechnicians",
+          "notes": "Row 2 — assigned technician"
+        }
+      ]
+    },
+    {
+      "name": "Detail Tab — Right-Click Context Menu",
+      "description": "Context menu actions available on each instrument line item row",
+      "fields": [
+        {
+          "label": "Add",
+          "inputType": "context-action",
+          "action": "Opens Instruments picker to add more items"
+        },
+        {
+          "label": "Base Unit Cost",
+          "inputType": "context-action",
+          "action": "Edit base unit cost for selected item"
+        },
+        {
+          "label": "Change Status",
+          "inputType": "context-action",
+          "action": "Change approval/repair status of line item",
+          "sqlColumn": "tblRepairInstrumentModels.sApproved"
+        },
+        {
+          "label": "Change Approval",
+          "inputType": "context-action",
+          "action": "Toggle approval state",
+          "sqlColumn": "tblRepairInstrumentModels.sApproved"
+        },
+        {
+          "label": "Approve All",
+          "inputType": "context-action",
+          "action": "Bulk-approve all line items in this repair"
+        },
+        {
+          "label": "Edit Comment",
+          "inputType": "context-action",
+          "action": "Edit comment on line item",
+          "sqlColumn": "tblRepairInstrumentModels.mComment"
+        },
+        {
+          "label": "Edit Quantity",
+          "inputType": "context-action",
+          "action": "Edit quantity",
+          "sqlColumn": "tblRepairInstrumentModels.lQuantity"
+        },
+        {
+          "label": "Outsource",
+          "inputType": "context-action",
+          "action": "Mark item as outsourced",
+          "sqlColumn": "tblRepairInstrumentModels.bOutsourced + lVendorKey + lOutsourcedRepairKey"
+        },
+        {
+          "label": "Replace",
+          "inputType": "context-action",
+          "action": "Mark item as replaced",
+          "sqlColumn": "tblRepairInstrumentModels.bReplaced + lReplacedRepairKey + lReplacedQuantity"
+        },
+        {
+          "label": "Remove",
+          "inputType": "context-action",
+          "action": "Remove line item from repair"
+        },
+        {
+          "label": "Technician",
+          "inputType": "context-action",
+          "action": "Assign technician to line item",
+          "sqlColumn": "tblRepairInstrumentModels.lTechnicianKey"
+        },
+        {
+          "label": "Unit Cost",
+          "inputType": "context-action",
+          "action": "Edit unit cost",
+          "sqlColumn": "tblRepairInstrumentModels.dblUnitCost"
+        },
+        {
+          "label": "Update Model Info",
+          "inputType": "context-action",
+          "action": "Edit manufacturer, model, serial number",
+          "sqlColumn": "tblRepairInstrumentModels.lManufacturerKey + lModelKey + sSerialNumber"
+        }
+      ]
+    },
+    {
+      "name": "Detail Tab — Footer Actions",
+      "description": "Bottom area buttons and fields below the line items grid",
+      "fields": [
+        {
+          "label": "Total Instrument #",
+          "inputType": "text",
+          "sqlColumn": "tblRepair.lInstrumentCount",
+          "dataType": "smallint",
+          "notes": "Editable count of total instruments (e.g. 15)"
+        },
+        {
+          "label": "Add To Contract",
+          "inputType": "button",
+          "action": "Link this repair to a contract",
+          "sqlColumn": "tblRepair.lContractKey"
+        },
+        {
+          "label": "Amend Repair",
+          "inputType": "button",
+          "action": "Create an amendment to the repair (grayed out when no amendments exist)"
+        },
+        {
+          "label": "Move Outsourced To New WO",
+          "inputType": "button",
+          "action": "Move all outsourced line items to a new work order",
+          "notes": "Creates a new repair with outsourced items"
+        },
+        {
+          "label": "Move Replaced To New WO",
+          "inputType": "button",
+          "action": "Move all replaced line items to a new work order",
+          "notes": "Creates a new repair with replaced items"
+        }
+      ]
+    },
+    {
+      "name": "Locate Repair Header (Instrument context)",
+      "description": "Top section — same as standard repairs but with 'Instrument Repair' button and extended tab set",
+      "fields": [
+        {
+          "label": "Department",
+          "inputType": "dropdown",
+          "sqlColumn": "tblRepair.lDepartmentKey",
+          "lookupTable": "tblDepartment",
+          "notes": "e.g. 'Testing Client  Endoscopy'"
+        },
+        {
+          "label": "Scope",
+          "inputType": "dropdown",
+          "sqlColumn": "tblRepair.lScopeKey",
+          "lookupTable": "tblScope",
+          "notes": "Shows scope ID + type (e.g. 'T046  Instrument Repair'); red star = required"
+        },
+        {
+          "label": "Instrument Repair (button)",
+          "inputType": "button",
+          "action": "Opens the Instruments picker dialog",
+          "notes": "Only visible when scope type is an instrument repair type"
+        },
+        {
+          "label": "Repair",
+          "inputType": "dropdown",
+          "sqlColumn": "tblRepair.lRepairKey",
+          "notes": "Selects existing repair for the scope (WO# + complaint + date)"
+        },
+        {
+          "label": "Turn Around Time",
+          "inputType": "readonly",
+          "sqlColumn": null,
+          "notes": "Computed TAT; shown as 'N/A' for instrument repairs"
+        },
+        {
+          "label": "Lead Time",
+          "inputType": "readonly",
+          "sqlColumn": null,
+          "notes": "Computed lead time in days (e.g. '0 day')"
+        }
+      ]
+    }
+  ]
+}

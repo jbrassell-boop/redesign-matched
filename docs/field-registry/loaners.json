@@ -1,0 +1,294 @@
+{
+  "screen": "Loaners",
+  "route": "/loaners",
+  "description": "Loaner scope tracking — check-out, check-in, and open loaner list. Scopes owned by a loaner client (e.g. TSI LOANER) are tracked through tblLoanerTran for each check-out/in cycle.",
+  "legacyForm": "Loaner Scopes - Open",
+  "primaryTable": "tblLoanerTran",
+  "supportingTables": ["tblScope", "tblScopeType", "tblClient", "tblDepartment", "tblSalesRep", "tblDeliveryMethod", "tblShippingUPS_Loaners"],
+  "views": ["vwLoanerTran", "vwLoanerTranNew"],
+  "fieldCount": 31,
+  "sections": [
+    {
+      "name": "Loaner List (main grid)",
+      "description": "Table of scopes belonging to the loaner client, showing scope type, serial, and current status (In / Out / Repair)",
+      "fields": [
+        {
+          "label": "Loaner Client",
+          "inputType": "readonly",
+          "sqlColumn": "tblClient.sClientName",
+          "joinPath": "tblScope.sClientID → tblClient.sClientID",
+          "notes": "Header label — the client whose scopes are tracked as loaners (e.g. TSI LOANER)"
+        },
+        {
+          "label": "Scope Type",
+          "inputType": "readonly",
+          "sqlColumn": "tblScopeType.sScopeTypeName",
+          "joinPath": "tblScope.lScopeTypeKey → tblScopeType.lScopeTypeKey",
+          "notes": "Grid column — model number like 0502-276-030"
+        },
+        {
+          "label": "Serial #",
+          "inputType": "readonly",
+          "sqlColumn": "tblScope.sSerialNumber",
+          "notes": "Grid column"
+        },
+        {
+          "label": "Status",
+          "inputType": "readonly",
+          "sqlColumn": null,
+          "notes": "Derived field — computed from tblLoanerTran: if sDateOut is set and sDateIn is null → 'Out'; if linked to active repair → 'Repair'; else → 'In'"
+        }
+      ]
+    },
+    {
+      "name": "Loaner Detail (below grid)",
+      "description": "Read-only details for the selected loaner scope, showing the most recent check-out transaction",
+      "fields": [
+        {
+          "label": "Loaned to",
+          "inputType": "readonly",
+          "sqlColumn": "tblDepartment.sDepartmentName",
+          "joinPath": "tblLoanerTran.lDepartmentKey → tblDepartment.lDepartmentKey",
+          "notes": "Client/department the scope was loaned to, shown as 'HCA Florida South Tampa Hospital - FL'"
+        },
+        {
+          "label": "Loaned on (date)",
+          "inputType": "readonly",
+          "sqlColumn": "tblLoanerTran.sDateOut",
+          "dataType": "nvarchar(14)",
+          "notes": "Date of check-out; stored as string, displayed as date"
+        },
+        {
+          "label": "Department (line 2)",
+          "inputType": "readonly",
+          "sqlColumn": "tblDepartment.sDepartmentName",
+          "notes": "Second line shows department name (e.g. 'Accoutns Payable')"
+        },
+        {
+          "label": "Sub-department (line 3)",
+          "inputType": "readonly",
+          "sqlColumn": null,
+          "notes": "Third line shows sub-department or facility (e.g. 'Sterile Processing'); may be a second department field or free text"
+        },
+        {
+          "label": "Company",
+          "inputType": "readonly",
+          "sqlColumn": "tblClient.sClientName",
+          "joinPath": "tblLoanerTran.lCompanyKey → tblClient.lClientKey",
+          "notes": "Company associated with the loaner transaction (e.g. 'Total Scope, Inc')"
+        },
+        {
+          "label": "Contact",
+          "inputType": "readonly",
+          "sqlColumn": "tblDepartment.sContactFirst + sContactLast",
+          "notes": "Contact name from the department record (e.g. 'Brian Kenney')"
+        },
+        {
+          "label": "P.O. #",
+          "inputType": "readonly",
+          "sqlColumn": "tblLoanerTran.sPurchaseOrder",
+          "dataType": "nvarchar(50)",
+          "notes": "Purchase order number; shown as 'TBD' or 'NA' when not set"
+        },
+        {
+          "label": "Delivery Method",
+          "inputType": "readonly",
+          "sqlColumn": "tblDeliveryMethod.sDeliveryMethodName",
+          "joinPath": "tblLoanerTran.lDeliveryMethodKey → tblDeliveryMethod.lDeliveryMethodKey",
+          "notes": "Carrier name (e.g. 'United Parcel Service')"
+        },
+        {
+          "label": "Recorded by",
+          "inputType": "readonly",
+          "sqlColumn": "tblLoanerTran.lCreateUser",
+          "joinPath": "lCreateUser → user lookup",
+          "notes": "Username who created the transaction (e.g. 'bmchugh')"
+        },
+        {
+          "label": "Recorded on",
+          "inputType": "readonly",
+          "sqlColumn": "tblLoanerTran.dtCreateDate",
+          "dataType": "datetime",
+          "notes": "Date the transaction was created (e.g. '04/10/2026')"
+        },
+        {
+          "label": "Owner",
+          "inputType": "readonly",
+          "sqlColumn": null,
+          "notes": "Shown below Recorded by; appears to be blank in screenshots — may be an unused field or scope owner reference"
+        }
+      ]
+    },
+    {
+      "name": "Check Out Dialog",
+      "description": "Modal for checking out a loaner scope to a customer department",
+      "legacyForm": "Loaner Scope - Check Out",
+      "fields": [
+        {
+          "label": "Department",
+          "inputType": "dropdown",
+          "sqlColumn": "tblLoanerTran.lDepartmentKey",
+          "lookupTable": "tblDepartment",
+          "lookupDisplay": "sDepartmentName",
+          "notes": "Two-part: department name + office/location suffix"
+        },
+        {
+          "label": "Company",
+          "inputType": "dropdown",
+          "sqlColumn": "tblLoanerTran.lCompanyKey",
+          "lookupTable": "tblClient",
+          "lookupDisplay": "sClientName",
+          "notes": "Company associated with the check-out"
+        },
+        {
+          "label": "Delivery Method",
+          "inputType": "dropdown",
+          "sqlColumn": "tblLoanerTran.lDeliveryMethodKey",
+          "lookupTable": "tblDeliveryMethod",
+          "lookupDisplay": "sDeliveryMethodName",
+          "notes": "Carrier for outbound shipment"
+        },
+        {
+          "label": "Sales Rep",
+          "inputType": "dropdown",
+          "sqlColumn": "tblLoanerTran.lSalesRepKey",
+          "lookupTable": "tblSalesRep",
+          "lookupDisplay": "sSalesRepName",
+          "notes": "Sales rep (e.g. 'House Account')"
+        },
+        {
+          "label": "P.O. #",
+          "inputType": "text",
+          "sqlColumn": "tblLoanerTran.sPurchaseOrder",
+          "dataType": "nvarchar(50)",
+          "notes": "Purchase order number"
+        },
+        {
+          "label": "On-Site Loaner",
+          "inputType": "checkbox",
+          "sqlColumn": "tblScope.bOnSiteLoaner",
+          "dataType": "bit",
+          "notes": "Checkbox — marks if loaner stays on-site at customer facility"
+        },
+        {
+          "label": "Tracking #",
+          "inputType": "text",
+          "sqlColumn": "tblLoanerTran.sTrackingNumber",
+          "dataType": "nvarchar(50)",
+          "notes": "Outbound shipment tracking number"
+        },
+        {
+          "label": "Date and Time",
+          "inputType": "datetime",
+          "sqlColumn": "tblLoanerTran.sDateOut",
+          "dataType": "nvarchar(14)",
+          "notes": "Check-out date + time; pre-populated with current datetime; stored as string"
+        }
+      ]
+    },
+    {
+      "name": "Check In Dialog",
+      "description": "Modal for checking in a returned loaner scope",
+      "legacyForm": "Loaner Scope - Check In",
+      "fields": [
+        {
+          "label": "Department",
+          "inputType": "dropdown",
+          "sqlColumn": "tblLoanerTran.lDepartmentKey",
+          "lookupTable": "tblDepartment",
+          "lookupDisplay": "sDepartmentName",
+          "notes": "Pre-populated from the check-out record; two-part display"
+        },
+        {
+          "label": "Company",
+          "inputType": "dropdown",
+          "sqlColumn": "tblLoanerTran.lCompanyKey",
+          "lookupTable": "tblClient",
+          "lookupDisplay": "sClientName",
+          "notes": "Pre-populated from check-out record"
+        },
+        {
+          "label": "Delivery Method",
+          "inputType": "dropdown",
+          "sqlColumn": "tblLoanerTran.lDeliveryMethodKey",
+          "lookupTable": "tblDeliveryMethod",
+          "lookupDisplay": "sDeliveryMethodName",
+          "notes": "Pre-populated; carrier for return shipment"
+        },
+        {
+          "label": "Sales Rep",
+          "inputType": "dropdown",
+          "sqlColumn": "tblLoanerTran.lSalesRepKey",
+          "lookupTable": "tblSalesRep",
+          "lookupDisplay": "sSalesRepName",
+          "notes": "Pre-populated from check-out record"
+        },
+        {
+          "label": "P.O. #",
+          "inputType": "text",
+          "sqlColumn": "tblLoanerTran.sPurchaseOrder",
+          "dataType": "nvarchar(50)",
+          "notes": "Pre-populated from check-out record"
+        },
+        {
+          "label": "On-Site Loaner",
+          "inputType": "checkbox",
+          "sqlColumn": "tblScope.bOnSiteLoaner",
+          "dataType": "bit",
+          "notes": "Pre-populated from scope record"
+        },
+        {
+          "label": "Tracking #",
+          "inputType": "text",
+          "sqlColumn": "tblLoanerTran.sTrackingNumber",
+          "dataType": "nvarchar(50)",
+          "notes": "Return shipment tracking number"
+        },
+        {
+          "label": "Date and Time",
+          "inputType": "datetime",
+          "sqlColumn": "tblLoanerTran.sDateIn",
+          "dataType": "nvarchar(14)",
+          "notes": "Check-in date + time; pre-populated with current datetime"
+        },
+        {
+          "label": "Rack #",
+          "inputType": "text",
+          "sqlColumn": "tblScope.sLoanerRackPosition",
+          "dataType": "varchar",
+          "notes": "Only on Check In dialog (not Check Out) — rack position where scope is stored after return"
+        }
+      ]
+    },
+    {
+      "name": "Dialog Actions",
+      "description": "Action buttons on both Check Out and Check In dialogs",
+      "fields": [
+        {
+          "label": "Save",
+          "inputType": "button",
+          "action": "POST/PATCH tblLoanerTran",
+          "notes": "Saves the check-out or check-in transaction"
+        },
+        {
+          "label": "Repair",
+          "inputType": "button",
+          "action": "Creates a repair record from the loaner scope",
+          "notes": "Links to tblLoanerTran.lRepairKey; creates a new repair for the scope"
+        },
+        {
+          "label": "Cancel",
+          "inputType": "button",
+          "action": "Close dialog without saving",
+          "notes": "Dismisses the dialog"
+        },
+        {
+          "label": "Label",
+          "inputType": "button",
+          "action": "Print shipping label",
+          "notes": "Generates a shipping label; likely uses tblShippingUPS_Loaners data"
+        }
+      ]
+    }
+  ]
+}
