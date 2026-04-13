@@ -67,9 +67,18 @@ public class LoanersController(IConfiguration config) : ControllerBase
                            WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL THEN 'Out'
                            ELSE 'Available'
                        END AS Status,
-                       ISNULL(c.sClientName1, '') AS Client,
-                       ISNULL(d.sDepartmentName, '') AS Dept,
-                       ISNULL(sr.sRepFirst + ' ' + sr.sRepLast, '') AS Rep,
+                       CASE
+                           WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL THEN ISNULL(c.sClientName1, '')
+                           ELSE ''
+                       END AS Client,
+                       CASE
+                           WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL THEN ISNULL(d.sDepartmentName, '')
+                           ELSE ''
+                       END AS Dept,
+                       CASE
+                           WHEN lt.sDateOut IS NOT NULL AND lt.sDateIn IS NULL THEN ISNULL(sr.sRepFirst + ' ' + sr.sRepLast, '')
+                           ELSE ''
+                       END AS Rep,
                        CASE
                            WHEN lt.sDateOut IS NOT NULL THEN
                                DATEDIFF(day, TRY_CAST(lt.sDateOut AS datetime),
