@@ -18,3 +18,5 @@ export type { PipelineStep } from './PipelineBar';
 export { InlineExpandRow } from './InlineExpandRow';
 export { CategoryPicker } from './CategoryPicker';
 export type { CategoryItem, SizeItem } from './CategoryPicker';
+export { EvalChecklist } from './EvalChecklist';
+export type { EvalItem } from './EvalChecklist';
