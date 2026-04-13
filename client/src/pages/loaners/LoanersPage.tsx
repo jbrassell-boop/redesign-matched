@@ -1,550 +1,53 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Input, Spin, Modal, message } from 'antd';
-import { SearchOutlined, CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import { getLoaners, getLoanerDetail, getLoanerStats, getLoanerRequests, fulfillLoanerRequest, declineLoanerRequest, bulkUpdateLoanerRequests, getLoanerScopeNeeds } from '../../api/loaners';
-import type { LoanerListItem, LoanerDetail, LoanerStats, LoanerRequest, LoanerScopeNeedItem } from './types';
-import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
-import type { TabDef } from '../../components/shared';
-import { ExportButton } from '../../components/common/ExportButton';
-import { useBulkSelect } from '../../components/common/useBulkSelect';
-import { StatStrip } from '../../components/shared/StatStrip';
-import type { StatChipDef } from '../../components/shared/StatStrip';
+import { Input, Spin, message } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
+import { getLoaners, getLoanerStats, checkOutLoaner, checkInLoaner } from '../../api/loaners';
+import type { LoanerListItem, LoanerStats, CheckOutPayload, CheckInPayload } from './types';
+import { StatStrip, InlineExpandRow } from '../../components/shared';
+import type { StatChipDef } from '../../components/shared';
+import { LoanerDrawer } from './LoanerDrawer';
 import './LoanersPage.css';
 
+/* ── Column definitions ──────────────────────────────────────── */
+const COLS = [
+  { key: 'scopeType',  label: 'Scope Type',   width: 170 },
+  { key: 'serial',     label: 'Serial #',     width: 120 },
+  { key: 'status',     label: 'Status',       width: 100 },
+  { key: 'clientDept', label: 'Client / Dept', width: 200 },
+  { key: 'rep',        label: 'Rep',          width: 110 },
+  { key: 'daysOut',    label: 'Days Out',     width: 80 },
+  { key: 'agreement',  label: 'Agreement',    width: 110 },
+  { key: 'action',     label: 'Action',       width: 120 },
+];
 
+const COL_COUNT = COLS.length;
 
-/* ── Days Out Chip ───────────────────────────────────────────── */
-const DaysChip = ({ days, status }: { days: number; status: string }) => {
-  let bg = 'rgba(var(--success-rgb), 0.1)'; let color = 'var(--success)';
-  if (status === 'Overdue') { bg = 'rgba(var(--danger-rgb), 0.1)'; color = 'var(--danger)'; }
-  else if (days >= 14) { bg = 'rgba(var(--amber-rgb), 0.1)'; color = 'var(--amber)'; }
-  return (
-    <span style={{ display: 'inline-block', padding: '1px 7px', borderRadius: 4, fontSize: 11, fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.04em', background: bg, color }}>
-      {days}d
-    </span>
-  );
+/* ── Status helpers ──────────────────────────────────────────── */
+const statusBadgeClass = (s: string) => {
+  const k = s.toLowerCase();
+  if (k === 'available') return 'loaners-status-badge--available';
+  if (k === 'out') return 'loaners-status-badge--out';
+  if (k === 'overdue') return 'loaners-status-badge--overdue';
+  if (k === 'repair' || k === 'in repair') return 'loaners-status-badge--repair';
+  if (k === 'evaluating') return 'loaners-status-badge--evaluating';
+  if (k === 'returned') return 'loaners-status-badge--returned';
+  return '';
 };
 
-
-
-const ACTIVE_COLS = [
-  { key: 'workOrder', label: 'Work Order', width: 130 },
-  { key: 'scopeType', label: 'Scope Type', width: 180 },
-  { key: 'serial', label: 'Serial #', width: 120 },
-  { key: 'client', label: 'Client', width: 160 },
-  { key: 'dept', label: 'Department', width: 140 },
-  { key: 'status', label: 'Status', width: 100 },
-  { key: 'dateOut', label: 'Date Out', width: 100 },
-  { key: 'daysOut', label: 'Days', width: 70 },
-  { key: 'trackingNumber', label: 'Tracking #', width: 130 },
-];
-
-const SCOPE_NEEDS_COLS = [
-  { key: 'scopeType', label: 'Scope Type', width: 200 },
-  { key: 'clientName', label: 'Client', width: 180 },
-  { key: 'deptName', label: 'Department', width: 160 },
-  { key: 'repairsInProgress', label: 'Repairs In Progress', width: 140, align: 'center' as const },
-  { key: 'avgTat', label: 'Avg TAT (days)', width: 120, align: 'center' as const },
-  { key: 'estimatedNeedDate', label: 'Est. Need Date', width: 120 },
-];
-
-const REQ_COLS = [
-  { key: 'select', label: '', width: 36 },
-  { key: 'workOrder', label: 'Work Order', width: 140 },
-  { key: 'scopeType', label: 'Scope Type', width: 180 },
-  { key: 'serialNumber', label: 'Serial #', width: 120 },
-  { key: 'client', label: 'Client', width: 160 },
-  { key: 'department', label: 'Department', width: 140 },
-  { key: 'dateRequested', label: 'Date Requested', width: 120 },
-  { key: 'status', label: 'Status', width: 100 },
-  { key: 'actions', label: 'Actions', width: 110 },
-];
-
-const MAIN_COLS = [
-  { key: 'workOrder', label: 'Work Order', width: 130 },
-  { key: 'scopeType', label: 'Scope Type', width: 180 },
-  { key: 'serial', label: 'Serial #', width: 120 },
-  { key: 'client', label: 'Client', width: 160 },
-  { key: 'dept', label: 'Department', width: 140 },
-  { key: 'status', label: 'Status', width: 100 },
-  { key: 'dateOut', label: 'Date Out', width: 100 },
-  { key: 'dateIn', label: 'Date In', width: 100 },
-  { key: 'daysOut', label: 'Days', width: 70 },
-  { key: 'trackingNumber', label: 'Tracking #', width: 130 },
-];
-
-/* ── SVG Icons ───────────────────────────────────────────────── */
-
-const LOANER_EXPORT_COLS = [
-  { key: 'workOrder', label: 'Work Order' },
-  { key: 'scopeType', label: 'Scope Type' },
-  { key: 'serial', label: 'Serial #' },
-  { key: 'client', label: 'Client' },
-  { key: 'dept', label: 'Department' },
-  { key: 'status', label: 'Status' },
-  { key: 'dateOut', label: 'Date Out' },
-  { key: 'dateIn', label: 'Date In' },
-  { key: 'daysOut', label: 'Days Out' },
-  { key: 'trackingNumber', label: 'Tracking #' },
-];
-
-/* ═════════════════════════════════════════════════════════════ */
-/*  ACTIVE LOANERS TAB                                          */
-/* ═════════════════════════════════════════════════════════════ */
-const ActiveLoanersTab = ({ onRowClick }: { onRowClick: (item: LoanerListItem) => void }) => {
-  const [items, setItems] = useState<LoanerListItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-
-  const loadActive = useCallback(async (s: string, cancelled: () => boolean) => {
-    setLoading(true);
-    try {
-      const result = await getLoaners({ search: s, page: 1, pageSize: 200, statusFilter: 'Out' });
-      if (!cancelled()) setItems(result.items);
-    } catch {
-      if (!cancelled()) message.error('Failed to load active loaners');
-    } finally {
-      if (!cancelled()) setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    const timer = setTimeout(() => loadActive(search, () => cancelled), search ? 300 : 0);
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [search, loadActive]);
-
-  return (
-    <div className="lp-tab-inner">
-      <div className="lp-sub-toolbar">
-        <Input
-          prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
-          placeholder="Search active loaners..."
-          aria-label="Search active loaners"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ height: 30, width: 260, fontSize: 12 }}
-          allowClear
-        />
-        <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }} aria-live="polite">
-          <strong style={{ color: 'var(--text)' }}>{items.length}</strong> active loaners
-        </div>
-      </div>
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
-          <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
-            <tr>
-              {ACTIVE_COLS.map(col => (
-                <th key={col.key} className="lp-th" style={{ width: col.width }}>
-                  {col.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={ACTIVE_COLS.length} className="lp-loading-cell"><Spin size="small" /></td></tr>
-            ) : items.length === 0 ? (
-              <tr><td colSpan={ACTIVE_COLS.length} className="lp-empty-cell">No active loaners currently out</td></tr>
-            ) : items.map((item, idx) => (
-              <tr
-                key={item.loanerTranKey}
-                onClick={() => onRowClick(item)}
-                className="hover-row-light"
-                style={{ cursor: 'pointer', background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }}
-              >
-                <td className="lp-td"><span className="lp-wo-link">{item.workOrder || '\u2014'}</span></td>
-                <td className="lp-td">{item.scopeType || '\u2014'}</td>
-                <td className="lp-td"><span className="lp-serial">{item.serial || '\u2014'}</span></td>
-                <td className="lp-td">{item.client || '\u2014'}</td>
-                <td className="lp-td">{item.dept || '\u2014'}</td>
-                <td className="lp-td"><StatusBadge status={item.status} /></td>
-                <td className="lp-td">{item.dateOut || '\u2014'}</td>
-                <td className="lp-td">{item.dateOut ? <DaysChip days={item.daysOut} status={item.status} /> : '\u2014'}</td>
-                <td className="lp-td">{item.trackingNumber || '\u2014'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+const rowClass = (item: LoanerListItem, idx: number) => {
+  const k = item.status.toLowerCase();
+  if (k === 'overdue') return 'loaners-row--overdue';
+  if (k === 'out') return 'loaners-row--out';
+  if (k === 'repair' || k === 'in repair') return 'loaners-row--repair';
+  if (k === 'evaluating') return 'loaners-row--evaluating';
+  return idx % 2 === 0 ? 'loaners-row--stripe-even' : 'loaners-row--stripe-odd';
 };
 
-
-/* ═════════════════════════════════════════════════════════════ */
-/*  SCOPE NEEDS TAB                                             */
-/* ═════════════════════════════════════════════════════════════ */
-
-const ScopeNeedsTab = () => {
-  const [items, setItems] = useState<LoanerScopeNeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    getLoanerScopeNeeds()
-      .then(data => { if (!cancelled) setItems(data); })
-      .catch(() => { if (!cancelled) message.error('Failed to load scope needs'); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, []);
-
-  return (
-    <div className="lp-tab-inner">
-      <div className="lp-sub-toolbar">
-        <span style={{ fontSize: 12, color: 'var(--muted)' }}>
-          Scope types currently in repair with loaner requests — estimated need dates based on average turnaround time.
-        </span>
-        <div style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>
-          <strong style={{ color: 'var(--text)' }}>{items.length}</strong> scope types
-        </div>
-      </div>
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 920 }}>
-          <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
-            <tr>
-              {SCOPE_NEEDS_COLS.map(col => (
-                <th key={col.key} className="lp-th" style={{ width: col.width, textAlign: col.align || 'left' }}>
-                  {col.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={SCOPE_NEEDS_COLS.length} className="lp-loading-cell"><Spin size="small" /></td></tr>
-            ) : items.length === 0 ? (
-              <tr><td colSpan={SCOPE_NEEDS_COLS.length} className="lp-empty-cell">No active loaner-requested repairs in progress</td></tr>
-            ) : items.map((item, idx) => (
-              <tr
-                key={`${item.scopeType}-${item.deptName}-${idx}`}
-                className="hover-row-light"
-                style={{ background: idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)' }}
-              >
-                <td className="lp-td lp-td--needs"><span className="lp-scope-type">{item.scopeType}</span></td>
-                <td className="lp-td lp-td--needs">{item.clientName || '\u2014'}</td>
-                <td className="lp-td lp-td--needs">{item.deptName || '\u2014'}</td>
-                <td className="lp-td lp-td--needs lp-td--center">
-                  <span style={{
-                    display: 'inline-block', padding: '1px 8px', borderRadius: 4,
-                    fontSize: 11, fontWeight: 700, fontFamily: 'monospace',
-                    background: item.repairsInProgress >= 3
-                      ? 'rgba(var(--danger-rgb), 0.1)'
-                      : item.repairsInProgress >= 2
-                        ? 'rgba(var(--amber-rgb), 0.1)'
-                        : 'rgba(var(--success-rgb), 0.1)',
-                    color: item.repairsInProgress >= 3
-                      ? 'var(--danger)'
-                      : item.repairsInProgress >= 2
-                        ? 'var(--amber)'
-                        : 'var(--success)',
-                  }}>
-                    {item.repairsInProgress}
-                  </span>
-                </td>
-                <td className="lp-td lp-td--needs lp-td--center lp-td--mono-bold">
-                  {item.avgTat.toFixed(1)}d
-                </td>
-                <td className="lp-td lp-td--needs lp-td--muted">{item.estimatedNeedDate}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+const daysClass = (days: number, status: string) => {
+  if (status.toLowerCase() === 'overdue') return 'loaners-days--red';
+  if (days >= 14) return 'loaners-days--amber';
+  return 'loaners-days--green';
 };
-
-
-/* ═════════════════════════════════════════════════════════════ */
-/*  REQUESTS TAB                                                */
-/* ═════════════════════════════════════════════════════════════ */
-
-
-const RequestsTab = ({ onRequestUpdated }: { onRequestUpdated: () => void }) => {
-  const [requests, setRequests] = useState<LoanerRequest[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [selectedKeys, setSelectedKeys] = useState<Set<number>>(new Set());
-  const [actionLoading, setActionLoading] = useState<number | null>(null);
-  const [bulkLoading, setBulkLoading] = useState(false);
-
-  const loadRequests = useCallback(async (s: string, sf: string, cancelled: () => boolean) => {
-    setLoading(true);
-    try {
-      const data = await getLoanerRequests({ search: s || undefined, statusFilter: sf !== 'All' ? sf : undefined });
-      if (!cancelled()) setRequests(data);
-    } catch {
-      if (!cancelled()) message.error('Failed to load loaner requests');
-    } finally {
-      if (!cancelled()) setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    const timer = setTimeout(() => loadRequests(search, statusFilter, () => cancelled), search ? 300 : 0);
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [search, statusFilter, loadRequests]);
-
-  const fmtDate = (d: string | null) => {
-    if (!d) return '\u2014';
-    return new Date(d).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
-  };
-
-  const handleAction = async (repairKey: number, action: 'fulfill' | 'decline') => {
-    const label = action === 'fulfill' ? 'Fulfill' : 'Decline';
-    Modal.confirm({
-      title: `${label} Loaner Request`,
-      content: `Are you sure you want to ${action} this loaner request?`,
-      okText: label,
-      okButtonProps: { danger: action === 'decline' },
-      onOk: async () => {
-        setActionLoading(repairKey);
-        try {
-          if (action === 'fulfill') await fulfillLoanerRequest(repairKey);
-          else await declineLoanerRequest(repairKey);
-          message.success(`Request ${action === 'fulfill' ? 'fulfilled' : 'declined'}`);
-          await loadRequests(search, statusFilter, () => false);
-          onRequestUpdated();
-        } catch {
-          message.error(`Failed to ${action} request`);
-        } finally {
-          setActionLoading(null);
-        }
-      },
-    });
-  };
-
-  const handleBulkAction = async (action: 'fulfill' | 'decline') => {
-    const keys = Array.from(selectedKeys);
-    const pendingKeys = keys.filter(k => {
-      const req = requests.find(r => r.repairKey === k);
-      return req?.status === 'Pending';
-    });
-    if (pendingKeys.length === 0) {
-      message.warning('No pending requests selected');
-      return;
-    }
-    const label = action === 'fulfill' ? 'fulfill' : 'decline';
-    Modal.confirm({
-      title: `Bulk ${action === 'fulfill' ? 'Fulfill' : 'Decline'}`,
-      content: `${action === 'fulfill' ? 'Fulfill' : 'Decline'} ${pendingKeys.length} pending request${pendingKeys.length > 1 ? 's' : ''}?`,
-      okText: `${action === 'fulfill' ? 'Fulfill' : 'Decline'} All`,
-      okButtonProps: { danger: action === 'decline' },
-      onOk: async () => {
-        setBulkLoading(true);
-        try {
-          const result = await bulkUpdateLoanerRequests(pendingKeys, action);
-          message.success(`${result.updated} request${result.updated !== 1 ? 's' : ''} ${label === 'fulfill' ? 'fulfilled' : 'declined'}`);
-          setSelectedKeys(new Set());
-          await loadRequests(search, statusFilter, () => false);
-          onRequestUpdated();
-        } catch {
-          message.error(`Failed to ${label} requests`);
-        } finally {
-          setBulkLoading(false);
-        }
-      },
-    });
-  };
-
-  const toggleSelect = (repairKey: number) => {
-    setSelectedKeys(prev => {
-      const next = new Set(prev);
-      if (next.has(repairKey)) next.delete(repairKey);
-      else next.add(repairKey);
-      return next;
-    });
-  };
-
-  const toggleSelectAll = () => {
-    if (selectedKeys.size === requests.length) {
-      setSelectedKeys(new Set());
-    } else {
-      setSelectedKeys(new Set(requests.map(r => r.repairKey)));
-    }
-  };
-
-  const pendingSelected = Array.from(selectedKeys).filter(k => {
-    const req = requests.find(r => r.repairKey === k);
-    return req?.status === 'Pending';
-  }).length;
-
-  return (
-    <div className="lp-tab-inner">
-      <div className="lp-sub-toolbar" style={{ flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span className="lp-filter-label">Status</span>
-          <div style={{ display: 'flex', gap: 0 }}>
-            {['All', 'Pending', 'Fulfilled', 'Declined'].map(s => (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                style={{
-                  height: 28, padding: '0 10px', fontSize: 11, fontWeight: statusFilter === s ? 700 : 500, fontFamily: 'inherit',
-                  border: '1px solid var(--border-dk)', borderRight: 'none', cursor: 'pointer',
-                  background: statusFilter === s ? 'var(--navy)' : 'var(--card)',
-                  color: statusFilter === s ? 'var(--card)' : 'var(--muted)',
-                }}
-              >
-                {s}
-              </button>
-            ))}
-            <div style={{ width: 0, borderRight: '1px solid var(--border-dk)' }} />
-          </div>
-        </div>
-        <div className="lp-separator" />
-        <Input
-          prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
-          placeholder="Search requests..."
-          aria-label="Search loaner requests"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ height: 30, width: 220, fontSize: 12 }}
-          allowClear
-        />
-        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-          {selectedKeys.size > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-                <strong style={{ color: 'var(--text)' }}>{selectedKeys.size}</strong> selected
-                {pendingSelected > 0 && <span> ({pendingSelected} pending)</span>}
-              </span>
-              <button
-                onClick={() => handleBulkAction('fulfill')}
-                disabled={bulkLoading || pendingSelected === 0}
-                style={{
-                  height: 36, minWidth: 36, padding: '0 10px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
-                  border: '1px solid rgba(var(--success-rgb), 0.4)', borderRadius: 4, cursor: 'pointer',
-                  background: 'rgba(var(--success-rgb), 0.1)', color: 'var(--success)',
-                  opacity: pendingSelected === 0 ? 0.4 : 1,
-                }}
-              >
-                Fulfill All
-              </button>
-              <button
-                onClick={() => handleBulkAction('decline')}
-                disabled={bulkLoading || pendingSelected === 0}
-                style={{
-                  height: 36, minWidth: 36, padding: '0 10px', fontSize: 11, fontWeight: 600, fontFamily: 'inherit',
-                  border: '1px solid rgba(var(--danger-rgb), 0.4)', borderRadius: 4, cursor: 'pointer',
-                  background: 'rgba(var(--danger-rgb), 0.1)', color: 'var(--danger)',
-                  opacity: pendingSelected === 0 ? 0.4 : 1,
-                }}
-              >
-                Decline All
-              </button>
-              <button
-                onClick={() => setSelectedKeys(new Set())}
-                style={{
-                  height: 36, minWidth: 36, padding: '0 8px', fontSize: 11, fontWeight: 500, fontFamily: 'inherit',
-                  border: '1px solid var(--border-dk)', borderRadius: 4, cursor: 'pointer',
-                  background: 'var(--card)', color: 'var(--muted)',
-                }}
-              >
-                Clear
-              </button>
-            </div>
-          )}
-          <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-            <strong style={{ color: 'var(--text)' }}>{requests.length}</strong> requests
-          </span>
-        </div>
-      </div>
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 1100 }}>
-          <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
-            <tr>
-              <th className="lp-th--checkbox">
-                <input
-                  type="checkbox"
-                  checked={requests.length > 0 && selectedKeys.size === requests.length}
-                  onChange={toggleSelectAll}
-                  style={{ cursor: 'pointer' }}
-                />
-              </th>
-              {REQ_COLS.slice(1).map(col => (
-                <th key={col.key} className="lp-th" style={{ width: col.width }}>
-                  {col.label}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={REQ_COLS.length} className="lp-loading-cell"><Spin size="small" /></td></tr>
-            ) : requests.length === 0 ? (
-              <tr><td colSpan={REQ_COLS.length} className="lp-empty-cell">No loaner requests match your filters</td></tr>
-            ) : requests.map((req, idx) => {
-              const isSelected = selectedKeys.has(req.repairKey);
-              return (
-                <tr
-                  key={req.repairKey}
-                  style={{
-                    background: isSelected ? 'rgba(var(--primary-rgb), 0.06)' : idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)',
-                  }}
-                >
-                  <td className="lp-td lp-td--center" style={{ padding: '6px' }}>
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggleSelect(req.repairKey)}
-                      style={{ cursor: 'pointer' }}
-                    />
-                  </td>
-                  <td className="lp-td"><span className="lp-wo-link">{req.workOrder || '\u2014'}</span></td>
-                  <td className="lp-td">{req.scopeType || '\u2014'}</td>
-                  <td className="lp-td"><span className="lp-serial">{req.serialNumber || '\u2014'}</span></td>
-                  <td className="lp-td">{req.client || '\u2014'}</td>
-                  <td className="lp-td">{req.department || '\u2014'}</td>
-                  <td className="lp-td">{fmtDate(req.dateRequested)}</td>
-                  <td className="lp-td"><StatusBadge status={req.status} /></td>
-                  <td className="lp-td lp-td--center">
-                    {req.status === 'Pending' ? (
-                      <div className="lp-action-center">
-                        <button
-                          onClick={() => handleAction(req.repairKey, 'fulfill')}
-                          disabled={actionLoading === req.repairKey}
-                          title="Fulfill"
-                          className="loaner-accept-btn lp-fulfill-btn"
-                        >
-                          <CheckCircleOutlined style={{ fontSize: 14 }} />
-                        </button>
-                        <button
-                          onClick={() => handleAction(req.repairKey, 'decline')}
-                          disabled={actionLoading === req.repairKey}
-                          title="Decline"
-                          className="loaner-decline-btn lp-decline-btn"
-                        >
-                          <CloseCircleOutlined style={{ fontSize: 14 }} />
-                        </button>
-                      </div>
-                    ) : (
-                      <span className="lp-status-small">{req.status}</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-/* ═════════════════════════════════════════════════════════════ */
-/*  TABS DEFINITION                                             */
-/* ═════════════════════════════════════════════════════════════ */
-const PAGE_TABS: TabDef[] = [
-  { key: 'loaners',   label: 'Task Loaners' },
-  { key: 'active',    label: 'Active Loaners' },
-  { key: 'needs',     label: 'Scope Needs' },
-  { key: 'requests',  label: 'Requests' },
-];
 
 /* ═════════════════════════════════════════════════════════════ */
 /*  LOANERS PAGE                                                */
@@ -554,23 +57,39 @@ export const LoanersPage = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<LoanerStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
-  const [activeTab, setActiveTab] = useState('loaners');
-  const bulk = useBulkSelect<number>();
 
-  // Inline detail pane (replaces Drawer)
-  const [selectedKey, setSelectedKey] = useState<number | null>(null);
-  const [detail, setDetail] = useState<LoanerDetail | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
+  // Drawer state
+  const [drawerScopeKey, setDrawerScopeKey] = useState<number | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Inline expand state
+  const [expandedRow, setExpandedRow] = useState<{ key: number; mode: 'checkout' | 'checkin' } | null>(null);
+  const [expandForm, setExpandForm] = useState({
+    departmentKey: 0,
+    deliveryMethodKey: 0,
+    salesRepKey: 0,
+    purchaseOrder: '',
+    onSiteLoaner: false,
+    rackPosition: '',
+    trackingNumber: '',
+  });
+  const [expandSaving, setExpandSaving] = useState(false);
 
   const pageSize = 50;
 
   const loadData = useCallback(async (s: string, sf: string, p: number, cancelled: () => boolean) => {
     setLoading(true);
     try {
-      const result = await getLoaners({ search: s, page: p, pageSize, statusFilter: sf });
+      const result = await getLoaners({
+        search: s || undefined,
+        page: p,
+        pageSize,
+        statusFilter: sf === 'all' ? undefined : sf,
+      });
       if (!cancelled()) {
         setItems(result.items);
         setTotalCount(result.totalCount);
@@ -583,10 +102,15 @@ export const LoanersPage = () => {
   }, []);
 
   const loadStats = useCallback(async (cancelled: () => boolean = () => false) => {
+    setStatsLoading(true);
     try {
       const data = await getLoanerStats();
       if (!cancelled()) setStats(data);
-    } catch (err) { console.error('[LoanersPage] loadStats failed', err); }
+    } catch {
+      if (!cancelled()) message.error('Failed to load stats');
+    } finally {
+      if (!cancelled()) setStatsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -601,280 +125,361 @@ export const LoanersPage = () => {
     return () => { cancelled = true; clearTimeout(timer); };
   }, [search, statusFilter, page, loadData]);
 
-  const handleChipClick = (sf: string) => {
-    setStatusFilter(sf);
+  const handleChipClick = (id: string) => {
+    setStatusFilter(id);
     setPage(1);
+    setExpandedRow(null);
   };
 
-  const handleRowClick = async (item: LoanerListItem) => {
-    setSelectedKey(item.loanerTranKey);
-    setDetailLoading(true);
+  const handleRowClick = (item: LoanerListItem) => {
+    if (expandedRow) return; // don't open drawer while expanding
+    setDrawerScopeKey(item.scopeKey);
+    setDrawerOpen(true);
+  };
+
+  const handleCloseDrawer = () => {
+    setDrawerOpen(false);
+    setDrawerScopeKey(null);
+  };
+
+  const handleActionClick = (e: React.MouseEvent, item: LoanerListItem, mode: 'checkout' | 'checkin') => {
+    e.stopPropagation();
+    if (expandedRow?.key === item.loanerTranKey && expandedRow?.mode === mode) {
+      setExpandedRow(null);
+      return;
+    }
+    setExpandedRow({ key: item.loanerTranKey, mode });
+    setExpandForm({
+      departmentKey: 0,
+      deliveryMethodKey: 0,
+      salesRepKey: 0,
+      purchaseOrder: item.purchaseOrder || '',
+      onSiteLoaner: false,
+      rackPosition: '',
+      trackingNumber: item.trackingNumber || '',
+    });
+  };
+
+  const handleExpandSave = async () => {
+    if (!expandedRow) return;
+    setExpandSaving(true);
     try {
-      setDetail(await getLoanerDetail(item.loanerTranKey));
+      if (expandedRow.mode === 'checkout') {
+        const item = items.find(i => i.loanerTranKey === expandedRow.key);
+        if (!item?.scopeKey) { message.error('Missing scope key'); return; }
+        const payload: CheckOutPayload = {
+          scopeKey: item.scopeKey,
+          departmentKey: expandForm.departmentKey,
+          deliveryMethodKey: expandForm.deliveryMethodKey,
+          salesRepKey: expandForm.salesRepKey,
+          purchaseOrder: expandForm.purchaseOrder || undefined,
+          onSiteLoaner: expandForm.onSiteLoaner,
+        };
+        await checkOutLoaner(payload);
+        message.success('Loaner checked out');
+      } else {
+        const payload: CheckInPayload = {
+          loanerTranKey: expandedRow.key,
+          rackPosition: expandForm.rackPosition || undefined,
+          trackingNumber: expandForm.trackingNumber || undefined,
+        };
+        await checkInLoaner(payload);
+        message.success('Loaner checked in');
+      }
+      setExpandedRow(null);
+      loadData(search, statusFilter, page, () => false);
+      loadStats();
+    } catch {
+      message.error(expandedRow.mode === 'checkout' ? 'Check out failed' : 'Check in failed');
     } finally {
-      setDetailLoading(false);
+      setExpandSaving(false);
     }
   };
 
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
-  /* ── Stat Strip ──────────────────────────────────────── */
-  const loanerChips: StatChipDef[] = [
-    { id: 'All',      label: 'Total',     value: stats?.total ?? 0,           color: 'navy'  },
-    { id: 'Out',      label: 'Out',       value: stats?.out ?? 0,             color: 'blue'  },
-    { id: 'Overdue',  label: 'Overdue',   value: stats?.overdue ?? 0,         color: 'red',   state: (stats?.overdue ?? 0) > 0 ? 'warn' : 'normal' },
-    { id: 'Returned', label: 'Returned',  value: stats?.returned ?? 0,        color: 'green' },
-    { id: 'Declined', label: 'Declined',  value: stats?.declined ?? 0,        color: 'amber' },
-    { id: 'fillRate', label: 'Fill Rate', value: `${stats?.fillRate ?? 0}%`, color: 'green' },
+  /* ── Stat Strip chips ──────────────────────────────────────── */
+  const chips: StatChipDef[] = [
+    { id: 'Available',   label: 'Available',   value: stats?.available ?? 0,  color: 'green' },
+    { id: 'Evaluating',  label: 'Evaluating',  value: stats?.evaluating ?? 0, color: 'purple' },
+    { id: 'Out',         label: 'Out',         value: stats?.out ?? 0,        color: 'amber' },
+    { id: 'Overdue',     label: 'Overdue',     value: stats?.overdue ?? 0,    color: 'red', state: (stats?.overdue ?? 0) > 0 ? 'alert' : 'normal' },
+    { id: 'Repair',      label: 'Repair',      value: stats?.repair ?? 0,     color: 'muted' },
   ];
-  const statStrip = (
-    <StatStrip
-      chips={loanerChips}
-      activeChip={statusFilter}
-      onChipClick={(id) => { if (id !== 'fillRate') handleChipClick(id === 'all' ? 'All' : id); }}
-    />
-  );
-  /* ── Toolbar ─────────────────────────────────────────────── */
-  const toolbar = (
-    <div className="lp-toolbar">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span className="lp-filter-label">Status</span>
-        <div style={{ display: 'flex', gap: 0 }}>
-          {['All', 'Out', 'Overdue', 'Returned', 'Declined'].map(s => (
-            <button
-              key={s}
-              onClick={() => { setStatusFilter(s); setPage(1); }}
-              style={{
-                height: 28, padding: '0 10px', fontSize: 11, fontWeight: statusFilter === s ? 700 : 500, fontFamily: 'inherit',
-                border: '1px solid var(--border-dk)', borderRight: 'none', cursor: 'pointer',
-                background: statusFilter === s ? 'var(--navy)' : 'var(--card)',
-                color: statusFilter === s ? 'var(--card)' : 'var(--muted)',
-              }}
-            >
-              {s}
-            </button>
-          ))}
-          <div style={{ width: 0, borderRight: '1px solid var(--border-dk)' }} />
-        </div>
-      </div>
-      <div className="lp-separator" />
-      <Input
-        prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
-        placeholder="Search loaners..."
-        aria-label="Search loaners"
-        value={search}
-        onChange={e => { setSearch(e.target.value); setPage(1); }}
-        style={{ height: 30, width: 220, fontSize: 12 }}
-        allowClear
-      />
-      <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 11, color: 'var(--muted)' }}>
-          <strong style={{ color: 'var(--text)' }}>{totalCount}</strong> records
-        </span>
-        <ExportButton
-          data={items as unknown as Record<string, unknown>[]}
-          columns={LOANER_EXPORT_COLS}
-          filename="loaners-export"
-          sheetName="Loaners"
-        />
-      </div>
-    </div>
-  );
 
-  const colCount = MAIN_COLS.length + 1; // +1 for checkbox
+  /* ── Render rows ───────────────────────────────────────────── */
+  const renderRow = (item: LoanerListItem, idx: number) => {
+    const k = item.status.toLowerCase();
+    const isRepair = k === 'repair' || k === 'in repair';
+    const isAvailable = k === 'available';
+    const isOut = k === 'out' || k === 'overdue';
+    const isExpanded = expandedRow?.key === item.loanerTranKey;
 
-  /* ── Loaner list (left panel content for Task Loaners tab) ── */
-  const dataTable = (
-    <div style={{ flex: 1, overflow: 'auto', position: 'relative' }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: selectedKey ? 800 : 1200 }}>
-        <thead style={{ position: 'sticky', top: 0, zIndex: 2 }}>
-          <tr>
-            <th className="lp-th--checkbox">
-              <input
-                type="checkbox"
-                checked={bulk.isAllSelected(items.map(i => i.loanerTranKey))}
-                onChange={() => bulk.toggleAll(items.map(i => i.loanerTranKey))}
-                style={{ cursor: 'pointer' }}
-              />
-            </th>
-            {MAIN_COLS.map(col => (
-              <th key={col.key} className="lp-th" style={{ width: col.width }}>
-                {col.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
-            <tr><td colSpan={colCount} className="lp-loading-cell"><Spin size="small" /></td></tr>
-          ) : items.length === 0 ? (
-            <tr><td colSpan={colCount} className="lp-empty-cell">No loaner records match your filters</td></tr>
-          ) : items.map((item, idx) => {
-            const selected = bulk.isSelected(item.loanerTranKey);
-            const isDetailSelected = item.loanerTranKey === selectedKey;
-            return (
-              <tr
-                key={item.loanerTranKey}
-                onClick={() => handleRowClick(item)}
-                style={{
-                  cursor: 'pointer',
-                  background: isDetailSelected ? 'var(--primary-light)' : selected ? 'rgba(var(--primary-rgb), 0.06)' : idx % 2 === 0 ? 'var(--card)' : 'var(--neutral-50)',
-                  borderLeft: isDetailSelected ? '3px solid var(--primary)' : '3px solid transparent',
-                }}
-                className={isDetailSelected ? 'selected' : 'hover-row-light'}
-              >
-                <td className="lp-td lp-td--center" style={{ padding: '6px' }} onClick={e => e.stopPropagation()}>
-                  <input
-                    type="checkbox"
-                    checked={selected}
-                    onChange={() => bulk.toggle(item.loanerTranKey)}
-                    style={{ cursor: 'pointer' }}
-                  />
-                </td>
-                <td className="lp-td"><span className="lp-wo-link">{item.workOrder || '\u2014'}</span></td>
-                <td className="lp-td">{item.scopeType || '\u2014'}</td>
-                <td className="lp-td"><span className="lp-serial">{item.serial || '\u2014'}</span></td>
-                <td className="lp-td">{item.client || '\u2014'}</td>
-                <td className="lp-td">{item.dept || '\u2014'}</td>
-                <td className="lp-td"><StatusBadge status={item.status} /></td>
-                <td className="lp-td">{item.dateOut || '\u2014'}</td>
-                <td className="lp-td">{item.dateIn || '\u2014'}</td>
-                <td className="lp-td">{item.dateOut ? <DaysChip days={item.daysOut} status={item.status} /> : '\u2014'}</td>
-                <td className="lp-td">{item.trackingNumber || '\u2014'}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-
-  /* ── Pagination Footer ───────────────────────────────────── */
-  const footer = (
-    <div className="lp-footer">
-      <div style={{ fontSize: 11, color: 'var(--muted)' }} aria-live="polite" aria-atomic="true">
-        Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{totalCount}</strong>
-      </div>
-      {totalPages > 1 && (
-        <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-          <PgBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{'\u2039'}</PgBtn>
-          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-            const start = Math.max(1, Math.min(page - 2, totalPages - 4));
-            const p = start + i;
-            return p <= totalPages ? <PgBtn key={p} active={p === page} onClick={() => setPage(p)}>{p}</PgBtn> : null;
-          })}
-          <PgBtn disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>{'\u203A'}</PgBtn>
-        </div>
-      )}
-    </div>
-  );
-
-  /* ── Inline Detail Pane content ──────────────────────────── */
-  const detailPane = detailLoading ? (
-    <div className="lp-detail-loading"><Spin /></div>
-  ) : detail ? (
-    <div className="lp-detail-scroll">
-      {/* Close button */}
-      <div className="lp-detail-header">
-        <span className="lp-detail-title">{detail.workOrder || `Loaner #${detail.loanerTranKey}`}</span>
-        <button
-          onClick={() => { setSelectedKey(null); setDetail(null); }}
-          className="lp-detail-close"
+    return (
+      <tbody key={item.loanerTranKey}>
+        <tr
+          className={rowClass(item, idx)}
+          onClick={() => handleRowClick(item)}
         >
-          &times;
-        </button>
-      </div>
-      <div className="lp-detail-body">
-        <DetailHeader
-          headingLevel="h2"
-          title={detail.workOrder || `Loaner #${detail.loanerTranKey}`}
-          badges={
-            <>
-              <StatusBadge status={detail.status} />
-              {detail.daysOut > 0 && <DaysChip days={detail.daysOut} status={detail.status} />}
-            </>
-          }
-        />
-        <div className="lp-detail-fields">
-          <FormGrid cols={2}>
-            <Field label="Scope Type" value={detail.scopeType} />
-            <Field label="Serial #" value={detail.serial} />
-            <Field label="Client" value={detail.client} />
-            <Field label="Department" value={detail.dept} />
-            <Field label="Date Out" value={detail.dateOut} />
-            <Field label="Date In" value={detail.dateIn} />
-            <Field label="Tracking #" value={detail.trackingNumber} />
-            <Field label="Purchase Order" value={detail.purchaseOrder} />
-            <Field label="Sales Rep" value={detail.salesRep} />
-            <Field label="Delivery Method" value={detail.deliveryMethod} />
-            <Field label="Rack Position" value={detail.rackPosition} />
-            <Field label="Created" value={detail.createdDate} />
-          </FormGrid>
-        </div>
-      </div>
-    </div>
-  ) : null;
+          {/* Scope Type */}
+          <td>{item.scopeType || '\u2014'}</td>
 
-  /* ── Tab content ─────────────────────────────────────────────────── */
-  const renderTab = () => {
-    switch (activeTab) {
-      case 'loaners':
-        return (
-          /* Split-pane layout for Task Loaners tab */
-          <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
-            {/* Left panel — list */}
-            <aside aria-label="Loaner list" style={{
-              display: 'flex', flexDirection: 'column',
-              width: selectedKey ? 'calc(100% - 400px)' : '100%',
-              minWidth: 0,
-              borderRight: selectedKey ? '1px solid var(--neutral-200)' : undefined,
-              transition: 'width 0.2s ease',
-              willChange: 'width',
-              overflow: 'hidden',
-            }}>
-              {toolbar}
-              {dataTable}
-              {footer}
-            </aside>
+          {/* Serial # */}
+          <td>
+            <span className="loaners-serial">{item.serial || '\u2014'}</span>
+            {item.recallNeeded && <span className="loaners-recall-badge">Recall?</span>}
+          </td>
 
-            {/* Right panel — detail */}
-            {selectedKey && (
-              <section aria-label="Loaner details" className="lp-detail-panel">
-                {detailPane}
-              </section>
+          {/* Status */}
+          <td>
+            <span className={`loaners-status-badge ${statusBadgeClass(item.status)}`}>
+              {item.status}
+            </span>
+          </td>
+
+          {/* Client / Dept */}
+          <td>
+            <div className="loaners-cell-twoline">
+              <span className="loaners-client">{item.client || '\u2014'}</span>
+              <span className="loaners-dept">{item.dept || ''}</span>
+            </div>
+          </td>
+
+          {/* Rep */}
+          <td>{item.rep || '\u2014'}</td>
+
+          {/* Days Out */}
+          <td>
+            {item.daysOut > 0 ? (
+              <span className={`loaners-days ${daysClass(item.daysOut, item.status)}`}>
+                {item.daysOut}d
+              </span>
+            ) : '\u2014'}
+          </td>
+
+          {/* Agreement */}
+          <td>
+            {item.agreement && item.agreement !== 'None' ? (
+              <span className={`loaners-agreement-badge ${
+                item.agreement === 'Signed'
+                  ? 'loaners-agreement-badge--signed'
+                  : 'loaners-agreement-badge--pending'
+              }`}>
+                {item.agreement}
+              </span>
+            ) : (
+              <span className="loaners-agreement-badge--none">&mdash;</span>
             )}
-          </div>
-        );
-      case 'active':
-        return <ActiveLoanersTab onRowClick={handleRowClick} />;
-      case 'needs':
-        return <ScopeNeedsTab />;
-      case 'requests':
-        return <RequestsTab onRequestUpdated={loadStats} />;
-      default:
-        return null;
-    }
+          </td>
+
+          {/* Action */}
+          <td onClick={e => e.stopPropagation()}>
+            {isAvailable && (
+              <button
+                className="loaners-action-btn loaners-action-btn--checkout"
+                onClick={e => handleActionClick(e, item, 'checkout')}
+              >
+                Check Out
+              </button>
+            )}
+            {isOut && (
+              <button
+                className="loaners-action-btn loaners-action-btn--checkin"
+                onClick={e => handleActionClick(e, item, 'checkin')}
+              >
+                Check In
+              </button>
+            )}
+            {isRepair && (
+              <span className="loaners-repair-label">In repair</span>
+            )}
+          </td>
+        </tr>
+
+        {/* Inline expand row */}
+        {isExpanded && expandedRow.mode === 'checkout' && (
+          <InlineExpandRow colSpan={COL_COUNT} onCancel={() => setExpandedRow(null)}>
+            <div className="loaners-expand-fields">
+              <div className="loaners-expand-field">
+                <label>Department</label>
+                <select
+                  value={expandForm.departmentKey}
+                  onChange={e => setExpandForm(f => ({ ...f, departmentKey: Number(e.target.value) }))}
+                >
+                  <option value={0}>Select...</option>
+                </select>
+              </div>
+              <div className="loaners-expand-field">
+                <label>Delivery Method</label>
+                <select
+                  value={expandForm.deliveryMethodKey}
+                  onChange={e => setExpandForm(f => ({ ...f, deliveryMethodKey: Number(e.target.value) }))}
+                >
+                  <option value={0}>Select...</option>
+                </select>
+              </div>
+              <div className="loaners-expand-field">
+                <label>Sales Rep</label>
+                <select
+                  value={expandForm.salesRepKey}
+                  onChange={e => setExpandForm(f => ({ ...f, salesRepKey: Number(e.target.value) }))}
+                >
+                  <option value={0}>Select...</option>
+                </select>
+              </div>
+              <div className="loaners-expand-field">
+                <label>PO #</label>
+                <input
+                  type="text"
+                  value={expandForm.purchaseOrder}
+                  onChange={e => setExpandForm(f => ({ ...f, purchaseOrder: e.target.value }))}
+                  placeholder="PO#"
+                />
+              </div>
+              <div className="loaners-expand-field">
+                <label>On-Site</label>
+                <input
+                  type="checkbox"
+                  checked={expandForm.onSiteLoaner}
+                  onChange={e => setExpandForm(f => ({ ...f, onSiteLoaner: e.target.checked }))}
+                />
+              </div>
+              <button
+                className="loaners-expand-save"
+                onClick={handleExpandSave}
+                disabled={expandSaving}
+              >
+                {expandSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </InlineExpandRow>
+        )}
+
+        {isExpanded && expandedRow.mode === 'checkin' && (
+          <InlineExpandRow colSpan={COL_COUNT} onCancel={() => setExpandedRow(null)}>
+            <div className="loaners-expand-fields">
+              <div className="loaners-expand-field">
+                <label>Rack #</label>
+                <input
+                  type="text"
+                  value={expandForm.rackPosition}
+                  onChange={e => setExpandForm(f => ({ ...f, rackPosition: e.target.value }))}
+                  placeholder="Rack position"
+                />
+              </div>
+              <div className="loaners-expand-field">
+                <label>Tracking #</label>
+                <input
+                  type="text"
+                  value={expandForm.trackingNumber}
+                  onChange={e => setExpandForm(f => ({ ...f, trackingNumber: e.target.value }))}
+                  placeholder="Tracking number"
+                />
+              </div>
+              <button
+                className="loaners-expand-save"
+                onClick={handleExpandSave}
+                disabled={expandSaving}
+              >
+                {expandSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          </InlineExpandRow>
+        )}
+      </tbody>
+    );
   };
 
   return (
-    <div className="lp-page">
-      {statStrip}
-      <TabBar tabs={PAGE_TABS} activeKey={activeTab} onChange={tab => { setActiveTab(tab); setSelectedKey(null); setDetail(null); }} />
-      <div className="lp-tab-content">
-        {renderTab()}
+    <div className="loaners-page">
+      {/* Stat Strip */}
+      <StatStrip
+        chips={chips}
+        loading={statsLoading}
+        activeChip={statusFilter === 'all' ? undefined : statusFilter}
+        onChipClick={id => handleChipClick(id)}
+      />
+
+      {/* Controls Row */}
+      <div className="loaners-controls">
+        <Input
+          prefix={<SearchOutlined style={{ color: 'var(--muted)', fontSize: 12 }} />}
+          placeholder="Search serial, client, scope type..."
+          aria-label="Search loaners"
+          value={search}
+          onChange={e => { setSearch(e.target.value); setPage(1); }}
+          allowClear
+          className="loaners-controls__search"
+        />
+        <div className="loaners-separator" />
+        <div className="loaners-controls__count">
+          <strong>{totalCount}</strong> loaners
+        </div>
       </div>
+
+      {/* Table */}
+      <div className="loaners-table-wrap">
+        <table className="loaners-table">
+          <thead>
+            <tr>
+              {COLS.map(col => (
+                <th key={col.key} style={{ width: col.width }}>{col.label}</th>
+              ))}
+            </tr>
+          </thead>
+          {loading ? (
+            <tbody>
+              <tr><td colSpan={COL_COUNT} className="loaners-loading-cell"><Spin size="small" /></td></tr>
+            </tbody>
+          ) : items.length === 0 ? (
+            <tbody>
+              <tr><td colSpan={COL_COUNT} className="loaners-empty-cell">No loaners match your filters</td></tr>
+            </tbody>
+          ) : (
+            items.map((item, idx) => renderRow(item, idx))
+          )}
+        </table>
+      </div>
+
+      {/* Footer */}
+      {totalPages > 1 && (
+        <div className="loaners-footer">
+          <div style={{ fontSize: 11, color: 'var(--muted)' }}>
+            Showing <strong style={{ color: 'var(--text)' }}>{items.length}</strong> of <strong style={{ color: 'var(--text)' }}>{totalCount}</strong>
+          </div>
+          <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+            <PgBtn disabled={page <= 1} onClick={() => setPage(p => p - 1)}>{'\u2039'}</PgBtn>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+              const p = start + i;
+              return p <= totalPages ? <PgBtn key={p} active={p === page} onClick={() => setPage(p)}>{p}</PgBtn> : null;
+            })}
+            <PgBtn disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>{'\u203A'}</PgBtn>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Drawer */}
+      <LoanerDrawer
+        scopeKey={drawerScopeKey}
+        open={drawerOpen}
+        onClose={handleCloseDrawer}
+      />
     </div>
   );
 };
 
-
+/* ── Pagination button ─────────────────────────────────────────── */
 const PgBtn = ({ children, active, disabled, onClick }: { children: React.ReactNode; active?: boolean; disabled?: boolean; onClick: () => void }) => (
   <button
     disabled={disabled}
     onClick={onClick}
+    className="loaners-action-btn"
     style={{
-      height: 36, minWidth: 36, padding: '0 6px',
-      border: '1px solid var(--border-dk)', borderRadius: 4, fontSize: 11, fontFamily: 'inherit', cursor: disabled ? 'default' : 'pointer',
+      height: 28, minWidth: 28, padding: '0 6px',
+      border: '1px solid var(--border-dk)', borderRadius: 4,
+      fontSize: 11, fontFamily: 'inherit',
+      cursor: disabled ? 'default' : 'pointer',
       background: active ? 'var(--navy)' : 'var(--card)',
       color: active ? 'var(--card)' : 'var(--muted)',
       fontWeight: active ? 600 : 400,
