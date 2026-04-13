@@ -347,7 +347,13 @@ public class DashboardController(IConfiguration config) : ControllerBase
                    ISNULL(d.sDepartmentName,'') AS sDepartmentName,
                    ISNULL(tt.sTaskType,'') AS sTaskType,
                    ISNULL(tp.sTaskPriority,'Normal') AS sTaskPriority,
-                   ISNULL(ts.TaskStatus,'Not Started') AS TaskStatus
+                   ISNULL(ts.TaskStatus,'Not Started') AS TaskStatus,
+                   ISNULL(t.lDepartmentKey, 0) AS lDepartmentKey,
+                   ISNULL(d.lSalesRepKey, 0) AS lSalesRepKey,
+                   CASE WHEN EXISTS (
+                       SELECT 1 FROM tblTaskLoaners tl WHERE tl.lTaskKey = t.lTaskKey
+                   ) THEN 1 ELSE 0 END AS HasLoanerRequest,
+                   ISNULL((SELECT TOP 1 tl.lScopeTypeKey FROM tblTaskLoaners tl WHERE tl.lTaskKey = t.lTaskKey), 0) AS LoanerScopeTypeKey
             FROM tblTasks t
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = t.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
@@ -388,7 +394,11 @@ public class DashboardController(IConfiguration config) : ControllerBase
                 Priority: dataReader["sTaskPriority"]?.ToString() ?? "Normal",
                 Status: dataReader["TaskStatus"]?.ToString() ?? "Not Started",
                 Date: dt?.ToString("MM/dd/yyyy") ?? "",
-                FromPortal: Convert.ToBoolean(dataReader["bFromPortal"])
+                FromPortal: Convert.ToBoolean(dataReader["bFromPortal"]),
+                HasLoanerRequest: Convert.ToBoolean(dataReader["HasLoanerRequest"]),
+                LoanerScopeTypeKey: dataReader["LoanerScopeTypeKey"] == DBNull.Value || Convert.ToInt32(dataReader["LoanerScopeTypeKey"]) == 0 ? null : Convert.ToInt32(dataReader["LoanerScopeTypeKey"]),
+                DepartmentKey: Convert.ToInt32(dataReader["lDepartmentKey"]),
+                SalesRepKey: Convert.ToInt32(dataReader["lSalesRepKey"])
             ));
         }
 

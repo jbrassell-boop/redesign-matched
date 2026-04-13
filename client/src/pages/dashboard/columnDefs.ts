@@ -1,7 +1,7 @@
 import type { ColumnsType } from 'antd/es/table';
 import { createElement } from 'react';
-import { StatusBadge } from '../../components/shared';
-import type { DashboardView } from './types';
+import { StatusBadge, DevNotice } from '../../components/shared';
+import type { DashboardView, DashboardTask } from './types';
 
 const woLink = (onRowClick: (key: number) => void) => ({
   title: 'WO#',
@@ -88,13 +88,46 @@ const emailsColumns = (_onRowClick: (key: number) => void): ColumnsType<any> => 
 ];
 
 // ── Tasks ──
-const tasksColumns = (_onRowClick: (key: number) => void): ColumnsType<any> => [
+const tasksColumns = (_onRowClick: (key: number) => void, onFulfillLoaner?: (task: DashboardTask) => void): ColumnsType<any> => [
   { title: 'PRIORITY', dataIndex: 'priority', key: 'priority', width: 90, render: statusRender },
   { title: 'TASK', dataIndex: 'title', key: 'title' },
   { title: 'CLIENT', dataIndex: 'client', key: 'client' },
   { title: 'TYPE', dataIndex: 'taskType', key: 'taskType', width: 120 },
   { title: 'DATE', dataIndex: 'date', key: 'date', width: 100 },
   { title: 'STATUS', dataIndex: 'status', key: 'status', width: 130, render: statusRender },
+  {
+    title: '',
+    key: 'actions',
+    width: 140,
+    render: (_: unknown, record: DashboardTask) => {
+      if (!record.hasLoanerRequest) return null;
+      return createElement(DevNotice, {
+        title: 'Fulfill Loaner',
+        requirements: [
+          'tblTasks + tblTaskLoaners must be migrated to Azure SQL',
+          'GET /api/loaners/available?scopeTypeKey={key}',
+          'POST /api/loaners/book-out',
+        ],
+      },
+        createElement('button', {
+          style: {
+            background: 'var(--primary)',
+            color: 'var(--card)',
+            border: 'none',
+            borderRadius: 4,
+            padding: '4px 10px',
+            fontSize: 11,
+            fontWeight: 600,
+            cursor: 'pointer',
+          },
+          onClick: (e: React.MouseEvent) => {
+            e.stopPropagation();
+            onFulfillLoaner?.(record);
+          },
+        }, 'Fulfill Loaner')
+      );
+    },
+  },
 ];
 
 // ── Tech Bench ──
@@ -107,7 +140,7 @@ const techBenchColumns = (onRowClick: (key: number) => void): ColumnsType<any> =
   { title: 'TAT', dataIndex: 'daysIn', key: 'daysIn', width: 60, align: 'center', render: tatRender },
 ];
 
-const VIEW_COLUMNS: Record<DashboardView, (onRowClick: (key: number) => void) => ColumnsType<any>> = {
+const VIEW_COLUMNS: Record<DashboardView, (onRowClick: (key: number) => void, onFulfillLoaner?: (task: DashboardTask) => void) => ColumnsType<any>> = {
   briefing: () => [],
   repairs: repairsColumns,
   shipping: shippingColumns,
@@ -118,8 +151,8 @@ const VIEW_COLUMNS: Record<DashboardView, (onRowClick: (key: number) => void) =>
   techbench: techBenchColumns,
 };
 
-export const getColumnsForView = (view: DashboardView, onRowClick: (key: number) => void): ColumnsType<any> =>
-  VIEW_COLUMNS[view](onRowClick);
+export const getColumnsForView = (view: DashboardView, onRowClick: (key: number) => void, onFulfillLoaner?: (task: DashboardTask) => void): ColumnsType<any> =>
+  VIEW_COLUMNS[view](onRowClick, onFulfillLoaner);
 
 // Row key extractors per view
 export const getRowKey = (view: DashboardView): string => {

@@ -13,7 +13,8 @@ import {
   getDashboardInvoices, getDashboardFlags, getDashboardEmails,
   getDashboardTasks, getDashboardTechBench,
 } from '../../api/dashboard';
-import type { DashboardStats, DashboardToolbarState, DashboardRepair } from './types';
+import { FulfillLoanerModal } from '../loaners/FulfillLoanerModal';
+import type { DashboardStats, DashboardToolbarState, DashboardRepair, DashboardTask } from './types';
 
 const DEFAULT_STATE: DashboardToolbarState = {
   view: 'repairs',
@@ -39,6 +40,17 @@ export const DashboardPage = () => {
   // Quick-edit modal
   const [quickEditRecord, setQuickEditRecord] = useState<DashboardRepair | null>(null);
   const [quickEditOpen, setQuickEditOpen] = useState(false);
+
+  // Fulfill-loaner modal
+  const [fulfillModal, setFulfillModal] = useState<{
+    open: boolean;
+    taskKey: number;
+    departmentKey: number;
+    salesRepKey: number;
+    scopeTypeKey?: number;
+    clientName?: string;
+    deptName?: string;
+  } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -153,6 +165,18 @@ export const DashboardPage = () => {
     );
   };
 
+  const handleFulfillLoaner = (task: DashboardTask) => {
+    setFulfillModal({
+      open: true,
+      taskKey: task.taskKey,
+      departmentKey: task.departmentKey,
+      salesRepKey: task.salesRepKey,
+      scopeTypeKey: task.loanerScopeTypeKey,
+      clientName: task.client,
+      deptName: task.dept,
+    });
+  };
+
   // CSV export for any view
   const handleExport = () => {
     if (data.length === 0) { message.info('No data to export'); return; }
@@ -246,6 +270,7 @@ export const DashboardPage = () => {
             onRowClick={handleRowClick}
             selectedKeys={selectedKeys}
             onSelectionChange={setSelectedKeys}
+            onFulfillLoaner={handleFulfillLoaner}
           />
         )}
       </div>
@@ -256,6 +281,19 @@ export const DashboardPage = () => {
         onClose={() => { setQuickEditOpen(false); setQuickEditRecord(null); }}
         onSaved={handleQuickEditSaved}
       />
+
+      {fulfillModal && (
+        <FulfillLoanerModal
+          open={fulfillModal.open}
+          onClose={() => { setFulfillModal(null); }}
+          taskKey={fulfillModal.taskKey}
+          departmentKey={fulfillModal.departmentKey}
+          salesRepKey={fulfillModal.salesRepKey}
+          scopeTypeKey={fulfillModal.scopeTypeKey}
+          clientName={fulfillModal.clientName}
+          deptName={fulfillModal.deptName}
+        />
+      )}
     </section>
   );
 };

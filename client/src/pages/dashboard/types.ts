@@ -76,6 +76,10 @@ export interface DashboardTask {
   status: string;
   date: string;
   fromPortal: boolean;
+  hasLoanerRequest: boolean;
+  loanerScopeTypeKey?: number;
+  departmentKey: number;
+  salesRepKey: number;
 }
 
 export interface DashboardTaskStats {

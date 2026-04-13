@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Table, message, Modal } from 'antd';
-import type { DashboardView } from './types';
+import type { DashboardView, DashboardTask } from './types';
 import { getColumnsForView, getRowKey } from './columnDefs';
 import { ContextMenu } from '../../components/common/ContextMenu';
 import type { ContextMenuItem } from '../../components/common/ContextMenu';
@@ -18,6 +18,7 @@ interface UnifiedTableProps {
   onRowClick: (repairKey: number) => void;
   selectedKeys: React.Key[];
   onSelectionChange: (keys: React.Key[]) => void;
+  onFulfillLoaner?: (task: DashboardTask) => void;
 }
 
 export const UnifiedTable = ({
@@ -31,8 +32,9 @@ export const UnifiedTable = ({
   onRowClick,
   selectedKeys,
   onSelectionChange,
+  onFulfillLoaner,
 }: UnifiedTableProps) => {
-  const columns = getColumnsForView(view, onRowClick);
+  const columns = getColumnsForView(view, onRowClick, onFulfillLoaner);
   const rowKey = getRowKey(view);
 
   const SCROLL_X: Record<string, number> = {

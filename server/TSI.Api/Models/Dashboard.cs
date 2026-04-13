@@ -47,7 +47,11 @@ public record DashboardTask(
     string Priority,
     string Status,
     string Date,
-    bool FromPortal
+    bool FromPortal,
+    bool HasLoanerRequest,
+    int? LoanerScopeTypeKey,
+    int DepartmentKey,
+    int SalesRepKey
 );
 
 public record DashboardTaskStats(
