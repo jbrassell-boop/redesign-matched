@@ -350,7 +350,6 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                     onAddItem={handleAddItem}
                     selectedCategoryName={selectedCatName}
                     onBack={() => {
-                      setSelectedCatKey(null);
                       setSelectedCatName(null);
                       setSizes([]);
                     }}
