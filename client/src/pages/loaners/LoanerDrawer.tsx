@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Spin, message } from 'antd';
 import { getLoanerDetail, getLoanerHistory } from '../../api/loaners';
 import type { LoanerDetail, LoanerHistoryItem } from './types';
-import { TabBar, Field, FormGrid } from '../../components/shared';
+import { TabBar, Field, FormGrid, DevNotice } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import './LoanerDrawer.css';
 
@@ -125,25 +125,55 @@ export const LoanerDrawer = ({ scopeKey, open, onClose }: LoanerDrawerProps) => 
     );
   };
 
-  const renderPlaceholder = (msg: string, buttons?: { label: string }[]) => (
-    <div className="loaner-drawer__placeholder">
-      <div className="loaner-drawer__placeholder-icon">&#128203;</div>
-      <div className="loaner-drawer__placeholder-text">{msg}</div>
-      {buttons?.map(b => (
-        <button key={b.label} className="loaner-drawer__placeholder-btn" disabled>
-          {b.label}
-        </button>
-      ))}
-    </div>
-  );
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'details': return renderDetails();
       case 'history': return renderHistory();
-      case 'evaluation': return renderPlaceholder('Evaluation tracking coming soon');
-      case 'agreement': return renderPlaceholder('Agreement tracking coming soon', [{ label: 'Generate Agreement' }, { label: 'Email Agreement' }]);
-      case 'shipping': return renderPlaceholder('Shipping label data coming soon');
+      case 'evaluation': return (
+        <div className="loaner-drawer__placeholder">
+          <div className="loaner-drawer__placeholder-icon">&#128203;</div>
+          <div className="loaner-drawer__placeholder-text">Evaluation checklist for outbound and inbound scope inspections.</div>
+          <DevNotice
+            title="Evaluation Tracking"
+            requirement="Create tblLoanerEval table to store pass/fail checklist results per scope per direction (outbound/inbound)."
+            sql={'CREATE TABLE tblLoanerEval (\n  lLoanerEvalKey int IDENTITY PRIMARY KEY,\n  lLoanerTranKey int NOT NULL,\n  sDirection nvarchar(10) NOT NULL, -- \'out\' or \'in\'\n  sCheckKey nvarchar(50),\n  sResult nvarchar(10), -- \'pass\' or \'fail\'\n  sNotes nvarchar(500),\n  dtSubmitted datetime DEFAULT GETDATE(),\n  lSubmittedBy int\n)'}
+          >
+            <button className="loaner-drawer__placeholder-btn">Enable Evaluation</button>
+          </DevNotice>
+        </div>
+      );
+      case 'agreement': return (
+        <div className="loaner-drawer__placeholder">
+          <div className="loaner-drawer__placeholder-icon">&#128203;</div>
+          <div className="loaner-drawer__placeholder-text">Loaner agreement generation, email, and tracking.</div>
+          <DevNotice
+            title="Agreement Tracking"
+            requirement="Add agreement tracking columns to tblLoanerTran: dtAgreementSent, dtAgreementReceived, sAgreementEmail."
+            sql={'ALTER TABLE tblLoanerTran ADD\n  dtAgreementSent datetime NULL,\n  dtAgreementReceived datetime NULL,\n  sAgreementEmail nvarchar(200) NULL'}
+          >
+            <button className="loaner-drawer__placeholder-btn">Generate Agreement</button>
+          </DevNotice>
+          <DevNotice
+            title="Email Agreement"
+            requirement="Email integration endpoint to send agreement PDF to department contact."
+          >
+            <button className="loaner-drawer__placeholder-btn">Email Agreement</button>
+          </DevNotice>
+        </div>
+      );
+      case 'shipping': return (
+        <div className="loaner-drawer__placeholder">
+          <div className="loaner-drawer__placeholder-icon">&#128203;</div>
+          <div className="loaner-drawer__placeholder-text">UPS shipping label generation from tblShippingUPS_Loaners.</div>
+          <DevNotice
+            title="Shipping Labels"
+            requirement="Migrate tblShippingUPS_Loaners to Azure SQL and create GET /api/loaners/{scopeKey}/shipping endpoint."
+            sql="SELECT * FROM tblShippingUPS_Loaners WHERE lLoanerTranKey = @tranKey"
+          >
+            <button className="loaner-drawer__placeholder-btn">Generate Label</button>
+          </DevNotice>
+        </div>
+      );
       default: return null;
     }
   };

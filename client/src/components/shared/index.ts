@@ -20,3 +20,4 @@ export { CategoryPicker } from './CategoryPicker';
 export type { CategoryItem, SizeItem } from './CategoryPicker';
 export { EvalChecklist } from './EvalChecklist';
 export type { EvalItem } from './EvalChecklist';
+export { DevNotice } from './DevNotice';

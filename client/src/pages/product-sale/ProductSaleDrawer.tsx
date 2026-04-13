@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Drawer, Spin, message, Tooltip } from 'antd';
+import { Drawer, Spin, message } from 'antd';
 import {
   StatusBadge,
   TabBar,
@@ -7,6 +7,7 @@ import {
   FormGrid,
   PipelineBar,
   CategoryPicker,
+  DevNotice,
 } from '../../components/shared';
 import type { TabDef, PipelineStep, CategoryItem, SizeItem } from '../../components/shared';
 import type { ProductSaleDetail, ProductSaleLineItem } from './types';
@@ -352,24 +353,24 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                     {selectedItems.length > 0 && (
                       <div className="ps-fulfill-bar">
                         <span className="ps-fulfill-bar__count">{selectedItems.length} item{selectedItems.length > 1 ? 's' : ''} selected</span>
-                        <Tooltip title="Requires DB migration: ALTER TABLE tblProductSalesInventory ADD sItemStatus nvarchar(20) DEFAULT 'Pending'">
-                          <button
-                            className="ps-fulfill-btn ps-fulfill-btn--ship"
-                            type="button"
-                            onClick={() => message.warning('Ship Items: Requires sItemStatus column on tblProductSalesInventory. See Steve for DB migration.')}
-                          >
+                        <DevNotice
+                          title="Mark Shipped"
+                          requirement="Add item-level status tracking to tblProductSalesInventory so individual line items can be marked as Shipped."
+                          sql="ALTER TABLE tblProductSalesInventory ADD sItemStatus nvarchar(20) NOT NULL DEFAULT 'Pending'"
+                        >
+                          <button className="ps-fulfill-btn ps-fulfill-btn--ship" type="button">
                             Mark Shipped
                           </button>
-                        </Tooltip>
-                        <Tooltip title="Requires DB migration: ALTER TABLE tblProductSalesInventory ADD sItemStatus nvarchar(20) DEFAULT 'Pending'">
-                          <button
-                            className="ps-fulfill-btn ps-fulfill-btn--backorder"
-                            type="button"
-                            onClick={() => message.warning('Backorder: Requires sItemStatus column on tblProductSalesInventory. See Steve for DB migration.')}
-                          >
+                        </DevNotice>
+                        <DevNotice
+                          title="Mark Backordered"
+                          requirement="Add item-level status tracking to tblProductSalesInventory so individual line items can be marked as Backordered."
+                          sql="ALTER TABLE tblProductSalesInventory ADD sItemStatus nvarchar(20) NOT NULL DEFAULT 'Pending'"
+                        >
+                          <button className="ps-fulfill-btn ps-fulfill-btn--backorder" type="button">
                             Mark Backordered
                           </button>
-                        </Tooltip>
+                        </DevNotice>
                       </div>
                     )}
 
@@ -420,25 +421,26 @@ export const ProductSaleDrawer = ({ productSaleKey, open, onClose, onUpdated }: 
                   >
                     Print Quote
                   </button>
-                  {canAdvance(detail.status) && (
-                    <Tooltip title={
-                      detail.status.toLowerCase() === 'approved'
-                        ? 'Invoice: Requires tblProductSaleInvoiceDetail snapshot creation. See Steve for backend implementation.'
-                        : undefined
-                    }>
-                      <button
-                        className="ps-advance-btn"
-                        onClick={detail.status.toLowerCase() === 'approved'
-                          ? () => message.warning('Create Invoice: Requires tblProductSaleInvoiceDetail snapshot + invoice number generation. See Steve for backend work.')
-                          : handleAdvance
-                        }
-                        disabled={advancing}
-                        type="button"
-                      >
-                        {advancing ? 'Processing...' : getAdvanceLabel(detail.status)}
+                  {canAdvance(detail.status) && detail.status.toLowerCase() === 'approved' ? (
+                    <DevNotice
+                      title="Create Invoice"
+                      requirement="Invoice creation requires writing snapshot records to tblProductSaleInvoiceDetail and generating a sequential invoice number."
+                      sql="INSERT INTO tblProductSaleInvoiceDetail (...) SELECT ... FROM tblProductSalesInventory WHERE lProductSaleKey = @key"
+                    >
+                      <button className="ps-advance-btn" type="button">
+                        {getAdvanceLabel(detail.status)}
                       </button>
-                    </Tooltip>
-                  )}
+                    </DevNotice>
+                  ) : canAdvance(detail.status) ? (
+                    <button
+                      className="ps-advance-btn"
+                      onClick={handleAdvance}
+                      disabled={advancing}
+                      type="button"
+                    >
+                      {advancing ? 'Processing...' : getAdvanceLabel(detail.status)}
+                    </button>
+                  ) : null}
                 </div>
               </div>
             )}

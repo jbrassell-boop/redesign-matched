@@ -1,0 +1,96 @@
+/* ── DevNotice: wraps any element to show a dev-requirement toast on click ── */
+
+.dev-notice-wrapper {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+/* Toast container — fixed bottom-right */
+.dev-notice-toast-container {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 420px;
+}
+
+/* Individual toast */
+.dev-notice-toast {
+  background: var(--card);
+  border: 1px solid var(--amber);
+  border-left: 4px solid var(--amber);
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  animation: dev-notice-slide-in 0.25s ease;
+  overflow: hidden;
+}
+
+.dev-notice-toast--exit {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: all 0.3s ease;
+}
+
+.dev-notice-toast__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(var(--amber-rgb), 0.08);
+  font-size: 12px;
+  color: var(--navy);
+}
+
+.dev-notice-toast__icon {
+  color: var(--amber);
+  font-size: 14px;
+}
+
+.dev-notice-toast__close {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+}
+.dev-notice-toast__close:hover {
+  color: var(--danger);
+}
+
+.dev-notice-toast__body {
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.dev-notice-toast__sql {
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--neutral-50);
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  font-family: monospace;
+  color: var(--navy);
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+@keyframes dev-notice-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
