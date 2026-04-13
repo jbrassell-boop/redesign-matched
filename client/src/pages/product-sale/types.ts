@@ -1,71 +1,125 @@
+/* ── Product Sales Types ─────────────────────────────────────────────────── */
+
 export interface ProductSaleListItem {
   productSaleKey: number;
   invoiceNumber: string;
   clientName: string;
   departmentName: string;
+  status: string;
+  source: string;
   salesRep: string;
   orderDate: string | null;
-  status: string;
-  itemCount: number;
-  purchaseOrder: string;
   total: number;
-  location: string;
-}
-
-export interface ProductSaleDetail {
-  productSaleKey: number;
-  invoiceNumber: string;
-  clientName: string;
-  departmentName: string;
-  salesRep: string;
-  orderDate: string | null;
-  quoteDate: string | null;
-  invoiceDate: string | null;
-  canceledDate: string | null;
-  status: string;
-  purchaseOrder: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  billName: string;
-  billAddress: string;
-  billCity: string;
-  billState: string;
-  billZip: string;
-  shipName: string;
-  shipAddress: string;
-  shipCity: string;
-  shipState: string;
-  shipZip: string;
-  trackingNumber: string | null;
-  subTotal: number;
-  shippingAmount: number;
-  taxAmount: number;
-  totalAmount: number;
-  notes: string | null;
-  lineItems: ProductSaleLineItem[];
-}
-
-export interface ProductSaleLineItem {
-  invoiceKey: number;
-  itemDescription: string;
-  sizeDescription: string;
-  quantity: number;
-  unitPrice: number;
-  extendedPrice: number;
+  itemCount: number;
+  backorderedCount: number;
 }
 
 export interface ProductSaleStats {
-  totalOrders: number;
-  openCount: number;
-  invoicedCount: number;
-  draftCount: number;
-  quotedCount: number;
-  cancelledCount: number;
-  totalRevenue: number;
+  total: number;
+  draft: number;
+  quoted: number;
+  approved: number;
+  invoiced: number;
+  cancelled: number;
+  revenue: number;
 }
 
 export interface ProductSaleListResponse {
   items: ProductSaleListItem[];
   totalCount: number;
+}
+
+/* ── Detail ──────────────────────────────────────────────────────────────── */
+
+export interface ProductSaleDetail {
+  productSaleKey: number;
+  invoiceNumber: string;
+  status: string;
+  clientKey: number | null;
+  clientName: string;
+  departmentKey: number | null;
+  departmentName: string;
+  salesRepKey: number | null;
+  salesRep: string;
+  orderDate: string | null;
+  quoteDate: string | null;
+  expirationDate: string | null;
+  approvalDate: string | null;
+  deniedDate: string | null;
+  canceledDate: string | null;
+  invoiceDate: string | null;
+  purchaseOrder: string;
+  shipTrackingNumber: string | null;
+  shippingAmount: number;
+  taxAmount: number;
+  totalAmount: number;
+  quoteAmount: number;
+  pricingListKey: number | null;
+  pricingListName: string | null;
+  note: string | null;
+  // contact
+  contactKey: number | null;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  // ship address
+  shipName1: string | null;
+  shipName2: string | null;
+  shipAddressLine1: string | null;
+  shipAddressLine2: string | null;
+  shipCity: string | null;
+  shipState: string | null;
+  shipZipCode: string | null;
+  shipCountry: string | null;
+  // bill address
+  billName1: string | null;
+  billName2: string | null;
+  billAddressLine1: string | null;
+  billAddressLine2: string | null;
+  billCity: string | null;
+  billState: string | null;
+  billZipCode: string | null;
+  billCountry: string | null;
+  billType: number | null;
+  billEmail: string | null;
+  billEmailName: string | null;
+  // denial
+  deniedBy: string | null;
+  denialReason: string | null;
+  // estimated ship
+  estimatedShipDateFrom: string | null;
+  estimatedShipDateTo: string | null;
+  // line items
+  lineItems: ProductSaleLineItem[];
+}
+
+/* ── Line Items ──────────────────────────────────────────────────────────── */
+
+export interface ProductSaleLineItem {
+  productSaleInventoryKey: number;
+  inventorySizeKey: number | null;
+  itemDescription: string;
+  sizeDescription: string;
+  sizeDescription2: string | null;
+  sizeDescription3: string | null;
+  quantity: number;
+  unitCost: number;
+  totalCost: number;
+  lotNumber: string | null;
+}
+
+/* ── Inventory Picker ────────────────────────────────────────────────────── */
+
+export interface InventoryCategory {
+  inventoryKey: number;
+  itemDescription: string;
+}
+
+export interface InventorySize {
+  inventorySizeKey: number;
+  sizeDescription: string;
+  sizeDescription2: string | null;
+  sizeDescription3: string | null;
+  status: string | null;
+  unitCost: number;
 }
