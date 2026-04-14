@@ -506,7 +506,35 @@ FROM S8_WOsWorked w
 ORDER BY DefectPct DESC, w.sTechName;
 
 -- ============================================================
--- SECTIONS 9-16: Added in Plans B and C
+-- SECTION 9: Tech Inventory Usage
+-- In-house WOs completed in period (dtDateOut).
+-- Cost via vwRepairInventoryCosts joined to tech via tblRepairItemTran.
 -- ============================================================
 
-SELECT 'Sections 9-16 coming in Plans B and C' AS Note;
+SELECT
+    t.sTechName,
+    vic.sItemDescription                                                       AS PartCategory,
+    CAST(SUM(vic.InventorySizeRepairAmount) AS decimal(10,2))                  AS PartCost
+FROM vwRepairInventoryCosts vic
+    JOIN tblRepairItemTran           rit ON vic.lRepairItemTranKey = rit.lRepairItemTranKey
+    JOIN tblRepair                   r   ON vic.lRepairKey        = r.lRepairKey
+    JOIN tblDepartment               d   ON r.lDepartmentKey      = d.lDepartmentKey
+    JOIN tblClient                   c   ON d.lClientKey          = c.lClientKey
+    JOIN tblTechnicians              t   ON rit.lTechnicianKey    = t.lTechnicianKey
+WHERE CONVERT(date, r.dtDateOut) >= @StartDate
+    AND   CONVERT(date, r.dtDateOut) <= @EndDate
+    AND   ISDATE(r.dtDateOut) = 1
+    AND   r.dtDateOut IS NOT NULL
+    AND   ISNULL(r.lVendorKey, 0) = 0
+    AND   ISNULL(c.bSkipTracking, 0) = 0
+    AND   t.bIsActive = 1
+    AND   t.lJobTypeKey = 2
+    AND   t.lTechnicianKey <> 96
+GROUP BY t.sTechName, vic.sItemDescription
+ORDER BY t.sTechName, SUM(vic.InventorySizeRepairAmount) DESC;
+
+-- ============================================================
+-- SECTIONS 10-16: Added in Plans B and C
+-- ============================================================
+
+SELECT 'Sections 10-16 coming in Plans B and C' AS Note;
