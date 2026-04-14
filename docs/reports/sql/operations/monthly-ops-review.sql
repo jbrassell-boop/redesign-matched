@@ -396,7 +396,58 @@ GROUP BY b.sTechName, b.InstrCategory, b.MaxLevelKey, rl.sRepairLevel, rl.lRepai
 ORDER BY b.sTechName, b.InstrCategory, rl.lRepairLevelKey;
 
 -- ============================================================
--- SECTIONS 7-16: Added in Plans B and C
+-- SECTION 7: Tech D&I Finds
+-- WOs received in period (dtDateIn) where tech performed a D&I item.
+-- AvgFindsPerWO = avg non-D&I repair items on those same WOs (thoroughness).
 -- ============================================================
 
-SELECT 'Sections 7-16 coming in Plans B and C' AS Note;
+;WITH S7_DIWOs AS (
+    SELECT DISTINCT
+        t.sTechName,
+        r.lRepairKey,
+        CASE
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 1 THEN 'Flex-Large'
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 0 THEN 'Flex-Small'
+            WHEN st.sRigidOrFlexible = 'R' THEN 'Rigid'
+            WHEN st.sRigidOrFlexible = 'C' THEN 'Camera'
+            WHEN st.sRigidOrFlexible = 'I' THEN 'Instrument'
+            ELSE 'Other'
+        END AS InstrCategory
+    FROM tblRepair r
+        JOIN tblDepartment               d   ON r.lDepartmentKey  = d.lDepartmentKey
+        JOIN tblClient                   c   ON d.lClientKey      = c.lClientKey
+        JOIN tblScope                    s   ON r.lScopeKey       = s.lScopeKey
+        JOIN tblScopeType                st  ON s.lScopeTypeKey   = st.lScopeTypeKey
+        LEFT JOIN dbo.tblScopeTypeCategories sc ON st.lScopeTypeCatKey = sc.lScopeTypeCategoryKey
+        JOIN tblRepairItemTran           rit ON r.lRepairKey      = rit.lRepairKey
+        JOIN tblTechnicians              t   ON rit.lTechnicianKey = t.lTechnicianKey
+    WHERE CONVERT(date, r.dtDateIn) >= @StartDate
+        AND   CONVERT(date, r.dtDateIn) <= @EndDate
+        AND   ISNULL(c.bSkipTracking, 0) = 0
+        AND   t.bIsActive = 1
+        AND   t.lJobTypeKey = 2
+        AND   t.lTechnicianKey <> 96
+        AND   rit.lRepairItemKey IN (29, 246, 636)
+),
+S7_NonDICount AS (
+    SELECT r.lRepairKey, COUNT(rit.lRepairItemTranKey) AS NonDIItems
+    FROM tblRepairItemTran rit
+        JOIN tblRepair r ON rit.lRepairKey = r.lRepairKey
+    WHERE rit.lRepairItemKey NOT IN (29, 246, 636)
+    GROUP BY r.lRepairKey
+)
+SELECT
+    dw.sTechName,
+    dw.InstrCategory,
+    COUNT(dw.lRepairKey)                                                       AS DIWOCount,
+    AVG(CAST(ISNULL(nd.NonDIItems, 0) AS decimal(10,2)))                      AS AvgFindsPerWO
+FROM S7_DIWOs dw
+    LEFT JOIN S7_NonDICount nd ON dw.lRepairKey = nd.lRepairKey
+GROUP BY dw.sTechName, dw.InstrCategory
+ORDER BY dw.sTechName, dw.InstrCategory;
+
+-- ============================================================
+-- SECTIONS 8-16: Added in Plans B and C
+-- ============================================================
+
+SELECT 'Sections 8-16 coming in Plans B and C' AS Note;
