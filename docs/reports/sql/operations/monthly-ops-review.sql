@@ -195,46 +195,64 @@ ORDER BY BillingType, InstrCategory;
 
 -- ============================================================
 -- SECTION 4: Contract P&L
--- Contract repairs completed in period (dtDateOut).
--- Revenue = tblInvoice.dblTranAmount (aggregated per repair — may have
---   multiple rows per WO). Cost = dblOutSourceCost only.
+-- Revenue: contract invoices posted in period (dtTranDate).
+--   Contract invoices have lRepairKey=NULL and join via lContractKey.
+--   Filter: bFinalized=1, ISNULL(lRepairKey,0)=0.
+--   Source: tblInvoice -> tblContract -> tblClient.
+-- Cost: outsource cost for contract repairs completed in period (dtDateOut).
+-- NOTE: Revenue and cost are on different date bases by design —
+--   revenue = when billed, cost = when repair shipped. This matches
+--   how Joe's monthly revenue report works.
 -- NOTE: Inventory cost will be added in Plan B once lot tables confirmed.
--- GrossMargin = Revenue - OutsourceCost (partial until Plan B adds inventory).
 -- ============================================================
 
-;WITH S4_InvoiceTotals AS (
-    SELECT lRepairKey, SUM(ISNULL(dblTranAmount, 0)) AS TotalInvoiced
-    FROM tblInvoice
-    GROUP BY lRepairKey
-),
-S4_ContractRepairs AS (
+;WITH S4_ContractRevenue AS (
+    -- Contract billing invoices: lRepairKey is NULL on contract rows;
+    -- they link to tblContract via lContractKey.
     SELECT
-        r.lRepairKey,
-        c.sClientName1,
-        ISNULL(inv.TotalInvoiced,     0) AS Revenue,
-        ISNULL(r.dblOutSourceCost,    0) AS OutsourceCost
+        con.lClientKey,
+        SUM(ISNULL(i.dblTranAmount, 0)) AS TotalRevenue
+    FROM tblInvoice i
+        JOIN tblContract con ON i.lContractKey = con.lContractKey
+    WHERE i.bFinalized = 1
+        AND   ISNULL(i.lRepairKey, 0) = 0
+        AND   CONVERT(date, i.dtTranDate) >= @StartDate
+        AND   CONVERT(date, i.dtTranDate) <= @EndDate
+    GROUP BY con.lClientKey
+),
+S4_ContractCost AS (
+    -- Outsource cost for contract repairs shipped in period.
+    SELECT
+        c.lClientKey,
+        COUNT(r.lRepairKey)                AS WOCount,
+        SUM(ISNULL(r.dblOutSourceCost, 0)) AS TotalOutsourceCost
     FROM tblRepair r
-        JOIN tblDepartment      d   ON r.lDepartmentKey = d.lDepartmentKey
-        JOIN tblClient          c   ON d.lClientKey     = c.lClientKey
-        LEFT JOIN S4_InvoiceTotals inv ON r.lRepairKey  = inv.lRepairKey
+        JOIN tblDepartment d ON r.lDepartmentKey = d.lDepartmentKey
+        JOIN tblClient     c ON d.lClientKey     = c.lClientKey
     WHERE CONVERT(date, r.dtDateOut) >= @StartDate
         AND   CONVERT(date, r.dtDateOut) <= @EndDate
         AND   ISDATE(r.dtDateOut) = 1
         AND   r.dtDateOut IS NOT NULL
         AND   ISNULL(c.bSkipTracking, 0) = 0
         AND   dbo.fn_scopeIsCoveredByContract(r.lScopeKey, r.dtDateIn) <> 0
+    GROUP BY c.lClientKey
 )
 SELECT
-    sClientName1,
-    COUNT(lRepairKey)                                                        AS WOCount,
-    SUM(Revenue)                                                             AS TotalRevenue,
-    SUM(OutsourceCost)                                                       AS TotalOutsourceCost,
-    SUM(Revenue) - SUM(OutsourceCost)                                        AS GrossMargin,
-    CASE WHEN SUM(Revenue) = 0 THEN NULL
-         ELSE ROUND((SUM(Revenue) - SUM(OutsourceCost)) / SUM(Revenue) * 100, 2)
+    cl.sClientName1,
+    ISNULL(cost.WOCount,           0)                                        AS WOCount,
+    ISNULL(rev.TotalRevenue,       0)                                        AS TotalRevenue,
+    ISNULL(cost.TotalOutsourceCost,0)                                        AS TotalOutsourceCost,
+    ISNULL(rev.TotalRevenue, 0) - ISNULL(cost.TotalOutsourceCost, 0)        AS GrossMargin,
+    CASE WHEN ISNULL(rev.TotalRevenue, 0) = 0 THEN NULL
+         ELSE ROUND(
+             (ISNULL(rev.TotalRevenue,0) - ISNULL(cost.TotalOutsourceCost,0))
+             / rev.TotalRevenue * 100, 2)
     END                                                                      AS GrossMarginPct
-FROM S4_ContractRepairs
-GROUP BY sClientName1
+FROM tblClient cl
+    LEFT JOIN S4_ContractRevenue  rev  ON cl.lClientKey = rev.lClientKey
+    LEFT JOIN S4_ContractCost     cost ON cl.lClientKey = cost.lClientKey
+WHERE ISNULL(cl.bSkipTracking, 0) = 0
+    AND (rev.lClientKey IS NOT NULL OR cost.lClientKey IS NOT NULL)
 ORDER BY TotalRevenue DESC;
 
 -- ============================================================
