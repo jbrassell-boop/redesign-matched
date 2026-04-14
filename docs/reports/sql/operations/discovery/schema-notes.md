@@ -467,3 +467,32 @@ JOIN tblTechnicians t ON rit.lTechnicianKey = t.lTechnicianKey
 4. **sWasLoanerProduced values** — not yet confirmed (Y/N or other). Use `lScopeKey_Loaner > 0` as primary fulfillment indicator, it's an FK and unambiguous.
 
 5. **Amendment cost for misquotes (key 15)** — Misquotes by ops staff: `lTechnicianKey` on the `tblRepairItemTran` rows linked to misquote amendments may be the ops user, not a field tech. Verify during Plan B implementation if the tech attribution makes sense for misquote tracking or if `tblAmendRepairComments.lUserKey` is better.
+
+---
+
+## Plan C Discoveries (Sections 13–16)
+
+### Van Service (Section 13)
+- `tblSiteServices`: `lTotalInstruments`, `lRepairCount`, `lSendToTSICount`, `lBeyondEconomicalRepair` are **NOT populated** in the current data entry workflow — all NULL in practice. Use `tblSiteServiceTrays` aggregates instead.
+- `tblSiteServiceTrays`: `lSiteServiceKey` (FK), `lInstrumentsCount`, `lRepairedCount`, `lSentToTSICount`, `lBeyondEconomicalRepairCount`, `sTrayName`, `lReplacedCount`
+- `tblSiteServiceTrayDetails`: `lSiteServiceTrayKey` (FK), `lVanServiceRepairItemKey` → `tblVanServiceRepairItems.sVanServiceRepairItem`
+- `tblVanServiceRepairItems`: simple lookup, `lVanServiceRepairItemKey`, `sVanServiceRepairItem`, `bActive`
+- Completed visit filter: `dtDateSubmitted IS NOT NULL`; period filter on `dtOnsiteDate`
+
+### Outsourced Repairs (Section 14)
+- `tblRepair.lVendorKey` → `tblSupplier.lSupplierKey` (sSupplierName1)
+- Revenue join: `LEFT JOIN tblInvoice ON lRepairKey AND bFinalized=1` — some WOs have no finalized invoice yet
+- **TSS/TSF/TSI flag**: suppliers with `sSupplierName1 LIKE '%Total Scope%'` have `dblOutSourceCost=0` — intercompany part flows, not third-party spend. Flag as `IsInternal=1` in output; do not compute meaningful margin for them.
+- Vendor summary confirmed working for March 2026: 18 vendors, top external = Clinical Engineering (23 WOs)
+
+### Inventory Ordering (Section 15)
+- Join chain: `tblSupplierPO` → `tblSupplierPOTran` → `tblSupplierSizes` → `tblInventorySize` → `tblInventory`
+- `tblSupplierPOTran.dblItemCost` = **line total** (not unit price). Unit price is `tblSupplierSizes.dblUnitCost`.
+- `tblInventorySize`: `lInventorySizeKey`, `lInventoryKey`, `sSizeDescription` — size/variant of a part
+- `tblInventory`: `lInventoryKey`, `sItemDescription` — parent part description
+- Filter: `po.bCancelled = 0`, date on `po.dtDateOfPO`
+
+### Scope Outcomes (Section 16)
+- **NR Rate**: confirmed keys 63, 197, 379, 508, 657, 259. Rate in March 2026 = 0.86% (4/467 in-house WOs). Reasonable; use `lVendorKey=0` to restrict to in-house.
+- **D&I Conversion**: DIOnly=0 in March 2026 (all D&I WOs also contain repair items). This is expected — WinScopeNet always pairs D&I with repair charges. The 100% "conversion" rate is accurate; Section 16B reports this transparently with DIOnly/DIWithRepair/Approval breakdown.
+- D&I item keys: 29, 246, 636. `dtAprRecvd IS NOT NULL` = customer approved repair estimate.

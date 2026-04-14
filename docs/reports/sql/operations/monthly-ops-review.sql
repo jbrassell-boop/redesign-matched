@@ -693,7 +693,187 @@ WHERE RankWithinCategory <= 10
 ORDER BY DamageCategory DESC, WOCount DESC, InstrCategory;
 
 -- ============================================================
--- SECTIONS 13-16: Added in Plan C
+-- SECTION 13: Van Service
 -- ============================================================
+-- Counts instruments from tblSiteServiceTrays; lTotalInstruments/lRepairCount
+-- on tblSiteServices are not populated in the current data entry workflow.
+-- Revenue = nInvoiceAmount; Cost = nTotalCostPreCap (pre-cap field reflects
+-- billable amount before any cap applied).
+;WITH S13_Trays AS (
+    SELECT
+        sst.lSiteServiceKey,
+        SUM(sst.lInstrumentsCount)            AS TrayInstruments,
+        SUM(sst.lRepairedCount)               AS TrayRepaired,
+        SUM(sst.lSentToTSICount)              AS TraySentToTSI,
+        SUM(sst.lBeyondEconomicalRepairCount) AS TrayBER
+    FROM tblSiteServiceTrays sst
+    GROUP BY sst.lSiteServiceKey
+)
+SELECT
+    COUNT(ss.lSiteServiceKey)                                           AS Visits,
+    COUNT(DISTINCT ss.lClientKey)                                       AS UniqueClients,
+    SUM(ss.lTrayCount)                                                  AS Trays,
+    SUM(ISNULL(st.TrayInstruments, 0))                                  AS Instruments,
+    SUM(ISNULL(st.TrayRepaired, 0))                                     AS Repaired,
+    SUM(ISNULL(st.TraySentToTSI, 0))                                    AS SentToTSI,
+    SUM(ISNULL(st.TrayBER, 0))                                          AS BER,
+    SUM(CAST(ss.nInvoiceAmount   AS decimal(12,2)))                     AS Revenue,
+    SUM(CAST(ss.nTotalCostPreCap AS decimal(12,2)))                     AS CostPreCap,
+    SUM(CAST(ss.nInvoiceAmount   AS decimal(12,2)))
+        - SUM(CAST(ss.nTotalCostPreCap AS decimal(12,2)))               AS Margin
+FROM tblSiteServices ss
+LEFT JOIN S13_Trays st ON ss.lSiteServiceKey = st.lSiteServiceKey
+WHERE ss.dtOnsiteDate >= @StartDate
+  AND ss.dtOnsiteDate <= @EndDate
+  AND ss.dtDateSubmitted IS NOT NULL;
 
-SELECT 'Sections 13-16 coming in Plan C' AS Note;
+-- ============================================================
+-- SECTION 14: Outsourced Repairs by Vendor
+-- ============================================================
+-- IsInternal=1 flags suppliers whose name contains 'Total Scope' — these are
+-- intercompany part flows (TSS, TSF, TSI) recorded with placeholder $0 cost;
+-- their margin figures are not meaningful as third-party outsource metrics.
+-- Revenue = finalized invoice amount tied to the repair WO.
+;WITH S14_Base AS (
+    SELECT
+        s.sSupplierName1,
+        CASE WHEN s.sSupplierName1 LIKE '%Total Scope%' THEN 1 ELSE 0 END AS IsInternal,
+        r.lRepairKey,
+        ISNULL(r.dblOutSourceCost, 0)   AS OutsourceCost,
+        ISNULL(i.dblTranAmount, 0)       AS Revenue
+    FROM tblRepair r
+    JOIN tblDepartment d ON r.lDepartmentKey = d.lDepartmentKey
+    JOIN tblClient c     ON d.lClientKey = c.lClientKey
+    JOIN tblSupplier s   ON r.lVendorKey = s.lSupplierKey
+    LEFT JOIN tblInvoice i ON r.lRepairKey = i.lRepairKey AND i.bFinalized = 1
+    WHERE ISNULL(r.lVendorKey, 0) > 0
+      AND ISDATE(r.dtDateOut) = 1
+      AND r.dtDateOut IS NOT NULL
+      AND CONVERT(date, r.dtDateOut) >= @StartDate
+      AND CONVERT(date, r.dtDateOut) <= @EndDate
+      AND ISNULL(c.bSkipTracking, 0) = 0
+)
+SELECT
+    sSupplierName1                          AS Vendor,
+    IsInternal,
+    COUNT(lRepairKey)                       AS WOCount,
+    SUM(OutsourceCost)                      AS OutsourceCost,
+    SUM(Revenue)                            AS Revenue,
+    SUM(Revenue) - SUM(OutsourceCost)       AS Margin
+FROM S14_Base
+GROUP BY sSupplierName1, IsInternal
+ORDER BY IsInternal, WOCount DESC;
+
+-- ============================================================
+-- SECTION 15: Inventory Ordering
+-- ============================================================
+-- dblItemCost on tblSupplierPOTran is the line total (not unit price);
+-- dblUnitCost on tblSupplierSizes is the unit price.
+-- Top 30 parts ordered in period by total spend.
+;WITH S15_Lines AS (
+    SELECT
+        inv.sItemDescription,
+        sz.sSizeDescription,
+        s.sSupplierName1,
+        pot.nOrderQuantity,
+        pot.nReceivedQuantity,
+        pot.dblItemCost                 AS LineCost
+    FROM tblSupplierPO po
+    JOIN tblSupplier s          ON po.lSupplierKey      = s.lSupplierKey
+    JOIN tblSupplierPOTran pot  ON po.lSupplierPOKey    = pot.lSupplierPOKey
+    JOIN tblSupplierSizes ss    ON pot.lSupplierSizesKey = ss.lSupplierSizesKey
+    JOIN tblInventorySize sz    ON ss.lInventorySizeKey  = sz.lInventorySizeKey
+    JOIN tblInventory inv       ON sz.lInventoryKey      = inv.lInventoryKey
+    WHERE po.dtDateOfPO >= @StartDate
+      AND po.dtDateOfPO < DATEADD(day, 1, CAST(@EndDate AS datetime))
+      AND po.bCancelled = 0
+)
+SELECT TOP 30
+    sItemDescription,
+    sSizeDescription,
+    SUM(nOrderQuantity)     AS TotalOrdered,
+    SUM(nReceivedQuantity)  AS TotalReceived,
+    SUM(LineCost)           AS TotalCost,
+    COUNT(*)                AS POLineCount
+FROM S15_Lines
+GROUP BY sItemDescription, sSizeDescription
+ORDER BY TotalCost DESC;
+
+-- ============================================================
+-- SECTION 16A: Not Repairable Rate by Instrument Category
+-- ============================================================
+-- NR repair item keys: 63, 197, 379, 508, 657, 259
+-- (sItemDescription LIKE '%Not Rep%')
+-- In-house repairs only (lVendorKey IS NULL / 0).
+;WITH S16A_Base AS (
+    SELECT
+        CASE
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 1 THEN 'Flex-Large'
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 0 THEN 'Flex-Small'
+            WHEN st.sRigidOrFlexible = 'R' THEN 'Rigid'
+            WHEN st.sRigidOrFlexible = 'C' THEN 'Camera'
+            WHEN st.sRigidOrFlexible = 'I' THEN 'Instrument'
+            ELSE 'Other'
+        END AS InstrCategory,
+        r.lRepairKey,
+        MAX(CASE WHEN rit.lRepairItemKey IN (63,197,379,508,657,259) THEN 1 ELSE 0 END) AS IsNR
+    FROM tblRepair r
+    JOIN tblRepairItemTran rit ON r.lRepairKey = rit.lRepairKey
+    JOIN tblScope s            ON r.lScopeKey  = s.lScopeKey
+    JOIN tblScopeType st       ON s.lScopeTypeKey = st.lScopeTypeKey
+    LEFT JOIN dbo.tblScopeTypeCategories sc ON st.lScopeTypeCatKey = sc.lScopeTypeCategoryKey
+    JOIN tblDepartment d ON r.lDepartmentKey = d.lDepartmentKey
+    JOIN tblClient c     ON d.lClientKey = c.lClientKey
+    WHERE ISDATE(r.dtDateOut) = 1
+      AND r.dtDateOut IS NOT NULL
+      AND CONVERT(date, r.dtDateOut) >= @StartDate
+      AND CONVERT(date, r.dtDateOut) <= @EndDate
+      AND ISNULL(r.lVendorKey, 0) = 0
+      AND ISNULL(c.bSkipTracking, 0) = 0
+    GROUP BY
+        st.sRigidOrFlexible, sc.bLargeDiameter,
+        r.lRepairKey
+)
+SELECT
+    COALESCE(InstrCategory, 'TOTAL')                            AS InstrCategory,
+    COUNT(lRepairKey)                                           AS TotalWOs,
+    SUM(IsNR)                                                   AS NRCount,
+    CAST(SUM(IsNR) AS decimal(10,4))
+        / NULLIF(COUNT(lRepairKey), 0)                          AS NRRate
+FROM S16A_Base
+GROUP BY GROUPING SETS ((InstrCategory), ())
+ORDER BY GROUPING(InstrCategory), NRRate DESC;
+
+-- ============================================================
+-- SECTION 16B: D&I Work Order Breakdown
+-- ============================================================
+-- D&I item keys: 29, 246, 636
+-- DIOnly  = WO has D&I item(s) but NO repair items → inspection only, no repair approved
+-- DIPlus  = WO has D&I item(s) AND repair item(s)
+-- Approved = dtAprRecvd IS NOT NULL (customer approved repair estimate)
+;WITH S16B_Base AS (
+    SELECT
+        r.lRepairKey,
+        MAX(CASE WHEN rit.lRepairItemKey IN (29,246,636) THEN 1 ELSE 0 END)         AS HasDI,
+        MAX(CASE WHEN rit.lRepairItemKey NOT IN (29,246,636) THEN 1 ELSE 0 END)     AS HasNonDI,
+        MAX(CASE WHEN r.dtAprRecvd IS NOT NULL THEN 1 ELSE 0 END)                   AS WasApproved
+    FROM tblRepair r
+    JOIN tblRepairItemTran rit ON r.lRepairKey = rit.lRepairKey
+    JOIN tblDepartment d ON r.lDepartmentKey = d.lDepartmentKey
+    JOIN tblClient c     ON d.lClientKey = c.lClientKey
+    WHERE CONVERT(date, r.dtDateIn) >= @StartDate
+      AND CONVERT(date, r.dtDateIn) <= @EndDate
+      AND ISNULL(c.bSkipTracking, 0) = 0
+    GROUP BY r.lRepairKey
+)
+SELECT
+    SUM(HasDI)                                                          AS TotalDIWOs,
+    SUM(CASE WHEN HasDI=1 AND HasNonDI=0 THEN 1 ELSE 0 END)           AS DIOnly,
+    SUM(CASE WHEN HasDI=1 AND HasNonDI=1 THEN 1 ELSE 0 END)           AS DIWithRepair,
+    SUM(CASE WHEN HasDI=1 AND WasApproved=1 THEN 1 ELSE 0 END)        AS DIApproved,
+    CAST(SUM(CASE WHEN HasDI=1 AND HasNonDI=1 THEN 1 ELSE 0 END) AS decimal(10,4))
+        / NULLIF(SUM(HasDI), 0)                                         AS ConversionRate,
+    CAST(SUM(CASE WHEN HasDI=1 AND WasApproved=1 THEN 1 ELSE 0 END) AS decimal(10,4))
+        / NULLIF(SUM(HasDI), 0)                                         AS ApprovalRate
+FROM S16B_Base
+WHERE HasDI = 1;
