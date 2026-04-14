@@ -104,23 +104,26 @@ ORDER BY b.InstrCategory, b.MaxLevelKey;
         AND   ISNULL(c.bSkipTracking, 0) = 0
 ),
 S2_FortyDay AS (
+    -- MAX() deduplicates in case fnWithin40Days returns multiple rows per WO.
+    -- If the function returns one row per WO (expected), MAX() is a no-op.
     SELECT
         w.sWorkOrderNumber,
-        CASE WHEN ISNULL(w.Failure_ImproperTechnique,  '') = 'X'
-              OR  ISNULL(w.Failure_PreviousInspection, '') = 'X'
-              OR  ISNULL(w.Failure_PreviousRepairs,    '') = 'X'
-             THEN 1 ELSE 0 END AS IsWarranty,
-        CASE WHEN ISNULL(w.Failure_ImproperCare,      '') = ''
-              AND ISNULL(w.Failure_Part,              '') = ''
-              AND ISNULL(w.Failure_Cosmetic,          '') = ''
-              AND ISNULL(w.Failure_ImproperTechnique, '') = ''
-              AND ISNULL(w.Failure_PreviousInspection,'') = ''
-              AND ISNULL(w.Failure_PreviousRepairs,   '') = ''
-              AND ISNULL(w.Failure_NoPreviousRepairs, '') = ''
-              AND ISNULL(w.Failure_Complaint,         '') = ''
-              AND ISNULL(w.Failure_Other,             '') = ''
-             THEN 1 ELSE 0 END AS NoCodeFilled
+        MAX(CASE WHEN ISNULL(w.Failure_ImproperTechnique,  '') = 'X'
+                  OR  ISNULL(w.Failure_PreviousInspection, '') = 'X'
+                  OR  ISNULL(w.Failure_PreviousRepairs,    '') = 'X'
+                 THEN 1 ELSE 0 END) AS IsWarranty,
+        MAX(CASE WHEN ISNULL(w.Failure_ImproperCare,      '') = ''
+                  AND ISNULL(w.Failure_Part,              '') = ''
+                  AND ISNULL(w.Failure_Cosmetic,          '') = ''
+                  AND ISNULL(w.Failure_ImproperTechnique, '') = ''
+                  AND ISNULL(w.Failure_PreviousInspection,'') = ''
+                  AND ISNULL(w.Failure_PreviousRepairs,   '') = ''
+                  AND ISNULL(w.Failure_NoPreviousRepairs, '') = ''
+                  AND ISNULL(w.Failure_Complaint,         '') = ''
+                  AND ISNULL(w.Failure_Other,             '') = ''
+                 THEN 1 ELSE 0 END) AS NoCodeFilled
     FROM dbo.fnWithin40Days(@StartDate, @EndDate, 'A', 0) w
+    GROUP BY w.sWorkOrderNumber
 ),
 S2_Matched AS (
     SELECT a.InstrCategory, f.IsWarranty, f.NoCodeFilled
