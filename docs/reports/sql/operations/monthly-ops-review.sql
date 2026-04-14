@@ -579,7 +579,41 @@ GROUP BY sTechName
 ORDER BY TotalAmendCost DESC;
 
 -- ============================================================
--- SECTIONS 10B-16: Added in Plans B and C
+-- SECTION 10B: Ops Misquotes
+-- Amendments with reason 15 (Misquote by operations) in period.
+-- Ops user identified via arc.lUserKey → tblTechnicians.lUserKey.
 -- ============================================================
 
-SELECT 'Sections 10B-16 coming in Plans B and C' AS Note;
+;WITH S10B_Lines AS (
+    SELECT
+        ISNULL(t.sTechName,
+               'User ' + CAST(arc.lUserKey AS nvarchar(10)))                   AS OpsUser,
+        arc.lAmendRepairCommentKey,
+        SUM(ISNULL(rit.dblRepairPrice, 0))                                     AS MisquoteCost
+    FROM tblAmendRepairComments arc
+        JOIN tblRepair          r   ON arc.lRepairKey             = r.lRepairKey
+        JOIN tblDepartment      d   ON r.lDepartmentKey           = d.lDepartmentKey
+        JOIN tblClient          c   ON d.lClientKey               = c.lClientKey
+        JOIN tblRepairItemTran  rit ON rit.lAmendRepairCommentKey = arc.lAmendRepairCommentKey
+        LEFT JOIN tblTechnicians t  ON arc.lUserKey               = t.lUserKey
+    WHERE CONVERT(date, arc.dtAmendmentDate) >= @StartDate
+        AND   CONVERT(date, arc.dtAmendmentDate) <= @EndDate
+        AND   ISNULL(c.bSkipTracking, 0) = 0
+        AND   arc.lAmendRepairReasonKey = 15
+    GROUP BY ISNULL(t.sTechName,
+                    'User ' + CAST(arc.lUserKey AS nvarchar(10))),
+             arc.lAmendRepairCommentKey
+)
+SELECT
+    OpsUser,
+    COUNT(lAmendRepairCommentKey)                                              AS MisquoteCount,
+    CAST(SUM(MisquoteCost) AS decimal(10,2))                                   AS TotalMisquoteCost
+FROM S10B_Lines
+GROUP BY OpsUser
+ORDER BY MisquoteCount DESC;
+
+-- ============================================================
+-- SECTIONS 11-16: Added in Plans B and C
+-- ============================================================
+
+SELECT 'Sections 11-16 coming in Plans B and C' AS Note;
