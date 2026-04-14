@@ -74,9 +74,82 @@ ORDER BY b.InstrCategory, b.MaxLevelKey;
 
 -- ============================================================
 -- SECTION 2: 40-Day Returns & Warranty
+-- Denominator: ALL WOs received in period (dtDateIn).
+-- Warranty = 40-day return with ImproperTechnique, PreviousInspection,
+--   or PreviousRepairs failure code = 'X'.
+-- Warranty RATE denominator = total WOs that month, NOT just 40-day.
+-- Fill rate gap = 40-day returns with zero failure codes checked.
 -- ============================================================
 
-SELECT 'Section 2 placeholder' AS Note;
+;WITH S2_AllWOs AS (
+    SELECT
+        r.lRepairKey,
+        r.sWorkOrderNumber,
+        CASE
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 1 THEN 'Flex-Large'
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 0 THEN 'Flex-Small'
+            WHEN st.sRigidOrFlexible = 'R' THEN 'Rigid'
+            WHEN st.sRigidOrFlexible = 'C' THEN 'Camera'
+            WHEN st.sRigidOrFlexible = 'I' THEN 'Instrument'
+            ELSE 'Other'
+        END AS InstrCategory
+    FROM tblRepair r
+        JOIN tblDepartment               d   ON r.lDepartmentKey  = d.lDepartmentKey
+        JOIN tblClient                   c   ON d.lClientKey      = c.lClientKey
+        JOIN tblScope                    s   ON r.lScopeKey       = s.lScopeKey
+        JOIN tblScopeType                st  ON s.lScopeTypeKey   = st.lScopeTypeKey
+        LEFT JOIN dbo.tblScopeTypeCategories sc ON st.lScopeTypeCatKey = sc.lScopeTypeCategoryKey
+    WHERE CONVERT(date, r.dtDateIn) >= @StartDate
+        AND   CONVERT(date, r.dtDateIn) <= @EndDate
+        AND   ISNULL(c.bSkipTracking, 0) = 0
+),
+S2_FortyDay AS (
+    SELECT
+        w.sWorkOrderNumber,
+        CASE WHEN ISNULL(w.Failure_ImproperTechnique,  '') = 'X'
+              OR  ISNULL(w.Failure_PreviousInspection, '') = 'X'
+              OR  ISNULL(w.Failure_PreviousRepairs,    '') = 'X'
+             THEN 1 ELSE 0 END AS IsWarranty,
+        CASE WHEN ISNULL(w.Failure_ImproperCare,      '') = ''
+              AND ISNULL(w.Failure_Part,              '') = ''
+              AND ISNULL(w.Failure_Cosmetic,          '') = ''
+              AND ISNULL(w.Failure_ImproperTechnique, '') = ''
+              AND ISNULL(w.Failure_PreviousInspection,'') = ''
+              AND ISNULL(w.Failure_PreviousRepairs,   '') = ''
+              AND ISNULL(w.Failure_NoPreviousRepairs, '') = ''
+              AND ISNULL(w.Failure_Complaint,         '') = ''
+              AND ISNULL(w.Failure_Other,             '') = ''
+             THEN 1 ELSE 0 END AS NoCodeFilled
+    FROM dbo.fnWithin40Days(@StartDate, @EndDate, 'A', 0) w
+),
+S2_Matched AS (
+    SELECT a.InstrCategory, f.IsWarranty, f.NoCodeFilled
+    FROM S2_FortyDay f
+        JOIN S2_AllWOs a ON f.sWorkOrderNumber = a.sWorkOrderNumber
+)
+SELECT
+    t.InstrCategory,
+    t.TotalWOs,
+    ISNULL(fd.FortyDayCount, 0)                                               AS FortyDayCount,
+    CAST(ISNULL(fd.FortyDayCount, 0) AS decimal(10,4))
+        / NULLIF(t.TotalWOs, 0)                                               AS FortyDayRate,
+    ISNULL(fd.WarrantyCount, 0)                                               AS WarrantyCount,
+    CAST(ISNULL(fd.WarrantyCount, 0) AS decimal(10,4))
+        / NULLIF(t.TotalWOs, 0)                                               AS WarrantyRate,
+    ISNULL(fd.NoCodeCount, 0)                                                 AS FillRateGap
+FROM (
+    SELECT InstrCategory, COUNT(lRepairKey) AS TotalWOs
+    FROM S2_AllWOs GROUP BY InstrCategory
+) t
+LEFT JOIN (
+    SELECT InstrCategory,
+           COUNT(*)          AS FortyDayCount,
+           SUM(IsWarranty)   AS WarrantyCount,
+           SUM(NoCodeFilled) AS NoCodeCount
+    FROM S2_Matched
+    GROUP BY InstrCategory
+) fd ON t.InstrCategory = fd.InstrCategory
+ORDER BY t.InstrCategory;
 
 -- ============================================================
 -- SECTION 3: Contract vs FFS Volume
