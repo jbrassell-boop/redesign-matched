@@ -259,13 +259,18 @@ ORDER BY TotalRevenue DESC;
 
 -- ============================================================
 -- SECTION 5: Loaner Fulfillment Rate
--- WOs received in period (dtDateIn) where bLoanerRequested=1.
--- Fulfilled = lScopeKey_Loaner > 0 (a loaner scope was assigned).
+-- Source: tblTasks (lTaskTypeKey 1=Loaner Request, 6=Loaner Wait List)
+--   joined to tblTaskLoaners (scope type) and vwTaskStatuses (outcome).
+-- Fulfilled = status 'Request Fulfilled' OR 'Customer Scope Sent'.
+-- Unfulfilled = 'Unable to Fulfill' OR 'Request Declined'.
+-- Closed Duplicate tasks are excluded (not real requests).
+-- tblTasks.dtTaskDate is the request date — filtered by period.
+-- bSkipTracking applied via tblTasks.lDepartmentKey → tblDepartment → tblClient.
 -- ============================================================
 
 ;WITH S5_Base AS (
     SELECT
-        r.lRepairKey,
+        t.lTaskKey,
         CASE
             WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 1 THEN 'Flex-Large'
             WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 0 THEN 'Flex-Small'
@@ -274,28 +279,64 @@ ORDER BY TotalRevenue DESC;
             WHEN st.sRigidOrFlexible = 'I' THEN 'Instrument'
             ELSE 'Other'
         END AS InstrCategory,
-        CASE WHEN ISNULL(r.lScopeKey_Loaner, 0) > 0 THEN 1 ELSE 0 END AS IsFulfilled
-    FROM tblRepair r
-        JOIN tblDepartment               d   ON r.lDepartmentKey  = d.lDepartmentKey
-        JOIN tblClient                   c   ON d.lClientKey      = c.lClientKey
-        JOIN tblScope                    s   ON r.lScopeKey       = s.lScopeKey
-        JOIN tblScopeType                st  ON s.lScopeTypeKey   = st.lScopeTypeKey
+        CASE WHEN vts.TaskStatus IN ('Request Fulfilled', 'Customer Scope Sent')
+             THEN 1 ELSE 0 END                                                 AS IsFulfilled,
+        CASE WHEN vts.TaskStatus IN ('Unable to Fulfill', 'Request Declined')
+             THEN 1 ELSE 0 END                                                 AS IsUnfulfilled
+    FROM tblTasks                        t
+        JOIN tblTaskLoaners              tl  ON t.lTaskKey          = tl.lTaskKey
+        JOIN tblScopeType                st  ON tl.lScopeTypeKey    = st.lScopeTypeKey
         LEFT JOIN dbo.tblScopeTypeCategories sc ON st.lScopeTypeCatKey = sc.lScopeTypeCategoryKey
-    WHERE CONVERT(date, r.dtDateIn) >= @StartDate
-        AND   CONVERT(date, r.dtDateIn) <= @EndDate
-        AND   r.bLoanerRequested = 1
+        JOIN vwTaskStatuses              vts ON t.lTaskKey          = vts.lTaskKey
+        JOIN tblDepartment               d   ON t.lDepartmentKey    = d.lDepartmentKey
+        JOIN tblClient                   c   ON d.lClientKey        = c.lClientKey
+    WHERE t.dtTaskDate >= @StartDate
+        AND   t.dtTaskDate <= @EndDate
+        AND   t.lTaskTypeKey IN (1, 6)
+        AND   vts.TaskStatus <> 'Closed Duplicate'
         AND   ISNULL(c.bSkipTracking, 0) = 0
 )
 SELECT
     COALESCE(InstrCategory, 'TOTAL')                                          AS InstrCategory,
-    COUNT(lRepairKey)                                                          AS LoanerRequested,
+    COUNT(lTaskKey)                                                            AS LoanerRequested,
     SUM(IsFulfilled)                                                           AS LoanerFulfilled,
-    COUNT(lRepairKey) - SUM(IsFulfilled)                                       AS LoanerUnfulfilled,
+    SUM(IsUnfulfilled)                                                         AS LoanerUnfulfilled,
     CAST(SUM(IsFulfilled) AS decimal(10,4))
-        / NULLIF(COUNT(lRepairKey), 0)                                         AS FulfillmentRate
+        / NULLIF(COUNT(lTaskKey), 0)                                           AS FulfillmentRate
 FROM S5_Base
 GROUP BY GROUPING SETS ((InstrCategory), ())
 ORDER BY GROUPING(InstrCategory), LoanerUnfulfilled DESC;
+
+-- Section 5B: Loaner model detail — unfulfilled by specific scope type model
+SELECT
+    st.sScopeTypeDesc                                                          AS ScopeModel,
+    CASE
+        WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 1 THEN 'Flex-Large'
+        WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 0 THEN 'Flex-Small'
+        WHEN st.sRigidOrFlexible = 'R' THEN 'Rigid'
+        WHEN st.sRigidOrFlexible = 'C' THEN 'Camera'
+        WHEN st.sRigidOrFlexible = 'I' THEN 'Instrument'
+        ELSE 'Other'
+    END                                                                        AS InstrCategory,
+    COUNT(t.lTaskKey)                                                          AS LoanerRequested,
+    SUM(CASE WHEN vts.TaskStatus IN ('Request Fulfilled', 'Customer Scope Sent')
+             THEN 1 ELSE 0 END)                                                AS LoanerFulfilled,
+    SUM(CASE WHEN vts.TaskStatus IN ('Unable to Fulfill', 'Request Declined')
+             THEN 1 ELSE 0 END)                                                AS LoanerUnfulfilled
+FROM tblTasks                        t
+    JOIN tblTaskLoaners              tl  ON t.lTaskKey          = tl.lTaskKey
+    JOIN tblScopeType                st  ON tl.lScopeTypeKey    = st.lScopeTypeKey
+    LEFT JOIN dbo.tblScopeTypeCategories sc ON st.lScopeTypeCatKey = sc.lScopeTypeCategoryKey
+    JOIN vwTaskStatuses              vts ON t.lTaskKey          = vts.lTaskKey
+    JOIN tblDepartment               d   ON t.lDepartmentKey    = d.lDepartmentKey
+    JOIN tblClient                   c   ON d.lClientKey        = c.lClientKey
+WHERE t.dtTaskDate >= @StartDate
+    AND   t.dtTaskDate <= @EndDate
+    AND   t.lTaskTypeKey IN (1, 6)
+    AND   vts.TaskStatus <> 'Closed Duplicate'
+    AND   ISNULL(c.bSkipTracking, 0) = 0
+GROUP BY st.sScopeTypeDesc, st.sRigidOrFlexible, sc.bLargeDiameter
+ORDER BY LoanerUnfulfilled DESC, LoanerRequested DESC;
 
 -- ============================================================
 -- SECTIONS 6-16: Added in Plans B and C
