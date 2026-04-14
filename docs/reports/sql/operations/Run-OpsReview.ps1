@@ -94,17 +94,12 @@ for ($i = 0; $i -lt $ds.Tables.Count; $i++) {
     $rows = $ds.Tables[$i].Rows.Count
     Write-Host ("  {0,-28} {1} rows" -f $tab, $rows)
 
-    $params = @{
-        Path          = $xlPath
-        WorksheetName = $tab
-        AutoSize      = $true
-        FreezeTopRow  = $true
-        BoldTopRow    = $true
-    }
     if ($xl) {
-        $xl = $ds.Tables[$i] | Export-Excel @params -ExcelPackage $xl -PassThru
+        $xl = $ds.Tables[$i] | Export-Excel -ExcelPackage $xl `
+            -WorksheetName $tab -AutoSize -FreezeTopRow -BoldTopRow -PassThru
     } else {
-        $xl = $ds.Tables[$i] | Export-Excel @params -PassThru
+        $xl = $ds.Tables[$i] | Export-Excel -Path $xlPath `
+            -WorksheetName $tab -AutoSize -FreezeTopRow -BoldTopRow -PassThru
     }
 }
 
