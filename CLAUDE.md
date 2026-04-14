@@ -230,6 +230,16 @@ Remove all unused imports before committing.
 - Auto-push after any API/query/data fix; push other changes only when Joe asks
 - `deploy-server.yml` path filter is `server/**` — workflow_dispatch needed for workflow-only changes
 
+### Remote / Mobile Session Push Checklist
+
+When running from Claude Code on web or mobile (fresh sandboxed environment, not Joe's laptop):
+
+1. **Make the edit before anything else.** A `claude/*` branch is only created when you push a commit. No commit → no branch → push will appear to "fail with no branch made."
+2. **Before pushing, verify you actually changed files:** run `git status` and `git diff --stat`. If output is empty, you never saved an edit — Write/Edit tool calls may have been declined or lost. Re-apply them explicitly.
+3. **Commit, then push.** The GitHub App auto-creates `claude/<slug>-<hash>` on push; you don't need to create the branch manually.
+4. **Main is not branch-protected** — direct pushes to `main` work, but prefer the auto-created `claude/*` branch and open a PR so Joe can review before deploys trigger.
+5. If the push genuinely errors (not a "no branch" confusion), report the full git output to Joe — don't retry blindly.
+
 
 # redesign-matched — Project Context
 
