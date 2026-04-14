@@ -447,7 +447,66 @@ GROUP BY dw.sTechName, dw.InstrCategory
 ORDER BY dw.sTechName, dw.InstrCategory;
 
 -- ============================================================
--- SECTIONS 8-16: Added in Plans B and C
+-- SECTION 8: Tech Defect %
+-- In-house WOs completed in period (dtDateOut).
+-- Defects attributed via tblRepair.lTechnicianKey_DefectTracking.
+-- Denominator: WOs where tech is tblRepair.lTechnicianKey (primary tech).
 -- ============================================================
 
-SELECT 'Sections 8-16 coming in Plans B and C' AS Note;
+;WITH S8_WOsWorked AS (
+    SELECT
+        t.sTechName,
+        t.lTechnicianKey,
+        COUNT(r.lRepairKey) AS WOsWorked
+    FROM tblRepair r
+        JOIN tblDepartment  d ON r.lDepartmentKey = d.lDepartmentKey
+        JOIN tblClient      c ON d.lClientKey     = c.lClientKey
+        JOIN tblTechnicians t ON r.lTechnicianKey = t.lTechnicianKey
+    WHERE CONVERT(date, r.dtDateOut) >= @StartDate
+        AND   CONVERT(date, r.dtDateOut) <= @EndDate
+        AND   ISDATE(r.dtDateOut) = 1
+        AND   r.dtDateOut IS NOT NULL
+        AND   ISNULL(r.lVendorKey, 0) = 0
+        AND   ISNULL(c.bSkipTracking, 0) = 0
+        AND   t.bIsActive = 1
+        AND   t.lJobTypeKey = 2
+        AND   t.lTechnicianKey <> 96
+    GROUP BY t.sTechName, t.lTechnicianKey
+),
+S8_Defects AS (
+    SELECT
+        t.sTechName,
+        t.lTechnicianKey,
+        COUNT(r.lRepairKey) AS DefectCount
+    FROM tblRepair r
+        JOIN tblDepartment  d ON r.lDepartmentKey                = d.lDepartmentKey
+        JOIN tblClient      c ON d.lClientKey                    = c.lClientKey
+        JOIN tblTechnicians t ON r.lTechnicianKey_DefectTracking = t.lTechnicianKey
+    WHERE CONVERT(date, r.dtDateOut) >= @StartDate
+        AND   CONVERT(date, r.dtDateOut) <= @EndDate
+        AND   ISDATE(r.dtDateOut) = 1
+        AND   r.dtDateOut IS NOT NULL
+        AND   ISNULL(r.lVendorKey, 0) = 0
+        AND   ISNULL(c.bSkipTracking, 0) = 0
+        AND   r.lTechnicianKey_DefectTracking IS NOT NULL
+        AND   r.lTechnicianKey_DefectTracking <> 0
+        AND   t.bIsActive = 1
+        AND   t.lJobTypeKey = 2
+        AND   t.lTechnicianKey <> 96
+    GROUP BY t.sTechName, t.lTechnicianKey
+)
+SELECT
+    w.sTechName,
+    w.WOsWorked,
+    ISNULL(d.DefectCount, 0)                                                  AS DefectCount,
+    CAST(ISNULL(d.DefectCount, 0) AS decimal(10,4))
+        / NULLIF(w.WOsWorked, 0)                                              AS DefectPct
+FROM S8_WOsWorked w
+    LEFT JOIN S8_Defects d ON w.lTechnicianKey = d.lTechnicianKey
+ORDER BY DefectPct DESC, w.sTechName;
+
+-- ============================================================
+-- SECTIONS 9-16: Added in Plans B and C
+-- ============================================================
+
+SELECT 'Sections 9-16 coming in Plans B and C' AS Note;
