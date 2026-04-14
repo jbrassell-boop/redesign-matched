@@ -339,7 +339,64 @@ GROUP BY st.sScopeTypeDesc, st.sRigidOrFlexible, sc.bLargeDiameter
 ORDER BY LoanerUnfulfilled DESC, LoanerRequested DESC;
 
 -- ============================================================
--- SECTIONS 6-16: Added in Plans B and C
+-- SECTION 6: Tech Repair Scorecard
+-- In-house WOs completed in period (dtDateOut), per tech.
+-- Counted at highest non-D&I repair level per WO per tech.
+-- D&I items (29, 246, 636) excluded. Placeholder tech 96 excluded.
+-- In-house only: ISNULL(r.lVendorKey,0)=0.
 -- ============================================================
 
-SELECT 'Sections 6-16 coming in Plans B and C' AS Note;
+;WITH S6_Base AS (
+    SELECT
+        t.sTechName,
+        r.lRepairKey,
+        CASE
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 1 THEN 'Flex-Large'
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 0 THEN 'Flex-Small'
+            WHEN st.sRigidOrFlexible = 'R' THEN 'Rigid'
+            WHEN st.sRigidOrFlexible = 'C' THEN 'Camera'
+            WHEN st.sRigidOrFlexible = 'I' THEN 'Instrument'
+            ELSE 'Other'
+        END AS InstrCategory,
+        MAX(rl.lRepairLevelKey)                                                AS MaxLevelKey,
+        CAST(dbo.fn_DateDiffWeekDays(r.dtAprRecvd, r.dtDateOut) AS decimal(10,2)) AS TAT
+    FROM tblRepair r
+        JOIN tblDepartment               d   ON r.lDepartmentKey     = d.lDepartmentKey
+        JOIN tblClient                   c   ON d.lClientKey         = c.lClientKey
+        JOIN tblScope                    s   ON r.lScopeKey          = s.lScopeKey
+        JOIN tblScopeType                st  ON s.lScopeTypeKey      = st.lScopeTypeKey
+        LEFT JOIN dbo.tblScopeTypeCategories sc ON st.lScopeTypeCatKey = sc.lScopeTypeCategoryKey
+        JOIN tblRepairItemTran           rit ON r.lRepairKey         = rit.lRepairKey
+        JOIN tblRepairItem               ri  ON rit.lRepairItemKey   = ri.lRepairItemKey
+        JOIN tblRepairLevels             rl  ON ri.sMajorRepair      = rl.lRepairLevelKey
+        JOIN tblTechnicians              t   ON rit.lTechnicianKey   = t.lTechnicianKey
+    WHERE CONVERT(date, r.dtDateOut) >= @StartDate
+        AND   CONVERT(date, r.dtDateOut) <= @EndDate
+        AND   ISDATE(r.dtDateOut) = 1
+        AND   r.dtDateOut IS NOT NULL
+        AND   ISNULL(r.lVendorKey, 0) = 0
+        AND   ISNULL(c.bSkipTracking, 0) = 0
+        AND   t.bIsActive = 1
+        AND   t.lJobTypeKey = 2
+        AND   t.lTechnicianKey <> 96
+        AND   rit.lRepairItemKey NOT IN (29, 246, 636)
+    GROUP BY t.sTechName, r.lRepairKey, st.sRigidOrFlexible, sc.bLargeDiameter,
+             r.dtAprRecvd, r.dtDateOut
+)
+SELECT
+    b.sTechName,
+    b.InstrCategory,
+    rl.sRepairLevel                                                            AS RepairLevel,
+    rl.lRepairLevelKey                                                         AS SortKey,
+    COUNT(b.lRepairKey)                                                        AS WOCount,
+    AVG(CASE WHEN b.TAT >= 0 THEN b.TAT END)                                  AS AvgTAT
+FROM S6_Base b
+    JOIN tblRepairLevels rl ON b.MaxLevelKey = rl.lRepairLevelKey
+GROUP BY b.sTechName, b.InstrCategory, b.MaxLevelKey, rl.sRepairLevel, rl.lRepairLevelKey
+ORDER BY b.sTechName, b.InstrCategory, rl.lRepairLevelKey;
+
+-- ============================================================
+-- SECTIONS 7-16: Added in Plans B and C
+-- ============================================================
+
+SELECT 'Sections 7-16 coming in Plans B and C' AS Note;
