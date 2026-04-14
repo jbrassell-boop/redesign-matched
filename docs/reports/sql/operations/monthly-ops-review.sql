@@ -195,9 +195,47 @@ ORDER BY BillingType, InstrCategory;
 
 -- ============================================================
 -- SECTION 4: Contract P&L
+-- Contract repairs completed in period (dtDateOut).
+-- Revenue = tblInvoice.dblTranAmount (aggregated per repair — may have
+--   multiple rows per WO). Cost = dblOutSourceCost only.
+-- NOTE: Inventory cost will be added in Plan B once lot tables confirmed.
+-- GrossMargin = Revenue - OutsourceCost (partial until Plan B adds inventory).
 -- ============================================================
 
-SELECT 'Section 4 placeholder' AS Note;
+;WITH S4_InvoiceTotals AS (
+    SELECT lRepairKey, SUM(ISNULL(dblTranAmount, 0)) AS TotalInvoiced
+    FROM tblInvoice
+    GROUP BY lRepairKey
+),
+S4_ContractRepairs AS (
+    SELECT
+        r.lRepairKey,
+        c.sClientName1,
+        ISNULL(inv.TotalInvoiced,     0) AS Revenue,
+        ISNULL(r.dblOutSourceCost,    0) AS OutsourceCost
+    FROM tblRepair r
+        JOIN tblDepartment      d   ON r.lDepartmentKey = d.lDepartmentKey
+        JOIN tblClient          c   ON d.lClientKey     = c.lClientKey
+        LEFT JOIN S4_InvoiceTotals inv ON r.lRepairKey  = inv.lRepairKey
+    WHERE CONVERT(date, r.dtDateOut) >= @StartDate
+        AND   CONVERT(date, r.dtDateOut) <= @EndDate
+        AND   ISDATE(r.dtDateOut) = 1
+        AND   r.dtDateOut IS NOT NULL
+        AND   ISNULL(c.bSkipTracking, 0) = 0
+        AND   dbo.fn_scopeIsCoveredByContract(r.lScopeKey, r.dtDateIn) <> 0
+)
+SELECT
+    sClientName1,
+    COUNT(lRepairKey)                                                        AS WOCount,
+    SUM(Revenue)                                                             AS TotalRevenue,
+    SUM(OutsourceCost)                                                       AS TotalOutsourceCost,
+    SUM(Revenue) - SUM(OutsourceCost)                                        AS GrossMargin,
+    CASE WHEN SUM(Revenue) = 0 THEN NULL
+         ELSE ROUND((SUM(Revenue) - SUM(OutsourceCost)) / SUM(Revenue) * 100, 2)
+    END                                                                      AS GrossMarginPct
+FROM S4_ContractRepairs
+GROUP BY sClientName1
+ORDER BY TotalRevenue DESC;
 
 -- ============================================================
 -- SECTIONS 5-16: Added in Plans B and C
