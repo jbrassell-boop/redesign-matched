@@ -12,8 +12,13 @@ param(
     [string]$StartDate,
     [Parameter(Mandatory)]
     [string]$EndDate,
-    [string]$OutputFolder = $PSScriptRoot
+    [string]$OutputFolder = "$env:USERPROFILE\Desktop\TSI Ops Reports"
 )
+
+if (-not (Test-Path $OutputFolder)) {
+    New-Item -ItemType Directory -Path $OutputFolder | Out-Null
+    Write-Host "Created folder: $OutputFolder" -ForegroundColor DarkGray
+}
 
 # ── Prerequisites ─────────────────────────────────────────────────────────────
 if (-not (Get-Module -ListAvailable -Name ImportExcel)) {
