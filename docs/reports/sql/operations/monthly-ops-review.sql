@@ -79,6 +79,8 @@ ORDER BY b.InstrCategory, b.MaxLevelKey;
 --   or PreviousRepairs failure code = 'X'.
 -- Warranty RATE denominator = total WOs that month, NOT just 40-day.
 -- Fill rate gap = 40-day returns with zero failure codes checked.
+-- Instrument (sRigidOrFlexible='I') excluded — failure code workflow
+--   does not apply to handheld instruments.
 -- ============================================================
 
 ;WITH S2_AllWOs AS (
@@ -90,7 +92,6 @@ ORDER BY b.InstrCategory, b.MaxLevelKey;
             WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 0 THEN 'Flex-Small'
             WHEN st.sRigidOrFlexible = 'R' THEN 'Rigid'
             WHEN st.sRigidOrFlexible = 'C' THEN 'Camera'
-            WHEN st.sRigidOrFlexible = 'I' THEN 'Instrument'
             ELSE 'Other'
         END AS InstrCategory
     FROM tblRepair r
@@ -102,6 +103,7 @@ ORDER BY b.InstrCategory, b.MaxLevelKey;
     WHERE CONVERT(date, r.dtDateIn) >= @StartDate
         AND   CONVERT(date, r.dtDateIn) <= @EndDate
         AND   ISNULL(c.bSkipTracking, 0) = 0
+        AND   st.sRigidOrFlexible <> 'I'
 ),
 S2_FortyDay AS (
     -- MAX() deduplicates in case fnWithin40Days returns multiple rows per WO.
