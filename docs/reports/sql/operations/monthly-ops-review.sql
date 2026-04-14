@@ -258,7 +258,47 @@ WHERE ISNULL(cl.bSkipTracking, 0) = 0
 ORDER BY TotalRevenue DESC;
 
 -- ============================================================
--- SECTIONS 5-16: Added in Plans B and C
+-- SECTION 5: Loaner Fulfillment Rate
+-- WOs received in period (dtDateIn) where bLoanerRequested=1.
+-- Fulfilled = lScopeKey_Loaner > 0 (a loaner scope was assigned).
 -- ============================================================
 
-SELECT 'Sections 5-16 coming in Plans B and C' AS Note;
+;WITH S5_Base AS (
+    SELECT
+        r.lRepairKey,
+        CASE
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 1 THEN 'Flex-Large'
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 0 THEN 'Flex-Small'
+            WHEN st.sRigidOrFlexible = 'R' THEN 'Rigid'
+            WHEN st.sRigidOrFlexible = 'C' THEN 'Camera'
+            WHEN st.sRigidOrFlexible = 'I' THEN 'Instrument'
+            ELSE 'Other'
+        END AS InstrCategory,
+        CASE WHEN ISNULL(r.lScopeKey_Loaner, 0) > 0 THEN 1 ELSE 0 END AS IsFulfilled
+    FROM tblRepair r
+        JOIN tblDepartment               d   ON r.lDepartmentKey  = d.lDepartmentKey
+        JOIN tblClient                   c   ON d.lClientKey      = c.lClientKey
+        JOIN tblScope                    s   ON r.lScopeKey       = s.lScopeKey
+        JOIN tblScopeType                st  ON s.lScopeTypeKey   = st.lScopeTypeKey
+        LEFT JOIN dbo.tblScopeTypeCategories sc ON st.lScopeTypeCatKey = sc.lScopeTypeCategoryKey
+    WHERE CONVERT(date, r.dtDateIn) >= @StartDate
+        AND   CONVERT(date, r.dtDateIn) <= @EndDate
+        AND   r.bLoanerRequested = 1
+        AND   ISNULL(c.bSkipTracking, 0) = 0
+)
+SELECT
+    COALESCE(InstrCategory, 'TOTAL')                                          AS InstrCategory,
+    COUNT(lRepairKey)                                                          AS LoanerRequested,
+    SUM(IsFulfilled)                                                           AS LoanerFulfilled,
+    COUNT(lRepairKey) - SUM(IsFulfilled)                                       AS LoanerUnfulfilled,
+    CAST(SUM(IsFulfilled) AS decimal(10,4))
+        / NULLIF(COUNT(lRepairKey), 0)                                         AS FulfillmentRate
+FROM S5_Base
+GROUP BY GROUPING SETS ((InstrCategory), ())
+ORDER BY GROUPING(InstrCategory), LoanerUnfulfilled DESC;
+
+-- ============================================================
+-- SECTIONS 6-16: Added in Plans B and C
+-- ============================================================
+
+SELECT 'Sections 6-16 coming in Plans B and C' AS Note;
