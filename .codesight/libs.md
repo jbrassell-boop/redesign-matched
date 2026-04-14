@@ -1,211 +1,158 @@
-# Libraries
+# Libraries & CSS/Theme Reference
 
-- `client\src\api\acquisitions.ts`
-  - function getAcquisitions
-  - function getAcquisitionsSold
-  - function getAcquisitionStats
-  - function getAcquisitionDetail
-- `client\src\api\administration.ts`
-  - function getAdminUsers
-  - function getSecurityGroups
-  - function getDeliveryMethods
-  - function getPaymentTerms
-  - function getScopeCategories
-  - function getDistributors
-  - _...24 more_
-- `client\src\api\auth.ts`
-  - function login
-  - function logout
-  - interface LoginResponse
-- `client\src\api\client.ts`
-  - function getToken
-  - function setToken
-  - function removeToken
-- `client\src\api\clients.ts`
-  - function getClients
-  - function getClientDetail
-  - function getClientContacts
-  - function getClientDepartments
-  - function getClientFlags
-  - function getClientFull
-  - _...16 more_
-- `client\src\api\contracts.ts`
-  - function getContracts
-  - function getContract
-  - function getContractStats
-  - function getContractScopes
-  - function getContractRepairs
-  - function getContractInvoices
-  - _...9 more_
-- `client\src\api\dashboard.ts`
-  - function getDashboardStats
-  - function getDashboardRepairs
-  - function getDashboardTasks
-  - function getDashboardEmails
-  - function getDashboardShipping
-  - function getDashboardInvoices
-  - _...4 more_
-- `client\src\api\departments.ts`
-  - function getDepartments
-  - function getDepartmentDetail
-  - function getDepartmentFull
-  - function getDepartmentKpis
-  - function updateDepartment
-  - function getDepartmentContacts
-  - _...17 more_
-- `client\src\api\development-list.ts`
-  - function getDevList
-  - function getDevListDetail
-  - function getDevListStatuses
-  - function getDevListStats
-- `client\src\api\endocarts.ts`
-  - function getEndoCartScopeInventory
-  - function getEndoCartServiceHistory
-  - function getEndoCartStats
-- `client\src\api\financial.ts`
-  - function getInvoices
-  - function getInvoiceDetail
-  - function getPayments
-  - function getClientsOnHold
-  - function getGLAccounts
-  - function getFinancialStats
-  - _...2 more_
-- `client\src\api\instruments.ts`
-  - function getInstrumentRepairs
-  - function getInstrumentRepairDetail
-  - function getInstrumentCatalog
-  - function getInstrumentCatalogDetail
-  - function getInstrumentStats
-- `client\src\api\inventory.ts`
-  - function getInventoryList
-  - function getInventoryDetail
-  - function getInventoryStats
-  - function getInventoryPurchaseOrders
-  - function getInventorySuppliers
-  - function getInventoryPendingReceipt
-  - _...1 more_
-- `client\src\api\loaners.ts`
-  - function getLoaners
-  - function getLoanerDetail
-  - function getLoanerStats
-  - function getLoanerRequests
-  - function fulfillLoanerRequest
-  - function declineLoanerRequest
-  - _...2 more_
-- `client\src\api\lookups.ts`
-  - function getSalesReps
-  - function getPricingCategories
-  - function getPaymentTerms
-  - function getCarriers
-  - function getRepairLevels
-  - function getRepairReasonOptions
-  - _...7 more_
-- `client\src\api\onsite-services.ts`
-  - function getOnsiteServices
-  - function getOnsiteServiceStats
-  - function createOnsiteVisit
-  - function updateOnsiteStatus
-  - function getOnsiteServiceDetail
-  - function getOnsiteServiceTrays
-  - _...1 more_
-- `client\src\api\orders.ts`
-  - function getWizardClients
-  - function getWizardDepartments
-  - function getWizardScopes
-  - function getInstrumentTypes
-  - function getWizardScopeTypes
-  - function createOrder
-  - _...7 more_
-- `client\src\api\outsource-validation.ts`
-  - function getOutsourceValidation
-  - function getOutsourceStats
-  - function getOutsourceVendors
-  - function sendToVendor
-  - function receiveBack
-  - function validateOutsource
-- `client\src\api\product-sales.ts`
-  - function getProductSales
-  - function getProductSaleDetail
-  - function getProductSaleStats
-  - function createProductSale
-- `client\src\api\quality.ts`
-  - function getQualityInspections
-  - function getQualityInspection
-  - function getQualityStats
-  - function getQualityNcr
-  - function getQualityRework
-- `client\src\api\receiving.ts`
-  - function getPendingArrivals
-  - function getReceivingStats
-  - function intakeReceive
-  - interface PendingArrival
-  - interface ReceivingStats
-  - interface ReceiveIntakeRequest
-  - _...1 more_
-- `client\src\api\repair-items.ts`
-  - function getRepairItems
-  - function getRepairItemDetail
-  - function getRepairItemStats
-  - function createRepairItem
-  - function updateRepairItem
-  - function deleteRepairItem
-- `client\src\api\repairs.ts`
-  - function getRepairs
-  - function getRepairDetail
-  - function getRepairLineItems
-  - function getRepairScopeHistory
-  - function getRepairFinancials
-  - function updateRepairNotes
-  - _...35 more_
-- `client\src\api\scopeModels.ts`
-  - function getScopeModels
-  - function getScopeModelDetail
-  - function getScopeModelStats
-  - function getManufacturers
-  - function getScopeModelRepairItems
-  - function getScopeModelMaxCharges
-  - _...4 more_
-- `client\src\api\search.ts`
-  - function globalSearch
-  - interface SearchResult
-  - interface SearchResponse
-- `client\src\api\suppliers.ts`
-  - function getSuppliers
-  - function getSupplierDetail
-  - function getSupplierStats
-  - function getSupplierInventory
-  - function getSupplierDocuments
-  - function updateSupplier
-  - _...1 more_
-- `client\src\api\workspace.ts` — function getWorkspaceData
-- `client\src\components\common\alertsController.ts` — function evaluateRepair: (data) => AlertInput[], function evaluateClient: (data) => AlertInput[]
-- `client\src\components\common\useBulkSelect.ts` — function useBulkSelect: () => BulkSelectReturn<K>, interface BulkSelectReturn
-- `client\src\hooks\useAlerts.ts`
-  - function useAlerts: () => void
-  - interface Alert
-  - type AlertType
-- `client\src\hooks\useAuth.ts` — function useAuth
-- `client\src\hooks\useAutosave.ts`
-  - function useAutosave: (saveFn) => void
-  - interface UseAutosaveReturn
-  - type AutosaveStatus
-- `client\src\hooks\useDensity.ts` — function useDensity: () => void, type Density
-- `client\src\hooks\useKeyboardNav.ts` — function useKeyboardNav: (items, selectedIndex, onSelect) => void
-- `client\src\hooks\useTabBadges.ts` — function useTabBadges: (fetchers, CountFetcher>, deps) => void
-- `client\src\pages\contracts\tabs\shared.ts`
-  - function fmtDate
-  - function fmtMoney
-  - function fmtMoneyDecimal
-  - function repairStatusColor
-  - const spinnerContainerStyle: React.CSSProperties
-  - const emptyStateStyle: React.CSSProperties
-  - _...35 more_
-- `client\src\pages\dashboard\columnDefs.ts` — function getColumnsForView, function getRowKey
-- `client\src\pages\workspace\widgetRegistry.ts`
-  - function loadLayout: () => WorkspaceLayout
-  - function saveLayout: (layout) => void
-  - interface WidgetConfig
-  - interface WidgetInstance
-  - interface WorkspaceLayout
-  - const WIDGET_COMPONENTS: Record<string, ComponentType>
-  - _...2 more_
+---
+
+## CSS Design System
+
+### Token File: `client/src/theme/tokens.css`
+
+All colors/spacing MUST use these variables. Zero hardcoded hex in `.tsx` files.
+
+**Primary palette:**
+```css
+--primary: #2E75B6          /* blue — buttons, links, active states */
+--primary-dark: #1B3A5C     /* dark navy — drawer headers */
+--primary-light: #E8F0FE    /* light blue — selected bg tints */
+--navy: #1B3A5C
+--danger: #B71234           /* red — errors, delete actions */
+--success: #16A34A          /* green */
+--warning: #F59E0B          /* amber — highlighted rows, warnings */
+--amber: #F59E0B
+```
+
+**RGB tokens (for rgba() — can't use hex vars inside rgba()):**
+```css
+--primary-rgb: 46, 117, 182
+--danger-rgb: 183, 18, 52
+--amber-rgb: 245, 158, 11
+--navy-rgb: 27, 58, 92
+--success-rgb: 22, 163, 74
+--muted-rgb: 107, 114, 128
+--purple-rgb: 124, 58, 237
+```
+Usage: `rgba(var(--primary-rgb), 0.13)` — NOT `rgba(46, 117, 182, 0.13)`
+
+**Layout colors:**
+```css
+--sidebar: #1E293B          --sidebar-lt: #334155
+--sidebar-text: #CBD5E1     --topbar: #1E293B
+--neutral-50/100/200/500/700/900
+--text: #111827             --muted: #6B7280
+--label: #374151            --card: #fff
+--bg: #F9FAFB               --border: #E5E7EB
+--border-dk: #B8C8E0
+```
+
+**Selection / highlight (split-layout selected row):**
+```css
+--amber-light: #FEF3C7      /* selected row bg */
+--amber-border: #FDE68A     /* selected row border */
+```
+Selected row pattern: `borderLeft: '2px solid var(--amber)'` + `background: 'var(--amber-light)'`
+
+**Status badge variables:** `--badge-blue-*`, `--badge-green-*`, `--badge-amber-*`, `--badge-red-*`, `--badge-purple-*`, `--badge-cyan-*`, `--badge-teal-*`, `--badge-orange-*`
+
+**Spacing scale:**
+```css
+--sp-1: 4px  --sp-2: 8px  --sp-3: 12px  --sp-4: 16px
+--sp-5: 20px --sp-6: 24px --sp-8: 32px  --sp-10: 40px  --sp-12: 48px
+```
+
+**Typography:**
+```css
+--text-xs: 12px  --text-sm: 13px  --text-base: 13px
+--text-lg: 15px  --text-xl: 18px  --text-2xl: 24px
+```
+
+**Shadows / z-index layers:**
+```css
+--shadow-card / --shadow-dropdown / --shadow-modal
+z-index: dropdown(100), sticky(200), drawer(400), overlay(500), modal(900), toast(1000), cmd(1100)
+```
+
+**Border radius:**
+```css
+--radius-sm: 4px  --radius-md: 6px  --radius-lg: 8px  --radius-xl: 12px  --radius-pill: 9999px
+```
+
+---
+
+## Ant Design Theme: `client/src/theme/antdTheme.ts`
+
+Custom token overrides. Key settings:
+- `fontSize: 13`, `controlHeight: 32` (compact sizing)
+- Primary color synced to `--primary` (#2E75B6)
+- Dark sidebar via Menu component tokens
+- Tab active: 2px bottom border + `--primary` color, no background fill
+- Drawer width: 600px universal
+
+Do NOT override Ant Design styles with inline CSS if a token exists in `antdTheme.ts`.
+
+---
+
+## Frontend Libraries
+
+| Library | Version | Purpose |
+|---------|---------|---------|
+| React | 19.x | UI framework |
+| React Router | v7 | Client-side routing |
+| Ant Design | 6.x | Component library |
+| Axios | 1.x | HTTP client |
+| xlsx | 0.18.5 | Excel export |
+| Vite | 8.x | Build tool / dev server |
+
+---
+
+## Shared UI Components: `client/src/components/shared/`
+
+Import from the barrel: `import { DataTable, SectionCard, ... } from '../../components/shared'`
+
+| Component | Purpose |
+|-----------|---------|
+| `DataTable` | Standardized Ant Design table wrapper |
+| `DetailHeader` | Right-panel header with title + action buttons |
+| `EmptyState` | Consistent empty/no-data display |
+| `Field` | Label + value display for detail panes |
+| `FormGrid` | 2-column form layout grid |
+| `ModalShell` | Standard modal wrapper (600px) |
+| `PairedTable` | Two side-by-side tables |
+| `SectionCard` | Titled card section for form groups |
+| `SplitLayout` | Left list panel + right detail panel container |
+| `StatStrip` | KPI chip strip across top of split pages |
+| `StatusBadge` | Colored status badge using badge token palette |
+| `TabBar` | Custom tab navigation (not Ant Design Tabs) |
+
+---
+
+## Common Components: `client/src/components/common/`
+
+| Component/Hook | Purpose |
+|---|---|
+| `RouteGuard` | Redirect to /login if no JWT token |
+| `AlertBanner` | Top-of-page dismissible alert banners |
+| `AutosaveIndicator` | Save status indicator (saving / saved / error) |
+| `BulkActionBar` | Floating bar when rows are bulk-selected |
+| `ContextMenu` | Right-click context menu |
+| `ExportButton` | CSV/Excel export trigger |
+| `InlineEditor` | Click-to-edit field |
+| `alertsController.ts` | Business logic: `evaluateRepair()`, `evaluateClient()` |
+| `useBulkSelect.ts` | Hook: multi-row selection state |
+| `exportUtils.ts` | xlsx export helpers |
+
+---
+
+## Hooks: `client/src/hooks/`
+
+| Hook | Purpose |
+|------|---------|
+| `useAuth` | Get current user from sessionStorage JWT |
+| `useAlerts` | Alert state management |
+| `useAutosave` | Debounced autosave with status feedback |
+| `useDensity` | Compact/normal density toggle (data attribute) |
+| `useKeyboardNav` | Arrow-key navigation for list panels |
+| `useTabBadges` | Fetch badge counts per tab (parallel fetch) |
+| `useServiceLocation` | Multi-location context (wraps app root) |
+
+---
+
+_Last updated: 2026-04-09_
