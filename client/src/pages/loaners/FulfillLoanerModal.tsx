@@ -125,7 +125,7 @@ export const FulfillLoanerModal = ({
         </div>
 
         <div className="fulfill-modal__steps">
-          <div className={`fulfill-modal__step ${step === 'pick' ? 'fulfill-modal__step--active' : step !== 'pick' ? 'fulfill-modal__step--done' : ''}`}>
+          <div className={`fulfill-modal__step ${step === 'pick' ? 'fulfill-modal__step--active' : 'fulfill-modal__step--done'}`}>
             1. Pick Scope
           </div>
           <div className={`fulfill-modal__step ${step === 'inspect' ? 'fulfill-modal__step--active' : step === 'bookout' ? 'fulfill-modal__step--done' : ''}`}>

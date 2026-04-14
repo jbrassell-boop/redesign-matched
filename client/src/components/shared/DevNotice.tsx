@@ -9,7 +9,7 @@ interface DevNoticeProps {
   /** Optional exact SQL migration */
   sql?: string;
   /** Wrap a button/element — click shows the notice instead of the action */
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 export const DevNotice = ({ title, requirement, sql, children }: DevNoticeProps) => {

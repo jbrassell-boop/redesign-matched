@@ -103,11 +103,7 @@ const tasksColumns = (_onRowClick: (key: number) => void, onFulfillLoaner?: (tas
       if (!record.hasLoanerRequest) return null;
       return createElement(DevNotice, {
         title: 'Fulfill Loaner',
-        requirements: [
-          'tblTasks + tblTaskLoaners must be migrated to Azure SQL',
-          'GET /api/loaners/available?scopeTypeKey={key}',
-          'POST /api/loaners/book-out',
-        ],
+        requirement: 'tblTasks + tblTaskLoaners must be migrated to Azure SQL; GET /api/loaners/available?scopeTypeKey={key}; POST /api/loaners/book-out',
       },
         createElement('button', {
           style: {
