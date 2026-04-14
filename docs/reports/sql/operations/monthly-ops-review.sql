@@ -638,7 +638,62 @@ GROUP BY t.sTechName, r.sMainRepairUpdateSlipReason
 ORDER BY t.sTechName, COUNT(rus.lRepairUpdateSlipKey) DESC;
 
 -- ============================================================
--- SECTIONS 12-16: Added in Plans B and C
+-- SECTION 12: Avoidable Damage
+-- In-house WOs completed in period (dtDateOut) with lRepairReasonKey filled.
+-- NOTE: ~54% coverage — lRepairReasonKey is not set on all WOs.
+-- Category 2 = Avoidable; Category 1 = Normal Wear & Tear.
+-- Top 10 reasons per category by WO count.
 -- ============================================================
 
-SELECT 'Sections 12-16 coming in Plans B and C' AS Note;
+;WITH S12_Base AS (
+    SELECT
+        rrc.sRepairReasonCategory                                              AS DamageCategory,
+        rr.sRepairReason                                                       AS DamageReason,
+        CASE
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 1 THEN 'Flex-Large'
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 0 THEN 'Flex-Small'
+            WHEN st.sRigidOrFlexible = 'R' THEN 'Rigid'
+            WHEN st.sRigidOrFlexible = 'C' THEN 'Camera'
+            WHEN st.sRigidOrFlexible = 'I' THEN 'Instrument'
+            ELSE 'Other'
+        END                                                                    AS InstrCategory,
+        COUNT(r.lRepairKey)                                                    AS WOCount
+    FROM tblRepair r
+        JOIN tblDepartment               d   ON r.lDepartmentKey    = d.lDepartmentKey
+        JOIN tblClient                   c   ON d.lClientKey        = c.lClientKey
+        JOIN tblScope                    s   ON r.lScopeKey         = s.lScopeKey
+        JOIN tblScopeType                st  ON s.lScopeTypeKey     = st.lScopeTypeKey
+        LEFT JOIN dbo.tblScopeTypeCategories sc ON st.lScopeTypeCatKey = sc.lScopeTypeCategoryKey
+        JOIN tblRepairReasons            rr  ON r.lRepairReasonKey  = rr.lRepairReasonKey
+        JOIN tblRepairReasonCategories   rrc ON rr.lRepairReasonCategoryKey = rrc.lRepairReasonCategoryKey
+    WHERE CONVERT(date, r.dtDateOut) >= @StartDate
+        AND   CONVERT(date, r.dtDateOut) <= @EndDate
+        AND   ISDATE(r.dtDateOut) = 1
+        AND   r.dtDateOut IS NOT NULL
+        AND   ISNULL(r.lVendorKey, 0) = 0
+        AND   ISNULL(c.bSkipTracking, 0) = 0
+    GROUP BY rrc.sRepairReasonCategory, rr.lRepairReasonCategoryKey,
+             rr.sRepairReason, st.sRigidOrFlexible, sc.bLargeDiameter
+),
+S12_Ranked AS (
+    SELECT *,
+        ROW_NUMBER() OVER (
+            PARTITION BY DamageCategory
+            ORDER BY WOCount DESC
+        ) AS RankWithinCategory
+    FROM S12_Base
+)
+SELECT
+    DamageCategory,
+    DamageReason,
+    InstrCategory,
+    WOCount
+FROM S12_Ranked
+WHERE RankWithinCategory <= 10
+ORDER BY DamageCategory DESC, WOCount DESC, InstrCategory;
+
+-- ============================================================
+-- SECTIONS 13-16: Added in Plan C
+-- ============================================================
+
+SELECT 'Sections 13-16 coming in Plan C' AS Note;
