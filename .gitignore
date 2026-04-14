@@ -19,4 +19,9 @@ client/.env.local
 # General
 .DS_Store
 *.log
+*.bak
 .worktrees/
+
+# Local-only Claude state (per-machine)
+.claude/settings.local.json
+.superpowers/
