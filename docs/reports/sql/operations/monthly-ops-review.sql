@@ -534,7 +534,52 @@ GROUP BY t.sTechName, vic.sItemDescription
 ORDER BY t.sTechName, SUM(vic.InventorySizeRepairAmount) DESC;
 
 -- ============================================================
--- SECTIONS 10-16: Added in Plans B and C
+-- SECTION 10A: Tech Amendments
+-- Amendments created in period (dtAmendmentDate).
+-- Cost = sum of dblRepairPrice on tblRepairItemTran rows linked
+--   to the amendment via lAmendRepairCommentKey.
+-- Missed D&I = reason 11; Repeat damage = reason 14.
 -- ============================================================
 
-SELECT 'Sections 10-16 coming in Plans B and C' AS Note;
+;WITH S10_AmendLines AS (
+    SELECT
+        t.sTechName,
+        arc.lAmendRepairCommentKey,
+        arc.lAmendRepairReasonKey,
+        CAST(ISNULL(arc.bApprovalDateReset, 0) AS int)                        AS bApprovalDateReset,
+        SUM(ISNULL(rit.dblRepairPrice, 0))                                     AS AmendCost
+    FROM tblAmendRepairComments arc
+        JOIN tblRepair          r   ON arc.lRepairKey             = r.lRepairKey
+        JOIN tblDepartment      d   ON r.lDepartmentKey           = d.lDepartmentKey
+        JOIN tblClient          c   ON d.lClientKey               = c.lClientKey
+        JOIN tblRepairItemTran  rit ON rit.lAmendRepairCommentKey = arc.lAmendRepairCommentKey
+        JOIN tblTechnicians     t   ON rit.lTechnicianKey         = t.lTechnicianKey
+    WHERE CONVERT(date, arc.dtAmendmentDate) >= @StartDate
+        AND   CONVERT(date, arc.dtAmendmentDate) <= @EndDate
+        AND   ISNULL(c.bSkipTracking, 0) = 0
+        AND   t.bIsActive = 1
+        AND   t.lJobTypeKey = 2
+        AND   t.lTechnicianKey <> 96
+        AND   arc.lAmendRepairReasonKey IN (11, 14)
+    GROUP BY t.sTechName, arc.lAmendRepairCommentKey,
+             arc.lAmendRepairReasonKey, arc.bApprovalDateReset
+)
+SELECT
+    sTechName,
+    COUNT(CASE WHEN lAmendRepairReasonKey = 11 THEN 1 END)                    AS MissedDICount,
+    CAST(SUM(CASE WHEN lAmendRepairReasonKey = 11
+                  THEN AmendCost ELSE 0 END) AS decimal(10,2))                 AS MissedDICost,
+    COUNT(CASE WHEN lAmendRepairReasonKey = 14 THEN 1 END)                    AS RepeatDamageCount,
+    CAST(SUM(CASE WHEN lAmendRepairReasonKey = 14
+                  THEN AmendCost ELSE 0 END) AS decimal(10,2))                 AS RepeatDamageCost,
+    SUM(bApprovalDateReset)                                                    AS TATResetCount,
+    CAST(SUM(AmendCost) AS decimal(10,2))                                      AS TotalAmendCost
+FROM S10_AmendLines
+GROUP BY sTechName
+ORDER BY TotalAmendCost DESC;
+
+-- ============================================================
+-- SECTIONS 10B-16: Added in Plans B and C
+-- ============================================================
+
+SELECT 'Sections 10B-16 coming in Plans B and C' AS Note;
