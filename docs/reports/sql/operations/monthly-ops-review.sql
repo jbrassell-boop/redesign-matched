@@ -156,9 +156,42 @@ ORDER BY t.InstrCategory;
 
 -- ============================================================
 -- SECTION 3: Contract vs FFS Volume
+-- WOs completed in period (dtDateOut).
+-- Contract = fn_scopeIsCoveredByContract(lScopeKey, dtDateIn) <> 0
 -- ============================================================
 
-SELECT 'Section 3 placeholder' AS Note;
+;WITH S3_Base AS (
+    SELECT
+        r.lRepairKey,
+        CASE
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 1 THEN 'Flex-Large'
+            WHEN st.sRigidOrFlexible = 'F' AND ISNULL(sc.bLargeDiameter,0) = 0 THEN 'Flex-Small'
+            WHEN st.sRigidOrFlexible = 'R' THEN 'Rigid'
+            WHEN st.sRigidOrFlexible = 'C' THEN 'Camera'
+            WHEN st.sRigidOrFlexible = 'I' THEN 'Instrument'
+            ELSE 'Other'
+        END AS InstrCategory,
+        CASE WHEN dbo.fn_scopeIsCoveredByContract(r.lScopeKey, r.dtDateIn) <> 0
+             THEN 'Contract' ELSE 'FFS' END AS BillingType
+    FROM tblRepair r
+        JOIN tblDepartment               d   ON r.lDepartmentKey  = d.lDepartmentKey
+        JOIN tblClient                   c   ON d.lClientKey      = c.lClientKey
+        JOIN tblScope                    s   ON r.lScopeKey       = s.lScopeKey
+        JOIN tblScopeType                st  ON s.lScopeTypeKey   = st.lScopeTypeKey
+        LEFT JOIN dbo.tblScopeTypeCategories sc ON st.lScopeTypeCatKey = sc.lScopeTypeCategoryKey
+    WHERE CONVERT(date, r.dtDateOut) >= @StartDate
+        AND   CONVERT(date, r.dtDateOut) <= @EndDate
+        AND   ISDATE(r.dtDateOut) = 1
+        AND   r.dtDateOut IS NOT NULL
+        AND   ISNULL(c.bSkipTracking, 0) = 0
+)
+SELECT
+    BillingType,
+    InstrCategory,
+    COUNT(lRepairKey) AS WOCount
+FROM S3_Base
+GROUP BY BillingType, InstrCategory
+ORDER BY BillingType, InstrCategory;
 
 -- ============================================================
 -- SECTION 4: Contract P&L
