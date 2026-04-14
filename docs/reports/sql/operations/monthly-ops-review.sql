@@ -613,7 +613,32 @@ GROUP BY OpsUser
 ORDER BY MisquoteCount DESC;
 
 -- ============================================================
--- SECTIONS 11-16: Added in Plans B and C
+-- SECTION 11: Update Slips
+-- Update slips created in period (dtUpdateRequestDate).
+-- By responsible tech and top-level reason category.
 -- ============================================================
 
-SELECT 'Sections 11-16 coming in Plans B and C' AS Note;
+SELECT
+    t.sTechName,
+    r.sMainRepairUpdateSlipReason                                              AS SlipReason,
+    COUNT(rus.lRepairUpdateSlipKey)                                            AS SlipCount
+FROM tblRepairUpdateSlips               rus
+    JOIN tblRepair                      rep ON rus.lRepairKey                     = rep.lRepairKey
+    JOIN tblDepartment                  d   ON rep.lDepartmentKey                 = d.lDepartmentKey
+    JOIN tblClient                      c   ON d.lClientKey                       = c.lClientKey
+    JOIN tblTechnicians                 t   ON rus.lResponsibleTech               = t.lTechnicianKey
+    JOIN tblMainRepairUpdateSlipReasons r   ON rus.lMainRepairUpdateSlipReasonKey = r.lMainRepairUpdateSlipReasonKey
+WHERE CONVERT(date, rus.dtUpdateRequestDate) >= @StartDate
+    AND   CONVERT(date, rus.dtUpdateRequestDate) <= @EndDate
+    AND   ISNULL(c.bSkipTracking, 0) = 0
+    AND   t.bIsActive = 1
+    AND   t.lJobTypeKey = 2
+    AND   t.lTechnicianKey <> 96
+GROUP BY t.sTechName, r.sMainRepairUpdateSlipReason
+ORDER BY t.sTechName, COUNT(rus.lRepairUpdateSlipKey) DESC;
+
+-- ============================================================
+-- SECTIONS 12-16: Added in Plans B and C
+-- ============================================================
+
+SELECT 'Sections 12-16 coming in Plans B and C' AS Note;
