@@ -19,8 +19,10 @@ DECLARE @EndDate   date = '2026-03-31'
 -- SECTION 1: Throughput & TAT
 -- WOs completed in period (dtDateOut), counted at highest non-D&I
 -- repair level per WO. In-house and outsourced shown separately.
--- Excludes D&I repair items (29, 246, 636).
+-- WOs that are 100% D&I items are intentionally excluded from counts.
+-- WOs with NULL dtAprRecvd are counted in WOCount but excluded from AvgTAT.
 -- TAT = fn_DateDiffWeekDays(dtAprRecvd, dtDateOut) business days.
+-- Scope is on tblRepair (one scope per WO); tblRepairItemTran has no lScopeKey.
 -- ============================================================
 
 ;WITH S1_Base AS (
