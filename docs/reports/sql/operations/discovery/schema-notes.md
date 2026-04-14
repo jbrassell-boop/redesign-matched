@@ -383,14 +383,87 @@ There are 5 "Not Repairable" entries and 1 "Not Repairable at TSI" — likely di
 
 ---
 
+---
+
+## 13. Defect Attribution — Resolved
+
+**`tblRepair` has a direct `lTechnicianKey_DefectTracking` column** (int FK → tblTechnicians).  
+Also: `dtDefectTrackingDate`, `dtDefectTrackingTime`, `sDefectReason`, `sDefectFollowUpNotes` on `tblRepair`.
+
+For Section 8 (Tech Defect %):
+- Defect recorded on WO = `tblRepair.lTechnicianKey_DefectTracking IS NOT NULL AND lTechnicianKey_DefectTracking <> 0`
+- Attributed to tech = `tblRepair.lTechnicianKey_DefectTracking = t.lTechnicianKey`
+- No need to use `tblRepairDefectTracking` for tech attribution at all
+
+---
+
+## 14. Amendment Cost — tblRepairItemTran Link
+
+`tblRepairItemTran` has `lAmendRepairCommentKey` (int FK → `tblAmendRepairComments.lAmendRepairCommentKey`).
+
+This means amendment cost = sum of `dblRepairPrice` on `tblRepairItemTran` rows that have a non-null `lAmendRepairCommentKey` matching the amendment in question.
+
+**Join path for amendment cost by reason:**
+```sql
+SELECT t.sTechName, arr.sAmendRepairReason, SUM(rit.dblRepairPrice) AS AmendCost
+FROM tblRepairItemTran rit
+JOIN tblAmendRepairComments arc ON rit.lAmendRepairCommentKey = arc.lAmendRepairCommentKey
+JOIN tblAmendRepairReasons arr ON arc.lAmendRepairReasonKey = arr.lAmendRepairReasonKey
+JOIN tblTechnicians t ON rit.lTechnicianKey = t.lTechnicianKey
+WHERE arc.dtAmendmentDate BETWEEN @StartDate AND @EndDate
+  AND arc.lAmendRepairReasonKey IN (11, 14, 15)  -- missed DI, repeat damage, misquote
+GROUP BY t.sTechName, arr.sAmendRepairReason
+```
+
+---
+
+## 15. vwRepairInventoryCosts — Tech Inventory Usage View
+
+Pre-built view for repair inventory cost lookup:
+
+| Column | Type | Notes |
+|--------|------|-------|
+| lScopeKey | int | |
+| lRepairKey | int | |
+| lRepairItemTranKey | int | Links to tblRepairItemTran |
+| sItemDescription | nvarchar | Part category name |
+| sSizeDescription | nvarchar | SKU description |
+| InventorySizeRepairAmount | money | Cost |
+
+**Tech attribution join:**
+```sql
+vwRepairInventoryCosts vic
+JOIN tblRepairItemTran rit ON vic.lRepairItemTranKey = rit.lRepairItemTranKey
+JOIN tblTechnicians t ON rit.lTechnicianKey = t.lTechnicianKey
+```
+
+---
+
+## 16. Loaner Fulfillment Columns (Confirmed on tblRepair)
+
+| Column | Notes |
+|--------|-------|
+| `bLoanerRequested` | bit — 1 if customer requested a loaner |
+| `sWasLoanerProduced` | nvarchar — whether loaner was actually provided |
+| `lScopeKey_Loaner` | int — FK to the loaner scope assigned (0 = none assigned) |
+
+**Fulfillment logic:**
+- Requested = `bLoanerRequested = 1`
+- Fulfilled = `bLoanerRequested = 1 AND ISNULL(lScopeKey_Loaner, 0) > 0`
+- Unfulfilled = `bLoanerRequested = 1 AND ISNULL(lScopeKey_Loaner, 0) = 0`
+
+**vwLoanerTran** has proper datetime columns `DateOut` and `DateIn` (parsed from nvarchar sDateOut/sDateIn).
+
+---
+
 ## Open Items / Ambiguities
 
-1. **tblRepairReasons / tblRepairReasonCategories** — not queried. May be relevant for complaint/failure classification in the ops review. Query if needed: `SELECT * FROM tblRepairReasons ORDER BY 1`
+1. **tblRepairReasons / tblRepairReasonCategories** — not queried. May be relevant for avoidable damage classification (Section 12). Query if needed: `SELECT * FROM tblRepairReasons ORDER BY 1`
 
-2. **Not Repairable keys** — 6 keys across different product lines. Confirm with Steve which key(s) apply to the scope types in scope for the report. The LIKE pattern is safer.
+2. **Not Repairable keys** — 6 keys across different product lines. Confirmed column is `sItemDescription`, not `sRepairItem`. Use `sItemDescription LIKE '%Not Rep%'` for safety.
 
-3. **No responsible tech column on defect tracking** — `tblRepairDefectTracking` has no tech column. Responsible tech must be derived from `tblRepair.lTechnicianKey1` or equivalent.
+3. **tblRepairDefectTracking has no PK column** — `lRepairKey` + `lDefectTrackingItemKey` is composite key. Use both in GROUP BY. For Section 8, use `tblRepair.lTechnicianKey_DefectTracking` directly — this is cleaner.
 
-4. **Q6 — No Order/Purchase/Receive tables matched original patterns** — The purchasing system uses `tblSupplierPO` / `tblSupplierPOTran` naming. Document updated in Section 6.
+4. **sWasLoanerProduced values** — not yet confirmed (Y/N or other). Use `lScopeKey_Loaner > 0` as primary fulfillment indicator, it's an FK and unambiguous.
 
-5. **tblRepairDefectTracking has no PK column** — `lRepairKey` + `lDefectTrackingItemKey` appears to be a composite key. Confirm before writing aggregation queries.
+5. **Amendment cost for misquotes (key 15)** — Misquotes by ops staff: `lTechnicianKey` on the `tblRepairItemTran` rows linked to misquote amendments may be the ops user, not a field tech. Verify during Plan B implementation if the tech attribution makes sense for misquote tracking or if `tblAmendRepairComments.lUserKey` is better.
