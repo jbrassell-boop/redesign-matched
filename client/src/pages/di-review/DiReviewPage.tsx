@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Table, Badge, Button, Spin, message, Tag } from 'antd';
 import type { DiQueueItem, LoadedRepair } from './types';
 import { getDiQueue, getDiDetail } from '../../api/diReview';
@@ -11,15 +11,15 @@ export const DiReviewPage = () => {
   const [detail, setDetail]           = useState<LoadedRepair[] | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const loadQueue = () => {
+  const loadQueue = useCallback(() => {
     setLoading(true);
     getDiQueue()
       .then(setQueue)
       .catch(() => message.error('Failed to load queue'))
       .finally(() => setLoading(false));
-  };
+  }, []);
 
-  useEffect(() => { loadQueue(); }, []);
+  useEffect(() => { loadQueue(); }, [loadQueue]);
 
   const handleExpand = async (repairKey: number) => {
     if (expanded === repairKey) { setExpanded(null); setDetail(null); return; }
