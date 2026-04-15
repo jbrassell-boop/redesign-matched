@@ -34,6 +34,10 @@ $connStr = "Server=10.0.0.15\Goldmine;Database=WinScopeNet;User ID=BrightLogixUs
 $sqlFile = Join-Path $PSScriptRoot "monthly-ops-review.sql"
 
 $tabNames = @(
+    "0A - Ops Dashboard",
+    "0B - Financial Dashboard",
+    "0C - Team Dashboard",
+    "0D - Top 10 Clients",
     "1 - Throughput & TAT",
     "2 - 40-Day Returns",
     "3 - Contract vs FFS",
@@ -52,7 +56,8 @@ $tabNames = @(
     "14 - Outsourced Repairs",
     "15 - Inventory Ordering",
     "16A - NR Rate",
-    "16B - DI Breakdown"
+    "16B - DI Breakdown",
+    "17 - Tech Hours"
 )
 
 # ── Validate ──────────────────────────────────────────────────────────────────

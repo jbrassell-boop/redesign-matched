@@ -5,7 +5,7 @@
 --   Monthly:   @StartDate = first day of month, @EndDate = last day of month
 --   Quarterly: @StartDate = first day of quarter, @EndDate = last day of quarter
 --
--- Produces 16 result sets in order (one per section).
+-- Produces 21 result sets: 4 KPI dashboards (0A-0D) + 17 detail sections.
 -- All sections filter: ISNULL(c.bSkipTracking,0) = 0
 -- Placeholder tech "000" (lTechnicianKey=96) excluded from all tech sections.
 -- Read-only -- no write operations.
@@ -14,6 +14,472 @@
 
 DECLARE @StartDate date = '2026-03-01'
 DECLARE @EndDate   date = '2026-03-31'
+
+-- ============================================================
+-- SECTION 0: KPI DASHBOARDS (Operations, Financial, Team)
+-- Prior period auto-computed as the equal-length window immediately
+-- preceding @StartDate. Produces THREE result sets:
+--   0A Operations    (throughput / quality / backlog)
+--   0B Financial     (revenue / mix / cost)
+--   0C Team          (utilization / accountability)
+-- Each dashboard: one row per KPI with Current, Prior, Delta, DeltaPct.
+-- ============================================================
+
+DECLARE @PeriodDays      int  = DATEDIFF(DAY, @StartDate, @EndDate) + 1;
+DECLARE @PriorEndDate    date = DATEADD(DAY, -1, @StartDate);
+DECLARE @PriorStartDate  date = DATEADD(DAY, -(@PeriodDays - 1), @PriorEndDate);
+
+DECLARE @KPI TABLE (
+    Dashboard char(1),
+    SortKey   int,
+    KPIName   nvarchar(100),
+    Unit      nvarchar(10),
+    [Current] decimal(18,4),
+    Prior     decimal(18,4)
+);
+
+-- ─── 0A.1/0A.2/0A.3  WO volume + mix (completed in window) ─────────────────
+;WITH WO_Base AS (
+    SELECT
+        r.lRepairKey,
+        CASE WHEN ISNULL(r.lVendorKey,0)=0 THEN 1 ELSE 0 END                   AS IsInHouse,
+        CAST(dbo.fn_DateDiffWeekDays(r.dtAprRecvd, r.dtDateOut) AS decimal(10,2)) AS TAT,
+        CASE WHEN CONVERT(date, r.dtDateOut) BETWEEN @StartDate AND @EndDate THEN 1
+             WHEN CONVERT(date, r.dtDateOut) BETWEEN @PriorStartDate AND @PriorEndDate THEN 2
+             ELSE 0 END                                                          AS Period
+    FROM tblRepair r
+        JOIN tblDepartment d ON r.lDepartmentKey = d.lDepartmentKey
+        JOIN tblClient     c ON d.lClientKey     = c.lClientKey
+    WHERE CONVERT(date, r.dtDateOut) BETWEEN @PriorStartDate AND @EndDate
+      AND ISNULL(c.bSkipTracking,0) = 0
+      AND EXISTS (SELECT 1 FROM tblRepairItemTran rit
+                  WHERE rit.lRepairKey = r.lRepairKey
+                    AND rit.lRepairItemKey NOT IN (29, 246, 636))
+    GROUP BY r.lRepairKey, r.lVendorKey, r.dtAprRecvd, r.dtDateOut
+)
+INSERT INTO @KPI (Dashboard, SortKey, KPIName, Unit, [Current], Prior)
+SELECT 'A', 1, 'Work Orders Completed', '#',
+    SUM(CASE WHEN Period=1 THEN 1 ELSE 0 END),
+    SUM(CASE WHEN Period=2 THEN 1 ELSE 0 END)
+FROM WO_Base
+UNION ALL
+SELECT 'A', 2, 'Avg TAT (business days)', 'days',
+    AVG(CASE WHEN Period=1 AND TAT>=0 THEN TAT END),
+    AVG(CASE WHEN Period=2 AND TAT>=0 THEN TAT END)
+FROM WO_Base
+UNION ALL
+SELECT 'A', 3, 'In-House WO %', '%',
+    CAST(SUM(CASE WHEN Period=1 THEN IsInHouse ELSE 0 END) AS decimal(18,4))
+        / NULLIF(SUM(CASE WHEN Period=1 THEN 1 ELSE 0 END),0),
+    CAST(SUM(CASE WHEN Period=2 THEN IsInHouse ELSE 0 END) AS decimal(18,4))
+        / NULLIF(SUM(CASE WHEN Period=2 THEN 1 ELSE 0 END),0)
+FROM WO_Base;
+
+-- ─── 0A.4/0A.5  Open WO aging (snapshot at end of current vs prior) ────────
+;WITH Open_Cur AS (
+    SELECT COUNT(*) AS OpenCount,
+           SUM(CASE WHEN DATEDIFF(DAY, r.dtDateIn, @EndDate) > 30 THEN 1 ELSE 0 END) AS Over30,
+           SUM(ISNULL(r.dblAmtRepair,0)) AS OpenDollars
+    FROM tblRepair r
+        JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+        JOIN tblClient     c ON d.lClientKey=c.lClientKey
+    WHERE r.dtDateOut IS NULL
+      AND r.dtDateIn IS NOT NULL
+      AND CONVERT(date,r.dtDateIn) <= @EndDate
+      AND r.dtDeniedDate IS NULL
+      AND ISNULL(c.bSkipTracking,0)=0
+),
+Open_Prior AS (
+    SELECT COUNT(*) AS OpenCount,
+           SUM(CASE WHEN DATEDIFF(DAY, r.dtDateIn, @PriorEndDate) > 30 THEN 1 ELSE 0 END) AS Over30,
+           SUM(ISNULL(r.dblAmtRepair,0)) AS OpenDollars
+    FROM tblRepair r
+        JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+        JOIN tblClient     c ON d.lClientKey=c.lClientKey
+    WHERE r.dtDateOut IS NULL
+      AND r.dtDateIn IS NOT NULL
+      AND CONVERT(date,r.dtDateIn) <= @PriorEndDate
+      AND r.dtDeniedDate IS NULL
+      AND ISNULL(c.bSkipTracking,0)=0
+)
+INSERT INTO @KPI (Dashboard, SortKey, KPIName, Unit, [Current], Prior)
+SELECT 'A', 4, 'Open WOs (snapshot at period end)', '#',
+    (SELECT OpenCount FROM Open_Cur), (SELECT OpenCount FROM Open_Prior)
+UNION ALL
+SELECT 'A', 5, 'Open WOs > 30 days old', '#',
+    (SELECT Over30 FROM Open_Cur), (SELECT Over30 FROM Open_Prior)
+UNION ALL
+SELECT 'A', 6, 'Open WO $ at risk', '$',
+    (SELECT OpenDollars FROM Open_Cur), (SELECT OpenDollars FROM Open_Prior);
+
+-- ─── 0A.7/0A.8  40-day return rate + Warranty rate (received in window) ────
+-- Uses same dbo.fnWithin40Days + Instrument exclusion as Section 2.
+;WITH WO_Cur AS (
+    SELECT r.sWorkOrderNumber
+    FROM tblRepair r
+        JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+        JOIN tblClient     c ON d.lClientKey=c.lClientKey
+        JOIN tblScope      s ON r.lScopeKey=s.lScopeKey
+        JOIN tblScopeType  st ON s.lScopeTypeKey=st.lScopeTypeKey
+    WHERE CONVERT(date,r.dtDateIn) BETWEEN @StartDate AND @EndDate
+      AND ISNULL(c.bSkipTracking,0)=0
+      AND st.sRigidOrFlexible <> 'I'
+),
+WO_Prior AS (
+    SELECT r.sWorkOrderNumber
+    FROM tblRepair r
+        JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+        JOIN tblClient     c ON d.lClientKey=c.lClientKey
+        JOIN tblScope      s ON r.lScopeKey=s.lScopeKey
+        JOIN tblScopeType  st ON s.lScopeTypeKey=st.lScopeTypeKey
+    WHERE CONVERT(date,r.dtDateIn) BETWEEN @PriorStartDate AND @PriorEndDate
+      AND ISNULL(c.bSkipTracking,0)=0
+      AND st.sRigidOrFlexible <> 'I'
+),
+F40_Cur AS (
+    SELECT w.sWorkOrderNumber,
+           MAX(CASE WHEN ISNULL(w.Failure_ImproperTechnique,'')='X'
+                     OR ISNULL(w.Failure_PreviousInspection,'')='X'
+                     OR ISNULL(w.Failure_PreviousRepairs,'')='X'
+                    THEN 1 ELSE 0 END) AS IsWarranty
+    FROM dbo.fnWithin40Days(@StartDate, @EndDate, 'A', 0) w
+    GROUP BY w.sWorkOrderNumber
+),
+F40_Prior AS (
+    SELECT w.sWorkOrderNumber,
+           MAX(CASE WHEN ISNULL(w.Failure_ImproperTechnique,'')='X'
+                     OR ISNULL(w.Failure_PreviousInspection,'')='X'
+                     OR ISNULL(w.Failure_PreviousRepairs,'')='X'
+                    THEN 1 ELSE 0 END) AS IsWarranty
+    FROM dbo.fnWithin40Days(@PriorStartDate, @PriorEndDate, 'A', 0) w
+    GROUP BY w.sWorkOrderNumber
+)
+INSERT INTO @KPI (Dashboard, SortKey, KPIName, Unit, [Current], Prior)
+SELECT 'A', 7, '40-Day Return Rate', '%',
+    CAST((SELECT COUNT(*) FROM F40_Cur f JOIN WO_Cur w ON f.sWorkOrderNumber=w.sWorkOrderNumber) AS decimal(18,4))
+        / NULLIF((SELECT COUNT(*) FROM WO_Cur),0),
+    CAST((SELECT COUNT(*) FROM F40_Prior f JOIN WO_Prior w ON f.sWorkOrderNumber=w.sWorkOrderNumber) AS decimal(18,4))
+        / NULLIF((SELECT COUNT(*) FROM WO_Prior),0)
+UNION ALL
+SELECT 'A', 8, 'Warranty Rate', '%',
+    CAST((SELECT SUM(f.IsWarranty) FROM F40_Cur f JOIN WO_Cur w ON f.sWorkOrderNumber=w.sWorkOrderNumber) AS decimal(18,4))
+        / NULLIF((SELECT COUNT(*) FROM WO_Cur),0),
+    CAST((SELECT SUM(f.IsWarranty) FROM F40_Prior f JOIN WO_Prior w ON f.sWorkOrderNumber=w.sWorkOrderNumber) AS decimal(18,4))
+        / NULLIF((SELECT COUNT(*) FROM WO_Prior),0);
+
+-- ─── 0A.9  Update Slips (created in period) ────────────────────────────────
+INSERT INTO @KPI (Dashboard, SortKey, KPIName, Unit, [Current], Prior)
+SELECT 'A', 9, 'Update Slips', '#',
+    SUM(CASE WHEN CONVERT(date, rus.dtUpdateRequestDate) BETWEEN @StartDate AND @EndDate THEN 1 ELSE 0 END),
+    SUM(CASE WHEN CONVERT(date, rus.dtUpdateRequestDate) BETWEEN @PriorStartDate AND @PriorEndDate THEN 1 ELSE 0 END)
+FROM tblRepairUpdateSlips rus
+    JOIN tblRepair     r ON rus.lRepairKey=r.lRepairKey
+    JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+    JOIN tblClient     c ON d.lClientKey=c.lClientKey
+WHERE ISNULL(c.bSkipTracking,0)=0
+  AND CONVERT(date, rus.dtUpdateRequestDate) BETWEEN @PriorStartDate AND @EndDate;
+
+-- ─── 0A.10  Avoidable Damage WOs (completed in period, category 2) ─────────
+INSERT INTO @KPI (Dashboard, SortKey, KPIName, Unit, [Current], Prior)
+SELECT 'A', 10, 'Avoidable Damage WOs', '#',
+    SUM(CASE WHEN CONVERT(date, r.dtDateOut) BETWEEN @StartDate AND @EndDate THEN 1 ELSE 0 END),
+    SUM(CASE WHEN CONVERT(date, r.dtDateOut) BETWEEN @PriorStartDate AND @PriorEndDate THEN 1 ELSE 0 END)
+FROM tblRepair r
+    JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+    JOIN tblClient     c ON d.lClientKey=c.lClientKey
+    JOIN tblRepairReasons          rr  ON r.lRepairReasonKey = rr.lRepairReasonKey
+    JOIN tblRepairReasonCategories rrc ON rr.lRepairReasonCategoryKey = rrc.lRepairReasonCategoryKey
+WHERE r.dtDateOut IS NOT NULL
+  AND CONVERT(date, r.dtDateOut) BETWEEN @PriorStartDate AND @EndDate
+  AND ISNULL(c.bSkipTracking,0)=0
+  AND ISNULL(r.lVendorKey,0)=0
+  AND rrc.lRepairReasonCategoryKey = 2;
+
+-- ─── 0A.11  NR Rate (in-house WOs completed; NR item keys) ─────────────────
+;WITH NR_Base AS (
+    SELECT
+        r.lRepairKey,
+        CASE WHEN CONVERT(date,r.dtDateOut) BETWEEN @StartDate AND @EndDate THEN 1
+             WHEN CONVERT(date,r.dtDateOut) BETWEEN @PriorStartDate AND @PriorEndDate THEN 2
+             ELSE 0 END AS Period,
+        MAX(CASE WHEN rit.lRepairItemKey IN (63,197,379,508,657,259) THEN 1 ELSE 0 END) AS IsNR
+    FROM tblRepair r
+        JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+        JOIN tblClient     c ON d.lClientKey=c.lClientKey
+        JOIN tblRepairItemTran rit ON r.lRepairKey=rit.lRepairKey
+    WHERE CONVERT(date,r.dtDateOut) BETWEEN @PriorStartDate AND @EndDate
+      AND r.dtDateOut IS NOT NULL
+      AND ISNULL(c.bSkipTracking,0)=0
+      AND ISNULL(r.lVendorKey,0)=0
+    GROUP BY r.lRepairKey, r.dtDateOut
+)
+INSERT INTO @KPI (Dashboard, SortKey, KPIName, Unit, [Current], Prior)
+SELECT 'A', 11, 'Not Repairable Rate', '%',
+    CAST(SUM(CASE WHEN Period=1 THEN IsNR ELSE 0 END) AS decimal(18,4))
+        / NULLIF(SUM(CASE WHEN Period=1 THEN 1 ELSE 0 END),0),
+    CAST(SUM(CASE WHEN Period=2 THEN IsNR ELSE 0 END) AS decimal(18,4))
+        / NULLIF(SUM(CASE WHEN Period=2 THEN 1 ELSE 0 END),0)
+FROM NR_Base;
+
+-- ─── 0A.12  D&I Conversion (Joe: not denied = whole WO approved) ───────────
+;WITH DI_Base AS (
+    SELECT
+        r.lRepairKey,
+        CASE WHEN CONVERT(date,r.dtDateIn) BETWEEN @StartDate AND @EndDate THEN 1
+             WHEN CONVERT(date,r.dtDateIn) BETWEEN @PriorStartDate AND @PriorEndDate THEN 2
+             ELSE 0 END AS Period,
+        MAX(CASE WHEN rit.lRepairItemKey IN (29,246,636) THEN 1 ELSE 0 END) AS HasDI,
+        r.dtDeniedDate
+    FROM tblRepair r
+        JOIN tblRepairItemTran rit ON r.lRepairKey=rit.lRepairKey
+        JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+        JOIN tblClient     c ON d.lClientKey=c.lClientKey
+    WHERE CONVERT(date,r.dtDateIn) BETWEEN @PriorStartDate AND @EndDate
+      AND ISNULL(c.bSkipTracking,0)=0
+    GROUP BY r.lRepairKey, r.dtDateIn, r.dtDeniedDate
+)
+INSERT INTO @KPI (Dashboard, SortKey, KPIName, Unit, [Current], Prior)
+SELECT 'A', 12, 'D&I Conversion (WO not denied)', '%',
+    CAST(SUM(CASE WHEN Period=1 AND HasDI=1 AND dtDeniedDate IS NULL THEN 1 ELSE 0 END) AS decimal(18,4))
+        / NULLIF(SUM(CASE WHEN Period=1 AND HasDI=1 THEN 1 ELSE 0 END),0),
+    CAST(SUM(CASE WHEN Period=2 AND HasDI=1 AND dtDeniedDate IS NULL THEN 1 ELSE 0 END) AS decimal(18,4))
+        / NULLIF(SUM(CASE WHEN Period=2 AND HasDI=1 THEN 1 ELSE 0 END),0)
+FROM DI_Base;
+
+-- ─── 0B.1..5  Revenue, cost, margin (WOs completed in window) ──────────────
+;WITH Rev_Base AS (
+    SELECT
+        r.lRepairKey,
+        r.lVendorKey,
+        CASE WHEN dbo.fn_scopeIsCoveredByContract(r.lScopeKey, r.dtDateIn) <> 0
+             THEN 1 ELSE 0 END          AS bContract,
+        ISNULL(r.dblAmtRepair,0)       AS Revenue,
+        ISNULL(r.dblAmtCostLabor,0)    AS LaborCost,
+        ISNULL(r.dblAmtCostMaterial,0) AS MaterialCost,
+        ISNULL(r.dblOutSourceCost,0)   AS OutsourceCost,
+        CASE WHEN CONVERT(date,r.dtDateOut) BETWEEN @StartDate AND @EndDate THEN 1
+             WHEN CONVERT(date,r.dtDateOut) BETWEEN @PriorStartDate AND @PriorEndDate THEN 2
+             ELSE 0 END AS Period
+    FROM tblRepair r
+        JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+        JOIN tblClient     c ON d.lClientKey=c.lClientKey
+    WHERE CONVERT(date,r.dtDateOut) BETWEEN @PriorStartDate AND @EndDate
+      AND r.dtDateOut IS NOT NULL
+      AND ISNULL(c.bSkipTracking,0)=0
+      AND r.dtDeniedDate IS NULL
+)
+INSERT INTO @KPI (Dashboard, SortKey, KPIName, Unit, [Current], Prior)
+SELECT 'B', 1, 'Total Revenue (completed WOs)', '$',
+    SUM(CASE WHEN Period=1 THEN Revenue ELSE 0 END),
+    SUM(CASE WHEN Period=2 THEN Revenue ELSE 0 END)
+FROM Rev_Base
+UNION ALL
+SELECT 'B', 2, 'Contract Revenue %', '%',
+    CAST(SUM(CASE WHEN Period=1 AND bContract=1 THEN Revenue ELSE 0 END) AS decimal(18,4))
+        / NULLIF(SUM(CASE WHEN Period=1 THEN Revenue ELSE 0 END),0),
+    CAST(SUM(CASE WHEN Period=2 AND bContract=1 THEN Revenue ELSE 0 END) AS decimal(18,4))
+        / NULLIF(SUM(CASE WHEN Period=2 THEN Revenue ELSE 0 END),0)
+FROM Rev_Base
+UNION ALL
+SELECT 'B', 3, 'Avg Revenue per WO', '$',
+    CAST(SUM(CASE WHEN Period=1 THEN Revenue ELSE 0 END) AS decimal(18,4))
+        / NULLIF(COUNT(CASE WHEN Period=1 THEN 1 END),0),
+    CAST(SUM(CASE WHEN Period=2 THEN Revenue ELSE 0 END) AS decimal(18,4))
+        / NULLIF(COUNT(CASE WHEN Period=2 THEN 1 END),0)
+FROM Rev_Base
+UNION ALL
+SELECT 'B', 4, 'Total Labor + Material Cost', '$',
+    SUM(CASE WHEN Period=1 THEN LaborCost + MaterialCost ELSE 0 END),
+    SUM(CASE WHEN Period=2 THEN LaborCost + MaterialCost ELSE 0 END)
+FROM Rev_Base
+UNION ALL
+SELECT 'B', 5, 'Outsource Spend', '$',
+    SUM(CASE WHEN Period=1 AND ISNULL(lVendorKey,0)<>0 THEN OutsourceCost ELSE 0 END),
+    SUM(CASE WHEN Period=2 AND ISNULL(lVendorKey,0)<>0 THEN OutsourceCost ELSE 0 END)
+FROM Rev_Base
+UNION ALL
+SELECT 'B', 6, 'Gross Margin %', '%',
+    CAST(SUM(CASE WHEN Period=1 THEN Revenue - LaborCost - MaterialCost - OutsourceCost ELSE 0 END) AS decimal(18,4))
+        / NULLIF(SUM(CASE WHEN Period=1 THEN Revenue ELSE 0 END),0),
+    CAST(SUM(CASE WHEN Period=2 THEN Revenue - LaborCost - MaterialCost - OutsourceCost ELSE 0 END) AS decimal(18,4))
+        / NULLIF(SUM(CASE WHEN Period=2 THEN Revenue ELSE 0 END),0)
+FROM Rev_Base;
+
+-- ─── 0B.7  Active Clients (distinct clients billed in window) ──────────────
+;WITH Client_Activity AS (
+    SELECT
+        c.lClientKey,
+        CASE WHEN CONVERT(date,r.dtDateOut) BETWEEN @StartDate AND @EndDate THEN 1
+             WHEN CONVERT(date,r.dtDateOut) BETWEEN @PriorStartDate AND @PriorEndDate THEN 2
+             ELSE 0 END AS Period
+    FROM tblRepair r
+        JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+        JOIN tblClient     c ON d.lClientKey=c.lClientKey
+    WHERE CONVERT(date,r.dtDateOut) BETWEEN @PriorStartDate AND @EndDate
+      AND r.dtDateOut IS NOT NULL
+      AND ISNULL(c.bSkipTracking,0)=0
+    GROUP BY c.lClientKey, r.dtDateOut
+)
+INSERT INTO @KPI (Dashboard, SortKey, KPIName, Unit, [Current], Prior)
+SELECT 'B', 7, 'Active Clients', '#',
+    COUNT(DISTINCT CASE WHEN Period=1 THEN lClientKey END),
+    COUNT(DISTINCT CASE WHEN Period=2 THEN lClientKey END)
+FROM Client_Activity
+UNION ALL
+SELECT 'B', 8, 'New Clients (not active prior period)', '#',
+    (SELECT COUNT(DISTINCT ca1.lClientKey) FROM Client_Activity ca1
+     WHERE ca1.Period=1
+       AND NOT EXISTS (SELECT 1 FROM Client_Activity ca2 WHERE ca2.Period=2 AND ca2.lClientKey=ca1.lClientKey)),
+    NULL
+UNION ALL
+SELECT 'B', 9, 'Lost Clients (active prior, not current)', '#',
+    (SELECT COUNT(DISTINCT ca2.lClientKey) FROM Client_Activity ca2
+     WHERE ca2.Period=2
+       AND NOT EXISTS (SELECT 1 FROM Client_Activity ca1 WHERE ca1.Period=1 AND ca1.lClientKey=ca2.lClientKey)),
+    NULL;
+
+-- ─── 0C.1..7  Team performance ─────────────────────────────────────────────
+;WITH TechHrs_Cur AS (
+    SELECT SUM(th.nHours) AS Paid FROM tblTechHours th
+    JOIN tblTechnicians t ON th.lTechnicianKey=t.lTechnicianKey
+    WHERE th.dtHoursDate BETWEEN @StartDate AND @EndDate
+      AND t.bIsActive=1 AND t.lJobTypeKey=2 AND t.lTechnicianKey<>96
+),
+TechHrs_Prior AS (
+    SELECT SUM(th.nHours) AS Paid FROM tblTechHours th
+    JOIN tblTechnicians t ON th.lTechnicianKey=t.lTechnicianKey
+    WHERE th.dtHoursDate BETWEEN @PriorStartDate AND @PriorEndDate
+      AND t.bIsActive=1 AND t.lJobTypeKey=2 AND t.lTechnicianKey<>96
+),
+Repair_Cur AS (
+    SELECT
+        SUM(CASE WHEN ISNULL(trit.bPause,0)=0 AND ISNULL(trit.bDryTime,0)=0 AND ISNULL(trit.bRework,0)=0
+                 THEN DATEDIFF(MINUTE, trit.dtStartDate, trit.dtStopDate)/60.0 ELSE 0 END) AS RepairHrs,
+        SUM(CASE WHEN ISNULL(trit.bPause,0)=0 AND ISNULL(trit.bRework,0)=1
+                 THEN DATEDIFF(MINUTE, trit.dtStartDate, trit.dtStopDate)/60.0 ELSE 0 END) AS ReworkHrs
+    FROM tblTechRepairItemTimes trit
+    JOIN tblTechnicians t ON trit.lTechKey=t.lTechnicianKey
+    WHERE trit.dtStartDate >= @StartDate AND trit.dtStartDate < DATEADD(DAY,1,@EndDate)
+      AND trit.dtStopDate IS NOT NULL
+      AND t.bIsActive=1 AND t.lJobTypeKey=2 AND t.lTechnicianKey<>96
+),
+Repair_Prior AS (
+    SELECT
+        SUM(CASE WHEN ISNULL(trit.bPause,0)=0 AND ISNULL(trit.bDryTime,0)=0 AND ISNULL(trit.bRework,0)=0
+                 THEN DATEDIFF(MINUTE, trit.dtStartDate, trit.dtStopDate)/60.0 ELSE 0 END) AS RepairHrs,
+        SUM(CASE WHEN ISNULL(trit.bPause,0)=0 AND ISNULL(trit.bRework,0)=1
+                 THEN DATEDIFF(MINUTE, trit.dtStartDate, trit.dtStopDate)/60.0 ELSE 0 END) AS ReworkHrs
+    FROM tblTechRepairItemTimes trit
+    JOIN tblTechnicians t ON trit.lTechKey=t.lTechnicianKey
+    WHERE trit.dtStartDate >= @PriorStartDate AND trit.dtStartDate < DATEADD(DAY,1,@PriorEndDate)
+      AND trit.dtStopDate IS NOT NULL
+      AND t.bIsActive=1 AND t.lJobTypeKey=2 AND t.lTechnicianKey<>96
+)
+INSERT INTO @KPI (Dashboard, SortKey, KPIName, Unit, [Current], Prior)
+SELECT 'C', 1, 'Active Repair Techs', '#',
+    (SELECT COUNT(*) FROM tblTechnicians WHERE bIsActive=1 AND lJobTypeKey=2 AND lTechnicianKey<>96),
+    (SELECT COUNT(*) FROM tblTechnicians WHERE bIsActive=1 AND lJobTypeKey=2 AND lTechnicianKey<>96)
+UNION ALL
+SELECT 'C', 2, 'Total Paid Hours', 'hrs',
+    (SELECT Paid FROM TechHrs_Cur), (SELECT Paid FROM TechHrs_Prior)
+UNION ALL
+SELECT 'C', 3, 'Total Hands-On Repair Hours', 'hrs',
+    (SELECT RepairHrs FROM Repair_Cur), (SELECT RepairHrs FROM Repair_Prior)
+UNION ALL
+SELECT 'C', 4, 'Total Rework Hours', 'hrs',
+    (SELECT ReworkHrs FROM Repair_Cur), (SELECT ReworkHrs FROM Repair_Prior)
+UNION ALL
+SELECT 'C', 5, 'Tech Utilization % (fleet avg)', '%',
+    CAST((SELECT RepairHrs FROM Repair_Cur) AS decimal(18,4)) / NULLIF((SELECT Paid FROM TechHrs_Cur),0),
+    CAST((SELECT RepairHrs FROM Repair_Prior) AS decimal(18,4)) / NULLIF((SELECT Paid FROM TechHrs_Prior),0)
+UNION ALL
+SELECT 'C', 6, 'Rework % of Hands-On Time', '%',
+    CAST((SELECT ReworkHrs FROM Repair_Cur) AS decimal(18,4))
+        / NULLIF((SELECT RepairHrs FROM Repair_Cur) + (SELECT ReworkHrs FROM Repair_Cur),0),
+    CAST((SELECT ReworkHrs FROM Repair_Prior) AS decimal(18,4))
+        / NULLIF((SELECT RepairHrs FROM Repair_Prior) + (SELECT ReworkHrs FROM Repair_Prior),0);
+
+-- ─── 0C.7/0C.8  Amendments / Misquotes (tblAmendRepairComments) ────────────
+-- Tech Amendments: reasons 11 (missed D&I) + 14 (repeat damage).
+-- Ops Misquotes:   reason 15 (misquote by operations).
+INSERT INTO @KPI (Dashboard, SortKey, KPIName, Unit, [Current], Prior)
+SELECT 'C', 7, 'Tech Amendments', '#',
+    SUM(CASE WHEN CONVERT(date, arc.dtAmendmentDate) BETWEEN @StartDate AND @EndDate
+                  AND arc.lAmendRepairReasonKey IN (11,14) THEN 1 ELSE 0 END),
+    SUM(CASE WHEN CONVERT(date, arc.dtAmendmentDate) BETWEEN @PriorStartDate AND @PriorEndDate
+                  AND arc.lAmendRepairReasonKey IN (11,14) THEN 1 ELSE 0 END)
+FROM tblAmendRepairComments arc
+    JOIN tblRepair     r ON arc.lRepairKey=r.lRepairKey
+    JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+    JOIN tblClient     c ON d.lClientKey=c.lClientKey
+WHERE ISNULL(c.bSkipTracking,0)=0
+  AND CONVERT(date, arc.dtAmendmentDate) BETWEEN @PriorStartDate AND @EndDate
+UNION ALL
+SELECT 'C', 8, 'Ops Misquotes', '#',
+    SUM(CASE WHEN CONVERT(date, arc.dtAmendmentDate) BETWEEN @StartDate AND @EndDate
+                  AND arc.lAmendRepairReasonKey = 15 THEN 1 ELSE 0 END),
+    SUM(CASE WHEN CONVERT(date, arc.dtAmendmentDate) BETWEEN @PriorStartDate AND @PriorEndDate
+                  AND arc.lAmendRepairReasonKey = 15 THEN 1 ELSE 0 END)
+FROM tblAmendRepairComments arc
+    JOIN tblRepair     r ON arc.lRepairKey=r.lRepairKey
+    JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+    JOIN tblClient     c ON d.lClientKey=c.lClientKey
+WHERE ISNULL(c.bSkipTracking,0)=0
+  AND CONVERT(date, arc.dtAmendmentDate) BETWEEN @PriorStartDate AND @EndDate;
+
+-- ═══ DASHBOARD OUTPUTS (3 result sets + 1 drill-down) ══════════════════════
+-- 0A - Operations KPIs
+SELECT
+    SortKey, KPIName, Unit,
+    CAST([Current] AS decimal(18,2)) AS [Current],
+    CAST(Prior     AS decimal(18,2)) AS Prior,
+    CAST([Current] - Prior AS decimal(18,2)) AS Delta,
+    CASE WHEN Unit='%' THEN NULL
+         WHEN ISNULL(Prior,0)=0 THEN NULL
+         ELSE CAST(([Current]-Prior)/Prior AS decimal(10,4))
+    END AS DeltaPct
+FROM @KPI WHERE Dashboard='A' ORDER BY SortKey;
+
+-- 0B - Financial KPIs
+SELECT
+    SortKey, KPIName, Unit,
+    CAST([Current] AS decimal(18,2)) AS [Current],
+    CAST(Prior     AS decimal(18,2)) AS Prior,
+    CAST([Current] - Prior AS decimal(18,2)) AS Delta,
+    CASE WHEN Unit='%' THEN NULL
+         WHEN ISNULL(Prior,0)=0 THEN NULL
+         ELSE CAST(([Current]-Prior)/Prior AS decimal(10,4))
+    END AS DeltaPct
+FROM @KPI WHERE Dashboard='B' ORDER BY SortKey;
+
+-- 0C - Team KPIs
+SELECT
+    SortKey, KPIName, Unit,
+    CAST([Current] AS decimal(18,2)) AS [Current],
+    CAST(Prior     AS decimal(18,2)) AS Prior,
+    CAST([Current] - Prior AS decimal(18,2)) AS Delta,
+    CASE WHEN Unit='%' THEN NULL
+         WHEN ISNULL(Prior,0)=0 THEN NULL
+         ELSE CAST(([Current]-Prior)/Prior AS decimal(10,4))
+    END AS DeltaPct
+FROM @KPI WHERE Dashboard='C' ORDER BY SortKey;
+
+-- 0D - Top 10 Clients by Revenue (current period)
+SELECT TOP 10
+    c.sClientName1                   AS Client,
+    COUNT(DISTINCT r.lRepairKey)     AS WOCount,
+    CAST(SUM(ISNULL(r.dblAmtRepair,0)) AS decimal(18,2)) AS Revenue,
+    CAST(SUM(ISNULL(r.dblAmtRepair,0))
+         / NULLIF(COUNT(DISTINCT r.lRepairKey),0) AS decimal(18,2)) AS AvgRevPerWO
+FROM tblRepair r
+    JOIN tblDepartment d ON r.lDepartmentKey=d.lDepartmentKey
+    JOIN tblClient     c ON d.lClientKey=c.lClientKey
+WHERE CONVERT(date, r.dtDateOut) BETWEEN @StartDate AND @EndDate
+  AND r.dtDateOut IS NOT NULL
+  AND ISNULL(c.bSkipTracking,0)=0
+  AND r.dtDeniedDate IS NULL
+GROUP BY c.sClientName1
+ORDER BY Revenue DESC;
 
 -- ============================================================
 -- SECTION 1: Throughput & TAT
@@ -877,3 +1343,88 @@ SELECT
         / NULLIF(SUM(HasDI), 0)                                         AS ApprovalRate
 FROM S16B_Base
 WHERE HasDI = 1;
+
+-- ============================================================
+-- SECTION 17: Tech Hours & Utilization
+-- PaidHours      = tblTechHours.nHours (all pay codes) in the period
+--                  (filter by dtHoursDate).
+-- RepairHours    = hands-on repair-item time where bPause=0, bDryTime=0,
+--                  bRework=0 (first-pass productive work).
+-- ReworkHours    = repair-item time where bRework=1 (quality signal).
+-- DryTimeHours   = bDryTime=1 (scope curing / non-hands-on waiting).
+-- NonRepairHours = clocked time against non-repair items (meetings, QC,
+--                  training) from tblTechNonRepairItemTimes.
+-- Utilization    = RepairHours / PaidHours.
+-- ReworkPct      = ReworkHours / (RepairHours + ReworkHours).
+-- Active repair techs only (bIsActive=1, lJobTypeKey=2, tech 96 excluded).
+-- Time tables use lTechKey; payroll table uses lTechnicianKey.
+-- ============================================================
+;WITH S17_Paid AS (
+    SELECT
+        th.lTechnicianKey,
+        SUM(th.nHours) AS PaidHours
+    FROM tblTechHours th
+    WHERE th.dtHoursDate >= @StartDate
+      AND th.dtHoursDate <= @EndDate
+    GROUP BY th.lTechnicianKey
+),
+S17_Repair AS (
+    SELECT
+        trit.lTechKey AS lTechnicianKey,
+        SUM(CASE WHEN ISNULL(trit.bPause,0)=0
+                  AND ISNULL(trit.bDryTime,0)=0
+                  AND ISNULL(trit.bRework,0)=0
+                 THEN DATEDIFF(MINUTE, trit.dtStartDate, trit.dtStopDate) / 60.0
+                 ELSE 0 END)                                            AS RepairHours,
+        SUM(CASE WHEN ISNULL(trit.bPause,0)=0
+                  AND ISNULL(trit.bRework,0)=1
+                 THEN DATEDIFF(MINUTE, trit.dtStartDate, trit.dtStopDate) / 60.0
+                 ELSE 0 END)                                            AS ReworkHours,
+        SUM(CASE WHEN ISNULL(trit.bDryTime,0)=1
+                 THEN DATEDIFF(MINUTE, trit.dtStartDate, trit.dtStopDate) / 60.0
+                 ELSE 0 END)                                            AS DryTimeHours
+    FROM tblTechRepairItemTimes trit
+    WHERE trit.dtStartDate >= @StartDate
+      AND trit.dtStartDate <  DATEADD(day, 1, @EndDate)
+      AND trit.dtStopDate  IS NOT NULL
+      AND trit.lTechKey    IS NOT NULL
+    GROUP BY trit.lTechKey
+),
+S17_NonRepair AS (
+    SELECT
+        tnrit.lTechKey AS lTechnicianKey,
+        SUM(CASE WHEN ISNULL(tnrit.bPause,0)=0
+                 THEN DATEDIFF(MINUTE, tnrit.dtStartDate, tnrit.dtStopDate) / 60.0
+                 ELSE 0 END)                                            AS NonRepairHours
+    FROM tblTechNonRepairItemTimes tnrit
+    WHERE tnrit.dtStartDate >= @StartDate
+      AND tnrit.dtStartDate <  DATEADD(day, 1, @EndDate)
+      AND tnrit.dtStopDate  IS NOT NULL
+      AND tnrit.lTechKey    IS NOT NULL
+    GROUP BY tnrit.lTechKey
+)
+SELECT
+    t.sTechName,
+    CAST(ISNULL(p.PaidHours,      0) AS decimal(10,2))                  AS PaidHours,
+    CAST(ISNULL(r.RepairHours,    0) AS decimal(10,2))                  AS RepairHours,
+    CAST(ISNULL(r.ReworkHours,    0) AS decimal(10,2))                  AS ReworkHours,
+    CAST(ISNULL(r.DryTimeHours,   0) AS decimal(10,2))                  AS DryTimeHours,
+    CAST(ISNULL(n.NonRepairHours, 0) AS decimal(10,2))                  AS NonRepairHours,
+    CAST(CASE WHEN ISNULL(p.PaidHours,0) > 0
+              THEN ISNULL(r.RepairHours,0) / p.PaidHours
+              ELSE NULL END AS decimal(10,4))                            AS UtilizationPct,
+    CAST(CASE WHEN (ISNULL(r.RepairHours,0) + ISNULL(r.ReworkHours,0)) > 0
+              THEN ISNULL(r.ReworkHours,0)
+                   / (ISNULL(r.RepairHours,0) + ISNULL(r.ReworkHours,0))
+              ELSE NULL END AS decimal(10,4))                            AS ReworkPct
+FROM tblTechnicians t
+    LEFT JOIN S17_Paid      p ON t.lTechnicianKey = p.lTechnicianKey
+    LEFT JOIN S17_Repair    r ON t.lTechnicianKey = r.lTechnicianKey
+    LEFT JOIN S17_NonRepair n ON t.lTechnicianKey = n.lTechnicianKey
+WHERE t.bIsActive       = 1
+  AND t.lJobTypeKey     = 2
+  AND t.lTechnicianKey <> 96
+  AND (p.PaidHours IS NOT NULL
+       OR r.RepairHours IS NOT NULL
+       OR n.NonRepairHours IS NOT NULL)
+ORDER BY t.sTechName;
