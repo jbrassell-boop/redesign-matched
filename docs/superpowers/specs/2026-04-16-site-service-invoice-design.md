@@ -1,6 +1,22 @@
 # Site Service Invoice Form — Design Spec
 Date: 2026-04-16
 
+## Developer Quick Start
+
+This feature is designed to be a near-copy of the existing repair invoice. The fastest path:
+
+1. **Copy** `client/src/pages/repairs/forms/InvoiceForm.tsx` → `client/src/pages/onsite-services/SiteServiceInvoiceForm.tsx`
+2. **Copy** `client/src/pages/repairs/forms/InvoiceForm.css` → `client/src/pages/onsite-services/SiteServiceInvoiceForm.css` (rename all `.inv-` prefixes to `.ssi-` only where you add new rules — reuse `.inv-*` classes as-is for shared sections)
+3. **Replace** the repairs line-items table with the 7-column tray table (see §5 below)
+4. **Remove** the signature block and remittance stub
+5. **Remove** the Shipping row from the totals block
+6. **Add** one new API endpoint (see §Backend Changes)
+7. **Add** one "Print Invoice" button to `OnsiteServiceDetailDrawer`
+
+Everything else — overlay, action bar, envelope zone, meta strip, ref grid, totals, payment note, footer — is a straight copy with field names swapped.
+
+---
+
 ## Overview
 
 A print-optimized React component that generates an invoice for a completed onsite service visit. Mirrors the visual format of the existing `InvoiceForm.tsx` (repairs invoice) — same CSS tokens, same layout skeleton — but with site-service-specific fields and a tray breakdown table instead of line items.
@@ -33,7 +49,7 @@ Same 8.5in × 11in printable page shell as `InvoiceForm.tsx`. Sections top to bo
 | 1 (highlighted) | Invoice # | Invoice # (`sWorkOrderNumber`) |
 | 2 | Invoice Date (today) | **Visit Date** (`dtOnsiteDate`) |
 | 3 | Due Date | Due Date (blank — not in schema) |
-| 4 | Terms | Terms (blank — not in schema) |
+| 4 | Terms | **Terms** (`sTermsDesc` via `tblDepartment.lPaymentTermsKey → tblPaymentTerms`) |
 
 ### 3. Reference Grid (4-column, 2 rows)
 | Position | Field | Source |
@@ -83,46 +99,99 @@ Identical to repairs: `ISO 13485 Certified | Total Scope Inc. | 17 Creek Pkwy...
 
 ## Data Model
 
+### Field Map — exact names at every layer
+
+| DB Column (`tblSiteServices`) | C# Property | TypeScript Key | Used For |
+|-------------------------------|-------------|----------------|----------|
+| `lSiteServiceKey` | `OnsiteServiceKey` | `onsiteServiceKey` | record ID |
+| `sWorkOrderNumber` | `InvoiceNum` | `invoiceNum` | Invoice # / WO# |
+| `dtOnsiteDate` | `VisitDate` | `visitDate` | Visit Date (formatted MM/dd/yyyy) |
+| `sTruckNumber` | `TruckNumber` | `truckNumber` | Truck # |
+| `sPurchaseOrder` | `PurchaseOrder` | `purchaseOrder` | PO # |
+| `lTrayCount` | `TrayCount` | `trayCount` | Trays / Instruments label |
+| `lTotalInstruments` | `InstrumentCount` | `instrumentCount` | Trays / Instruments label |
+| `nInvoiceAmount` | `InvoiceAmount` | `invoiceAmount` | Subtotal |
+| `nTaxAmount` | `TaxAmount` | `taxAmount` | Tax |
+| `sBillName1` | `BillName1` | `billName1` | Bill To line 1 |
+| `sBillName2` | `BillName2` | `billName2` | Bill To line 2 (contact name) |
+| `sBillEmail` | `BillEmail` | `billEmail` | Bill To email |
+
+**Joined fields:**
+
+| Source | DB Column | C# Property | TypeScript Key |
+|--------|-----------|-------------|----------------|
+| `tblClient` | `sClientName1` | `ClientName` | `clientName` |
+| `tblDepartment` | `sDepartmentName` | `DeptName` | `deptName` |
+| `tblTechnicians` | `sTechName` | `TechName` | `techName` |
+| `tblPaymentTerms` (via `tblDepartment.lPaymentTermsKey`) | `sTermsDesc` | `TermsDesc` | `termsDesc` |
+
+**Tray fields** (existing `GET /api/onsite-services/{id}/trays` — no changes):
+
+| DB Column (`tblSiteServiceTrays`) | C# Property | TypeScript Key |
+|-----------------------------------|-------------|----------------|
+| `lSiteServiceTrayKey` | `TrayKey` | `trayKey` |
+| `lTrayNumber` | `TrayNumber` | `trayNumber` |
+| `sTrayName` | `TrayName` | `trayName` |
+| `lInstrumentsCount` | `InstrumentsCount` | `instrumentsCount` |
+| `lRepairedCount` | `RepairedCount` | `repairedCount` |
+| `lSentToTSICount` | `SentToTsiCount` | `sentToTsiCount` |
+| `lBeyondEconomicalRepairCount` | `BeyondEconomicalRepairCount` | `beyondEconomicalRepairCount` |
+| `lReplacedCount` | `ReplacedCount` | `replacedCount` |
+| *(calculated)* | *(calculated)* | `inspectedCount` = `instrumentsCount - repairedCount - sentToTsiCount - beyondEconomicalRepairCount` |
+
+---
+
 ### New API endpoint: `GET /api/onsite-services/{id}/invoice`
 
 Extends the existing `GetDetail` query with billing and financial fields not currently returned:
 
 ```sql
 SELECT
-  ss.sWorkOrderNumber, ss.dtOnsiteDate, ss.sTruckNumber,
-  ss.sPurchaseOrder, ss.lTrayCount, ss.lTotalInstruments,
-  ss.nInvoiceAmount, ss.nTaxAmount,
-  -- Bill To (from tblSiteServices billing columns)
-  ss.sBillName1, ss.sBillName2, ss.sBillEmail,
-  -- Client / Dept / Tech (joins)
-  c.sClientName1, d.sDepartmentName, t.sTechName
+  ss.lSiteServiceKey,
+  ss.sWorkOrderNumber,
+  ss.dtOnsiteDate,
+  ss.sTruckNumber,
+  ss.sPurchaseOrder,
+  ss.lTrayCount,
+  ss.lTotalInstruments,
+  ISNULL(ss.nInvoiceAmount, 0) AS nInvoiceAmount,
+  ISNULL(ss.nTaxAmount, 0)     AS nTaxAmount,
+  ISNULL(ss.sBillName1, '')    AS sBillName1,
+  ISNULL(ss.sBillName2, '')    AS sBillName2,
+  ISNULL(ss.sBillEmail, '')     AS sBillEmail,
+  ISNULL(c.sClientName1, '')    AS sClientName1,
+  ISNULL(d.sDepartmentName, '') AS sDepartmentName,
+  ISNULL(t.sTechName, '')       AS sTechName,
+  ISNULL(pt.sTermsDesc, '')     AS sTermsDesc
 FROM tblSiteServices ss
-LEFT JOIN tblClient c ON c.lClientKey = ss.lClientKey
-LEFT JOIN tblDepartment d ON d.lDepartmentKey = ss.lDepartmentKey
-LEFT JOIN tblTechnicians t ON t.lTechnicianKey = ss.lTechnicianKey
+LEFT JOIN tblClient       c  ON c.lClientKey      = ss.lClientKey
+LEFT JOIN tblDepartment   d  ON d.lDepartmentKey  = ss.lDepartmentKey
+LEFT JOIN tblTechnicians  t  ON t.lTechnicianKey  = ss.lTechnicianKey
+LEFT JOIN tblPaymentTerms pt ON pt.lPaymentTermsKey = d.lPaymentTermsKey
 WHERE ss.lSiteServiceKey = @id
 ```
 
-Trays are fetched via the existing `GET /api/onsite-services/{id}/trays` endpoint (no changes needed).
+Trays are fetched via the existing `GET /api/onsite-services/{id}/trays` endpoint — **no changes needed**.
 
 ### New TypeScript interface: `OnsiteServiceInvoiceData`
 ```ts
 interface OnsiteServiceInvoiceData {
   onsiteServiceKey: number;
-  invoiceNum: string;        // sWorkOrderNumber
-  visitDate: string | null;  // dtOnsiteDate formatted MM/dd/yyyy
+  invoiceNum: string;
+  visitDate: string | null;
   techName: string;
   truckNumber: string | null;
   purchaseOrder: string | null;
   trayCount: number;
   instrumentCount: number;
-  invoiceAmount: number;     // nInvoiceAmount
-  taxAmount: number;         // nTaxAmount
-  billName1: string | null;  // sBillName1
-  billName2: string | null;  // sBillName2
-  billEmail: string | null;  // sBillEmail
+  invoiceAmount: number;
+  taxAmount: number;
+  billName1: string | null;
+  billName2: string | null;
+  billEmail: string | null;
   clientName: string;
   deptName: string;
+  termsDesc: string | null;
 }
 ```
 
@@ -177,9 +246,27 @@ Data is fetched by the caller (`OnsiteServiceDetailDrawer`) before mounting. The
 
 ---
 
+## One-Page Constraint
+
+The invoice must fit on a single 8.5 × 11in page when printed.
+
+**Tray table scaling strategy:**
+- Use `font-size: 8.5px` for tray rows (vs 10.5px in the repairs table) to fit more rows
+- Row height: `min-height: 16px` (tighter than repairs' 20px)
+- If tray count exceeds ~20 rows, the table will overflow to page 2 — this is acceptable for unusually large visits but the layout is optimized for the typical 10–15 tray visit
+- `@media print` rule: `font-size: 8px` on the tray table to compress further if needed
+
+**Sections removed vs. repairs to recover vertical space:**
+- Signature block (removed)
+- Remittance stub (removed)
+- Shipping row in totals (removed)
+
+These three removals free approximately 1.4 inches, which accommodates the wider tray table.
+
+---
+
 ## Out of Scope
 
 - Per-tray cost breakdown (not in current schema surface)
-- Due Date / Terms population (not stored on `tblSiteServices`)
 - Email-invoice workflow
 - PDF generation server-side
