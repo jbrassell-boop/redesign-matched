@@ -72,3 +72,22 @@ public record OnsiteServiceTray(
     int BeyondEconomicalRepairCount,
     int ReplacedCount
 );
+
+public record OnsiteServiceInvoiceData(
+    int OnsiteServiceKey,
+    string InvoiceNum,
+    string? VisitDate,
+    string? TruckNumber,
+    string? PurchaseOrder,
+    int TrayCount,
+    int InstrumentCount,
+    double InvoiceAmount,
+    double TaxAmount,
+    string BillName1,
+    string BillName2,
+    string BillEmail,
+    string ClientName,
+    string DeptName,
+    string TechName,
+    string TermsDesc
+);
