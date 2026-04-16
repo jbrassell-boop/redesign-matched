@@ -34,8 +34,8 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
                    ss.dtOnsiteDate,
                    ss.dtDateSubmitted AS dtSubmittedDate,
                    CASE WHEN ss.dtVoidDate IS NOT NULL THEN 'Voided'
-                        WHEN ss.dtDateSubmitted IS NOT NULL THEN 'Submitted'
                         WHEN ss.dtInvoiceDate IS NOT NULL THEN 'Invoiced'
+                        WHEN ss.dtDateSubmitted IS NOT NULL THEN 'Submitted'
                         ELSE 'Draft' END AS sStatus,
                    ISNULL(ss.lTrayCount, 0) AS nTrayCount,
                    ISNULL(ss.lTotalInstruments, 0) AS nInstrumentCount,
@@ -65,11 +65,13 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
                     continue;
 
                 if (!string.IsNullOrWhiteSpace(dateFrom) && visitDate.HasValue &&
-                    visitDate.Value < DateTime.Parse(dateFrom))
+                    DateTime.TryParse(dateFrom, out var from) &&
+                    visitDate.Value < from)
                     continue;
 
                 if (!string.IsNullOrWhiteSpace(dateTo) && visitDate.HasValue &&
-                    visitDate.Value > DateTime.Parse(dateTo).AddDays(1))
+                    DateTime.TryParse(dateTo, out var to) &&
+                    visitDate.Value > to.AddDays(1))
                     continue;
 
                 var invoiceNum = reader["sInvoiceNumber"]?.ToString() ?? "";
@@ -121,8 +123,8 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
 
         const string sql = """
             SELECT CASE WHEN ss.dtVoidDate IS NOT NULL THEN 'Voided'
-                        WHEN ss.dtDateSubmitted IS NOT NULL THEN 'Submitted'
                         WHEN ss.dtInvoiceDate IS NOT NULL THEN 'Invoiced'
+                        WHEN ss.dtDateSubmitted IS NOT NULL THEN 'Submitted'
                         ELSE 'Draft' END AS sStatus,
                    ISNULL(ss.nInvoiceAmount, 0) AS dblTotalBilled
             FROM tblSiteServices ss
@@ -189,57 +191,91 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateVisit([FromBody] CreateOnsiteVisitRequest req)
     {
+        if (!DateTime.TryParse(req.VisitDate, out var visitDate))
+            return BadRequest(new { error = "VisitDate is missing or not a valid date." });
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // Derive lSalesRepKey from department; tblSiteServices requires it NOT NULL.
+        int salesRepKey = 0;
+        await using (var lookupCmd = new SqlCommand(
+            "SELECT ISNULL(lSalesRepKey, 0) FROM tblDepartment WHERE lDepartmentKey = @deptKey", conn))
+        {
+            lookupCmd.Parameters.AddWithValue("@deptKey", req.DepartmentKey);
+            var result = await lookupCmd.ExecuteScalarAsync();
+            if (result is not null and not DBNull) salesRepKey = Convert.ToInt32(result);
+        }
+
         await using var transaction = (SqlTransaction)await conn.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
 
-        // Generate next invoice number inside the transaction to prevent duplicates
-        await using var seqCmd = new SqlCommand(
-            "SELECT ISNULL(MAX(CAST(REPLACE(sInvoiceNumber, 'INV-', '') AS INT)), 4000) + 1 FROM tblOnsiteService WITH (UPDLOCK, HOLDLOCK) WHERE sInvoiceNumber LIKE 'INV-%'",
-            conn, transaction);
-        seqCmd.CommandTimeout = 30;
-
-        int nextNum;
+        // Generate sWorkOrderNumber using WinScope convention: {prefix}V{YY}{dayOfYear:D3}{seq:D3}
+        // e.g. North + Van + 2026 + Feb 27 (day 58) + 1st that day = "NV26058001"
+        var prefix = "N"; // Default to North service location
         try
         {
-            nextNum = Convert.ToInt32(await seqCmd.ExecuteScalarAsync());
+            await using var locCmd = new SqlCommand(
+                "SELECT TOP 1 sTransNumberPrefix FROM tblServiceLocations WHERE bUsed = 1 ORDER BY lServiceLocationKey",
+                conn, transaction);
+            var locResult = await locCmd.ExecuteScalarAsync();
+            if (locResult is string s && !string.IsNullOrWhiteSpace(s)) prefix = s.Trim();
         }
-        catch
+        catch { /* fall back to default prefix */ }
+
+        var yy = (visitDate.Year % 100).ToString("D2");
+        var doy = visitDate.DayOfYear.ToString("D3");
+        var woPattern = $"{prefix}V{yy}{doy}";
+
+        int nextSeq = 1;
+        await using (var seqCmd = new SqlCommand(
+            $"SELECT ISNULL(MAX(CAST(RIGHT(sWorkOrderNumber, 3) AS INT)), 0) + 1 FROM tblSiteServices WITH (UPDLOCK, HOLDLOCK) WHERE sWorkOrderNumber LIKE @pattern",
+            conn, transaction))
         {
-            nextNum = new Random().Next(5000, 9999);
+            seqCmd.CommandTimeout = 30;
+            seqCmd.Parameters.AddWithValue("@pattern", woPattern + "%");
+            var seqResult = await seqCmd.ExecuteScalarAsync();
+            if (seqResult is not null and not DBNull) nextSeq = Convert.ToInt32(seqResult);
         }
 
-        var invoiceNum = $"INV-{nextNum}";
+        var workOrderNumber = $"{woPattern}{nextSeq:D3}";
+
+        // Notes field combines optional free-text Notes + PriceClass tag (no sPriceClass column on tblSiteServices).
+        var combinedNotes = req.Notes ?? string.Empty;
+        if (!string.IsNullOrWhiteSpace(req.PriceClass))
+            combinedNotes = string.IsNullOrWhiteSpace(combinedNotes)
+                ? $"Price class: {req.PriceClass}"
+                : $"{combinedNotes}\nPrice class: {req.PriceClass}";
 
         const string sql = """
-            INSERT INTO tblOnsiteService
-                (sInvoiceNumber, lClientKey, lDepartmentKey, lTechnicianKey, dtOnsiteDate,
-                 sLocation, sPONumber, sTruckNum, sPriceClass, sNotes, sStatus, dtCreated)
+            INSERT INTO tblSiteServices
+                (sWorkOrderNumber, lClientKey, lDepartmentKey, lTechnicianKey,
+                 lSalesRepKey, lVanServicePricingListKey, lServiceLocationKey,
+                 dtOnsiteDate, sAddressLine1, sPurchaseOrder, sTruckNumber, sNotes, lTrayCount)
             VALUES
-                (@invoiceNum, @clientKey, @deptKey, @techKey, @visitDate,
-                 @location, @po, @truckNum, @priceClass, @notes, 'Draft', GETDATE());
+                (@wo, @clientKey, @deptKey, @techKey,
+                 @salesRepKey, 1, 1,
+                 @visitDate, @location, @po, @truckNum, @notes, 0);
             SELECT SCOPE_IDENTITY();
             """;
 
         await using var cmd = new SqlCommand(sql, conn, transaction);
         cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@invoiceNum", invoiceNum);
+        cmd.Parameters.AddWithValue("@wo", workOrderNumber);
         cmd.Parameters.AddWithValue("@clientKey", req.ClientKey);
         cmd.Parameters.AddWithValue("@deptKey", req.DepartmentKey);
         cmd.Parameters.AddWithValue("@techKey", req.TechnicianKey);
-        cmd.Parameters.AddWithValue("@visitDate", DateTime.Parse(req.VisitDate));
+        cmd.Parameters.AddWithValue("@salesRepKey", salesRepKey);
+        cmd.Parameters.AddWithValue("@visitDate", visitDate);
         cmd.Parameters.AddWithValue("@location", (object?)req.Location ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@po", (object?)req.Po ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@truckNum", (object?)req.TruckNum ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@priceClass", (object?)req.PriceClass ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@notes", string.IsNullOrWhiteSpace(combinedNotes) ? DBNull.Value : combinedNotes);
 
         try
         {
             var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
             await transaction.CommitAsync();
-            return Ok(new { onsiteServiceKey = newKey, invoiceNum });
+            return Ok(new { onsiteServiceKey = newKey, invoiceNum = workOrderNumber });
         }
         catch (SqlException ex)
         {
@@ -254,16 +290,42 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var sql = "UPDATE tblOnsiteService SET sStatus = @status";
-        if (req.Status == "Submitted")
-            sql += ", dtSubmittedDate = GETDATE()";
+        // tblSiteServices has no sStatus column — status is derived from dtVoidDate/dtDateSubmitted/dtInvoiceDate.
+        // Progression: Draft → Submitted → Invoiced, with Void as a terminal state.
+        // Each transition sets its target date and clears any later/lateral date to keep the derived status coherent.
+        var status = (req.Status ?? string.Empty).Trim();
+        var sets = new List<string>();
+        switch (status.ToLowerInvariant())
+        {
+            case "submitted":
+                sets.Add("dtDateSubmitted = GETDATE()");
+                sets.Add("dtInvoiceDate = NULL");
+                sets.Add("dtVoidDate = NULL");
+                break;
+            case "invoiced":
+                sets.Add("dtInvoiceDate = GETDATE()");
+                sets.Add("dtVoidDate = NULL");
+                break;
+            case "void":
+            case "voided":
+                sets.Add("dtVoidDate = GETDATE()");
+                break;
+            case "draft":
+                sets.Add("dtDateSubmitted = NULL");
+                sets.Add("dtInvoiceDate = NULL");
+                sets.Add("dtVoidDate = NULL");
+                break;
+            default:
+                return BadRequest(new { error = $"Unknown status '{req.Status}'. Allowed: Submitted, Invoiced, Void, Draft." });
+        }
+
         if (!string.IsNullOrWhiteSpace(req.Notes))
-            sql += ", sNotes = @notes";
-        sql += " WHERE lOnsiteServiceKey = @id";
+            sets.Add("sNotes = @notes");
+
+        var sql = $"UPDATE tblSiteServices SET {string.Join(", ", sets)} WHERE lSiteServiceKey = @id";
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@status", req.Status);
         cmd.Parameters.AddWithValue("@id", id);
         if (!string.IsNullOrWhiteSpace(req.Notes))
             cmd.Parameters.AddWithValue("@notes", req.Notes);
@@ -336,6 +398,70 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
             PurchaseOrder: reader["sPurchaseOrder"]?.ToString(),
             TruckNumber: reader["sTruckNumber"]?.ToString(),
             Notes: reader["sNotes"]?.ToString()
+        ));
+    }
+
+    [HttpGet("{id:int}/invoice")]
+    public async Task<IActionResult> GetInvoice(int id)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT
+              ss.lSiteServiceKey,
+              ss.sWorkOrderNumber,
+              ss.dtOnsiteDate,
+              ISNULL(ss.sTruckNumber, '')    AS sTruckNumber,
+              ISNULL(ss.sPurchaseOrder, '')  AS sPurchaseOrder,
+              ISNULL(ss.lTrayCount, 0)       AS lTrayCount,
+              ISNULL(ss.lTotalInstruments, 0) AS lTotalInstruments,
+              ISNULL(ss.nInvoiceAmount, 0)   AS nInvoiceAmount,
+              ISNULL(ss.nTaxAmount, 0)       AS nTaxAmount,
+              ISNULL(ss.sBillName1, '')      AS sBillName1,
+              ISNULL(ss.sBillName2, '')      AS sBillName2,
+              ISNULL(ss.sBillEmail, '')      AS sBillEmail,
+              ISNULL(c.sClientName1, '')     AS sClientName1,
+              ISNULL(d.sDepartmentName, '')  AS sDepartmentName,
+              ISNULL(t.sTechName, '')        AS sTechName,
+              ISNULL(pt.sTermsDesc, '')      AS sTermsDesc
+            FROM tblSiteServices ss
+            LEFT JOIN tblClient       c  ON c.lClientKey       = ss.lClientKey
+            LEFT JOIN tblDepartment   d  ON d.lDepartmentKey   = ss.lDepartmentKey
+            LEFT JOIN tblTechnicians  t  ON t.lTechnicianKey   = ss.lTechnicianKey
+            LEFT JOIN tblPaymentTerms pt ON pt.lPaymentTermsKey = d.lPaymentTermsKey
+            WHERE ss.lSiteServiceKey = @id
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@id", id);
+        await using var reader = await cmd.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+            return NotFound(new { message = "Visit not found." });
+
+        var visitDate = reader["dtOnsiteDate"] == DBNull.Value
+            ? null
+            : Convert.ToDateTime(reader["dtOnsiteDate"]).ToString("MM/dd/yyyy");
+
+        return Ok(new OnsiteServiceInvoiceData(
+            OnsiteServiceKey: Convert.ToInt32(reader["lSiteServiceKey"]),
+            InvoiceNum: reader["sWorkOrderNumber"]?.ToString() ?? "",
+            VisitDate: visitDate,
+            TruckNumber: reader["sTruckNumber"]?.ToString(),
+            PurchaseOrder: reader["sPurchaseOrder"]?.ToString(),
+            TrayCount: Convert.ToInt32(reader["lTrayCount"]),
+            InstrumentCount: Convert.ToInt32(reader["lTotalInstruments"]),
+            InvoiceAmount: reader["nInvoiceAmount"] == DBNull.Value ? 0 : Convert.ToDouble(reader["nInvoiceAmount"]),
+            TaxAmount: reader["nTaxAmount"] == DBNull.Value ? 0 : Convert.ToDouble(reader["nTaxAmount"]),
+            BillName1: reader["sBillName1"]?.ToString() ?? "",
+            BillName2: reader["sBillName2"]?.ToString(),
+            BillEmail: reader["sBillEmail"]?.ToString() ?? "",
+            ClientName: reader["sClientName1"]?.ToString() ?? "",
+            DeptName: reader["sDepartmentName"]?.ToString() ?? "",
+            TechName: reader["sTechName"]?.ToString() ?? "",
+            TermsDesc: reader["sTermsDesc"]?.ToString() ?? ""
         ));
     }
 
