@@ -84,7 +84,7 @@ public record OnsiteServiceInvoiceData(
     double InvoiceAmount,
     double TaxAmount,
     string BillName1,
-    string BillName2,
+    string? BillName2,
     string BillEmail,
     string ClientName,
     string DeptName,
