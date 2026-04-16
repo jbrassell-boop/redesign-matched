@@ -74,3 +74,22 @@ export interface OnsiteServiceTray {
   beyondEconomicalRepairCount: number;
   replacedCount: number;
 }
+
+export interface OnsiteServiceInvoiceData {
+  onsiteServiceKey: number;
+  invoiceNum: string;
+  visitDate: string | null;
+  techName: string;
+  truckNumber: string | null;
+  purchaseOrder: string | null;
+  trayCount: number;
+  instrumentCount: number;
+  invoiceAmount: number;
+  taxAmount: number;
+  billName1: string;
+  billName2: string | null;
+  billEmail: string;
+  clientName: string;
+  deptName: string;
+  termsDesc: string;
+}

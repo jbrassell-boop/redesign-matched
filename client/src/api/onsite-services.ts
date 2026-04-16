@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { OnsiteServiceListResponse, OnsiteServiceStats, OnsiteServiceFilters, CreateOnsiteVisitRequest, OnsiteServiceDetail, OnsiteServiceTray } from '../pages/onsite-services/types';
+import type { OnsiteServiceListResponse, OnsiteServiceStats, OnsiteServiceFilters, CreateOnsiteVisitRequest, OnsiteServiceDetail, OnsiteServiceTray, OnsiteServiceInvoiceData } from '../pages/onsite-services/types';
 
 export const getOnsiteServices = async (filters: OnsiteServiceFilters): Promise<OnsiteServiceListResponse> => {
   const { data } = await apiClient.get<OnsiteServiceListResponse>('/onsite-services', {
@@ -42,4 +42,9 @@ export const getOnsiteServiceTrays = async (id: number): Promise<OnsiteServiceTr
 
 export const submitOnsiteForInvoicing = async (id: number): Promise<void> => {
   await apiClient.patch(`/onsite-services/${id}/submit`);
+};
+
+export const getOnsiteServiceInvoice = async (id: number): Promise<OnsiteServiceInvoiceData> => {
+  const { data } = await apiClient.get<OnsiteServiceInvoiceData>(`/onsite-services/${id}/invoice`);
+  return data;
 };
