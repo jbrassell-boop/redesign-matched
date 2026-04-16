@@ -81,5 +81,6 @@
   .ssi-tray-table  { font-size: 8px; }
   .ssi-tray-th     { font-size: 7px; }
   .ssi-tray-td     { font-size: 8px; height: 14px; min-height: 14px; }
-  .print-no-color  { color: var(--print-body-text) !important; }
+  .ssi-print-no-color  { color: var(--print-body-text) !important; }
+
 }
