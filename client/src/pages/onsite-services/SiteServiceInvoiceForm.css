@@ -1,0 +1,85 @@
+/* ── SiteServiceInvoiceForm.css ──
+   Tray-table additions for the site service invoice.
+   All layout, overlay, meta, ref, totals, footer styles are
+   inherited from InvoiceForm.css via the shared inv-* class names.
+   ─────────────────────────────────────────────────────────────── */
+
+/* 7-column tray breakdown table */
+.ssi-tray-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 2px;
+  font-size: 8.5px;
+}
+
+/* Column header cells */
+.ssi-tray-th {
+  background: var(--navy);
+  color: #fff;
+  font-size: 7.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 4px 5px;
+  text-align: center;
+  white-space: nowrap;
+}
+.ssi-tray-th--left {
+  text-align: left;
+}
+.ssi-tray-th--num {
+  width: 28px;
+}
+.ssi-tray-th--desc {
+  text-align: left;
+}
+.ssi-tray-th--count {
+  width: 64px;
+}
+
+/* Data cells */
+.ssi-tray-td {
+  padding: 3px 5px;
+  font-size: 8.5px;
+  border-bottom: 1px solid var(--print-border-lt);
+  vertical-align: middle;
+  min-height: 16px;
+  height: 16px;
+  text-align: center;
+}
+.ssi-tray-td--left {
+  text-align: left;
+}
+.ssi-tray-td--repaired {
+  color: var(--success);
+  font-weight: 600;
+}
+.ssi-tray-td--sent {
+  color: var(--primary);
+  font-weight: 600;
+}
+.ssi-tray-td--ber {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* Footer totals row */
+.ssi-tray-tfoot td {
+  padding: 4px 5px;
+  font-size: 8.5px;
+  font-weight: 700;
+  border-top: 2px solid var(--primary);
+  background: var(--print-info-bg);
+  text-align: center;
+}
+.ssi-tray-tfoot td.ssi-tray-td--left {
+  text-align: left;
+}
+
+/* Print overrides — compress further at print time */
+@media print {
+  .ssi-tray-table  { font-size: 8px; }
+  .ssi-tray-th     { font-size: 7px; }
+  .ssi-tray-td     { font-size: 8px; height: 14px; min-height: 14px; }
+  .print-no-color  { color: var(--print-body-text) !important; }
+}
