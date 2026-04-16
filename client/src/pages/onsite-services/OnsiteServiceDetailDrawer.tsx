@@ -93,6 +93,9 @@ export const OnsiteServiceDetailDrawer = ({ open, serviceKey, onClose, onUpdated
     setActiveTab('summary');
     setDetail(null);
     setTrays([]);
+    setInvoiceOpen(false);
+    setInvoiceData(null);
+    setInvoiceTrays([]);
     setLoading(true);
     getOnsiteServiceDetail(serviceKey)
       .then(d => { if (!cancelled) setDetail(d); })
@@ -132,12 +135,14 @@ export const OnsiteServiceDetailDrawer = ({ open, serviceKey, onClose, onUpdated
 
   const handlePrintInvoice = async () => {
     if (!serviceKey) return;
+    const key = serviceKey;
     setInvoiceLoading(true);
     try {
       const [inv, t] = await Promise.all([
-        getOnsiteServiceInvoice(serviceKey),
-        getOnsiteServiceTrays(serviceKey),
+        getOnsiteServiceInvoice(key),
+        getOnsiteServiceTrays(key),
       ]);
+      if (serviceKey !== key) return;
       setInvoiceData(inv);
       setInvoiceTrays(t);
       setInvoiceOpen(true);
