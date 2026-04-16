@@ -1,8 +1,7 @@
 import './SiteServiceInvoiceForm.css';
 import '../repairs/forms/InvoiceForm.css';
 import '../repairs/forms/print.css';
-import type { OnsiteServiceInvoiceData } from './types';
-import type { OnsiteServiceTray } from './types';
+import type { OnsiteServiceInvoiceData, OnsiteServiceTray } from './types';
 
 interface Props {
   invoiceData: OnsiteServiceInvoiceData;
@@ -94,7 +93,7 @@ export const SiteServiceInvoiceForm = ({ invoiceData, trays, onClose }: Props) =
           </div>
           <div className="inv-ref-field">
             <span className="inv-fl">Visit Date</span>
-            <div className="inv-fv">{invoiceData.visitDate ?? ''}</div>
+            <div className="inv-fv">{invoiceData.visitDate ?? '—'}</div>
           </div>
           <div className="inv-ref-field">
             <span className="inv-fl">Mobile Tech</span>
@@ -182,7 +181,7 @@ export const SiteServiceInvoiceForm = ({ invoiceData, trays, onClose }: Props) =
               <tr className="inv-tot-due-row">
                 <td className="inv-tot-due-label">Amount Due</td>
                 <td className="inv-tot-due-val">
-                  {fmt(invoiceData.invoiceAmount)}
+                  {fmt(invoiceData.invoiceAmount + invoiceData.taxAmount)}
                 </td>
               </tr>
             </tbody>
