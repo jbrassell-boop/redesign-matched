@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Spin, message } from 'antd';
-import { getOnsiteServiceDetail, getOnsiteServiceTrays, submitOnsiteForInvoicing } from '../../api/onsite-services';
+import { getOnsiteServiceDetail, getOnsiteServiceTrays, submitOnsiteForInvoicing, getOnsiteServiceInvoice } from '../../api/onsite-services';
 import { StatusBadge } from '../../components/shared';
-import type { OnsiteServiceDetail, OnsiteServiceTray } from './types';
+import type { OnsiteServiceDetail, OnsiteServiceTray, OnsiteServiceInvoiceData } from './types';
+import { SiteServiceInvoiceForm } from './SiteServiceInvoiceForm';
 
 interface Props {
   open: boolean;
@@ -67,6 +68,10 @@ export const OnsiteServiceDetailDrawer = ({ open, serviceKey, onClose, onUpdated
   const [traysLoading, setTraysLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>('summary');
   const [submitting, setSubmitting] = useState(false);
+  const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [invoiceData, setInvoiceData] = useState<OnsiteServiceInvoiceData | null>(null);
+  const [invoiceTrays, setInvoiceTrays] = useState<OnsiteServiceTray[]>([]);
 
   const load = useCallback(async (key: number) => {
     setLoading(true);
@@ -123,6 +128,25 @@ export const OnsiteServiceDetailDrawer = ({ open, serviceKey, onClose, onUpdated
   };
 
   const canSubmit = detail?.status === 'Draft';
+  const canPrintInvoice = detail?.status === 'Submitted' || detail?.status === 'Invoiced';
+
+  const handlePrintInvoice = async () => {
+    if (!serviceKey) return;
+    setInvoiceLoading(true);
+    try {
+      const [inv, t] = await Promise.all([
+        getOnsiteServiceInvoice(serviceKey),
+        getOnsiteServiceTrays(serviceKey),
+      ]);
+      setInvoiceData(inv);
+      setInvoiceTrays(t);
+      setInvoiceOpen(true);
+    } catch {
+      message.error('Failed to load invoice data');
+    } finally {
+      setInvoiceLoading(false);
+    }
+  };
 
   if (!open) return null;
 
@@ -166,7 +190,25 @@ export const OnsiteServiceDetailDrawer = ({ open, serviceKey, onClose, onUpdated
                 {submitting ? 'Submitting...' : 'Submit for Invoicing'}
               </button>
             )}
-            {!canSubmit && (
+            {canPrintInvoice && (
+              <button
+                onClick={handlePrintInvoice}
+                disabled={invoiceLoading}
+                style={{
+                  ...submitBtnBaseStyle,
+                  background: invoiceLoading ? 'var(--muted)' : 'var(--navy)',
+                  cursor: invoiceLoading ? 'default' : 'pointer',
+                }}
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={13} height={13}>
+                  <polyline points="6 9 6 2 18 2 18 9" />
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="8" />
+                </svg>
+                {invoiceLoading ? 'Loading...' : 'Print Invoice'}
+              </button>
+            )}
+            {!canSubmit && !canPrintInvoice && (
               <span style={noActionLabelStyle}>
                 Visit is {detail.status} — no further actions available
               </span>
@@ -201,6 +243,13 @@ export const OnsiteServiceDetailDrawer = ({ open, serviceKey, onClose, onUpdated
             {activeTab === 'expenses' && <ExpensesTab detail={detail} />}
           </div>
         </div>
+      )}
+      {invoiceOpen && invoiceData && (
+        <SiteServiceInvoiceForm
+          invoiceData={invoiceData}
+          trays={invoiceTrays}
+          onClose={() => setInvoiceOpen(false)}
+        />
       )}
     </div>
   );
