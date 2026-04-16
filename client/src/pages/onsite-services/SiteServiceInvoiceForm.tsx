@@ -181,7 +181,7 @@ export const SiteServiceInvoiceForm = ({ invoiceData, trays, onClose }: Props) =
               <tr className="inv-tot-due-row">
                 <td className="inv-tot-due-label">Amount Due</td>
                 <td className="inv-tot-due-val">
-                  {fmt(invoiceData.invoiceAmount + invoiceData.taxAmount)}
+                  {fmt(invoiceData.invoiceAmount)}
                 </td>
               </tr>
             </tbody>
