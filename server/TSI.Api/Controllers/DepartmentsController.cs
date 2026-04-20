@@ -90,7 +90,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
                    ISNULL(c.sClientName1, '') AS sClientName1,
                    ISNULL(d.bActive, 0) AS bActive,
                    d.sShipAddr1, d.sShipCity, d.sShipState, d.sShipZip,
-                   d.sContactPhoneVoice,
+                   d.sContactPhoneNumber AS sContactPhoneVoice,
                    LTRIM(RTRIM(ISNULL(d.sContactFirst,'') + ' ' + ISNULL(d.sContactLast,''))) AS ContactName,
                    d.sContactEMail,
                    (SELECT COUNT(*) FROM tblRepair r
@@ -140,7 +140,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
                    ISNULL(c.sClientName1, '') AS sClientName1,
                    ISNULL(d.bActive, 0) AS bActive,
                    d.sShipAddr1, d.sShipCity, d.sShipState, d.sShipZip,
-                   d.sContactFirst, d.sContactLast, d.sContactPhoneVoice, d.sContactEMail,
+                   d.sContactFirst, d.sContactLast, d.sContactPhoneNumber AS sContactPhoneVoice, d.sContactEMail,
                    ISNULL(sl.sServiceLocation, '') AS sServiceLocation,
                    (SELECT COUNT(*) FROM tblScope s WHERE s.lDepartmentKey = d.lDepartmentKey) AS ScopeCount,
                    (SELECT COUNT(*) FROM tblRepair r
@@ -356,7 +356,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
 
         const string sql = """
             SELECT con.lContactKey, con.sContactFirst, con.sContactLast,
-                   con.sContactPhoneVoice, con.sContactEMail,
+                   con.sContactPhoneNumber AS sContactPhoneVoice, con.sContactEMail,
                    ISNULL(con.bActive, 1) AS bActive
             FROM tblContacts con
                 INNER JOIN tblContactTran ct ON ct.lContactKey = con.lContactKey
@@ -398,7 +398,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
                    ISNULL(m.sManufacturer, '') AS sManufacturer,
                    ISNULL(st.sRigidOrFlexible, '') AS sRigidOrFlexible,
                    ISNULL(stc.sScopeTypeCategory, '') AS sScopeTypeCategory,
-                   ISNULL(s.bActive, 1) AS bActive,
+                   CAST(1 AS bit) AS bActive, -- TODO: tblScope has no bActive column in db-schema-dump.json.
                    (SELECT COUNT(*) FROM tblRepair r WHERE r.lScopeKey = s.lScopeKey) AS RepairCount,
                    (SELECT TOP 1 CONVERT(VARCHAR(10), r.dtDateIn, 120)
                     FROM tblRepair r WHERE r.lScopeKey = s.lScopeKey
@@ -535,7 +535,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         const string sql = """
-            SELECT sContactFirst, sContactLast, sContactEMail, sContactPhoneVoice
+            SELECT sContactFirst, sContactLast, sContactEMail, sContactPhoneNumber AS sContactPhoneVoice
             FROM tblDepartment WHERE lDepartmentKey = @id
             """;
 
@@ -857,16 +857,19 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         if (clientKeyObj == null) return NotFound(new { message = "Department not found." });
         var clientKey = clientKeyObj == DBNull.Value ? (int?)null : Convert.ToInt32(clientKeyObj);
 
+        // tblScope has no bActive or lClientKey columns (verified against db-schema-dump.json).
+        // Scope is linked to client indirectly via lDepartmentKey -> tblDepartment.lClientKey.
         const string sql = """
-            INSERT INTO tblScope (lDepartmentKey, lClientKey, lScopeTypeKey, sSerialNumber, dtCreateDate, bActive)
-            VALUES (@deptKey, @clientKey, @scopeTypeKey, @serialNumber, GETDATE(), 1);
+            INSERT INTO tblScope (lDepartmentKey, lScopeTypeKey, sSerialNumber, dtCreateDate)
+            VALUES (@deptKey, @scopeTypeKey, @serialNumber, GETDATE());
             SELECT SCOPE_IDENTITY();
             """;
+
+        _ = clientKey; // retained for reference; not used in INSERT
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@deptKey", deptKey);
-        cmd.Parameters.AddWithValue("@clientKey", (object?)clientKey ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@scopeTypeKey", (object?)body.ScopeTypeKey ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@serialNumber", (object?)body.SerialNumber ?? DBNull.Value);
 
@@ -929,6 +932,8 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // bEmailNewRepairs lives on tblClient, NOT tblDepartment (verified against db-schema-dump.json).
+        // Removed from INSERT column list to avoid runtime failure.
         const string sql = """
             INSERT INTO tblDepartment
                 (lClientKey, sDepartmentName, sShipAddr1, sShipCity, sShipState, sShipZip,
@@ -936,7 +941,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
                  lShippingCarrierKey, lServiceLocationKey, dtCreateDate, bActive,
                  bIncludeConsumptionReportWithReq, bEnforceScopeTypeFiltering,
                  sDispProductID, bDisplayUAorNWT, bDisplayItemDescription,
-                 bEmailNewRepairs, bTrackingNumberRequired, bTaxExempt,
+                 bTrackingNumberRequired, bTaxExempt,
                  bPaysByCreditCard, bOnsiteService)
             OUTPUT INSERTED.lDepartmentKey
             VALUES
@@ -945,7 +950,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
                  @carrierKey, @serviceLocationKey, GETDATE(), 1,
                  @consumptionOnReq, @enforceScopeType,
                  @showProductId, @showUAorNWT, @showItemizedDesc,
-                 @emailNewRepairs, @trackingRequired, @taxExempt,
+                 @trackingRequired, @taxExempt,
                  @paysByCreditCard, @onsiteService)
             """;
 
@@ -968,7 +973,8 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         cmd.Parameters.AddWithValue("@showProductId",       (object?)body.ShowProductId ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@showUAorNWT",         body.ShowUAorNWT ? 1 : 0);
         cmd.Parameters.AddWithValue("@showItemizedDesc",    body.ShowItemizedDesc ? 1 : 0);
-        cmd.Parameters.AddWithValue("@emailNewRepairs",     body.EmailNewRepairs ? 1 : 0);
+        // @emailNewRepairs removed — bEmailNewRepairs is on tblClient, not tblDepartment.
+        _ = body.EmailNewRepairs;
         cmd.Parameters.AddWithValue("@trackingRequired",    body.TrackingRequired ? 1 : 0);
         cmd.Parameters.AddWithValue("@taxExempt",           body.TaxExempt ? 1 : 0);
         cmd.Parameters.AddWithValue("@paysByCreditCard",    body.PaysByCreditCard ? 1 : 0);
@@ -979,14 +985,14 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         // Optionally create a scope for this department
         if (!string.IsNullOrWhiteSpace(body.SerialNumber) || body.ScopeTypeKey.HasValue)
         {
+            // tblScope has no bActive or lClientKey columns (verified against db-schema-dump.json).
             const string scopeSql = """
-                INSERT INTO tblScope (lDepartmentKey, lClientKey, lScopeTypeKey, sSerialNumber, dtCreateDate, bActive)
-                VALUES (@deptKey, @clientKey, @scopeTypeKey, @serialNumber, GETDATE(), 1)
+                INSERT INTO tblScope (lDepartmentKey, lScopeTypeKey, sSerialNumber, dtCreateDate)
+                VALUES (@deptKey, @scopeTypeKey, @serialNumber, GETDATE())
                 """;
             await using var scopeCmd = new SqlCommand(scopeSql, conn);
             scopeCmd.CommandTimeout = 30;
             scopeCmd.Parameters.AddWithValue("@deptKey",      newKey);
-            scopeCmd.Parameters.AddWithValue("@clientKey",    (object?)body.ClientKey ?? DBNull.Value);
             scopeCmd.Parameters.AddWithValue("@scopeTypeKey", (object?)body.ScopeTypeKey ?? DBNull.Value);
             scopeCmd.Parameters.AddWithValue("@serialNumber", (object?)body.SerialNumber ?? DBNull.Value);
             await scopeCmd.ExecuteNonQueryAsync();

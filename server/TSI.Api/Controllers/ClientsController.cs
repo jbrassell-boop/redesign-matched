@@ -81,7 +81,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             SELECT c.lClientKey, c.sClientName1,
                    c.sMailAddr1, c.sMailAddr2,
                    c.sMailCity, c.sMailState, c.sMailZip,
-                   c.sPhoneVoice, c.sPhoneFAX,
+                   c.sPhoneNumber AS sPhoneVoice, NULL AS sPhoneFAX,
                    ISNULL(c.bActive, 0) AS bActive,
                    (SELECT COUNT(*) FROM tblDepartment d WHERE d.lClientKey = c.lClientKey) AS DeptCount,
                    (SELECT COUNT(*) FROM tblRepair r
@@ -164,7 +164,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
 
         const string sql = """
             SELECT con.lContactKey, con.sContactFirst, con.sContactLast,
-                   con.sContactPhoneVoice, con.sContactPhoneFAX,
+                   con.sContactPhoneNumber AS sContactPhoneVoice, NULL AS sContactPhoneFAX,
                    con.sContactEMail, ISNULL(con.bActive, 1) AS bActive
             FROM tblContacts con
                 INNER JOIN tblContactTran ct ON ct.lContactKey = con.lContactKey
@@ -273,7 +273,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
         const string sql = """
             SELECT c.lClientKey, c.sClientName1, ISNULL(c.bActive, 0) AS bActive,
                    c.sMailAddr1, c.sMailAddr2, c.sMailCity, c.sMailState, c.sMailZip,
-                   c.sPhoneVoice, c.sPhoneFAX, c.sBillTo AS sBillingEmail,
+                   c.sPhoneNumber AS sPhoneVoice, NULL AS sPhoneFAX, c.sBillTo AS sBillingEmail,
                    pc.sPricingDescription, c.lPricingCategoryKey,
                    pt.sTermsDesc, c.lPaymentTermsKey,
                    ISNULL(sr.sRepFirst + ' ' + sr.sRepLast, '') AS SalesRep, c.lSalesRepKey,
@@ -822,7 +822,8 @@ public class ClientsController(IConfiguration config) : ControllerBase
                  sPhoneVoice, sPhoneFAX, dtClientSince, dtCreateDate,
                  lPricingCategoryKey, lSalesRepKey, lPaymentTermsKey, sBillTo, lDistributorKey,
                  dblDiscountPct, sBillAddr1, sBillCity, sBillState, sBillZip,
-                 sBillEmail, bBlindPS3, bRequisitionTotalsOnly, bBlindTotalsOnFinal,
+                 /* sBillEmail — NOT a tblClient column (uses sBillTo for billing email) */
+                 bBlindPS3, bRequisitionTotalsOnly, bBlindTotalsOnFinal,
                  sPORequired, bNeverHold, bSkipTracking, bEmailNewRepairs, bNationalAccount,
                  sClientName2, sReferenceNum, sReferenceNum2, sGPID, bActive)
             OUTPUT INSERTED.lClientKey
@@ -831,7 +832,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
                  @phone, @fax, @clientSince, GETDATE(),
                  @pricingCatKey, @salesRepKey, @paymentTermsKey, @billTo, @distributorKey,
                  @discountPct, @billAddr1, @billCity, @billState, @billZip,
-                 @billEmail, @blindPS3, @reqTotalsOnly, @blindTotalsOnFinal,
+                 @blindPS3, @reqTotalsOnly, @blindTotalsOnFinal,
                  @poRequired, @neverHold, @skipTracking, @emailNewRepairs, @nationalAccount,
                  @secondary, @ref1, @ref2, @gpid, 1)
             """;
@@ -857,7 +858,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
         cmd.Parameters.AddWithValue("@billCity",          (object?)body.BillCity ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@billState",         (object?)body.BillState ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@billZip",           (object?)body.BillZip ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@billEmail",         (object?)body.BillEmail ?? DBNull.Value);
+        // @billEmail not bound — tblClient has no sBillEmail column; use sBillTo via @billTo above.
         cmd.Parameters.AddWithValue("@blindPS3",          body.BlindPS3 ? 1 : 0);
         cmd.Parameters.AddWithValue("@reqTotalsOnly",     body.ReqTotalsOnly ? 1 : 0);
         cmd.Parameters.AddWithValue("@blindTotalsOnFinal",body.BlindTotalsOnFinal ? 1 : 0);
