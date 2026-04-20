@@ -16,7 +16,7 @@
 }
 
 .tab-bar__item {
-  padding: 8px 18px;
+  padding: var(--sp-2) var(--sp-4-5);
   font-size: 13px;
   font-weight: 500;
   color: var(--neutral-500);
@@ -55,7 +55,7 @@
   min-width: 16px;
   height: 16px;
   padding: 0 5px;
-  margin-left: 6px;
+  margin-left: var(--sp-1-5);
   background: var(--danger);
   color: var(--card);
   font-size: 11px;
@@ -74,7 +74,7 @@
   }
 
   .tab-bar__item {
-    padding: 6px 12px;
+    padding: var(--sp-1-5) var(--sp-3);
     font-size: 12px;
   }
 }
@@ -82,7 +82,7 @@
 /* Mobile: even more compact tabs */
 @media (max-width: 480px) {
   .tab-bar__item {
-    padding: 6px 8px;
+    padding: var(--sp-1-5) var(--sp-2);
     font-size: 11px;
   }
 }

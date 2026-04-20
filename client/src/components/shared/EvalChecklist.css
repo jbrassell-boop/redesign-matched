@@ -43,7 +43,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: var(--sp-3);
   padding: 10px 0;
 }
 
@@ -70,10 +70,10 @@
 }
 
 .eval-checklist__stamp {
-  padding: 8px 12px;
+  padding: var(--sp-2) var(--sp-3);
   background: var(--neutral-50);
   border-radius: 4px;
   font-size: 11px;
   color: var(--muted);
-  margin-bottom: 8px;
+  margin-bottom: var(--sp-2);
 }

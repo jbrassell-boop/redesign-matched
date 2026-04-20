@@ -3,18 +3,18 @@
    ──────────────────────────────────────────────────────────────── */
 
 /* Wrapper panel */
-.rb-panel          { margin-top: 8px; padding: 10px 12px; background: var(--neutral-50); border: 1px solid var(--border); border-radius: 4px; }
+.rb-panel          { margin-top: var(--sp-2); padding: var(--sp-2-5) var(--sp-3); background: var(--neutral-50); border: 1px solid var(--border); border-radius: 4px; }
 
 /* Shared param row */
-.rb-row            { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
-.rb-row--end       { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 0; justify-content: flex-end; }
+.rb-row            { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: var(--sp-2); }
+.rb-row--end       { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; margin-bottom: 0; justify-content: flex-end; }
 
 /* Label */
 .rb-label          { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; min-width: 55px; text-align: right; }
 
 /* Input / select */
-.rb-input          { height: 28px; border: 1.5px solid var(--border-dk); border-radius: 4px; padding: 0 8px; font-size: 11px; font-family: inherit; color: var(--text); background: var(--card); outline: none; }
-.rb-select         { height: 28px; border: 1.5px solid var(--border-dk); border-radius: 4px; padding: 0 8px; font-size: 11px; font-family: inherit; color: var(--text); background: var(--card); outline: none; cursor: pointer; min-width: 120px; }
+.rb-input          { height: 28px; border: 1.5px solid var(--border-dk); border-radius: 4px; padding: 0 var(--sp-2); font-size: 11px; font-family: inherit; color: var(--text); background: var(--card); outline: none; }
+.rb-select         { height: 28px; border: 1.5px solid var(--border-dk); border-radius: 4px; padding: 0 var(--sp-2); font-size: 11px; font-family: inherit; color: var(--text); background: var(--card); outline: none; cursor: pointer; min-width: 120px; }
 
 /* Date inputs */
 .rb-date           { width: 130px; }
@@ -25,8 +25,8 @@
 .rb-instant-text   { font-size: 11px; color: var(--label); }
 
 /* Checkbox option label */
-.rb-check-label    { font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer; }
-.rb-check-group    { display: flex; flex-wrap: wrap; gap: 8px; }
+.rb-check-label    { font-size: 11px; display: flex; align-items: center; gap: var(--sp-1); cursor: pointer; }
+.rb-check-group    { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
 
 /* Generate button */
-.rb-gen-btn        { height: 28px; padding: 0 16px; border: none; border-radius: 4px; background: var(--success); color: var(--card); font-size: 11px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background 0.1s; }
+.rb-gen-btn        { height: 28px; padding: 0 var(--sp-4); border: none; border-radius: 4px; background: var(--success); color: var(--card); font-size: 11px; font-weight: 700; font-family: inherit; cursor: pointer; transition: background 0.1s; }

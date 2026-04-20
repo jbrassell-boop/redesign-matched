@@ -1,5 +1,5 @@
 .exec-kpi {
-  padding: 12px 16px;
+  padding: var(--sp-3) var(--sp-4);
   background: var(--navy);
   border-bottom: 2px solid var(--primary);
 }
@@ -8,13 +8,13 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: var(--sp-2-5);
 }
 
 .exec-kpi__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 10px;
+  gap: var(--sp-2-5);
 }
 
 @media (max-width: 1024px) {
@@ -39,7 +39,7 @@
 .exec-kpi__skeleton-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 10px;
+  gap: var(--sp-2-5);
 }
 
 @media (max-width: 1024px) {

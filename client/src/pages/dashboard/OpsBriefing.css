@@ -3,7 +3,7 @@
 .ops-briefing__two-col {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  gap: var(--sp-3-5);
 }
 
 .ops-briefing__priorities-grid {
@@ -14,13 +14,13 @@
 .ops-briefing__prod-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .ops-briefing__delay-grid {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
-  gap: 8px;
+  gap: var(--sp-2);
   text-align: center;
 }
 

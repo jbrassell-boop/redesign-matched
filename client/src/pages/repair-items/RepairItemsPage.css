@@ -10,8 +10,8 @@
 
 /* Stat strip */
 .rip-stat-strip         {
-  display: flex; align-items: center; gap: 6px;
-  padding: 4px 14px; background: var(--card);
+  display: flex; align-items: center; gap: var(--sp-1-5);
+  padding: var(--sp-1) var(--sp-3-5); background: var(--card);
   border-bottom: 1px solid var(--neutral-200);
   flex-shrink: 0; flex-wrap: wrap;
 }
@@ -42,8 +42,8 @@
 }
 
 /* Modal form */
-.rip-modal-form         { margin-top: 8px; }
-.rip-modal-grid         { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.rip-modal-form         { margin-top: var(--sp-2); }
+.rip-modal-grid         { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
 
 /* Navy button style for modal footer (dynamic border kept inline) */
 .rip-navy-btn           { background: var(--navy); border-color: var(--navy); }
