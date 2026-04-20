@@ -2,11 +2,11 @@
   border: 1px solid var(--border);
   border-radius: 6px;
   overflow: hidden;
-  margin-top: 16px;
+  margin-top: var(--sp-4);
 }
 
 .category-picker__header {
-  padding: 8px 12px;
+  padding: var(--sp-2) var(--sp-3);
   background: rgba(var(--amber-rgb), 0.06);
   font-size: 11px;
   font-weight: 600;
@@ -58,7 +58,7 @@
 }
 
 .category-picker__loading {
-  padding: 20px;
+  padding: var(--sp-5);
   text-align: center;
   color: var(--muted);
   font-size: 12px;
@@ -71,7 +71,7 @@
 }
 
 .category-picker__table th {
-  padding: 4px 8px;
+  padding: var(--sp-1) var(--sp-2);
   text-align: left;
   background: var(--neutral-50);
   font-size: 10px;
@@ -79,7 +79,7 @@
 }
 
 .category-picker__table td {
-  padding: 4px 8px;
+  padding: var(--sp-1) var(--sp-2);
   border-bottom: 1px solid var(--neutral-50);
 }
 

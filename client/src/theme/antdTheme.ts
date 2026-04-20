@@ -1,8 +1,23 @@
 import type { ThemeConfig } from 'antd';
 
 /**
- * Shared color constants for the Ant Design theme.
- * These MUST stay in sync with the CSS variables defined in tokens.css.
+ * Shared color + sizing constants for the Ant Design theme.
+ *
+ * ⚠️ SYNC CONTRACT — these values MUST match tokens.css exactly.
+ * If you change a value here, update the corresponding CSS variable in
+ * src/theme/tokens.css (and vice versa). Drift here = AntD components
+ * render off-brand.
+ *
+ *   COLORS.primary       ↔ --primary        (tokens.css)
+ *   COLORS.error         ↔ --danger
+ *   COLORS.success       ↔ --success
+ *   COLORS.warning       ↔ --warning
+ *   COLORS.bgBase        ↔ --bg
+ *   COLORS.textBase      ↔ --text
+ *   COLORS.border        ↔ --border
+ *   COLORS.sidebar       ↔ --sidebar
+ *   COLORS.primaryLight  ↔ --primary-light
+ *   SIZES.controlHeight* ↔ --control-height* (tokens.css)
  */
 const COLORS = {
   primary: '#2E75B6',
@@ -14,6 +29,12 @@ const COLORS = {
   border: '#E5E7EB',
   sidebar: '#1E293B',
   primaryLight: '#E8F0FE',
+} as const;
+
+const SIZES = {
+  controlHeightSM: 28,
+  controlHeight: 32,
+  controlHeightLG: 40,
 } as const;
 
 const tsiTheme: ThemeConfig = {
@@ -32,9 +53,9 @@ const tsiTheme: ThemeConfig = {
     borderRadiusSM: 4,
     boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
     boxShadowSecondary: '0 4px 12px rgba(0,0,0,0.12)',
-    controlHeight: 32,     // Compact: toolbar/input height
-    controlHeightSM: 28,   // Extra-compact variant
-    controlHeightLG: 40,   // Standard form inputs
+    controlHeight: SIZES.controlHeight,
+    controlHeightSM: SIZES.controlHeightSM,
+    controlHeightLG: SIZES.controlHeightLG,
     paddingContentHorizontal: 12,
     paddingContentVertical: 6,
     lineHeight: 1.4,

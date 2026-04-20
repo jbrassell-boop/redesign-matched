@@ -17,7 +17,7 @@
 .field__value {
   font-size: 13px;
   color: var(--text);
-  padding: 4px 8px;
+  padding: var(--sp-1) var(--sp-2);
   background: var(--neutral-50);
   border: 1px solid var(--neutral-200);
   border-radius: var(--radius-sm);

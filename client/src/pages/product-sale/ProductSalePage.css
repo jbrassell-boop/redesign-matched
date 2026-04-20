@@ -12,8 +12,8 @@
 .ps-controls {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 16px;
+  gap: var(--sp-2-5);
+  padding: var(--sp-2-5) var(--sp-4);
   background: var(--card);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
@@ -38,7 +38,7 @@
   position: sticky;
   top: 0;
   background: var(--neutral-50);
-  padding: 8px 12px;
+  padding: var(--sp-2) var(--sp-3);
   text-align: left;
   font-size: 11px;
   font-weight: 700;
@@ -51,7 +51,7 @@
 }
 .ps-table th.ps-col-right { text-align: right; }
 .ps-table td {
-  padding: 8px 12px;
+  padding: var(--sp-2) var(--sp-3);
   border-bottom: 1px solid var(--neutral-100);
   color: var(--text);
   vertical-align: middle;
@@ -71,7 +71,7 @@
 .ps-source-badge {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   padding: 2px 8px;
   border-radius: 9999px;
   font-size: 10px;
@@ -87,12 +87,12 @@
   font-size: 10px;
   color: var(--danger);
   font-weight: 600;
-  margin-left: 4px;
+  margin-left: var(--sp-1);
 }
 
 /* Loading / empty */
 .ps-loading {
-  padding: 40px;
+  padding: var(--sp-10);
   text-align: center;
   color: var(--muted);
   font-size: 13px;
@@ -103,7 +103,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
+  padding: var(--sp-2) var(--sp-4);
   border-top: 1px solid var(--border);
   background: var(--neutral-50);
   flex-shrink: 0;
@@ -119,7 +119,7 @@
 .ps-pg-btn {
   height: 30px;
   min-width: 30px;
-  padding: 0 6px;
+  padding: 0 var(--sp-1-5);
   border: 1px solid var(--border-dk);
   border-radius: 4px;
   font-size: 11px;
@@ -141,12 +141,12 @@
   .ps-controls__search { max-width: 240px; }
 }
 @media (max-width: 1024px) {
-  .ps-controls { padding: 8px 12px; }
+  .ps-controls { padding: var(--sp-2) var(--sp-3); }
   .ps-controls__search { max-width: 200px; }
 }
 
 /* Modal */
-.ps-modal-footer { display: flex; justify-content: flex-end; gap: 8px; }
-.ps-modal-body { display: flex; flex-direction: column; gap: 14px; padding: 8px 0; }
-.ps-modal-label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: 4px; }
+.ps-modal-footer { display: flex; justify-content: flex-end; gap: var(--sp-2); }
+.ps-modal-body { display: flex; flex-direction: column; gap: var(--sp-3-5); padding: var(--sp-2) 0; }
+.ps-modal-label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; margin-bottom: var(--sp-1); }
 .ps-modal-hint { font-size: 11px; color: var(--muted); margin: 0; }

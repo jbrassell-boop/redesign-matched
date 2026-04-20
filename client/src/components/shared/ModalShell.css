@@ -20,7 +20,7 @@
 .modal-shell .ant-modal-close {
   color: rgba(255, 255, 255, 0.8);
   top: 14px;
-  right: 16px;
+  right: var(--sp-4);
 }
 
 .modal-shell .ant-modal-close:hover {
@@ -29,11 +29,11 @@
 }
 
 .modal-shell .ant-modal-body {
-  padding: 16px 20px;
+  padding: var(--sp-4) var(--sp-5);
 }
 
 .modal-shell .ant-modal-footer {
-  padding: 12px 20px;
+  padding: var(--sp-3) var(--sp-5);
   border-top: 1px solid var(--neutral-200);
 }
 

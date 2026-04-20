@@ -1,6 +1,6 @@
 .form-grid {
   display: grid;
-  gap: 8px 12px;
+  gap: var(--sp-2) var(--sp-3);
 }
 
 .form-grid--2 { grid-template-columns: 1fr 1fr; }

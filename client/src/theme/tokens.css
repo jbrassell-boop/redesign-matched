@@ -85,9 +85,13 @@
   --border: #E5E7EB;
   --border-dk: #B8C8E0;
   --sp-1: 4px;
+  --sp-1-5: 6px;
   --sp-2: 8px;
+  --sp-2-5: 10px;
   --sp-3: 12px;
+  --sp-3-5: 14px;
   --sp-4: 16px;
+  --sp-4-5: 18px;
   --sp-5: 20px;
   --sp-6: 24px;
   --sp-8: 32px;
@@ -114,6 +118,12 @@
   --radius-lg: 8px;
   --radius-xl: 12px;
   --radius-pill: 9999px;
+
+  /* control heights — must mirror antdTheme.ts controlHeight* tokens */
+  --control-height-sm: 28px;
+  --control-height: 32px;
+  --control-height-lg: 40px;
+  --control-height-icon: 32px;
 
   /* print-form palette (used in repair print forms) */
   --print-text: #111;

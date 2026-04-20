@@ -15,12 +15,12 @@
   font-weight: 600 !important;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  padding: 10px 12px !important;
+  padding: var(--sp-2-5) var(--sp-3) !important;
   border-bottom: 1px solid var(--neutral-200) !important;
 }
 
 .data-table-wrap .ant-table-tbody > tr > td {
-  padding: 10px 12px !important;
+  padding: var(--sp-2-5) var(--sp-3) !important;
   font-size: 13px !important;
   border-bottom: 1px solid var(--neutral-200) !important;
   color: var(--neutral-900);

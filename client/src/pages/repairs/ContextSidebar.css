@@ -2,12 +2,12 @@
   width: 280px;
   flex-shrink: 0;
   background: var(--neutral-50);
-  padding: 10px;
+  padding: var(--sp-2-5);
   border-left: 1.5px solid var(--border-dk);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--sp-2-5);
 }
 .context-sidebar__link {
   font-size: 11px;
