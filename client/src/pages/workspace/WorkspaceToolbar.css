@@ -2,7 +2,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: var(--sp-3) var(--sp-4);
   border-bottom: 1px solid var(--border);
   background: var(--card);
   flex-shrink: 0;
@@ -11,7 +11,7 @@
 .workspace-toolbar__left {
   display: flex;
   align-items: baseline;
-  gap: 10px;
+  gap: var(--sp-2-5);
 }
 
 .workspace-toolbar__title {
@@ -29,7 +29,7 @@
 .workspace-toolbar__right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--sp-2);
 }
 
 .workspace-toolbar__preset {

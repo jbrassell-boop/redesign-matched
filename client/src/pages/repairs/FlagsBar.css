@@ -1,8 +1,8 @@
 .flags-bar {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
+  gap: var(--sp-1-5);
+  padding: var(--sp-1-5) var(--sp-3-5);
   border-bottom: 1px solid var(--neutral-200);
   background: var(--card);
   flex-shrink: 0;
@@ -11,7 +11,7 @@
 .flags-bar__chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--sp-1);
   padding: 2px 8px;
   border-radius: 9999px;
   font-size: 11px;

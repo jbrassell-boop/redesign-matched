@@ -1,8 +1,8 @@
 .dept-toolbar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-4);
   border-bottom: 1px solid var(--neutral-200);
   background: var(--card);
   flex-shrink: 0;
@@ -49,7 +49,7 @@
 .dept-toolbar__save-indicator {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--sp-1-5);
   font-size: 12px;
   font-weight: 500;
 }

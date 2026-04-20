@@ -6,9 +6,9 @@
 .inline-expand-row__body {
   display: flex;
   align-items: flex-end;
-  gap: 10px;
+  gap: var(--sp-2-5);
   flex-wrap: wrap;
-  padding: 10px 16px;
+  padding: var(--sp-2-5) var(--sp-4);
   background: rgba(var(--amber-rgb), 0.06);
 }
 

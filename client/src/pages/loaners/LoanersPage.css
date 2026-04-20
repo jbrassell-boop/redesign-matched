@@ -8,14 +8,14 @@
 
 /* Controls row */
 .loaners-controls {
-  display: flex; align-items: center; gap: 10px; padding: 10px 16px;
+  display: flex; align-items: center; gap: var(--sp-2-5); padding: var(--sp-2-5) var(--sp-4);
   background: var(--card); border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; flex-wrap: wrap;
 }
 .loaners-controls__search {
   height: 30px; width: 240px; font-size: 12px;
 }
 .loaners-controls__rep-select {
-  height: 30px; font-size: 12px; padding: 0 8px;
+  height: 30px; font-size: 12px; padding: 0 var(--sp-2);
   border: 1px solid var(--border-dk); border-radius: 4px;
   background: var(--card); color: var(--text); font-family: inherit;
   cursor: pointer;
@@ -33,13 +33,13 @@
 .loaners-table { width: 100%; border-collapse: collapse; min-width: 1100px; }
 
 .loaners-table th {
-  background: var(--neutral-50); color: var(--muted); font-weight: 600; padding: 8px 10px;
+  background: var(--neutral-50); color: var(--muted); font-weight: 600; padding: var(--sp-2) var(--sp-2-5);
   text-align: left; white-space: nowrap; border-right: 1px solid rgba(var(--primary-rgb), 0.15);
   border-bottom: 1px solid var(--neutral-200); letter-spacing: 0.04em; text-transform: uppercase; font-size: 11px;
 }
 
 .loaners-table td {
-  padding: 6px 8px; font-size: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text);
+  padding: var(--sp-1-5) var(--sp-2); font-size: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text);
 }
 
 .loaners-table tbody tr { cursor: pointer; transition: background 0.1s ease; }
@@ -98,13 +98,13 @@
   display: inline-block; padding: 1px 6px; border-radius: 4px;
   font-size: 10px; font-weight: 700; letter-spacing: 0.04em;
   background: rgba(var(--danger-rgb), 0.1); color: var(--danger);
-  margin-left: 4px;
+  margin-left: var(--sp-1);
 }
 
 /* Action buttons */
 .loaners-action-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  height: 26px; padding: 0 10px; border-radius: 4px;
+  height: 26px; padding: 0 var(--sp-2-5); border-radius: 4px;
   font-size: 11px; font-weight: 600; font-family: inherit;
   border: none; cursor: pointer; white-space: nowrap; transition: all 0.15s;
 }
@@ -125,7 +125,7 @@
 
 /* Inline expand row fields */
 .loaners-expand-fields {
-  display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;
+  display: flex; align-items: flex-end; gap: var(--sp-2-5); flex-wrap: wrap;
 }
 .loaners-expand-field { display: flex; flex-direction: column; gap: 2px; }
 .loaners-expand-field label {
@@ -133,14 +133,14 @@
 }
 .loaners-expand-field input,
 .loaners-expand-field select {
-  height: 28px; padding: 0 8px; border: 1px solid var(--border-dk); border-radius: 4px;
+  height: 28px; padding: 0 var(--sp-2); border: 1px solid var(--border-dk); border-radius: 4px;
   font-size: 12px; font-family: inherit; background: var(--card); color: var(--text);
 }
 .loaners-expand-field input[type="checkbox"] {
-  height: auto; width: auto; margin-top: 6px;
+  height: auto; width: auto; margin-top: var(--sp-1-5);
 }
 .loaners-expand-save {
-  height: 28px; padding: 0 14px; border: none; border-radius: 4px; cursor: pointer;
+  height: 28px; padding: 0 var(--sp-3-5); border: none; border-radius: 4px; cursor: pointer;
   font-size: 11px; font-weight: 600; font-family: inherit;
   background: var(--primary); color: var(--card);
 }
@@ -148,7 +148,7 @@
 
 /* Footer */
 .loaners-footer {
-  background: var(--card); border-top: 1px solid var(--border); padding: 6px 16px;
+  background: var(--card); border-top: 1px solid var(--border); padding: var(--sp-1-5) var(--sp-4);
   display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
 }
 
@@ -157,10 +157,10 @@
   .loaners-table { min-width: 900px; }
 }
 @media (max-width: 1024px) {
-  .loaners-controls { padding: 8px 12px; }
+  .loaners-controls { padding: var(--sp-2) var(--sp-3); }
   .loaners-controls__search { width: 180px; }
 }
 
 /* Empty / loading */
-.loaners-loading-cell { text-align: center; padding: 24px; }
+.loaners-loading-cell { text-align: center; padding: var(--sp-6); }
 .loaners-empty-cell { text-align: center; padding: 30px; color: var(--muted); font-size: 12px; }

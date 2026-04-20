@@ -4,8 +4,8 @@
 
 /* Layout */
 .idp-container          { display: flex; flex-direction: column; height: 100%; background: var(--bg); }
-.idp-loading            { display: flex; justify-content: center; padding: 40px; }
-.idp-empty              { padding: 40px; text-align: center; color: var(--muted); font-size: 13px; }
+.idp-loading            { display: flex; justify-content: center; padding: var(--sp-10); }
+.idp-empty              { padding: var(--sp-10); text-align: center; color: var(--muted); font-size: 13px; }
 .idp-tab-body           { flex: 1; overflow: auto; }
 
 /* Stat strip */
@@ -13,8 +13,8 @@
 
 /* StatChip */
 .idp-stat-chip          {
-  flex: 1; display: flex; align-items: center; gap: 8px;
-  padding: 8px 12px; border-right: 1px solid var(--border);
+  flex: 1; display: flex; align-items: center; gap: var(--sp-2);
+  padding: var(--sp-2) var(--sp-3); border-right: 1px solid var(--border);
 }
 .idp-stat-icon          {
   width: 24px; height: 24px; border-radius: 4px;
@@ -29,18 +29,18 @@
 }
 
 /* Inventory tab */
-.idp-inv-tab            { padding: 16px 20px; }
-.idp-section-spacer     { margin-top: 14px; }
+.idp-inv-tab            { padding: var(--sp-4) var(--sp-5); }
+.idp-section-spacer     { margin-top: var(--sp-3-5); }
 
 /* Flags */
-.idp-flags-wrap         { display: flex; flex-wrap: wrap; gap: 16px; }
-.idp-flag-item          { display: flex; align-items: center; gap: 6px; }
+.idp-flags-wrap         { display: flex; flex-wrap: wrap; gap: var(--sp-4); }
+.idp-flag-item          { display: flex; align-items: center; gap: var(--sp-1-5); }
 .idp-flag-label         { font-size: 12px; color: var(--text); }
 /* Flag check box — bg/border/color stay inline (dynamic on flag.value) */
 
 /* Sizes tab */
-.idp-sizes-tab          { padding: 12px 16px; }
-.idp-sizes-empty        { padding: 32px; text-align: center; color: var(--muted); font-size: 13px; }
+.idp-sizes-tab          { padding: var(--sp-3) var(--sp-4); }
+.idp-sizes-empty        { padding: var(--sp-8); text-align: center; color: var(--muted); font-size: 13px; }
 .idp-sizes-table-wrap   { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
 
 /* Size column renders */

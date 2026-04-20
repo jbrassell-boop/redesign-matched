@@ -9,17 +9,17 @@
 .os-stat-strip         { display: flex; background: var(--card); border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; }
 
 /* StatChip — static parts only; dynamic active/cursor stay inline */
-.os-stat-chip-inner    { flex: 1; display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-right: 1px solid var(--neutral-200); transition: background 0.12s; }
+.os-stat-chip-inner    { flex: 1; display: flex; align-items: center; gap: var(--sp-2-5); padding: var(--sp-2-5) var(--sp-4); border-right: 1px solid var(--neutral-200); transition: background 0.12s; }
 .os-chip-icon          { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .os-chip-value         { font-size: 16px; font-weight: 800; line-height: 1.2; }
 .os-chip-label         { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
 .os-chip-text          { /* value + label wrapper — no extra styles needed */ }
 
 /* Toolbar */
-.os-toolbar            { display: flex; align-items: center; gap: 8px; padding: 10px 16px; background: var(--card); border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; flex-wrap: wrap; }
+.os-toolbar            { display: flex; align-items: center; gap: var(--sp-2); padding: var(--sp-2-5) var(--sp-4); background: var(--card); border-bottom: 1px solid var(--neutral-200); flex-shrink: 0; flex-wrap: wrap; }
 
 /* New Visit button */
-.os-new-btn            { height: 30px; padding: 0 14px; font-size: 12px; font-weight: 700; font-family: inherit; background: var(--navy); color: var(--card); border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+.os-new-btn            { height: 30px; padding: 0 var(--sp-3-5); font-size: 12px; font-weight: 700; font-family: inherit; background: var(--navy); color: var(--card); border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 5px; }
 
 /* Toolbar divider */
 .os-divider            { width: 1px; height: 22px; background: var(--border-dk); flex-shrink: 0; }
@@ -31,7 +31,7 @@
 .os-seg-wrap           { display: inline-flex; border: 1px solid var(--border-dk); border-radius: 6px; overflow: hidden; }
 
 /* Date inputs */
-.os-date-input         { height: 30px; border: 1.5px solid var(--border-dk); border-radius: 6px; padding: 0 8px; font-size: 11px; font-family: inherit; color: var(--text); background: var(--card); outline: none; cursor: pointer; width: 120px; }
+.os-date-input         { height: 30px; border: 1.5px solid var(--border-dk); border-radius: 6px; padding: 0 var(--sp-2); font-size: 11px; font-family: inherit; color: var(--text); background: var(--card); outline: none; cursor: pointer; width: 120px; }
 .os-date-sep           { font-size: 11px; color: var(--muted); }
 
 /* Search input */
@@ -50,7 +50,7 @@
 .os-list-scroll        { flex: 1; overflow: auto; }
 
 /* List state messages */
-.os-list-empty         { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+.os-list-empty         { text-align: center; padding: var(--sp-10); color: var(--muted); font-size: 13px; }
 
 /* List row — static parts; isSelected states stay inline */
 .os-list-row-header    { display: flex; justify-content: space-between; align-items: flex-start; }
@@ -61,10 +61,10 @@
 .os-list-billed        { font-weight: 600; color: var(--navy); }
 
 /* Pagination footer */
-.os-footer             { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--neutral-50); border-top: 1.5px solid var(--border-dk); flex-shrink: 0; font-size: 11px; color: var(--muted); }
+.os-footer             { display: flex; align-items: center; justify-content: space-between; padding: var(--sp-2) var(--sp-3); background: var(--neutral-50); border-top: 1.5px solid var(--border-dk); flex-shrink: 0; font-size: 11px; color: var(--muted); }
 .os-footer-count       { font-weight: 500; }
 .os-pager-wrap         { display: flex; gap: 3px; align-items: center; }
-.os-pager-btn          { height: 36px; min-width: 36px; padding: 0 6px; border: 1px solid var(--border-dk); border-radius: 4px; background: var(--card); font-size: 11px; color: var(--label); font-family: inherit; }
+.os-pager-btn          { height: 36px; min-width: 36px; padding: 0 var(--sp-1-5); border: 1px solid var(--border-dk); border-radius: 4px; background: var(--card); font-size: 11px; color: var(--label); font-family: inherit; }
 
 /* Right detail panel */
 .os-detail-pane        { flex: 1; overflow: hidden; display: flex; flex-direction: column; background: var(--card); }

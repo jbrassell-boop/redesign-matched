@@ -20,6 +20,6 @@
 }
 
 .section-card__body {
-  padding: 10px 14px;
+  padding: var(--sp-2-5) var(--sp-3-5);
   background: var(--card);
 }
