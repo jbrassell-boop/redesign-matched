@@ -170,4 +170,24 @@ Located in `client/src/components/shared/`. Prefer these over inline JSX:
 
 ---
 
+## 12. For downstream consumers (WinScope Cloud)
+
+**This repo is the source of truth for the TSI design system.** If you are building a React/AntD app that should share the TSI visual language (e.g. Steve's `winscope-net-production/Claude/` modernization), your local `tokens.css` and `antdTheme.ts` should be a **re-sync** from this repo, not a fork.
+
+**Sync rules:**
+1. `client/src/theme/tokens.css` and `client/src/theme/antdTheme.ts` here are canonical. Any snapshot you keep locally (e.g. under `reference/joseph-ui/`) should be periodically refreshed from this repo's `main` branch.
+2. Do not add TSI palette colors or spacing tokens locally without first adding them here. One source, one truth.
+3. When you pull a new version, review the sync contract in §7 — if a CSS variable changed, the matching JS constant in `antdTheme.ts` must change too. Drift breaks AntD components.
+4. Shared React components under `client/src/components/shared/` are also canonical. Copy them across rather than reinventing.
+
+**Current drop (2026-04-20) includes:**
+- Half-step spacing tokens: `--sp-1-5` (6px), `--sp-2-5` (10px), `--sp-3-5` (14px), `--sp-4-5` (18px)
+- Control-height tokens: `--control-height`, `--control-height-sm`, `--control-height-lg`, `--control-height-icon`
+- `SIZES` constant block in `antdTheme.ts` so control heights have a single JS source
+- Written sync contract in §7 (JS constants ↔ CSS variables)
+
+If you're tracking alignment, re-sync `client/src/theme/` and `client/src/components/shared/` from this branch after merge.
+
+---
+
 _Last audit: 2026-04-20. Open audit items: abstract `ToolbarBase` (5 page-specific toolbars duplicate ~800 LOC), abstract `LayoutListDetail` (7 pages reimplement the split), clean residual orphan pixel values (`5px`/`7px`/`15px`/`30px`/`36px`) into the spacing scale or leave as documented exceptions._
