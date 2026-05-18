@@ -15,6 +15,7 @@ import {
 } from '../../api/dashboard';
 import { FulfillLoanerModal } from '../loaners/FulfillLoanerModal';
 import type { DashboardStats, DashboardToolbarState, DashboardRepair, DashboardTask } from './types';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 
 const DEFAULT_STATE: DashboardToolbarState = {
   view: 'repairs',
@@ -29,6 +30,7 @@ const DEFAULT_STATE: DashboardToolbarState = {
 
 export const DashboardPage = () => {
   const navigate = useNavigate();
+  const { locationKey } = useServiceLocation();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [toolbarState, setToolbarState] = useState<DashboardToolbarState>(DEFAULT_STATE);
@@ -67,7 +69,7 @@ export const DashboardPage = () => {
       const params = { search: s.search, page: s.page, pageSize: s.pageSize };
       switch (s.view) {
         case 'repairs': {
-          const r = await getDashboardRepairs(s);
+          const r = await getDashboardRepairs({ ...s, svcKey: locationKey });
           if (!cancelled()) { setData(r.repairs); setTotalCount(r.totalCount); }
           break;
         }
@@ -105,7 +107,7 @@ export const DashboardPage = () => {
     } finally {
       if (!cancelled()) setLoading(false);
     }
-  }, []);
+  }, [locationKey]);
 
   useEffect(() => {
     let cancelled = false;

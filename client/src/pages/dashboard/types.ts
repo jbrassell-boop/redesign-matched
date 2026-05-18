@@ -54,6 +54,7 @@ export interface DashboardToolbarState {
   page: number;
   pageSize: number;
   statusFilter: string;
+  svcKey?: number;
 }
 
 export interface BriefingStats {

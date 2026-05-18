@@ -69,7 +69,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
         [FromQuery] string? statusFilter = null,
         [FromQuery] string type = "all",
         [FromQuery] string location = "all",
-        [FromQuery] string groupBy = "none")
+        [FromQuery] string groupBy = "none",
+        [FromQuery] int? svcKey = null)
     {
         await using var conn = CreateConnection();
         await conn.OpenAsync();
@@ -105,6 +106,14 @@ public class DashboardController(IConfiguration config) : ControllerBase
             where.Add("ISNULL(r.bOutsourced, 0) = 1");
         else if (location == "hotlist")
             where.Add("ISNULL(r.bHotList, 0) = 1");
+        if (svcKey.HasValue && svcKey.Value > 0)
+        {
+            // Filter by WO prefix (source of truth) — S-prefix = Nashville (2), N-prefix = UC (1)
+            if (svcKey.Value == 2)
+                where.Add("r.sWorkOrderNumber LIKE 'S[RICKV]%'");
+            else
+                where.Add("r.sWorkOrderNumber NOT LIKE 'S[RICKV]%'");
+        }
 
         var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
 

@@ -23,6 +23,7 @@ export const getDashboardRepairs = async (filters: DashboardFilters | DashboardT
   if ('type' in filters && filters.type !== 'all') params.type = filters.type;
   if ('location' in filters && filters.location !== 'all') params.location = filters.location;
   if ('groupBy' in filters && filters.groupBy !== 'none') params.groupBy = filters.groupBy;
+  if ('svcKey' in filters && filters.svcKey) params.svcKey = filters.svcKey;
   const { data } = await apiClient.get<DashboardRepairsResponse>('/dashboard/repairs', { params });
   return data;
 };
