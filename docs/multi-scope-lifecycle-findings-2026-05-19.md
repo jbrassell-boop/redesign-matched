@@ -99,11 +99,24 @@ The cockpit Inspections endpoint reads from `tblRepair` directly (not `tblRepair
 
 ## Recommended PR sequence
 
-1. **Bug 1 + Bug 2 together** — same plumbing. One PR adds `RigidOrFlexible` to `RepairFull` (backend), threads it through `InspectionsTab`, fixes the form catalog `types` to use `R`/`F`/`C`, and fixes the subtitle render. ~80 lines across 4 files.
-2. **Bug 3** — backend-only. Update `GetRepairFull` SQL to LEFT JOIN `tblInvoice` on `(lRepairKey, MAX(InvoiceKey) WHERE bIsVoid = 0)` and project the invoice number. ~20 lines.
-3. **Bug 4** — investigate the UI race; punt if not reproducible.
-4. **Bug 5** — diagnose with the specific clientKey from NR26135004 (Surgery Center of Lawrenceville).
-5. **Universal observation** — design ticket; not a code fix.
+| # | Status | What |
+| --- | --- | --- |
+| 1 | **SHIPPED 2026-05-19** | Bugs 1+2 (form labels + formsForScope). redesign-matched commit 95dcdde live on happy-plant. Steve PR #53. |
+| 2 | **SHIPPED 2026-05-19** | Bug 3 (surface draft invoice). redesign-matched commit 3878c99 + e62d029 live on happy-plant. Steve PR opened on joe/repairs-surface-draft-invoice. |
+| 3 | open | Bug 4 — UI Draft Invoice button race; punt if not reproducible. |
+| 4 | open | Bug 5 — `/clients/{key}/flags` 500 on NR26135004 client (Surgery Center of Lawrenceville). |
+| 5 | open | Architectural — Inspection form fields are Flexible-shaped on tblRepair for all scope types. Needs separate field sets for Rigid + Camera. Design-ticket, not session-sized. |
+| 6 | open | Draft Invoice idempotency — clicking twice creates two `tblInvoice` rows. Worth a quick UPDATE-or-INSERT change. |
+
+## 2026-05-19 — Intake side walkthrough (post-fix)
+
+After shipping Bugs 1–3, I also walked the front-end-of-the-workflow surfaces to find bugs Steve will hit when his smoke test starts at Receiving / Wizard rather than at an existing cockpit. No new bugs surfaced.
+
+| Surface | Result | Notes |
+| --- | --- | --- |
+| Receiving page | PASS | 0 pending arrivals (expected — happy-plant doesn't have migration 014 yet). Walk-in / No Match form opens cleanly with Customer/Serial/PO/Complaint/Tracking/Notes fields. Customer picker shows clients with city/state subtitle. No 500s. |
+| New Repair Wizard | PASS | 4-step flow Client → Department → Scope → Intake works end-to-end. Searched/picked Kent Hospital - RI / Sterile Processing / SN# 2417164 (CF HQ190L). Each step's API loaded 200. Step 4 Intake has required Customer Complaint, optional PO/Rack/Accessories. ETO Cap + Water Res. Cap pre-checked by default. Did not click Create Order to avoid polluting test data. |
+| Scope-by-serial lookup | PASS | `GET /api/repairs/scope-lookup?sn=2417164` returns full {scopeKey, serialNumber, scopeTypeKey, scopeTypeDesc, manufacturer, deptKey, deptName, clientKey, clientName}. Frontend `lookupScopeBySerial` wrapper uses the right URL. |
 
 ## Test artifacts left on happy-plant
 
