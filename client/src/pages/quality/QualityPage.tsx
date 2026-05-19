@@ -365,7 +365,7 @@ export const QualityPage = () => {
       {/* ── Stat Strip ── */}
       <div style={statStripStyle}>
         <StatChip
-          label="Total Inspections"
+          label="Inspections (30d)"
           value={statsLoading ? '—' : (stats?.totalInspections ?? 0)}
           icon={<IconShield />}
           iconColor="var(--navy)"
