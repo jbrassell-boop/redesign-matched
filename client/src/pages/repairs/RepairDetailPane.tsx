@@ -60,21 +60,25 @@ interface RepairDetailPaneProps {
   repairKey?: number;
 }
 
-// Status flow: maps current status ID to next status ID (0 = end of workflow)
-const STATUS_NEXT_MAP: Record<number, number> = {
-  1:  6,   // Waiting on Inspection -> Waiting for Approved
-  3:  6,   // In the Drying Room -> Waiting for Approved
-  5:  6,   // Additional Evaluation -> Waiting for Approved
-  6:  8,   // Waiting for Approved -> In Repair - Minor
-  8:  21,  // In Repair - Minor -> QC
-  9:  21,  // In Repair - Major -> QC
-  11: 21,  // In Repair - Mid Level -> QC
-  14: 21,  // Semi Rigid Repair -> QC
-  15: 21,  // Special Rigid -> QC
-  21: 10,  // QC -> Scheduled to Ship
-  10: 0,   // Scheduled to Ship -> end
-  12: 0,   // Scheduled to Ship Tomorrow -> end
-  13: 0,   // Shipping Today or Tomorrow -> end
+// Status flow: maps current status ID to the next status (id + display name).
+// Display name is embedded here so the "Advance workflow?" confirm dialog can
+// render correctly even when the target status is filtered out of the picker
+// dropdown (e.g. /repairs/statuses excludes readonly milestone statuses).
+// `next: null` means end-of-workflow.
+const STATUS_NEXT_MAP: Record<number, { id: number; name: string } | null> = {
+  1:  { id: 6,  name: 'Waiting for Approved' },           // Waiting on Inspection
+  3:  { id: 6,  name: 'Waiting for Approved' },           // In the Drying Room
+  5:  { id: 6,  name: 'Waiting for Approved' },           // Additional Evaluation
+  6:  { id: 8,  name: 'In Repair Process - Minor Repair' }, // Waiting for Approved
+  8:  { id: 21, name: 'QC - Waiting Customer Approval' }, // In Repair - Minor
+  9:  { id: 21, name: 'QC - Waiting Customer Approval' }, // In Repair - Major
+  11: { id: 21, name: 'QC - Waiting Customer Approval' }, // In Repair - Mid Level
+  14: { id: 21, name: 'QC - Waiting Customer Approval' }, // Semi Rigid Repair
+  15: { id: 21, name: 'QC - Waiting Customer Approval' }, // Special Rigid
+  21: { id: 10, name: 'Scheduled to Ship' },              // QC
+  10: null,  // Scheduled to Ship -> end
+  12: null,  // Scheduled to Ship Tomorrow -> end
+  13: null,  // Shipping Today or Tomorrow -> end
 };
 
 const BASE_TABS: TabDef[] = [
@@ -256,12 +260,12 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
   const currentStatus = isCockpit ? (fullRepair?.status ?? '') : (detail?.status ?? '');
 
   const handleAdvance = useCallback(async () => {
-    const nextId = STATUS_NEXT_MAP[currentStatusId];
-    if (nextId === undefined) {
+    const next = STATUS_NEXT_MAP[currentStatusId];
+    if (next === undefined) {
       message.warning(`No next stage for: ${currentStatus}`);
       return;
     }
-    if (nextId === 0) {
+    if (next === null) {
       // Shipping stage — modal for tracking number
       let trackingValue = '';
       Modal.confirm({
@@ -302,9 +306,8 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       return;
     }
     try {
-      await updateRepairStatus(rk, nextId);
-      const nextName = statuses.find(s => s.statusId === nextId)?.statusName ?? `Status #${nextId}`;
-      message.success(`Advanced to: ${nextName}`);
+      await updateRepairStatus(rk, next.id);
+      message.success(`Advanced to: ${next.name}`);
       onStatusChanged?.(rk);
       if (isCockpit && resolvedKey) {
         getRepairFull(resolvedKey).then(setFullRepair).catch(() => { message.error('Failed to reload repair'); });
@@ -312,7 +315,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
     } catch {
       message.error('Failed to advance status');
     }
-  }, [currentStatusId, currentStatus, rk, statuses, onStatusChanged, isCockpit, resolvedKey]);
+  }, [currentStatusId, currentStatus, rk, onStatusChanged, isCockpit, resolvedKey]);
 
   const handleSetStatus = useCallback(async (statusId: number) => {
     setStatusMenuOpen(false);
@@ -350,10 +353,9 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
     }
   }, [rk, onNoteSaved]);
 
-  const hasNext = STATUS_NEXT_MAP[currentStatusId] !== undefined && STATUS_NEXT_MAP[currentStatusId] !== 0;
-  const nextStatusName = hasNext
-    ? statuses.find(s => s.statusId === STATUS_NEXT_MAP[currentStatusId])?.statusName ?? null
-    : null;
+  const nextStage = STATUS_NEXT_MAP[currentStatusId] ?? null;
+  const hasNext = nextStage !== null;
+  const nextStatusName = nextStage?.name ?? null;
 
   // ── COCKPIT MODE ──
   if (isCockpit) {
