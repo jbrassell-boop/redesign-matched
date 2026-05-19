@@ -59,14 +59,50 @@ API: <https://tsi-redesign-api.azurewebsites.net>
 
 ## Pre-dry-run punch list
 
-| # | Action | Owner |
+| # | Action | Owner | Status |
+| --- | --- | --- | --- |
+| 1 | Wait for Steve to merge **PRs #25, #32, #34, #52, #53, #54, #55** | Steve | #32 merged 5/19, others still open |
+| 2 | Send a PR for **Administration sFirstName/sLastName → sUserFullName** fix | Me | **DONE — commits 4599f46 + 8d56df8 (live on happy-plant)** |
+| 3 | Decide whether to fix the **Outsource Validation vendor join** + **Scope Model joins** before dry-run | Joe call | **NOT A CODE BUG — see Data Gap Audit below** |
+| 4 | Fix **Loaner detail formatter bugs** (Invalid Date, raw userKey) | Me | **DONE — commit 4599f46 (live on happy-plant)** |
+| 5 | Pick **dry-run date + 2-3 testers + scenario doc** | Joe | |
+| 6 | Set up a **feedback channel** | Joe | |
+
+## Data Gap Audit — Yellow-module follow-up (2026-05-20)
+
+Investigated all four yellow modules where columns rendered empty. Every one is a **migration gap, not a code bug**. Both redesign-matched and Steve's stack query the right tables with correct joins — the source tables themselves are empty on WinscopeWeb because the BACPAC migration didn't include the lookup/operational data behind them.
+
+| Module | Source table(s) | Goldmine | WinscopeWeb (cloud) | Fix owner |
+| --- | --- | --- | --- | --- |
+| Onsite Services | tblSiteServices, tblSiteServicesCalendar | 12 / 43 | 0 / 0 | Steve / data migration |
+| Outsource Validation vendor column | tblVendor | 45 | 0 | Steve / data migration |
+| Scope Model Manufacturer/Category | tblManufacturers + tblScopeTypeCategories | populated | 0 / 0 | Steve / data migration |
+| Suppliers Parts/Repair/Acquisition/Carts badges | tblSupplierRoles + tblSupplierRolesRef | 312 / 4 | 0 / 0 | Steve / data migration |
+
+The Scope Model physical-property columns (`sInsertTubeLength`, `sInsertTubeDiameter`, `sFieldOfView`, `sDirectionOfView`) are nvarchar(8) tech-entered metadata that were never universal even on Goldmine — those rendering empty is data quality, not a migration gap. Won't fix.
+
+## Updated module scorecard (2026-05-20 EOD)
+
+| Module | Status | Change |
 | --- | --- | --- |
-| 1 | Wait for Steve to merge **PRs #25, #32, #34, #52, #53, #54, #55** — closes 7 of the visible cosmetic bugs | Steve |
-| 2 | Send a PR for **Administration sFirstName/sLastName → sUserFullName** fix (similar to Bug 5 — small ~20-line patch) | Me, next session |
-| 3 | Decide whether to fix the **Outsource Validation vendor join** + **Scope Model joins** before dry-run, or accept the cosmetic gaps and tell testers | Joe call |
-| 4 | Optionally fix **Loaner detail formatter bugs** (Invalid Date, raw userKey) — small, visible to any tester who clicks a loaner | Me, next session if Joe agrees |
-| 5 | Pick **dry-run date + 2-3 testers + scenario doc** | Joe |
-| 6 | Set up a **feedback channel** — shared Slack/Notes/etc where testers paste WO# + tab + what broke | Joe |
+| Repairs cockpit | 🟢 | (unchanged) |
+| New Repair Wizard | 🟢 | (unchanged) |
+| Receiving | 🟢 | (unchanged) |
+| Dashboard / Workspace | 🟢 | (unchanged) |
+| Quality | 🟢 | (unchanged) |
+| **Administration** | 🟢 | 🔴 → 🟢 (fixed in commits 4599f46 + 8d56df8) |
+| **Loaners** | 🟢 | 🟡 → 🟢 (formatter fix in commit 4599f46) |
+| Onsite Services | 🟢 code / 🟡 data | 🔴 → 🟢/🟡 (Steve PR #32 + redesign-matched alignment in commit cfadc4e; data still missing from WinscopeWeb) |
+| Suppliers | 🟢 code / 🟡 data | unchanged (role-counts empty due to data gap) |
+| Outsource Validation | 🟢 code / 🟡 data | unchanged (vendor column empty due to data gap) |
+| Scope Model | 🟢 code / 🟡 data | unchanged (joins empty due to data gap) |
+| Inventory | 🟢 | (minor cosmetic data quality, unchanged) |
+| Repair Items | 🟢 | (one row null-name, unchanged) |
+| Endocarts | 🟡 demo data | unchanged |
+| Acquisitions | 🟡 empty data | unchanged |
+| Financial > GL Accounts | 🔴 | (deferred per Avalara/GP plan) |
+
+**Net: 11 green-code / 1 red.** The only blocker on the redesign-matched side is the GL Accounts tab, which is intentionally deferred. Everything tester-facing in the recommended dry-run scope is now green-code; some surfaces are yellow-data (empty lookup tables), which testers can be told to ignore.
 
 ## My read on timing
 
