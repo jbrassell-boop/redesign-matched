@@ -236,7 +236,7 @@ public class LoanersController(IConfiguration config) : ControllerBase
                 ISNULL(s.sLoanerRackPosition, '') AS RackPosition,
                 ISNULL(lt.sDateOut, '') AS DateOut,
                 ISNULL(lt.sDateIn, '') AS DateIn,
-                ISNULL(CAST(lt.lCreateUser AS NVARCHAR), '') AS CreatedBy,
+                ISNULL(cu.sUserFullName, '') AS CreatedBy,
                 CASE WHEN lt.dtCreateDate IS NOT NULL THEN CONVERT(NVARCHAR, lt.dtCreateDate, 101) ELSE '' END AS CreatedDate,
                 ISNULL(stc.sScopeTypeCategory, '') AS Category,
                 ISNULL(s.bOnSiteLoaner, 0) AS OnSiteLoaner
@@ -249,6 +249,7 @@ public class LoanersController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepair r ON r.lRepairKey = lt.lRepairKey
             LEFT JOIN tblSalesRep sr ON sr.lSalesRepKey = lt.lSalesRepKey
             LEFT JOIN tblDeliveryMethod dm ON dm.lDeliveryMethodKey = lt.lDeliveryMethodKey
+            LEFT JOIN tblUsers cu ON cu.lUserKey = lt.lCreateUser
             WHERE lt.lScopeKey = @scopeKey
             ORDER BY lt.lLoanerTranKey DESC
             """;

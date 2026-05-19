@@ -22,7 +22,21 @@ const DRAWER_TABS: TabDef[] = [
 
 const fmtDate = (d: string | null | undefined) => {
   if (!d) return '\u2014';
-  return new Date(d).toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+  const parsed = new Date(d);
+  // Backend sometimes returns malformed/0-epoch date strings that JS parses to NaN
+  // \u2014 render an em dash instead of literal "Invalid Date".
+  if (isNaN(parsed.getTime())) return '\u2014';
+  return parsed.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+};
+
+const fmtCreatedBy = (v: string | number | null | undefined) => {
+  if (v == null) return '\u2014';
+  const s = String(v).trim();
+  // Backend currently returns the raw Created_UserKey integer (0 = system / unknown)
+  // rather than the user name. Show em dash for unresolvable values until the
+  // backend joins tblUsers.sUserFullName.
+  if (s === '' || s === '0') return '\u2014';
+  return s;
 };
 
 export const LoanerDrawer = ({ scopeKey, open, onClose }: LoanerDrawerProps) => {
@@ -81,7 +95,7 @@ export const LoanerDrawer = ({ scopeKey, open, onClose }: LoanerDrawerProps) => 
           <Field label="On-Site Loaner" value={detail.onSiteLoaner ? 'Yes' : 'No'} />
           <Field label="Date Out" value={fmtDate(detail.dateOut)} />
           <Field label="Date In" value={fmtDate(detail.dateIn)} />
-          <Field label="Created By" value={detail.createdBy} />
+          <Field label="Created By" value={fmtCreatedBy(detail.createdBy)} />
           <Field label="Created Date" value={fmtDate(detail.createdDate)} />
         </FormGrid>
       </div>

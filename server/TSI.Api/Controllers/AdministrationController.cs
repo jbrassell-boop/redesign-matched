@@ -23,9 +23,15 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // WinscopeWeb schema differences from the legacy spec the controller was written
+        // against:
+        //   tblUsers.sFirstName + sLastName don't exist; use sUserFullName instead.
+        //   tblSecurityGroup is named tblSecurityGroups (plural) and its display column
+        //     is sSecurityGroup (not sSecurityGroupName).
+        //   tblServiceLocations display column is sServiceLocation (not sServiceLocationName).
         var where = "WHERE 1=1";
         if (!string.IsNullOrWhiteSpace(search))
-            where += " AND (u.sFirstName + ' ' + u.sLastName LIKE @search OR u.sEmailAddress LIKE @search)";
+            where += " AND (u.sUserFullName LIKE @search OR u.sEmailAddress LIKE @search)";
 
         var offset = (page - 1) * pageSize;
 
@@ -37,16 +43,16 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         var totalCount = (int)(await countCmd.ExecuteScalarAsync())!;
 
         await using var cmd = new SqlCommand($@"
-            SELECT u.lUserKey, u.sFirstName + ' ' + u.sLastName AS Name,
-                   u.sEmailAddress, sg.sSecurityGroupName AS Role,
-                   sl.sServiceLocationName AS Location,
+            SELECT u.lUserKey, ISNULL(u.sUserFullName, '') AS Name,
+                   u.sEmailAddress, sg.sSecurityGroup AS Role,
+                   sl.sServiceLocation AS Location,
                    u.dtLastLogin, u.bActive
             FROM tblUsers u
             LEFT JOIN tblUserSecurityGroup usg ON u.lUserKey = usg.lUserKey
-            LEFT JOIN tblSecurityGroup sg ON usg.lSecurityGroupKey = sg.lSecurityGroupKey
+            LEFT JOIN tblSecurityGroups sg ON usg.lSecurityGroupKey = sg.lSecurityGroupKey
             LEFT JOIN tblServiceLocations sl ON u.lServiceLocationKey = sl.lServiceLocationKey
             {where}
-            ORDER BY u.sLastName, u.sFirstName
+            ORDER BY u.sUserFullName
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY", conn);
         cmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search))
@@ -79,12 +85,17 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // tblSecurityGroups (plural) on WinscopeWeb. Display column is sSecurityGroup
+        // (no sSecurityGroupName). Table has no sDescription or bActive column —
+        // surface NULL/active=true and filter by soft-delete.
         await using var cmd = new SqlCommand(@"
-            SELECT sg.lSecurityGroupKey, sg.sSecurityGroupName, sg.sDescription,
+            SELECT sg.lSecurityGroupKey, sg.sSecurityGroup AS sSecurityGroupName,
+                   CAST(NULL AS nvarchar(max)) AS sDescription,
                    (SELECT COUNT(*) FROM tblUserSecurityGroup usg WHERE usg.lSecurityGroupKey = sg.lSecurityGroupKey) AS MemberCount,
-                   sg.bActive
-            FROM tblSecurityGroup sg
-            ORDER BY sg.sSecurityGroupName", conn);
+                   CAST(1 AS bit) AS bActive
+            FROM tblSecurityGroups sg
+            WHERE sg.Deleted_datetime IS NULL
+            ORDER BY sg.sSecurityGroup", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -518,13 +529,15 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // tblPricingCategory display column is sPricingDescription (not sPricingCategory).
+        // Last-update column is dtLastUpdate (no trailing 'd').
         await using var cmd = new SqlCommand(@"
-            SELECT p.lPricingCategoryKey, p.sPricingCategory,
+            SELECT p.lPricingCategoryKey, p.sPricingDescription AS sPricingCategory,
                    (SELECT COUNT(DISTINCT lClientKey) FROM tblPricingDetail pd WHERE pd.lPricingCategoryKey = p.lPricingCategoryKey) AS ClientCount,
                    (SELECT COUNT(*) FROM tblPricingDetail pd WHERE pd.lPricingCategoryKey = p.lPricingCategoryKey) AS ItemCount,
-                   p.dtLastUpdated, p.bActive
+                   p.dtLastUpdate AS dtLastUpdated, p.bActive
             FROM tblPricingCategory p
-            ORDER BY p.sPricingCategory", conn);
+            ORDER BY p.sPricingDescription", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -903,13 +916,15 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // tblSecurityGroups (plural) — no bActive on this table, use soft-delete filter.
+        // tblUsers has no bLocked column — surface 0 until a real lock concept exists.
         await using var cmd = new SqlCommand(@"
             SELECT
                 (SELECT COUNT(*) FROM tblUsers WHERE bActive = 1) AS ActiveUsers,
-                (SELECT COUNT(*) FROM tblSecurityGroup WHERE bActive = 1) AS SecurityGroups,
+                (SELECT COUNT(*) FROM tblSecurityGroups WHERE Deleted_datetime IS NULL) AS SecurityGroups,
                 (SELECT COUNT(*) FROM tblPricingCategory WHERE bActive = 1) AS PricingLists,
                 0 AS AuditEntries24h,
-                (SELECT COUNT(*) FROM tblUsers WHERE bLocked = 1) AS LockedAccounts", conn);
+                0 AS LockedAccounts", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
