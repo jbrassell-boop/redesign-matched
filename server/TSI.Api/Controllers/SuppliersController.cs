@@ -33,7 +33,7 @@ public class SuppliersController(IConfiguration config) : ControllerBase
         var dataSql = $"""
             SELECT s.lSupplierKey, ISNULL(s.sSupplierName1, '') AS sSupplierName1,
                    ISNULL(s.sShipCity, '') AS sShipCity, ISNULL(s.sShipState, '') AS sShipState,
-                   ISNULL(s.sPhoneVoice, '') AS sPhoneVoice, ISNULL(s.sGPID, '') AS sGPID,
+                   ISNULL(s.sPhoneNumber, '') AS sPhoneVoice, ISNULL(s.sGPID, '') AS sGPID,
                    ISNULL(s.bActive, 0) AS bActive, ISNULL(s.bAcquisitionSupplier, 0) AS bAcquisitionSupplier
             FROM tblSupplier s
             {whereClause}
@@ -152,8 +152,8 @@ public class SuppliersController(IConfiguration config) : ControllerBase
             MailCountry: reader["sMailCountry"]?.ToString(),
             ContactFirst: reader["sContactFirst"]?.ToString(),
             ContactLast: reader["sContactLast"]?.ToString(),
-            Phone: reader["sPhoneVoice"]?.ToString(),
-            Fax: reader["sPhoneFAX"]?.ToString(),
+            Phone: reader["sPhoneNumber"]?.ToString(),
+            Fax: reader["sFaxNumber"]?.ToString(),
             Email: reader["sContactEMail"]?.ToString(),
             GpId: reader["sGPID"]?.ToString(),
             PeachTreeId: reader["sPeachTreeSupplierID"]?.ToString(),
@@ -256,8 +256,8 @@ public class SuppliersController(IConfiguration config) : ControllerBase
         if (body.ShipCity is not null)    { sets.Add("sShipCity = @city");       cmd.Parameters.AddWithValue("@city",  body.ShipCity); }
         if (body.ShipState is not null)   { sets.Add("sShipState = @state");     cmd.Parameters.AddWithValue("@state", body.ShipState); }
         if (body.ShipZip is not null)     { sets.Add("sShipZip = @zip");         cmd.Parameters.AddWithValue("@zip",   body.ShipZip); }
-        if (body.Phone is not null)       { sets.Add("sPhoneVoice = @phone");    cmd.Parameters.AddWithValue("@phone", body.Phone); }
-        if (body.Fax is not null)         { sets.Add("sPhoneFAX = @fax");        cmd.Parameters.AddWithValue("@fax",   body.Fax); }
+        if (body.Phone is not null)       { sets.Add("sPhoneNumber = @phone");   cmd.Parameters.AddWithValue("@phone", body.Phone); }
+        if (body.Fax is not null)         { sets.Add("sFaxNumber = @fax");       cmd.Parameters.AddWithValue("@fax",   body.Fax); }
         if (body.Email is not null)       { sets.Add("sContactEMail = @email");  cmd.Parameters.AddWithValue("@email", body.Email); }
         if (body.ContactFirst is not null){ sets.Add("sContactFirst = @cfirst"); cmd.Parameters.AddWithValue("@cfirst",body.ContactFirst); }
         if (body.ContactLast is not null) { sets.Add("sContactLast = @clast");   cmd.Parameters.AddWithValue("@clast", body.ContactLast); }
