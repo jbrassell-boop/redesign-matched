@@ -661,7 +661,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
         if (body.StatusId.HasValue)
         {
             await using var logCmd = new SqlCommand("""
-                INSERT INTO tblRepairStatusLog (lRepairKey, lRepairStatusID, sRepairStatus, dtStatusDate)
+                INSERT INTO tblRepairStatusLog (lRepairKey, lRepairStatusID, sRepairStatus, ChangeDate)
                 SELECT @repairKey, @statusId, rs.sRepairStatus, GETDATE()
                 FROM tblRepairStatuses rs WHERE rs.lRepairStatusID = @statusId
                 """, conn);
@@ -721,7 +721,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
 
         // Insert status log entry
         await using var logCmd = new SqlCommand("""
-            INSERT INTO tblRepairStatusLog (lRepairKey, lRepairStatusID, sRepairStatus, dtStatusChange)
+            INSERT INTO tblRepairStatusLog (lRepairKey, lRepairStatusID, sRepairStatus, ChangeDate)
             SELECT @repairKey, @statusId, rs.sRepairStatus, GETDATE()
             FROM tblRepairStatuses rs WHERE rs.lRepairStatusID = @statusId
             """, conn);
