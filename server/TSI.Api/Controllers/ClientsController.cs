@@ -235,8 +235,14 @@ public class ClientsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // tblFlags.bVisibleOnDI / bVisibleOnBlank are nullable bits and at least some
+        // real client rows (e.g. clientKey 5308 / Surgery Center of Lawrenceville) have
+        // them NULL. Convert.ToBoolean(null) throws → endpoint returns 500. Coalesce
+        // with ISNULL in SQL and DBNull-guard in C# so NULLs map cleanly to false.
         const string sql = """
-            SELECT f.lFlagKey, f.sFlag, f.bVisibleOnDI, f.bVisibleOnBlank,
+            SELECT f.lFlagKey, f.sFlag,
+                   ISNULL(f.bVisibleOnDI, 0) AS bVisibleOnDI,
+                   ISNULL(f.bVisibleOnBlank, 0) AS bVisibleOnBlank,
                    ISNULL(ft.sFlagType, '') AS sFlagType
             FROM tblFlags f
                 LEFT JOIN tblFlagTypes ft ON ft.lFlagTypeKey = f.lFlagTypeKey
@@ -256,8 +262,8 @@ public class ClientsController(IConfiguration config) : ControllerBase
                 FlagKey: Convert.ToInt32(reader["lFlagKey"]),
                 FlagType: reader["sFlagType"]?.ToString() ?? "",
                 Flag: reader["sFlag"]?.ToString() ?? "",
-                VisibleOnDI: Convert.ToBoolean(reader["bVisibleOnDI"]),
-                VisibleOnBlank: Convert.ToBoolean(reader["bVisibleOnBlank"])
+                VisibleOnDI: reader["bVisibleOnDI"] != DBNull.Value && Convert.ToBoolean(reader["bVisibleOnDI"]),
+                VisibleOnBlank: reader["bVisibleOnBlank"] != DBNull.Value && Convert.ToBoolean(reader["bVisibleOnBlank"])
             ));
         }
 
