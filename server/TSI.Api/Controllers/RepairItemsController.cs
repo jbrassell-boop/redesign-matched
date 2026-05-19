@@ -68,13 +68,17 @@ public class RepairItemsController(IConfiguration config) : ControllerBase
 
         var countSql = $"SELECT COUNT(*) FROM tblRepairItem ri {whereClause}";
 
+        // Push rows with null/empty sItemDescription to the bottom. Real data has a
+        // handful of legacy items where sItemDescription was never set; default ASC
+        // order put them at the top of the list and looked broken.
         var dataSql = $"""
             SELECT ri.lRepairItemKey, ri.sItemDescription, ri.sProblemID, ri.sTSICode, ri.sProductID,
                    ri.sRigidOrFlexible, ri.sPartOrLabor, ISNULL(ri.bActive, 0) AS bActive,
                    ri.nTurnAroundTime
             FROM tblRepairItem ri
             {whereClause}
-            ORDER BY ri.sItemDescription
+            ORDER BY CASE WHEN ri.sItemDescription IS NULL OR ri.sItemDescription = '' THEN 1 ELSE 0 END,
+                     ri.sItemDescription
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
             """;
 
