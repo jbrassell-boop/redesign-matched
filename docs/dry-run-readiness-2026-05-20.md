@@ -70,16 +70,21 @@ API: <https://tsi-redesign-api.azurewebsites.net>
 
 ## Data Gap Audit — Yellow-module follow-up (2026-05-20)
 
-Investigated all four yellow modules where columns rendered empty. Every one is a **migration gap, not a code bug**. Both redesign-matched and Steve's stack query the right tables with correct joins — the source tables themselves are empty on WinscopeWeb because the BACPAC migration didn't include the lookup/operational data behind them.
+Investigated five yellow modules where columns rendered empty. Every one is a **migration gap, not a code bug**. Both redesign-matched and Steve's stack query the right tables with correct joins — the source tables themselves are empty on WinscopeWeb because the BACPAC migration didn't include the lookup/operational data behind them.
 
-| Module | Source table(s) | Goldmine | WinscopeWeb (cloud) | Fix owner |
+| Module | Source table(s) | Goldmine | WinscopeWeb (cloud) | Fix |
 | --- | --- | --- | --- | --- |
-| Onsite Services | tblSiteServices, tblSiteServicesCalendar | 12 / 43 | 0 / 0 | Steve / data migration |
-| Outsource Validation vendor column | tblVendor | 45 | 0 | Steve / data migration |
-| Scope Model Manufacturer/Category | tblManufacturers + tblScopeTypeCategories | populated | 0 / 0 | Steve / data migration |
-| Suppliers Parts/Repair/Acquisition/Carts badges | tblSupplierRoles + tblSupplierRolesRef | 312 / 4 | 0 / 0 | Steve / data migration |
+| Onsite Services | tblSiteServices, tblSiteServicesCalendar, Trays, TrayDetails | 12 / 43 / 112 / 76 | 0 / 0 / 0 / 0 | PR #56 phase 75 |
+| Outsource Validation vendor column | tblVendor | 45 | 0 | PR #56 phase 11 |
+| Scope Model Manufacturer/Category | tblManufacturers + tblScopeTypeCategories | 387 / 64 | 0 / 0 | PR #56 phase 11 |
+| Suppliers Parts/Repair/Acquisition/Carts badges | tblSupplierRoles + tblSupplierRolesRef | 312 / 4 | 0 / 0 | PR #56 phases 11+53 |
+| Acquisitions In-House / Consigned / Sold | tblAcquisitionSupplierPO + Tran | 328 / 974 | 0 / 0 | PR #56 phase 54 |
+
+**Migration PR #56 (`joe/migration-fill-lookup-tables`)** writes new phases 11/53/54/75 loading 1,377 north-only rows total. Steve runs the migration; all five modules flip to fully populated.
 
 The Scope Model physical-property columns (`sInsertTubeLength`, `sInsertTubeDiameter`, `sFieldOfView`, `sDirectionOfView`) are nvarchar(8) tech-entered metadata that were never universal even on Goldmine — those rendering empty is data quality, not a migration gap. Won't fix.
+
+**Endocarts is a separate case** — no operational cart tables exist in Goldmine OR WinscopeWeb (only empty report tables `tblRptCart*`). The hardcoded demo data in `endoCartData.ts` is deliberate placeholder until cart-specific tables get designed. Not a migration job.
 
 ## Updated module scorecard (2026-05-20 EOD)
 
@@ -89,20 +94,29 @@ The Scope Model physical-property columns (`sInsertTubeLength`, `sInsertTubeDiam
 | New Repair Wizard | 🟢 | (unchanged) |
 | Receiving | 🟢 | (unchanged) |
 | Dashboard / Workspace | 🟢 | (unchanged) |
-| Quality | 🟢 | (unchanged) |
-| **Administration** | 🟢 | 🔴 → 🟢 (fixed in commits 4599f46 + 8d56df8) |
+| **Quality** | 🟢 | label fix: "Total Inspections" → "Inspections (30d)" (commit 4ace444) to disambiguate 30-day stat strip vs all-time list |
+| **Administration** | 🟢 | 🔴 → 🟢 (fixes in commits 4599f46 + 8d56df8) |
 | **Loaners** | 🟢 | 🟡 → 🟢 (formatter fix in commit 4599f46) |
-| Onsite Services | 🟢 code / 🟡 data | 🔴 → 🟢/🟡 (Steve PR #32 + redesign-matched alignment in commit cfadc4e; data still missing from WinscopeWeb) |
-| Suppliers | 🟢 code / 🟡 data | unchanged (role-counts empty due to data gap) |
-| Outsource Validation | 🟢 code / 🟡 data | unchanged (vendor column empty due to data gap) |
-| Scope Model | 🟢 code / 🟡 data | unchanged (joins empty due to data gap) |
-| Inventory | 🟢 | (minor cosmetic data quality, unchanged) |
-| Repair Items | 🟢 | (one row null-name, unchanged) |
-| Endocarts | 🟡 demo data | unchanged |
-| Acquisitions | 🟡 empty data | unchanged |
+| **Onsite Services** | 🟢 code / 🟡 data | 🔴 → 🟢/🟡 (Steve PR #32 + commit cfadc4e align); data populated when **PR #56** merges |
+| **Suppliers** | 🟢 code / 🟡 data | code unchanged; data populated when **PR #56** merges (phases 11+53) |
+| **Outsource Validation** | 🟢 code / 🟡 data | code unchanged; data populated when **PR #56** merges (phase 11) |
+| **Scope Model** | 🟢 code / 🟡 data | code unchanged; data populated when **PR #56** merges (phase 11) |
+| **Acquisitions** | 🟢 code / 🟡 data | 🟡 → 🟢/🟡 (diagnosed as data gap, added to PR #56 phase 54) |
+| **Repair Items** | 🟢 | 🟡 → 🟢 (null-description rows pushed to bottom of list, commit c889ef8) |
+| Inventory | 🟢 | (minor cosmetic data quality on two timestamp-named rows, unchanged) |
+| Endocarts | 🟡 demo data | unchanged — no real cart tables exist on either DB; intentional placeholder |
 | Financial > GL Accounts | 🔴 | (deferred per Avalara/GP plan) |
 
-**Net: 11 green-code / 1 red.** The only blocker on the redesign-matched side is the GL Accounts tab, which is intentionally deferred. Everything tester-facing in the recommended dry-run scope is now green-code; some surfaces are yellow-data (empty lookup tables), which testers can be told to ignore.
+**Net: 12 green-code / 1 red.** Once PR #56 lands and Steve runs the migration, **5 of the 5 "data-gap" yellow modules flip to fully populated**.
+
+## Dry-run go signal (2026-05-20)
+
+**Ready for a focused 2-3 tester dry-run now.** The repair-lifecycle path is solid, Administration works, Loaners works, Quality is correctly labeled. Testers can ignore the empty Onsite/Outsource-vendor/Scope-Model-joins/Suppliers-roles/Acquisitions columns since those flip green data-wise on next migration run.
+
+**Ready for full-team dry-run after:**
+1. Steve approves and runs migration PR #56 — populates the five data-gap modules
+2. Steve approves controller-fix PRs #25, #34, #52, #53, #54, #55 — closes residual cosmetic bugs on his stack
+3. (Optional) Decide whether to wire real cart tables — Endocarts demo data is harmless but should be set expectations clearly
 
 ## My read on timing
 
