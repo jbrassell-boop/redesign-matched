@@ -13,6 +13,33 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
 
+    /// <summary>
+    /// Returns true if a column exists on a SqlDataReader's result set.
+    /// Used to guard against optional columns (e.g. lParentProductSaleKey,
+    /// sItemStatus) that may not be present on every schema version.
+    /// </summary>
+    private static bool HasField(System.Data.IDataRecord r, string name)
+    {
+        for (int i = 0; i < r.FieldCount; i++)
+            if (string.Equals(r.GetName(i), name, StringComparison.OrdinalIgnoreCase))
+                return true;
+        return false;
+    }
+
+    /// <summary>
+    /// Probes INFORMATION_SCHEMA.COLUMNS to determine whether an optional
+    /// column is present. Cheap (1 row, indexed) — fine to call per-request.
+    /// </summary>
+    private static async Task<bool> ColumnExistsAsync(SqlConnection conn, string table, string column)
+    {
+        await using var cmd = new SqlCommand(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = @t AND COLUMN_NAME = @c", conn);
+        cmd.CommandTimeout = 10;
+        cmd.Parameters.AddWithValue("@t", table);
+        cmd.Parameters.AddWithValue("@c", column);
+        return Convert.ToInt32(await cmd.ExecuteScalarAsync()) > 0;
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private const string StatusCaseSql = """
@@ -70,6 +97,10 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
             {whereClause}
             """;
 
+        // NOTE: lParentProductSaleKey is not present on the cloud schema yet.
+        // Return 0 as a placeholder until the column is added — the column
+        // backs the parent/child sub-order feature, which the cloud schema
+        // does not support without a schema migration.
         var dataSql = $"""
             SELECT ps.lProductSaleKey, ps.sInvoiceNumber,
                    ISNULL(c.sClientName1, '') AS sClientName1,
@@ -80,7 +111,7 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
                    {StatusCaseSql} AS Status,
                    ISNULL(ps.sPurchaseOrder, '') AS sPurchaseOrder,
                    (SELECT COUNT(*) FROM tblProductSalesInventory psi WHERE psi.lProductSaleKey = ps.lProductSaleKey) AS ItemCount,
-                   ISNULL(ps.lParentProductSaleKey, 0) AS lParentProductSaleKey
+                   0 AS lParentProductSaleKey
             FROM tblProductSales ps
             LEFT JOIN tblClient c ON c.lClientKey = ps.lClientKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = ps.lDepartmentKey
@@ -134,21 +165,23 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // ISNULL each SUM — on an empty table SUM returns NULL (not 0),
+        // and Convert.ToInt32(DBNull) throws InvalidCastException → 500.
         const string sql = """
             SELECT
                 COUNT(*) AS Total,
-                SUM(CASE WHEN ps.dtCanceledDate IS NULL AND ps.dtDeniedDate IS NULL
+                ISNULL(SUM(CASE WHEN ps.dtCanceledDate IS NULL AND ps.dtDeniedDate IS NULL
                           AND ps.dtInvoiceDate IS NULL AND ps.dtApprovalDate IS NULL
-                          AND ps.dtQuoteDate IS NULL THEN 1 ELSE 0 END) AS Draft,
-                SUM(CASE WHEN ps.dtQuoteDate IS NOT NULL AND ps.dtApprovalDate IS NULL
+                          AND ps.dtQuoteDate IS NULL THEN 1 ELSE 0 END), 0) AS Draft,
+                ISNULL(SUM(CASE WHEN ps.dtQuoteDate IS NOT NULL AND ps.dtApprovalDate IS NULL
                           AND ps.dtDeniedDate IS NULL AND ps.dtInvoiceDate IS NULL
-                          AND ps.dtCanceledDate IS NULL THEN 1 ELSE 0 END) AS Quoted,
-                SUM(CASE WHEN ps.dtApprovalDate IS NOT NULL AND ps.dtInvoiceDate IS NULL
+                          AND ps.dtCanceledDate IS NULL THEN 1 ELSE 0 END), 0) AS Quoted,
+                ISNULL(SUM(CASE WHEN ps.dtApprovalDate IS NOT NULL AND ps.dtInvoiceDate IS NULL
                           AND ps.dtDeniedDate IS NULL AND ps.dtCanceledDate IS NULL
-                          THEN 1 ELSE 0 END) AS Approved,
-                SUM(CASE WHEN ps.dtInvoiceDate IS NOT NULL AND ps.dtCanceledDate IS NULL
-                          AND ps.dtDeniedDate IS NULL THEN 1 ELSE 0 END) AS Invoiced,
-                SUM(CASE WHEN ps.dtCanceledDate IS NOT NULL THEN 1 ELSE 0 END) AS Cancelled,
+                          THEN 1 ELSE 0 END), 0) AS Approved,
+                ISNULL(SUM(CASE WHEN ps.dtInvoiceDate IS NOT NULL AND ps.dtCanceledDate IS NULL
+                          AND ps.dtDeniedDate IS NULL THEN 1 ELSE 0 END), 0) AS Invoiced,
+                ISNULL(SUM(CASE WHEN ps.dtCanceledDate IS NOT NULL THEN 1 ELSE 0 END), 0) AS Cancelled,
                 ISNULL(SUM(CASE WHEN ps.dtInvoiceDate IS NOT NULL AND ps.dtCanceledDate IS NULL
                                 AND ps.dtDeniedDate IS NULL THEN ps.nTotalAmount ELSE 0 END), 0) AS Revenue
             FROM tblProductSales ps
@@ -178,20 +211,22 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // NOTE: parent self-join removed — depends on lParentProductSaleKey
+        // column which is not on the cloud schema. ParentInvoiceNumber returned
+        // as NULL until schema migration adds the column.
         var sql = $"""
             SELECT ps.*,
                    ISNULL(c.sClientName1, '') AS sClientName1,
                    ISNULL(d.sDepartmentName, '') AS sDepartmentName,
                    ISNULL(sr.sRepFirst, '') + ' ' + ISNULL(sr.sRepLast, '') AS SalesRep,
                    pl.sInventoryPricingList,
-                   parent.sInvoiceNumber AS ParentInvoiceNumber,
+                   CAST(NULL AS NVARCHAR(50)) AS ParentInvoiceNumber,
                    {StatusCaseSql} AS Status
             FROM tblProductSales ps
             LEFT JOIN tblClient c ON c.lClientKey = ps.lClientKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = ps.lDepartmentKey
             LEFT JOIN tblSalesRep sr ON sr.lSalesRepKey = ps.lSalesRepKey
             LEFT JOIN tblInventoryPricingLists pl ON pl.lInventoryPricingListKey = ps.lInventoryPricingListKey
-            LEFT JOIN tblProductSales parent ON parent.lProductSaleKey = ps.lParentProductSaleKey
             WHERE ps.lProductSaleKey = @key
             """;
 
@@ -206,7 +241,8 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
         var detail = MapDetail(reader);
         await reader.CloseAsync();
 
-        // Load line items from tblProductSalesInventory
+        // Load line items from tblProductSalesInventory.
+        // sItemStatus column is not on the cloud schema yet — default to 'Pending'.
         const string linesSql = """
             SELECT psi.lProductSaleInventoryKey, psi.lInventorySizeKey,
                    ISNULL(i.sItemDescription, '') AS sItemDescription,
@@ -216,7 +252,7 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
                    ISNULL(psi.nUnitCost, 0) AS nUnitCost,
                    ISNULL(psi.nTotalCost, 0) AS nTotalCost,
                    psi.sLotNumber,
-                   ISNULL(psi.sItemStatus, 'Pending') AS sItemStatus
+                   CAST('Pending' AS NVARCHAR(20)) AS sItemStatus
             FROM tblProductSalesInventory psi
             LEFT JOIN tblInventorySize isz ON isz.lInventorySizeKey = psi.lInventorySizeKey
             LEFT JOIN tblInventory i ON i.lInventoryKey = isz.lInventoryKey
@@ -305,7 +341,13 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
             DenialReason: r["sDenialReason"]?.ToString(),
             EstimatedShipDateFrom: (r["dtEstimatedShipDateFrom"] as DateTime?)?.ToString("yyyy-MM-dd"),
             EstimatedShipDateTo: (r["dtEstimatedShipDateTo"] as DateTime?)?.ToString("yyyy-MM-dd"),
-            ParentProductSaleKey: r["lParentProductSaleKey"] == DBNull.Value ? null : Convert.ToInt32(r["lParentProductSaleKey"]),
+            // ParentProductSaleKey: column not on cloud schema yet → always null.
+            // SqlDataReader.GetOrdinal would throw on a missing column, so use
+            // a guarded HasColumn-style helper via a try/catch in case the
+            // column shows up on a future schema.
+            ParentProductSaleKey: HasField(r, "lParentProductSaleKey")
+                ? (r["lParentProductSaleKey"] == DBNull.Value ? null : (int?)Convert.ToInt32(r["lParentProductSaleKey"]))
+                : null,
             ParentInvoiceNumber: r["ParentInvoiceNumber"]?.ToString(),
             LineItems: Array.Empty<ProductSaleLineItem>()
         );
@@ -558,6 +600,15 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // Bulk-status writes to sItemStatus, which may not be on the schema yet.
+        if (!await ColumnExistsAsync(conn, "tblProductSalesInventory", "sItemStatus"))
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new
+            {
+                error = "Per-item status requires schema upgrade: tblProductSalesInventory.sItemStatus is not present on this database."
+            });
+        }
+
         // Build parameterized IN clause
         var paramNames = new List<string>();
         for (int i = 0; i < body.ItemKeys.Length; i++)
@@ -588,6 +639,11 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
     {
         await using var conn = CreateConnection();
         await conn.OpenAsync();
+
+        // Cloud schema may not have lParentProductSaleKey yet — if missing,
+        // there are no parent/child relationships, so return an empty result.
+        if (!await ColumnExistsAsync(conn, "tblProductSales", "lParentProductSaleKey"))
+            return Ok(new RelatedOrdersResponse(null, Array.Empty<RelatedOrderItem>()));
 
         // Get this order's parent key
         await using var parentKeyCmd = new SqlCommand(
@@ -683,6 +739,18 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
     {
         await using var conn = CreateConnection();
         await conn.OpenAsync();
+
+        // Invoice flow depends on per-item sItemStatus (Shipped/Backordered)
+        // and on lParentProductSaleKey for child sub-orders. If either is
+        // absent on the running schema, fail clearly instead of erroring.
+        if (!await ColumnExistsAsync(conn, "tblProductSalesInventory", "sItemStatus") ||
+            !await ColumnExistsAsync(conn, "tblProductSales", "lParentProductSaleKey"))
+        {
+            return StatusCode(StatusCodes.Status501NotImplemented, new
+            {
+                error = "Invoice flow requires schema upgrade: tblProductSalesInventory.sItemStatus and tblProductSales.lParentProductSaleKey are not present on this database."
+            });
+        }
 
         // ── Preconditions ───────────────────────────────────────────────────
         await using var checkCmd = new SqlCommand(
