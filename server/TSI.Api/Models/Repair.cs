@@ -150,7 +150,13 @@ public record RepairFull(
     int? PricingCategoryKey,
     int? PaymentTermsKey,
     int? DistributorKey,
-    string? Requisition
+    string? Requisition,
+    // Latest non-void invoice for this repair (from tblInvoice via OUTER APPLY in GetRepairFull).
+    // Draft invoices have no sInvoiceNumber until finalized — the cockpit uses Key + Status to
+    // render "Draft #1733091235" feedback after Create Draft Invoice. NULL when no invoice exists.
+    int? LatestInvoiceKey = null,
+    string? LatestInvoiceStatus = null,
+    string? LatestInvoiceNumber = null
 );
 
 public record RepairInspections(

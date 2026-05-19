@@ -282,9 +282,22 @@ public class RepairsController(IConfiguration config) : ControllerBase
                       AND r2.dtDateIn IS NOT NULL
                     ORDER BY r2.lRepairKey DESC) AS DaysLastIn,
                    ISNULL(dist.sDistName1, '') AS sDistributor,
-                   ISNULL(pkg.sPackageType, '') AS sPackageType
+                   ISNULL(pkg.sPackageType, '') AS sPackageType,
+                   -- Latest non-void invoice for this repair (draft or finalized).
+                   -- Drafts have NULL sInvoiceNumber until finalized; the cockpit needs to
+                   -- know one exists so the user gets feedback after clicking Draft Invoice.
+                   inv.lInvoiceKey AS latestInvoiceKey,
+                   inv.sInvoiceStatus AS latestInvoiceStatus,
+                   inv.sInvoiceNumber AS latestInvoiceNumber
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            OUTER APPLY (
+                SELECT TOP 1 i.lInvoiceKey, i.sInvoiceStatus, i.sInvoiceNumber
+                FROM tblInvoice i
+                WHERE i.lRepairKey = r.lRepairKey
+                  AND ISNULL(i.bIsVoid, 0) = 0
+                ORDER BY i.lInvoiceKey DESC
+            ) inv
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
             LEFT JOIN tblScopeTypeCategories stc2 ON stc2.lScopeTypeCategoryKey = st.lScopeTypeCatKey
@@ -407,7 +420,10 @@ public class RepairsController(IConfiguration config) : ControllerBase
             PricingCategoryKey: reader["lPricingCategoryKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lPricingCategoryKey"]),
             PaymentTermsKey: reader["lPaymentTermsKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lPaymentTermsKey"]),
             DistributorKey: reader["lDistributorKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lDistributorKey"]),
-            Requisition: ReadStr("sRequisition")
+            Requisition: ReadStr("sRequisition"),
+            LatestInvoiceKey: reader["latestInvoiceKey"] == DBNull.Value ? null : Convert.ToInt32(reader["latestInvoiceKey"]),
+            LatestInvoiceStatus: ReadStr("latestInvoiceStatus"),
+            LatestInvoiceNumber: ReadStr("latestInvoiceNumber")
         ));
     }
 

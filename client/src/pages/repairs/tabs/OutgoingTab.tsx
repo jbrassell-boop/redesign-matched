@@ -40,6 +40,9 @@ const totalValueStyle: React.CSSProperties = { fontSize: 13, fontWeight: 900 };
 interface OutgoingTabProps {
   repair: RepairFull;
   items: RepairLineItem[];
+  /** Optional refresh callback. Fired after a successful Draft Invoice so the
+   *  cockpit can re-fetch the repair and surface the new tblInvoice row. */
+  onRepairChanged?: () => void;
 }
 
 const F = ({ label, value }: { label: string; value?: string | null }) => (
@@ -85,7 +88,7 @@ const Badge = ({ label, style }: { label: string; style: React.CSSProperties }) 
   </span>
 );
 
-export const OutgoingTab = ({ repair, items }: OutgoingTabProps) => {
+export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps) => {
   const warrantyTotal = items.filter(i => i.fixType?.toUpperCase() === 'W').reduce((s, i) => s + (i.amount ?? 0), 0);
   const customerTotal = items.filter(i => i.fixType?.toUpperCase() !== 'W').reduce((s, i) => s + (i.amount ?? 0), 0);
   const fmt = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -154,7 +157,16 @@ export const OutgoingTab = ({ repair, items }: OutgoingTabProps) => {
             <div style={invoiceHeaderStyle}>
               <div>
                 <div style={invoiceLabelStyle}>Invoice Number</div>
-                <div style={invoiceNumStyle}>{repair.invoiceNumber || '—'}</div>
+                <div style={invoiceNumStyle}>
+                  {/* Show finalized invoice number when present; otherwise fall back to
+                      the latest draft from tblInvoice as "Draft #NNNN". tblRepair.sInvoiceNumber
+                      is only populated on finalize. */}
+                  {repair.invoiceNumber
+                    || repair.latestInvoiceNumber
+                    || (repair.latestInvoiceKey
+                        ? `${repair.latestInvoiceStatus ?? 'Draft'} #${repair.latestInvoiceKey}`
+                        : '—')}
+                </div>
               </div>
               <div style={{ textAlign: 'right' }}>
                 <div style={invoiceLabelStyle}>Invoice Date</div>
@@ -167,6 +179,7 @@ export const OutgoingTab = ({ repair, items }: OutgoingTabProps) => {
                   try {
                     const r = await createDraftInvoice(repair.repairKey);
                     message.success(`Draft invoice #${r.invoiceKey} created`);
+                    onRepairChanged?.();
                   } catch { message.error('Failed to create draft invoice'); }
                 } },
                 { label: 'Email Invoice', onClick: () => message.info('Invoice emailing requires SMTP configuration — contact IT') },
