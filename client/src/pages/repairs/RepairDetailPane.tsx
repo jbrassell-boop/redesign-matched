@@ -104,14 +104,17 @@ const COCKPIT_TABS = [
   { key: 'comments',  label: 'Notes',      group: 'review' },
 ] as const;
 
+// `types` uses single-char scope discriminators ('R' = Rigid, 'F' = Flexible,
+// 'C' = Camera) matching tblScopeType.sRigidOrFlexible. Forms without a `types`
+// array are always shown.
 const INTERNAL_FORMS = [
-  { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)', title: 'Camera endoscope disassembly & inspection form', types: ['Camera'] },
-  { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)', title: 'Flexible endoscope disassembly & inspection form', types: ['Flexible'] },
-  { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)', title: 'Flexible endoscope diagnostic disassembly & inspection form', types: ['Flexible'] },
-  { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)', title: 'Rigid endoscope disassembly & inspection form', types: ['Rigid'] },
-  { key: 'bi-flexible'     as const, label: 'BI Flexible (OM07-3)',       title: 'Blank inspection — flexible endoscope',       types: ['Flexible'] },
-  { key: 'bi-camera'       as const, label: 'BI Camera (OM07-4)',         title: 'Blank inspection — camera system',            types: ['Camera'] },
-  { key: 'bi-rigid'        as const, label: 'BI Rigid (OM07-5)',          title: 'Blank inspection — rigid endoscope',          types: ['Rigid'] },
+  { key: 'di-inspection'  as const, label: 'D&I Camera (OM05-2)', title: 'Camera endoscope disassembly & inspection form', types: ['C'] },
+  { key: 'di-flexible'         as const, label: 'D&I Flexible (OM07-3)', title: 'Flexible endoscope disassembly & inspection form', types: ['F'] },
+  { key: 'di-flex-diagnostic'  as const, label: 'D&I Flex Diagnostic (OM05-1)', title: 'Flexible endoscope diagnostic disassembly & inspection form', types: ['F'] },
+  { key: 'di-rigid'            as const, label: 'D&I Rigid (OM05-3)', title: 'Rigid endoscope disassembly & inspection form', types: ['R'] },
+  { key: 'bi-flexible'     as const, label: 'BI Flexible (OM07-3)',       title: 'Blank inspection — flexible endoscope',       types: ['F'] },
+  { key: 'bi-camera'       as const, label: 'BI Camera (OM07-4)',         title: 'Blank inspection — camera system',            types: ['C'] },
+  { key: 'bi-rigid'        as const, label: 'BI Rigid (OM07-5)',          title: 'Blank inspection — rigid endoscope',          types: ['R'] },
   { key: 'amendment'      as const, label: 'Amendment (OM07-9)', title: 'Repair order amendment form' },
   { key: 'update-slip'    as const, label: 'Update Slip (OM15-2)', title: 'Customer update communication slip' },
   { key: 'subassembly-qc'  as const, label: 'Sub-Assembly QC (OM07-1)',   title: 'Sub-assembly parts QC requisition' },
@@ -119,10 +122,10 @@ const INTERNAL_FORMS = [
   { key: 'ncp'             as const, label: 'Non-Conforming (OM23-1)',     title: 'Non-conforming product report' },
 ];
 
-/** Filter forms by scope type — forms without a `types` array are always shown */
-function formsForScope<T extends { types?: string[] }>(forms: T[], scopeType: string | undefined): T[] {
-  const cat = (scopeType ?? '').toLowerCase();
-  return forms.filter(f => !f.types || f.types.some(t => t.toLowerCase() === cat));
+/** Filter forms by scope-type discriminator (R/F/C). Forms without `types` are always shown. */
+function formsForScope<T extends { types?: string[] }>(forms: T[], rigidOrFlexible: string | undefined): T[] {
+  const code = (rigidOrFlexible ?? '').toUpperCase();
+  return forms.filter(f => !f.types || (code !== '' && f.types.includes(code)));
 }
 
 const CUSTOMER_FORMS = [
@@ -463,7 +466,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             {formsMenuOpen && (
               <div role="menu" className="rdp-forms-dropdown">
                 <div className="rdp-forms-section-header">Internal</div>
-                {formsForScope(INTERNAL_FORMS, fullRepair?.scopeType).map(item => (
+                {formsForScope(INTERNAL_FORMS, fullRepair?.rigidOrFlexible).map(item => (
                   <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} className="rdp-menu-item menu-item-hover"
                   >{item.label}</div>
                 ))}
@@ -533,7 +536,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           {activeTab === 'details'     && <DetailsTab repair={fullRepair} flags={flags} />}
           {activeTab === 'outgoing'    && <OutgoingTab repair={fullRepair} items={lineItems} />}
           {activeTab === 'expense'     && <ExpenseTab repairKey={fullRepair.repairKey} />}
-          {activeTab === 'inspections' && <InspectionsTab repairKey={fullRepair.repairKey} />}
+          {activeTab === 'inspections' && <InspectionsTab repairKey={fullRepair.repairKey} rigidOrFlexible={fullRepair.rigidOrFlexible} />}
           {activeTab === 'financials'  && <FinancialsTab repairKey={fullRepair.repairKey} />}
           {activeTab === 'scopehistory' && <ScopeHistoryTab repairKey={fullRepair.repairKey} currentRepairKey={fullRepair.repairKey} />}
           {activeTab === 'statuslog'   && <StatusHistoryTab repairKey={fullRepair.repairKey} />}
@@ -675,7 +678,10 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           {formsMenuOpen && (
             <div className="rdp-forms-dropdown">
               <div className="rdp-forms-section-header">Internal</div>
-              {formsForScope(INTERNAL_FORMS, detail?.scopeType).map(item => (
+              {/* Legacy mode: RepairDetail doesn't carry the rigidOrFlexible discriminator,
+                  so scope-specific D&I/BI forms are not surfaced here. Cockpit mode (above)
+                  uses fullRepair.rigidOrFlexible and shows the full catalog. */}
+              {formsForScope(INTERNAL_FORMS, undefined).map(item => (
                 <div key={item.key} title={item.title} onClick={() => { setActiveForm(item.key); setFormsMenuOpen(false); }} role="menuitem" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveForm(item.key); setFormsMenuOpen(false); } }} className="rdp-menu-item menu-item-hover"
                 >{item.label}</div>
               ))}

@@ -83,6 +83,8 @@ export interface RepairFull {
   repairKey: number; wo: string; status: string; statusId: number; isUrgent: boolean;
   client: string; clientKey: number; dept: string; deptKey: number;
   scopeType: string; serial: string; scopeModel?: string; manufacturer?: string;
+  // 'R' = Rigid, 'F' = Flexible, 'C' = Camera, '' = unknown. From tblScopeType.sRigidOrFlexible.
+  rigidOrFlexible?: string;
   dateIn: string; dateApproved?: string; estDelivery?: string; shipDate?: string; dateOut?: string;
   daysIn: number;
   // Command strip fields

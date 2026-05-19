@@ -93,21 +93,40 @@ const ALL_PF_KEYS: PFKey[] = [
 
 // ── D&I Modal ─────────────────────────────────────────────────────────────────
 
+// Per-scope-type form identification. 'F' = Flexible, 'R' = Rigid, 'C' = Camera.
+// Source: tblScopeType.sRigidOrFlexible.
+const DI_FORM_BY_SCOPE: Record<string, { title: string; ref: string }> = {
+  F: { title: 'Flexible Endoscope Diagnostic Report', ref: 'OM05-1' },
+  R: { title: 'Rigid Endoscope Disassembly & Inspection Form', ref: 'OM05-3' },
+  C: { title: 'Camera Endoscope Disassembly & Inspection Form', ref: 'OM05-2' },
+};
+
+/** Look up the right D&I form descriptor by scope-type code. Defaults to Flexible (OM05-1)
+ *  when the code is missing/unknown so the cockpit still renders something usable. */
+function diFormFor(rigidOrFlexible: string | undefined) {
+  const code = (rigidOrFlexible ?? '').toUpperCase();
+  return DI_FORM_BY_SCOPE[code] ?? DI_FORM_BY_SCOPE.F;
+}
+
 interface ModalProps {
   data: RepairInspections;
   saving: boolean;
+  /** Optional — only DiModal uses it to pick the right form title. */
+  rigidOrFlexible?: string;
   onChange: (patch: Partial<RepairInspections>) => void;
   onSave: () => void;
   onClose: () => void;
 }
 
-const DiModal = ({ data, saving, onChange, onSave, onClose }: ModalProps) => (
+const DiModal = ({ data, saving, rigidOrFlexible, onChange, onSave, onClose }: ModalProps) => {
+  const form = diFormFor(rigidOrFlexible);
+  return (
   <div className="insp-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
     <div className="insp-panel">
       <div className="insp-modal-header">
         <div>
-          <div className="insp-modal-title">Flexible Endoscope Diagnostic Report</div>
-          <div className="insp-modal-sub">OM05-1 — D&amp;I Intake Inspection</div>
+          <div className="insp-modal-title">{form.title}</div>
+          <div className="insp-modal-sub">{form.ref} — D&amp;I Intake Inspection</div>
         </div>
         <button className="insp-close-btn" onClick={onClose}>Close</button>
       </div>
@@ -314,7 +333,8 @@ const DiModal = ({ data, saving, onChange, onSave, onClose }: ModalProps) => (
       </div>
     </div>
   </div>
-);
+  );
+};
 
 // ── Post-Repair Modal ──────────────────────────────────────────────────────────
 
@@ -517,9 +537,12 @@ const SelectorCard = ({ title, subtitle, badge, badgeColor, onClick, icon }: Sel
 
 interface InspectionsTabProps {
   repairKey: number;
+  /** Scope-type discriminator from tblScopeType.sRigidOrFlexible: 'R', 'F', 'C'.
+   *  Drives which D&I form (OM05-1 / OM05-2 / OM05-3) the cockpit references. */
+  rigidOrFlexible?: string;
 }
 
-export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
+export const InspectionsTab = ({ repairKey, rigidOrFlexible }: InspectionsTabProps) => {
   const [data, setData] = useState<RepairInspections | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -569,7 +592,7 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
         <div className="insp-selector-row">
           <SelectorCard
             title="D&I Intake"
-            subtitle="OM05-1 — Flexible Endoscope Diagnostic Report"
+            subtitle={`${diFormFor(rigidOrFlexible).ref} — ${diFormFor(rigidOrFlexible).title}`}
             badge={diDone ? 'Recorded' : 'Not started'}
             badgeColor={diDone ? 'var(--success)' : undefined}
             onClick={() => setDiOpen(true)}
@@ -602,6 +625,7 @@ export const InspectionsTab = ({ repairKey }: InspectionsTabProps) => {
         <DiModal
           data={data}
           saving={saving}
+          rigidOrFlexible={rigidOrFlexible}
           onChange={patch}
           onSave={() => saveAndClose(() => setDiOpen(false))}
           onClose={() => setDiOpen(false)}

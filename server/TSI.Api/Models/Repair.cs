@@ -97,6 +97,10 @@ public record RepairFull(
     // Related entities
     string Client, int ClientKey, string Dept, int DeptKey,
     string ScopeType, string Serial, string? ScopeModel, string? Manufacturer, string? CapFfs,
+    // Scope-type discriminator: 'R' (Rigid), 'F' (Flexible), 'C' (Camera), or '' if unknown.
+    // Source: tblScopeType.sRigidOrFlexible. Used by the cockpit to pick the right
+    // D&I/BI form and inspection form variants per scope type.
+    string? RigidOrFlexible,
     // Dates
     string DateIn, string? DateApproved, string? EstDelivery, string? ShipDate, string? DateOut,
     int DaysIn,
