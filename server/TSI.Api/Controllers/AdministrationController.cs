@@ -531,9 +531,12 @@ public class AdministrationController(IConfiguration config) : ControllerBase
 
         // tblPricingCategory display column is sPricingDescription (not sPricingCategory).
         // Last-update column is dtLastUpdate (no trailing 'd').
+        // ClientCount: tblPricingDetail has no lClientKey — pricing categories are
+        // assigned at the client level via tblClient.lPricingCategoryKey. Count
+        // active clients tied to this category there.
         await using var cmd = new SqlCommand(@"
             SELECT p.lPricingCategoryKey, p.sPricingDescription AS sPricingCategory,
-                   (SELECT COUNT(DISTINCT lClientKey) FROM tblPricingDetail pd WHERE pd.lPricingCategoryKey = p.lPricingCategoryKey) AS ClientCount,
+                   (SELECT COUNT(*) FROM tblClient c WHERE c.lPricingCategoryKey = p.lPricingCategoryKey) AS ClientCount,
                    (SELECT COUNT(*) FROM tblPricingDetail pd WHERE pd.lPricingCategoryKey = p.lPricingCategoryKey) AS ItemCount,
                    p.dtLastUpdate AS dtLastUpdated, p.bActive
             FROM tblPricingCategory p
