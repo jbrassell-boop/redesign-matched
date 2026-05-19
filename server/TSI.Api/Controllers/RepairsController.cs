@@ -677,17 +677,19 @@ public class RepairsController(IConfiguration config) : ControllerBase
         cmd.Parameters.AddWithValue("@notes", (object?)body.Notes ?? DBNull.Value);
         var rows = await cmd.ExecuteNonQueryAsync();
 
-        // Log status change if status was provided
+        // Log status change if status was provided. Audit columns populated from
+        // the JWT user_key claim so the Status Log shows who made the change.
         if (body.StatusId.HasValue)
         {
             await using var logCmd = new SqlCommand("""
-                INSERT INTO tblRepairStatusLog (lRepairKey, lRepairStatusID, sRepairStatus, ChangeDate)
-                SELECT @repairKey, @statusId, rs.sRepairStatus, GETDATE()
+                INSERT INTO tblRepairStatusLog (lRepairKey, lRepairStatusID, sRepairStatus, ChangeDate, Created_datetime, Created_UserKey)
+                SELECT @repairKey, @statusId, rs.sRepairStatus, GETDATE(), GETDATE(), @userKey
                 FROM tblRepairStatuses rs WHERE rs.lRepairStatusID = @statusId
                 """, conn);
             logCmd.CommandTimeout = 30;
             logCmd.Parameters.AddWithValue("@repairKey", repairKey);
             logCmd.Parameters.AddWithValue("@statusId", body.StatusId.Value);
+            logCmd.Parameters.AddWithValue("@userKey", this.GetCurrentUserKey());
             await logCmd.ExecuteNonQueryAsync();
         }
 
@@ -730,6 +732,8 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        var userKey = this.GetCurrentUserKey();
+
         // Update the repair record
         await using var updateCmd = new SqlCommand(
             "UPDATE tblRepair SET lRepairStatusID = @statusId WHERE lRepairKey = @id", conn);
@@ -739,15 +743,17 @@ public class RepairsController(IConfiguration config) : ControllerBase
         var rows = await updateCmd.ExecuteNonQueryAsync();
         if (rows == 0) return NotFound();
 
-        // Insert status log entry
+        // Insert status log entry. Audit columns populated from the JWT user_key
+        // claim so the Status Log shows who made the change (was always "System").
         await using var logCmd = new SqlCommand("""
-            INSERT INTO tblRepairStatusLog (lRepairKey, lRepairStatusID, sRepairStatus, ChangeDate)
-            SELECT @repairKey, @statusId, rs.sRepairStatus, GETDATE()
+            INSERT INTO tblRepairStatusLog (lRepairKey, lRepairStatusID, sRepairStatus, ChangeDate, Created_datetime, Created_UserKey)
+            SELECT @repairKey, @statusId, rs.sRepairStatus, GETDATE(), GETDATE(), @userKey
             FROM tblRepairStatuses rs WHERE rs.lRepairStatusID = @statusId
             """, conn);
         logCmd.CommandTimeout = 30;
         logCmd.Parameters.AddWithValue("@repairKey", repairKey);
         logCmd.Parameters.AddWithValue("@statusId", body.StatusId);
+        logCmd.Parameters.AddWithValue("@userKey", userKey);
         await logCmd.ExecuteNonQueryAsync();
 
         return Ok();
@@ -1543,6 +1549,9 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // Was hardcoded lUserKey = 1 — every note showed up authored by user 1
+        // (or "System" if the GetRepairNotes join misses). Now we capture the
+        // actual signed-in user via the user_key JWT claim.
         const string sql = """
             IF NOT EXISTS (SELECT 1 FROM tblOwnerTypes WHERE sOwnerType = 'Repair')
                 INSERT INTO tblOwnerTypes (sOwnerType) VALUES ('Repair');
@@ -1550,13 +1559,14 @@ public class RepairsController(IConfiguration config) : ControllerBase
             INSERT INTO tblNotes (lOwnerKey, lOwnerTypeKey, sNote, dtNoteDate, lUserKey)
             VALUES (@repairKey,
                     (SELECT TOP 1 lOwnerTypeKey FROM tblOwnerTypes WHERE sOwnerType = 'Repair'),
-                    @note, GETDATE(), 1)
+                    @note, GETDATE(), @userKey)
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         cmd.Parameters.AddWithValue("@note", body.Note ?? "");
+        cmd.Parameters.AddWithValue("@userKey", this.GetCurrentUserKey());
         await cmd.ExecuteNonQueryAsync();
         return Ok(new { success = true });
     }

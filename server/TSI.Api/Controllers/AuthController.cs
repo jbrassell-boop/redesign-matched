@@ -34,6 +34,7 @@ public class AuthController(IConfiguration config, JwtService jwtService) : Cont
 
         string storedPassword;
         string role;
+        int userKey;
 
         await using (var reader = await cmd.ExecuteReaderAsync())
         {
@@ -41,6 +42,7 @@ public class AuthController(IConfiguration config, JwtService jwtService) : Cont
                 return Unauthorized(new { message = "Invalid credentials." });
 
             storedPassword = reader["sUserPassword"]?.ToString() ?? "";
+            userKey = reader["lUserKey"] == DBNull.Value ? 0 : Convert.ToInt32(reader["lUserKey"]);
             var isSupervisor = reader["sSupervisor"]?.ToString()?.Trim();
             var isIsoManager = reader["sISOManager"]?.ToString()?.Trim();
             role = (isSupervisor == "1" || isSupervisor?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true
@@ -81,7 +83,7 @@ public class AuthController(IConfiguration config, JwtService jwtService) : Cont
         if (!valid)
             return Unauthorized(new { message = "Invalid credentials." });
 
-        var token = jwtService.GenerateToken(request.Username, role);
+        var token = jwtService.GenerateToken(request.Username, role, userKey);
         var expiryHours = int.Parse(config["JWT:ExpiryHours"] ?? "8");
 
         return Ok(new LoginResponse(
