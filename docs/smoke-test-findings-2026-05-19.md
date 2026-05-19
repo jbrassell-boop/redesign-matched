@@ -28,15 +28,15 @@ Walk the cockpit (`/repairs/579184`) through every tab and the two header workfl
 
 ## Bugs / gaps
 
-### Bug 1 — Next Stage prompt says "Move this repair to 'null'?" (NOT FIXED)
+### Bug 1 — Next Stage prompt says "Move this repair to 'null'?" (FIXED, commit 32912d7)
 
 **Where:** `client/src/pages/repairs/RepairDetailPane.tsx:64-78` (`STATUS_NEXT_MAP`) and lines 353-356.
 
-**Root cause:** `GET /api/repairs/statuses` (`RepairsController.cs:678-704`) filters with `WHERE ISNULL(bIsReadOnly, 0) = 0`. That excludes the system-managed milestone statuses (IDs 1, 6, 10, 12, 13 — Waiting on Inspection, Waiting for Approved, Scheduled to Ship, Scheduled to Ship Tomorrow, Shipping Today or Tomorrow). The frontend uses this list both to populate the Change Status dropdown (correct — these shouldn't be manually pickable) AND to look up the *display name* of the next status from `STATUS_NEXT_MAP`. The lookup misses, returns undefined, and `\`Move this repair to "${nextStatusName}"?\`` renders the JS string `null`.
+**Root cause:** `GET /api/repairs/statuses` (`RepairsController.cs:678-704`) filters with `WHERE ISNULL(bIsReadOnly, 0) = 0`. That excludes the system-managed milestone statuses (IDs 1, 6, 10, 12, 13 — Waiting on Inspection, Waiting for Approved, Scheduled to Ship, Scheduled to Ship Tomorrow, Shipping Today or Tomorrow). The frontend uses this list both to populate the Change Status dropdown (correct — these shouldn't be manually pickable) AND to look up the *display name* of the next status from `STATUS_NEXT_MAP`. The lookup misses, returns undefined, and the template literal `Move this repair to "${nextStatusName}"?` rendered the JS string `null`.
 
-**Fix:** the cleanest path is to change `STATUS_NEXT_MAP` from `Record<number, number>` to `Record<number, { id: number; name: string }>` so display name doesn't depend on the dropdown list. Alternative: backend `/repairs/statuses?includeReadOnly=true`.
+**Fix shipped:** commit `32912d7` changes `STATUS_NEXT_MAP` from `Record<number, number>` to `Record<number, { id: number; name: string } | null>` so display name is embedded directly and doesn't depend on the dropdown's contents. End-of-workflow uses `null` instead of the magic number 0. Verified end-to-end on happy-plant: button now reads "Waiting for Approved" and the confirm dialog reads "Move this repair to 'Waiting for Approved'?".
 
-**Impact:** the Next Stage button is unusable. Change Status is still available as a workaround, so this is annoying but not blocking smoke testing.
+**Cross-stack port:** same code exists in Steve's repo; matching fix pushed on branch `joe/repairs-next-stage-name`.
 
 ### Bug 2 — PUT /repairs/{id}/status returned 500 (FIXED, commit 36a831a)
 
@@ -69,8 +69,9 @@ The Update Technicians dropdown contains internal techs (Joe Brassell, Allen Mar
 | Commit | Files | Why |
 | --- | --- | --- |
 | 36a831a | `server/TSI.Api/Controllers/RepairsController.cs` | Rename `dtStatusChange` / `dtStatusDate` → `ChangeDate` so status changes log correctly. |
+| 32912d7 | `client/src/pages/repairs/RepairDetailPane.tsx` | Embed next-stage display name in `STATUS_NEXT_MAP` so Next Stage button/dialog never renders "null". |
 
-Auto-deployed via `deploy-server.yml` (30s build+deploy). Verified live.
+Both auto-deployed via `deploy-server.yml` / `deploy-client.yml`. Verified live on happy-plant.
 
 ## Test data left on the repair
 
