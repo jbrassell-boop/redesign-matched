@@ -284,15 +284,17 @@ public class RepairsController(IConfiguration config) : ControllerBase
                    ISNULL(dist.sDistName1, '') AS sDistributor,
                    ISNULL(pkg.sPackageType, '') AS sPackageType,
                    -- Latest non-void invoice for this repair (draft or finalized).
-                   -- Drafts have NULL sInvoiceNumber until finalized; the cockpit needs to
-                   -- know one exists so the user gets feedback after clicking Draft Invoice.
+                   -- The invoice number lives in tblInvoice.sTranNumber; drafts have it
+                   -- NULL until finalized. Status derives from bFinalized (1 = finalized,
+                   -- else Draft) since sInvoiceStatus on this schema is nvarchar(0).
                    inv.lInvoiceKey AS latestInvoiceKey,
-                   inv.sInvoiceStatus AS latestInvoiceStatus,
-                   inv.sInvoiceNumber AS latestInvoiceNumber
+                   inv.sLatestInvoiceStatus AS latestInvoiceStatus,
+                   inv.sTranNumber AS latestInvoiceNumber
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             OUTER APPLY (
-                SELECT TOP 1 i.lInvoiceKey, i.sInvoiceStatus, i.sInvoiceNumber
+                SELECT TOP 1 i.lInvoiceKey, i.sTranNumber,
+                       CASE WHEN ISNULL(i.bFinalized, 0) = 1 THEN 'Finalized' ELSE 'Draft' END AS sLatestInvoiceStatus
                 FROM tblInvoice i
                 WHERE i.lRepairKey = r.lRepairKey
                   AND ISNULL(i.bIsVoid, 0) = 0
