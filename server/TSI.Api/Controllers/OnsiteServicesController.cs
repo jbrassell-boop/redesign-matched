@@ -25,7 +25,32 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        const string sql = """
+        // Status CASE order matters: Invoiced wins over Submitted when both dates are
+        // set, because invoicing is downstream of submission. Previously rows that had
+        // been invoiced still showed as 'Submitted' which is misleading. Label 'Void'
+        // matches the convention used elsewhere on the stack.
+        const string statusExpr = """
+            CASE WHEN ss.dtVoidDate IS NOT NULL THEN 'Void'
+                 WHEN ss.dtInvoiceDate IS NOT NULL THEN 'Invoiced'
+                 WHEN ss.dtDateSubmitted IS NOT NULL THEN 'Submitted'
+                 ELSE 'Draft' END
+            """;
+
+        // Push search / status / date filters into SQL rather than the C# loop so
+        // pagination + totalCount work correctly when real data lands (the legacy
+        // in-memory filter was breaking page totals).
+        var where = new List<string> { "ss.Deleted_datetime IS NULL" };
+        if (!string.IsNullOrWhiteSpace(search))
+            where.Add("(ss.sWorkOrderNumber LIKE @search OR c.sClientName1 LIKE @search OR d.sDepartmentName LIKE @search OR t.sTechName LIKE @search)");
+        if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all")
+            where.Add($"({statusExpr}) = @statusFilter");
+        if (!string.IsNullOrWhiteSpace(dateFrom))
+            where.Add("ss.dtOnsiteDate >= @dateFrom");
+        if (!string.IsNullOrWhiteSpace(dateTo))
+            where.Add("ss.dtOnsiteDate < DATEADD(day, 1, @dateTo)");
+        var whereClause = "WHERE " + string.Join(" AND ", where);
+
+        var sql = $"""
             SELECT ss.lSiteServiceKey AS lOnsiteServiceKey,
                    ISNULL(ss.sWorkOrderNumber, '') AS sInvoiceNumber,
                    ISNULL(c.sClientName1, '') AS sClientName,
@@ -33,10 +58,7 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
                    ISNULL(t.sTechName, '') AS sTechName,
                    ss.dtOnsiteDate,
                    ss.dtDateSubmitted AS dtSubmittedDate,
-                   CASE WHEN ss.dtVoidDate IS NOT NULL THEN 'Voided'
-                        WHEN ss.dtDateSubmitted IS NOT NULL THEN 'Submitted'
-                        WHEN ss.dtInvoiceDate IS NOT NULL THEN 'Invoiced'
-                        ELSE 'Draft' END AS sStatus,
+                   {statusExpr} AS sStatus,
                    ISNULL(ss.lTrayCount, 0) AS nTrayCount,
                    ISNULL(ss.lTotalInstruments, 0) AS nInstrumentCount,
                    ISNULL(ss.nInvoiceAmount, 0) AS dblTotalBilled
@@ -44,73 +66,65 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
             LEFT JOIN tblClient c ON c.lClientKey = ss.lClientKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = ss.lDepartmentKey
             LEFT JOIN tblTechnicians t ON t.lTechnicianKey = ss.lTechnicianKey
+            {whereClause}
             ORDER BY ss.dtOnsiteDate DESC
             """;
-        await using var cmd = new SqlCommand(sql, conn);
+        // Get totalCount in SQL too so pagination stays correct.
+        var countSql = $"""
+            SELECT COUNT(*)
+            FROM tblSiteServices ss
+            LEFT JOIN tblClient c ON c.lClientKey = ss.lClientKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = ss.lDepartmentKey
+            LEFT JOIN tblTechnicians t ON t.lTechnicianKey = ss.lTechnicianKey
+            {whereClause}
+            """;
+        var pagedSql = sql + "\nOFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY";
+
+        await using var countCmd = new SqlCommand(countSql, conn);
+        countCmd.CommandTimeout = 30;
+        AddListParams(countCmd, search, statusFilter, dateFrom, dateTo);
+        var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
+
+        await using var cmd = new SqlCommand(pagedSql, conn);
         cmd.CommandTimeout = 30;
+        AddListParams(cmd, search, statusFilter, dateFrom, dateTo);
+        cmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
+        cmd.Parameters.AddWithValue("@pageSize", pageSize);
 
         var items = new List<OnsiteServiceListItem>();
-        try
+        await using var reader = await cmd.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
         {
-            await using var reader = await cmd.ExecuteReaderAsync();
-            while (await reader.ReadAsync())
-            {
-                var visitDate = GetNullableDateTime(reader, "dtOnsiteDate");
-                var submittedDate = GetNullableDateTime(reader, "dtSubmittedDate");
-                var status = reader["sStatus"]?.ToString() ?? "Draft";
-
-                // Apply filters in-memory since stored proc doesn't support them
-                if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all" &&
-                    !string.Equals(status, statusFilter, StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                if (!string.IsNullOrWhiteSpace(dateFrom) && visitDate.HasValue &&
-                    visitDate.Value < DateTime.Parse(dateFrom))
-                    continue;
-
-                if (!string.IsNullOrWhiteSpace(dateTo) && visitDate.HasValue &&
-                    visitDate.Value > DateTime.Parse(dateTo).AddDays(1))
-                    continue;
-
-                var invoiceNum = reader["sInvoiceNumber"]?.ToString() ?? "";
-                var clientName = reader["sClientName"]?.ToString() ?? "";
-                var deptName = reader["sDepartmentName"]?.ToString() ?? "";
-                var techName = reader["sTechName"]?.ToString() ?? "";
-
-                if (!string.IsNullOrWhiteSpace(search))
-                {
-                    var hay = $"{invoiceNum}{clientName}{deptName}{techName}".ToLower();
-                    if (!hay.Contains(search.ToLower()))
-                        continue;
-                }
-
-                items.Add(new OnsiteServiceListItem(
-                    OnsiteServiceKey: Convert.ToInt32(reader["lOnsiteServiceKey"]),
-                    InvoiceNum: invoiceNum,
-                    ClientName: clientName,
-                    DeptName: deptName,
-                    TechName: techName,
-                    VisitDate: visitDate?.ToString("MM/dd/yyyy"),
-                    Status: status,
-                    TrayCount: reader["nTrayCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["nTrayCount"]),
-                    InstrumentCount: reader["nInstrumentCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["nInstrumentCount"]),
-                    TotalBilled: reader["dblTotalBilled"] == DBNull.Value ? 0 : Convert.ToDouble(reader["dblTotalBilled"]),
-                    SubmittedDate: submittedDate?.ToString("MM/dd/yyyy")
-                ));
-            }
-        }
-        catch (SqlException ex)
-        {
-            return StatusCode(500, new { error = "Database error", detail = ex.Message });
+            var visitDate = GetNullableDateTime(reader, "dtOnsiteDate");
+            var submittedDate = GetNullableDateTime(reader, "dtSubmittedDate");
+            items.Add(new OnsiteServiceListItem(
+                OnsiteServiceKey: Convert.ToInt32(reader["lOnsiteServiceKey"]),
+                InvoiceNum: reader["sInvoiceNumber"]?.ToString() ?? "",
+                ClientName: reader["sClientName"]?.ToString() ?? "",
+                DeptName: reader["sDepartmentName"]?.ToString() ?? "",
+                TechName: reader["sTechName"]?.ToString() ?? "",
+                VisitDate: visitDate?.ToString("MM/dd/yyyy"),
+                Status: reader["sStatus"]?.ToString() ?? "Draft",
+                TrayCount: reader["nTrayCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["nTrayCount"]),
+                InstrumentCount: reader["nInstrumentCount"] == DBNull.Value ? 0 : Convert.ToInt32(reader["nInstrumentCount"]),
+                TotalBilled: reader["dblTotalBilled"] == DBNull.Value ? 0 : Convert.ToDouble(reader["dblTotalBilled"]),
+                SubmittedDate: submittedDate?.ToString("MM/dd/yyyy")
+            ));
         }
 
-        var totalCount = items.Count;
-        var paged = items
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
+        return Ok(new OnsiteServiceListResponse(items, totalCount));
+    }
 
-        return Ok(new OnsiteServiceListResponse(paged, totalCount));
+    private static void AddListParams(SqlCommand cmd, string? search, string? statusFilter, string? dateFrom, string? dateTo)
+    {
+        if (!string.IsNullOrWhiteSpace(search))
+            cmd.Parameters.AddWithValue("@search", $"%{search}%");
+        if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all")
+            cmd.Parameters.AddWithValue("@statusFilter", statusFilter);
+        if (!string.IsNullOrWhiteSpace(dateFrom))
+            cmd.Parameters.AddWithValue("@dateFrom", DateTime.Parse(dateFrom));
+        if (!string.IsNullOrWhiteSpace(dateTo))
+            cmd.Parameters.AddWithValue("@dateTo", DateTime.Parse(dateTo));
     }
 
     [HttpGet("stats")]
