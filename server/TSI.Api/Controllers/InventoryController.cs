@@ -20,6 +20,14 @@ public class InventoryController(IConfiguration config) : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 200)
     {
+        // Mandatory location scope. Per-size qty / min / max moved off
+        // tblInventorySize onto tblInventorySizeLocationInfo (one row per
+        // (size, service-location)). The list-level levels are now rolled up
+        // SUM across this location's size rows so a UC user sees UC on-hand
+        // totals, not the legacy global tblInventory.nLevelCurrent column.
+        // See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -33,24 +41,39 @@ public class InventoryController(IConfiguration config) : ControllerBase
 
         var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
 
+        // Count is unchanged — item count doesn't depend on location-rolled levels.
         var countSql = $"""
             SELECT COUNT(*)
             FROM tblInventory i
             {whereClause}
             """;
 
+        // Data rolls up per-location levels from tblInventorySizeLocationInfo.
+        // LEFT JOIN both tables so items with no sizes (or no location rows) still
+        // surface, with zero levels — the user sees the item card but it shows 0
+        // on-hand for their location. Sum across sizes is the natural list-level
+        // total; the per-size detail remains available on the cockpit view.
         var dataSql = $"""
             SELECT i.lInventoryKey,
                    ISNULL(i.sItemDescription, '') AS sItemDescription,
                    ISNULL(i.sRigidOrFlexible, '') AS sRigidOrFlexible,
-                   ISNULL(i.nLevelCurrent, 0) AS nLevelCurrent,
-                   ISNULL(i.nLevelMinimum, 0) AS nLevelMinimum,
-                   ISNULL(i.nLevelMaximum, 0) AS nLevelMaximum,
+                   ISNULL(SUM(li.nLevelCurrent), 0) AS nLevelCurrent,
+                   ISNULL(SUM(li.nLevelMinimum), 0) AS nLevelMinimum,
+                   ISNULL(SUM(li.nLevelMaximum), 0) AS nLevelMaximum,
                    ISNULL(i.bActive, 0) AS bActive,
-                   (SELECT COUNT(*) FROM tblInventorySize s WHERE s.lInventoryKey = i.lInventoryKey) AS SizeCount,
-                   CASE WHEN ISNULL(i.nLevelCurrent, 0) <= ISNULL(i.nLevelMinimum, 0) THEN 1 ELSE 0 END AS IsLowStock
+                   COUNT(DISTINCT s.lInventorySizeKey) AS SizeCount,
+                   CASE WHEN ISNULL(SUM(li.nLevelCurrent), 0) <= ISNULL(SUM(li.nLevelMinimum), 0)
+                        THEN 1 ELSE 0 END AS IsLowStock
             FROM tblInventory i
+            LEFT JOIN tblInventorySize s
+                   ON s.lInventoryKey = i.lInventoryKey
+                  AND s.Deleted_datetime IS NULL
+            LEFT JOIN tblInventorySizeLocationInfo li
+                   ON li.lInventorySizeKey = s.lInventorySizeKey
+                  AND li.lServiceLocationKey = @locationKey
+                  AND li.Deleted_datetime IS NULL
             {whereClause}
+            GROUP BY i.lInventoryKey, i.sItemDescription, i.sRigidOrFlexible, i.bActive
             ORDER BY i.sItemDescription
             OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
             """;
@@ -62,6 +85,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 30;
+        dataCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -335,27 +359,44 @@ public class InventoryController(IConfiguration config) : ControllerBase
     [HttpGet("pending-receipt")]
     public async Task<IActionResult> GetPendingReceipt()
     {
+        // Mandatory location scope. Pending receipt is a per-location concept:
+        // "sizes below minimum AT MY LOCATION" — UC's reorder thresholds aren't
+        // Nashville's, and a Nashville size below its min isn't UC's problem.
+        // The per-size qty / min / max now live on tblInventorySizeLocationInfo;
+        // the read here filters by the user's active location. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Return all active inventory sizes that are at or below minimum (candidates for receiving)
+        // Return inventory sizes at or below their per-location minimum
+        // (candidates for receiving at this location). bActive is no longer on
+        // either tblInventorySize or tblInventorySizeLocationInfo on the new
+        // schema — soft-delete on the size IS the active filter, so the
+        // Deleted_datetime predicates cover it.
         const string sql = """
             SELECT s.lInventorySizeKey, i.lInventoryKey,
                    ISNULL(i.sItemDescription, '') AS sItemDescription,
                    ISNULL(s.sSizeDescription, '') AS sSizeDescription,
-                   ISNULL(s.nLevelCurrent, 0) AS nLevelCurrent,
-                   ISNULL(s.nLevelMinimum, 0) AS nLevelMinimum,
-                   ISNULL(s.nLevelMaximum, 0) AS nLevelMaximum,
-                   s.sBinNumber
+                   ISNULL(li.nLevelCurrent, 0) AS nLevelCurrent,
+                   ISNULL(li.nLevelMinimum, 0) AS nLevelMinimum,
+                   ISNULL(li.nLevelMaximum, 0) AS nLevelMaximum,
+                   li.sBinNumber
             FROM tblInventorySize s
             INNER JOIN tblInventory i ON i.lInventoryKey = s.lInventoryKey
-            WHERE ISNULL(s.bActive, 0) = 1
-              AND ISNULL(s.nLevelCurrent, 0) <= ISNULL(s.nLevelMinimum, 0)
+            INNER JOIN tblInventorySizeLocationInfo li
+                    ON li.lInventorySizeKey = s.lInventorySizeKey
+                   AND li.lServiceLocationKey = @locationKey
+                   AND li.Deleted_datetime IS NULL
+            WHERE s.Deleted_datetime IS NULL
+              AND ISNULL(li.nLevelCurrent, 0) <= ISNULL(li.nLevelMinimum, 0)
+              AND ISNULL(li.nLevelMinimum, 0) > 0
             ORDER BY i.sItemDescription, s.sSizeDescription
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
         var items = new List<InventoryReceivingItem>();
