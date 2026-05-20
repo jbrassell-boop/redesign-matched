@@ -388,12 +388,24 @@ public class FinancialController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Outstanding A/R: sum of all non-zero invoices
+        // Outstanding A/R = invoiced amount minus payments, for invoices that
+        // are not void, not marked-paid, and still have a positive balance.
+        // Mirrors Steve's cloud pattern. Without these filters, every non-zero
+        // invoice since 2018 — paid or not — gets summed as outstanding A/R
+        // (the bug that produced $265M / 139K overdue on the dashboard).
         const string arSql = """
-            SELECT ISNULL(SUM(dblTranAmount), 0) AS TotalAR,
+            SELECT ISNULL(SUM(i.dblTranAmount - ISNULL(p.TotalPaid, 0)), 0) AS TotalAR,
                    COUNT(*) AS TotalInvoices
-            FROM tblInvoice
-            WHERE dblTranAmount > 0
+            FROM tblInvoice i
+            OUTER APPLY (
+                SELECT SUM(nInvoicePayment) AS TotalPaid
+                FROM tblInvoicePayments
+                WHERE lInvoiceKey = i.lInvoiceKey
+            ) p
+            WHERE i.dblTranAmount > 0
+              AND ISNULL(i.bIsVoid, 0) = 0
+              AND ISNULL(i.bMarkAsPaid, 0) = 0
+              AND i.dblTranAmount > ISNULL(p.TotalPaid, 0)
             """;
 
         await using var arCmd = new SqlCommand(arSql, conn);
@@ -404,22 +416,35 @@ public class FinancialController(IConfiguration config) : ControllerBase
             totalAR = arReader["TotalAR"] == DBNull.Value ? 0 : Convert.ToDouble(arReader["TotalAR"]);
         await arReader.CloseAsync();
 
-        // Overdue: invoices where due date > 90 days ago
+        // Overdue: invoices past their due-by-90-days mark that ALSO still
+        // have a positive balance after applied payments. Same filters as
+        // outstanding A/R.
         const string overdueSql = """
-            SELECT COUNT(*) FROM tblInvoice
-            WHERE dblTranAmount > 0 AND dtDueDate < DATEADD(day, -90, GETDATE())
+            SELECT COUNT(*) FROM tblInvoice i
+            WHERE i.dblTranAmount > 0
+              AND i.dtDueDate < DATEADD(day, -90, GETDATE())
+              AND ISNULL(i.bIsVoid, 0) = 0
+              AND ISNULL(i.bMarkAsPaid, 0) = 0
+              AND i.dblTranAmount > ISNULL((SELECT SUM(p.nInvoicePayment)
+                                            FROM tblInvoicePayments p
+                                            WHERE p.lInvoiceKey = i.lInvoiceKey), 0)
             """;
         await using var overdueCmd = new SqlCommand(overdueSql, conn);
         overdueCmd.CommandTimeout = 30;
         var overdueCount = Convert.ToInt32(await overdueCmd.ExecuteScalarAsync());
 
-        // Average aging days — limit to last 12 months to avoid skew from old invoices
+        // Average aging days — only over invoices that are actually unpaid.
         const string agingSql = """
-            SELECT ISNULL(AVG(DATEDIFF(day, ISNULL(dtDueDate, dtTranDate), GETDATE())), 0)
-            FROM tblInvoice
-            WHERE dblTranAmount > 0
-              AND dtDueDate IS NOT NULL
-              AND dtTranDate >= DATEADD(year, -1, GETDATE())
+            SELECT ISNULL(AVG(DATEDIFF(day, ISNULL(i.dtDueDate, i.dtTranDate), GETDATE())), 0)
+            FROM tblInvoice i
+            WHERE i.dblTranAmount > 0
+              AND ISNULL(i.dtDueDate, i.dtTranDate) IS NOT NULL
+              AND ISNULL(i.bIsVoid, 0) = 0
+              AND ISNULL(i.bMarkAsPaid, 0) = 0
+              AND i.dblTranAmount > ISNULL((SELECT SUM(p.nInvoicePayment)
+                                            FROM tblInvoicePayments p
+                                            WHERE p.lInvoiceKey = i.lInvoiceKey), 0)
+              AND i.dtTranDate >= DATEADD(year, -1, GETDATE())
             """;
         await using var agingCmd = new SqlCommand(agingSql, conn);
         agingCmd.CommandTimeout = 30;
