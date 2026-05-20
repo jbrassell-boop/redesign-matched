@@ -143,6 +143,7 @@ public class OnsiteServicesController(
                         ELSE 'Draft' END AS sStatus,
                    ISNULL(ss.nInvoiceAmount, 0) AS dblTotalBilled
             FROM tblSiteServices ss
+            WHERE ss.Deleted_datetime IS NULL
             """;
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
@@ -271,16 +272,20 @@ public class OnsiteServicesController(
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var sql = "UPDATE tblOnsiteService SET sStatus = @status";
-        if (req.Status == "Submitted")
-            sql += ", dtSubmittedDate = GETDATE()";
+        var setClauses = req.Status switch
+        {
+            "Submitted" => "dtDateSubmitted = GETDATE()",
+            "Invoiced"  => "dtInvoiceDate = GETDATE()",
+            "Void"      => "dtVoidDate = GETDATE()",
+            "Draft"     => "dtDateSubmitted = NULL, dtInvoiceDate = NULL, dtVoidDate = NULL",
+            _           => throw new ArgumentException($"Unknown status: {req.Status}")
+        };
         if (!string.IsNullOrWhiteSpace(req.Notes))
-            sql += ", sNotes = @notes";
-        sql += " WHERE lOnsiteServiceKey = @id";
+            setClauses += ", sNotes = @notes";
+        var sql = $"UPDATE tblSiteServices SET {setClauses} WHERE lSiteServiceKey = @id";
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@status", req.Status);
         cmd.Parameters.AddWithValue("@id", id);
         if (!string.IsNullOrWhiteSpace(req.Notes))
             cmd.Parameters.AddWithValue("@notes", req.Notes);
@@ -313,6 +318,7 @@ public class OnsiteServicesController(
                    ISNULL(ss.lTrayCount, 0) AS lTrayCount,
                    ISNULL(ss.lTotalInstruments, 0) AS lTotalInstruments,
                    ISNULL(ss.nInvoiceAmount, 0) AS nInvoiceAmount,
+                   ss.dtDateSubmitted,
                    ss.dtInvoiceDate,
                    CASE
                        WHEN ss.dtVoidDate IS NOT NULL THEN 'Void'
@@ -336,7 +342,8 @@ public class OnsiteServicesController(
             return NotFound(new { message = "Visit not found." });
 
         var visitDate = reader["dtOnsiteDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtOnsiteDate"]).ToString("MM/dd/yyyy");
-        var submittedDate = reader["dtInvoiceDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtInvoiceDate"]).ToString("MM/dd/yyyy");
+        var submittedDate = reader["dtDateSubmitted"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtDateSubmitted"]).ToString("MM/dd/yyyy");
+        var invoiceDate = reader["dtInvoiceDate"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtInvoiceDate"]).ToString("MM/dd/yyyy");
 
         return Ok(new OnsiteServiceDetail(
             OnsiteServiceKey: Convert.ToInt32(reader["lSiteServiceKey"]),
@@ -350,6 +357,7 @@ public class OnsiteServicesController(
             InstrumentCount: Convert.ToInt32(reader["lTotalInstruments"]),
             TotalBilled: reader["nInvoiceAmount"] == DBNull.Value ? 0 : Convert.ToDouble(reader["nInvoiceAmount"]),
             SubmittedDate: submittedDate,
+            InvoiceDate: invoiceDate,
             PurchaseOrder: reader["sPurchaseOrder"]?.ToString(),
             TruckNumber: reader["sTruckNumber"]?.ToString(),
             Notes: reader["sNotes"]?.ToString()

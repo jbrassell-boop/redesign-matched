@@ -151,6 +151,9 @@ public record RepairFull(
     int? PaymentTermsKey,
     int? DistributorKey,
     string? Requisition,
+    // Distributor and package type (resolved from lookup tables via lDistributorKey / lPackageTypeKey)
+    string? Distributor = null,
+    string? PackageType = null,
     // Invoice for this repair (1:1 with tblInvoice). sTranNumber is always populated.
     // NULL when no invoice exists yet.
     int? LatestInvoiceKey = null,

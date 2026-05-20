@@ -57,6 +57,7 @@ public record OnsiteServiceDetail(
     int InstrumentCount,
     double TotalBilled,
     string? SubmittedDate,
+    string? InvoiceDate,
     string? PurchaseOrder,
     string? TruckNumber,
     string? Notes

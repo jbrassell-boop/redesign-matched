@@ -432,8 +432,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
         if (update.City != null) { sets.Add("sMailCity = @city"); cmd.Parameters.AddWithValue("@city", update.City); }
         if (update.State != null) { sets.Add("sMailState = @state"); cmd.Parameters.AddWithValue("@state", update.State); }
         if (update.Zip != null) { sets.Add("sMailZip = @zip"); cmd.Parameters.AddWithValue("@zip", update.Zip); }
-        if (update.Phone != null) { sets.Add("sPhoneVoice = @phone"); cmd.Parameters.AddWithValue("@phone", update.Phone); }
-        if (update.Fax != null) { sets.Add("sPhoneFAX = @fax"); cmd.Parameters.AddWithValue("@fax", update.Fax); }
+        if (update.Phone != null) { sets.Add("sPhoneNumber = @phone"); cmd.Parameters.AddWithValue("@phone", update.Phone); }
         if (update.BillingEmail != null) { sets.Add("sBillTo = @billingEmail"); cmd.Parameters.AddWithValue("@billingEmail", update.BillingEmail); }
         if (update.PricingCategoryKey != null) { sets.Add("lPricingCategoryKey = @pck"); cmd.Parameters.AddWithValue("@pck", update.PricingCategoryKey); }
         if (update.PaymentTermsKey != null) { sets.Add("lPaymentTermsKey = @ptk"); cmd.Parameters.AddWithValue("@ptk", update.PaymentTermsKey); }
@@ -449,6 +448,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
         if (update.ReqTotalsOnly != null) { sets.Add("bRequisitionTotalsOnly = @reqtotals"); cmd.Parameters.AddWithValue("@reqtotals", update.ReqTotalsOnly); }
         if (update.BlindTotalsOnFinal != null) { sets.Add("bBlindTotalsOnFinal = @blindfinal"); cmd.Parameters.AddWithValue("@blindfinal", update.BlindTotalsOnFinal); }
         if (update.SkipTracking != null) { sets.Add("bSkipTracking = @skiptracking"); cmd.Parameters.AddWithValue("@skiptracking", update.SkipTracking); }
+        if (update.SkipMetrics != null) { sets.Add("bSkipTracking = @skipMetrics"); cmd.Parameters.AddWithValue("@skipMetrics", update.SkipMetrics); }
         if (update.PoRequired != null) { sets.Add("sPORequired = @porequired"); cmd.Parameters.AddWithValue("@porequired", update.PoRequired == true ? "Y" : ""); }
         if (update.NeverHold != null) { sets.Add("bNeverHold = @neverhold"); cmd.Parameters.AddWithValue("@neverhold", update.NeverHold); }
         if (update.EmailNewRepairs != null) { sets.Add("bEmailNewRepairs = @emailrepairs"); cmd.Parameters.AddWithValue("@emailrepairs", update.EmailNewRepairs); }
@@ -481,44 +481,6 @@ public class ClientsController(IConfiguration config) : ControllerBase
         }
 
         return Ok(new { message = "Client updated." });
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> CreateClient([FromBody] ClientUpdate data)
-    {
-        await using var conn = CreateConnection();
-        await conn.OpenAsync();
-
-        const string sql = """
-            INSERT INTO tblClient (sClientName1, sMailAddr1, sMailAddr2, sMailCity, sMailState, sMailZip,
-                sPhoneVoice, sPhoneFAX, sBillTo, lPricingCategoryKey, lPaymentTermsKey, lSalesRepKey,
-                sReferenceNum, lDistributorKey, bNationalAccount, bActive, dtCreateDate, dtLastUpdate)
-            VALUES (@name, @addr1, @addr2, @city, @state, @zip,
-                @phone, @fax, @billingEmail, @pck, @ptk, @srk,
-                @contract, @dk, @gpo, 1, GETDATE(), GETDATE());
-            SELECT SCOPE_IDENTITY();
-            """;
-
-        await using var cmd = new SqlCommand(sql, conn);
-        cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@name", (object?)data.Name ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@addr1", (object?)data.Address1 ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@addr2", (object?)data.Address2 ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@city", (object?)data.City ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@state", (object?)data.State ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@zip", (object?)data.Zip ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@phone", (object?)data.Phone ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@fax", (object?)data.Fax ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@billingEmail", (object?)data.BillingEmail ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@pck", (object?)data.PricingCategoryKey ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@ptk", (object?)data.PaymentTermsKey ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@srk", (object?)data.SalesRepKey ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@contract", (object?)data.ContractNumber ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@dk", (object?)data.DistributorKey ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@gpo", (object?)data.IsGPO ?? DBNull.Value);
-
-        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-        return Ok(new { clientKey = newKey, message = "Client created." });
     }
 
     [HttpPut("{clientKey:int}/deactivate")]
@@ -825,7 +787,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
         const string sql = """
             INSERT INTO tblClient
                 (sClientName1, sMailAddr1, sMailAddr2, sMailCity, sMailState, sMailZip,
-                 sPhoneVoice, sPhoneFAX, dtClientSince, dtCreateDate,
+                 sPhoneNumber, dtClientSince, dtCreateDate,
                  lPricingCategoryKey, lSalesRepKey, lPaymentTermsKey, sBillTo, lDistributorKey,
                  dblDiscountPct, sBillAddr1, sBillCity, sBillState, sBillZip,
                  /* sBillEmail — NOT a tblClient column (uses sBillTo for billing email) */
@@ -835,7 +797,7 @@ public class ClientsController(IConfiguration config) : ControllerBase
             OUTPUT INSERTED.lClientKey
             VALUES
                 (@name, @addr1, @unit, @city, @state, @zip,
-                 @phone, @fax, @clientSince, GETDATE(),
+                 @phone, @clientSince, GETDATE(),
                  @pricingCatKey, @salesRepKey, @paymentTermsKey, @billTo, @distributorKey,
                  @discountPct, @billAddr1, @billCity, @billState, @billZip,
                  @blindPS3, @reqTotalsOnly, @blindTotalsOnFinal,
@@ -852,7 +814,6 @@ public class ClientsController(IConfiguration config) : ControllerBase
         cmd.Parameters.AddWithValue("@state",             (object?)body.State ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@zip",               (object?)body.Zip ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@phone",             (object?)body.Phone ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@fax",               (object?)body.Fax ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@clientSince",       body.ClientSince.HasValue ? (object)body.ClientSince.Value : DBNull.Value);
         cmd.Parameters.AddWithValue("@pricingCatKey",     (object?)body.PricingCategoryKey ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@salesRepKey",       (object?)body.SalesRepKey ?? DBNull.Value);

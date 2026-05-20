@@ -260,7 +260,7 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                    -- Extended 4-tab fields
                    r.sRackPosition,
                    r.dtReqSent,
-                   c.dblDiscountPct,
+                   ISNULL(r.dblDiscountPct, c.dblDiscountPct) AS dblDiscountPct,
                    r.dblShippingClientIn,
                    r.bTrackingNumberRequired,
                    r.dtDeliveryDateGuaranteed,
@@ -415,6 +415,8 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             PaymentTermsKey: reader["lPaymentTermsKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lPaymentTermsKey"]),
             DistributorKey: reader["lDistributorKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lDistributorKey"]),
             Requisition: ReadStr("sRequisition"),
+            Distributor: ReadStr("sDistributor"),
+            PackageType: ReadStr("sPackageType"),
             LatestInvoiceKey: reader["latestInvoiceKey"] == DBNull.Value ? null : Convert.ToInt32(reader["latestInvoiceKey"]),
             LatestInvoiceStatus: ReadStr("latestInvoiceStatus"),
             LatestInvoiceNumber: ReadStr("latestInvoiceNumber")
@@ -483,7 +485,11 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         cmd.Parameters.AddWithValue("@complaint", (object?)body.Complaint ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@reason", (object?)body.RepairReason ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@inboundTracking", (object?)body.InboundTracking ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@displayCustomerComplaint", (object?)body.DisplayCustomerComplaint ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@displayCustomerComplaint",
+            body.DisplayCustomerComplaint == null ? DBNull.Value
+            : (object)(body.DisplayCustomerComplaint.Equals("true", StringComparison.OrdinalIgnoreCase) ? "Y"
+                     : body.DisplayCustomerComplaint.Equals("false", StringComparison.OrdinalIgnoreCase) ? "N"
+                     : body.DisplayCustomerComplaint));
         cmd.Parameters.AddWithValue("@displayItemDesc", (object?)body.DisplayItemizedDesc ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@displayItemAmt", (object?)body.DisplayItemizedAmounts ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@billTo", (object?)body.BillToCustomer ?? DBNull.Value);
@@ -528,6 +534,8 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                    ISNULL(rit.dblRepairPriceBase, 0) AS dblRepairPriceBase,
                    ISNULL(t.sTechName,'') AS sTechName,
                    ISNULL(rit.sComments,'') AS sComments,
+                   -- AmendmentCount is per-repair (not per-line-item) by design:
+                   -- tblAmendRepairComments has no lRepairItemTranKey column.
                    (SELECT COUNT(*) FROM tblAmendRepairComments a
                     WHERE a.lRepairKey = rit.lRepairKey) AS AmendmentCount
             FROM tblRepairItemTran rit
@@ -758,8 +766,10 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
 
         const string sql = """
             SELECT sl.lRepairStatusLogID, ISNULL(sl.sRepairStatus, '') AS sRepairStatus,
-                   sl.ChangeDate
+                   sl.ChangeDate,
+                   ISNULL(u.sUserFullName, '') AS sChangedBy
             FROM tblRepairStatusLog sl
+            LEFT JOIN tblUsers u ON u.lUserKey = sl.Created_UserKey
             WHERE sl.lRepairKey = @repairKey
             ORDER BY sl.ChangeDate DESC
             """;
@@ -775,7 +785,7 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                 LogId: Convert.ToInt32(reader["lRepairStatusLogID"]),
                 StatusName: reader["sRepairStatus"]?.ToString() ?? "",
                 ChangedAt: reader["ChangeDate"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["ChangeDate"]),
-                ChangedBy: null
+                ChangedBy: reader["sChangedBy"]?.ToString() is { Length: > 0 } name ? name : null
             ));
         }
         return Ok(history);
