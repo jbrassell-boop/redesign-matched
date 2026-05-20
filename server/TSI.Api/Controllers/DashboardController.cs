@@ -38,6 +38,10 @@ public class DashboardController(IConfiguration config) : ControllerBase
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
+        // Mandatory location scope — KPI cards on dashboard show the user's
+        // own location only. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -57,11 +61,13 @@ public class DashboardController(IConfiguration config) : ControllerBase
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-            WHERE {KpiRepairScopeWhere}
+            WHERE r.lServiceLocationKey = @locationKey
+              AND {KpiRepairScopeWhere}
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 60;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var reader = await cmd.ExecuteReaderAsync();
 
         if (!await reader.ReadAsync())
@@ -249,39 +255,46 @@ public class DashboardController(IConfiguration config) : ControllerBase
     [HttpGet("briefing")]
     public async Task<IActionResult> GetBriefing()
     {
+        // Mandatory location scope — morning briefing reflects user's own
+        // location only. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
         var yesterday = DateTime.Today.AddDays(-1);
-        // Each subquery applies KpiRepairScopeWhere via department join.
+        // Each subquery applies KpiRepairScopeWhere via department join
+        // AND r.lServiceLocationKey = @locationKey for location scoping.
         // Inlined because each subquery has its own date predicate.
         await using var cmd = new SqlCommand($@"
             SELECT
                 (SELECT COUNT(*) FROM tblRepair r
                   LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-                  WHERE CAST(r.dtDateIn AS DATE) = @yesterday AND {KpiRepairScopeWhere}) AS Received,
+                  WHERE CAST(r.dtDateIn AS DATE) = @yesterday AND r.lServiceLocationKey = @locationKey AND {KpiRepairScopeWhere}) AS Received,
                 -- Use dtShipDate when set, fall back to dtDateOut. ~46% of legacy closed
                 -- repairs have only dtDateOut (Goldmine quirk); without COALESCE we silently
                 -- undercount shipments by 30-40%. Phase 76 backfill heals existing data.
                 (SELECT COUNT(*) FROM tblRepair r
                   LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-                  WHERE CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = @yesterday AND {KpiRepairScopeWhere}) AS Shipped,
+                  WHERE CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = @yesterday AND r.lServiceLocationKey = @locationKey AND {KpiRepairScopeWhere}) AS Shipped,
                 (SELECT COUNT(*) FROM tblRepair r
                   LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-                  WHERE CAST(r.dtAprRecvd AS DATE) = @yesterday AND {KpiRepairScopeWhere}) AS Approved,
+                  WHERE CAST(r.dtAprRecvd AS DATE) = @yesterday AND r.lServiceLocationKey = @locationKey AND {KpiRepairScopeWhere}) AS Approved,
                 (SELECT ISNULL(SUM(r.dblAmtRepair), 0) FROM tblRepair r
                   LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-                  WHERE CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = @yesterday AND {KpiRepairScopeWhere}) AS Revenue,
+                  WHERE CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = @yesterday AND r.lServiceLocationKey = @locationKey AND {KpiRepairScopeWhere}) AS Revenue,
                 (SELECT ISNULL(AVG(CAST(DATEDIFF(DAY, r.dtDateIn, ISNULL(r.dtDateOut, GETDATE())) AS DECIMAL(10,1))), 0)
                  FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
                   LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-                 WHERE rs.sRepairStatus NOT IN ('Cancelled','Closed') AND {KpiRepairScopeWhere}) AS AvgTat,
+                 WHERE rs.sRepairStatus NOT IN ('Cancelled','Closed') AND r.lServiceLocationKey = @locationKey AND {KpiRepairScopeWhere}) AS AvgTat,
                 (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
                   LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
                  WHERE ISNULL(r.sRepairClosed, 'N') != 'Y'
+                 AND r.lServiceLocationKey = @locationKey
                  AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) > 14 AND {KpiRepairScopeWhere}) AS Overdue
         ", conn);
         cmd.CommandTimeout = 60;
         cmd.Parameters.AddWithValue("@yesterday", yesterday);
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var rdr = await cmd.ExecuteReaderAsync();
         await rdr.ReadAsync();
         var briefing = new BriefingStats(
@@ -301,10 +314,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             WHERE (CAST(r.dtDateIn AS DATE) = @yesterday OR CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = @yesterday)
+              AND r.lServiceLocationKey = @locationKey
               AND {KpiRepairScopeWhere}
             GROUP BY st.sRigidOrFlexible
         ", conn);
         flowCmd.Parameters.AddWithValue("@yesterday", yesterday);
+        flowCmd.Parameters.AddWithValue("@locationKey", locationKey);
         flowCmd.CommandTimeout = 60;
         await using var flowRdr = await flowCmd.ExecuteReaderAsync();
         var flow = new List<object>();
@@ -552,12 +567,16 @@ public class DashboardController(IConfiguration config) : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
+        // Mandatory location scope — shipping queue is per-location.
+        // See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
         // KPI dashboard repair scope — applied to all shipping segments so cloud
         // reconciles to the KPI framework's NR/SR repair scope.
-        var where = new List<string> { KpiRepairScopeWhere };
+        var where = new List<string> { "r.lServiceLocationKey = @locationKey", KpiRepairScopeWhere };
         if (segment == "ready")
             where.Add("rs.sRepairStatus IN ('Complete','Pending Ship') AND r.sShipTrackingNumber IS NULL");
         else if (segment == "today")
@@ -609,11 +628,13 @@ public class DashboardController(IConfiguration config) : ControllerBase
 
         await using var countCmd = new SqlCommand(countSql, conn);
         countCmd.CommandTimeout = 60;
+        countCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 60;
+        dataCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -649,10 +670,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-            WHERE {KpiRepairScopeWhere}
+            WHERE r.lServiceLocationKey = @locationKey
+              AND {KpiRepairScopeWhere}
             """;
         await using var shipStatsCmd = new SqlCommand(shipStatsSql, conn);
         shipStatsCmd.CommandTimeout = 60;
+        shipStatsCmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var shipStatsReader = await shipStatsCmd.ExecuteReaderAsync();
         int readyToShip = 0, shippedToday = 0; decimal totalCharges = 0;
         if (await shipStatsReader.ReadAsync())
@@ -871,10 +894,14 @@ public class DashboardController(IConfiguration config) : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
+        // Mandatory location scope — techs see their own bench only.
+        // See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string> { "ISNULL(r.sRepairClosed, 'N') != 'Y'", KpiRepairScopeWhere };
+        var where = new List<string> { "ISNULL(r.sRepairClosed, 'N') != 'Y'", "r.lServiceLocationKey = @locationKey", KpiRepairScopeWhere };
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("""
                 (r.sWorkOrderNumber LIKE @search
@@ -918,12 +945,14 @@ public class DashboardController(IConfiguration config) : ControllerBase
 
         await using var countCmd = new SqlCommand(countSql, conn);
         countCmd.CommandTimeout = 60;
+        countCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter)) countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 60;
+        dataCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter)) dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -956,10 +985,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-            WHERE {KpiRepairScopeWhere}
+            WHERE r.lServiceLocationKey = @locationKey
+              AND {KpiRepairScopeWhere}
             """;
         await using var tbStatsCmd = new SqlCommand(tbStatsSql, conn);
         tbStatsCmd.CommandTimeout = 60;
+        tbStatsCmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var tbStatsReader = await tbStatsCmd.ExecuteReaderAsync();
         int tbAssigned = 0, tbInRepair = 0, tbOnHold = 0, tbCompleted = 0;
         if (await tbStatsReader.ReadAsync())
@@ -978,6 +1009,9 @@ public class DashboardController(IConfiguration config) : ControllerBase
     [HttpGet("analytics")]
     public async Task<IActionResult> GetAnalytics()
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -990,10 +1024,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-            WHERE {KpiRepairScopeWhere}
+            WHERE r.lServiceLocationKey = @locationKey
+              AND {KpiRepairScopeWhere}
             """;
         await using var aStatsCmd = new SqlCommand(aStatsSql, conn);
         aStatsCmd.CommandTimeout = 60;
+        aStatsCmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var aStatsReader = await aStatsCmd.ExecuteReaderAsync();
         int inHouse = 0, throughput = 0; decimal avgTat = 0;
         if (await aStatsReader.ReadAsync())
@@ -1017,12 +1053,14 @@ public class DashboardController(IConfiguration config) : ControllerBase
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-            WHERE {KpiRepairScopeWhere}
+            WHERE r.lServiceLocationKey = @locationKey
+              AND {KpiRepairScopeWhere}
             GROUP BY st.sScopeTypeDesc
             ORDER BY COUNT(*) DESC
             """;
         await using var metricsCmd = new SqlCommand(metricsSql, conn);
         metricsCmd.CommandTimeout = 60;
+        metricsCmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var metricsReader = await metricsCmd.ExecuteReaderAsync();
         var metrics = new List<DashboardAnalyticsMetric>();
         int rank = 0;
@@ -1047,6 +1085,9 @@ public class DashboardController(IConfiguration config) : ControllerBase
     [HttpGet("executive-kpi")]
     public async Task<IActionResult> GetExecutiveKpi()
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -1093,11 +1134,13 @@ public class DashboardController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             WHERE r.dtDateIn >= DATEADD(YEAR, -2, GETDATE())
+              AND r.lServiceLocationKey = @locationKey
               AND {KpiRepairScopeWhere}
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 60;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var rdr = await cmd.ExecuteReaderAsync();
         if (!await rdr.ReadAsync()) return Ok(new { });
 
