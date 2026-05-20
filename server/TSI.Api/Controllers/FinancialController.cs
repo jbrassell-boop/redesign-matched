@@ -437,11 +437,13 @@ public class FinancialController(IConfiguration config) : ControllerBase
         var paidResult = await paidCmd.ExecuteScalarAsync();
         var paidMTD = paidResult == null || paidResult == DBNull.Value ? 0.0 : Convert.ToDouble(paidResult);
 
-        // Revenue MTD from tblRepair (shipped revenue — consistent with Dashboard KPIs)
+        // Revenue MTD from tblRepair (shipped revenue — consistent with Dashboard KPIs).
+        // COALESCE(dtShipDate, dtDateOut) — ~46% of legacy closed repairs only have
+        // dtDateOut populated (Goldmine workflow quirk). Migration phase 76 backfills
+        // existing data; this COALESCE guards against future drift.
         const string revMtdSql = """
             SELECT ISNULL(SUM(dblAmtRepair), 0) FROM tblRepair
-            WHERE dtShipDate IS NOT NULL
-              AND CAST(dtShipDate AS DATE) >= DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)
+            WHERE CAST(COALESCE(dtShipDate, dtDateOut) AS DATE) >= DATEADD(month, DATEDIFF(month, 0, GETDATE()), 0)
               AND dblAmtRepair > 0
             """;
         await using var revMtdCmd = new SqlCommand(revMtdSql, conn);

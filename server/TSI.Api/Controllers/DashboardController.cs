@@ -19,13 +19,17 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // dtShipDate / dtDateOut: ~46% of legacy closed repairs have dtShipDate
+        // NULL even when dtDateOut is set (Goldmine workflow quirk). The cloud
+        // backfill (migration phase 76) heals existing data; COALESCE here is
+        // defense-in-depth against future ingest that re-introduces the gap.
         const string sql = """
             SELECT
                 SUM(CASE WHEN ISNULL(r.sRepairClosed, 'N') != 'Y' THEN 1 ELSE 0 END) AS OpenRepairs,
                 SUM(CASE WHEN r.bHotList = 1 AND ISNULL(r.sRepairClosed, 'N') != 'Y' THEN 1 ELSE 0 END) AS UrgentRepairs,
                 SUM(CASE WHEN rs.sRepairStatus = 'Pending QC' THEN 1 ELSE 0 END) AS PendingQC,
                 SUM(CASE WHEN rs.sRepairStatus = 'Pending Ship' THEN 1 ELSE 0 END) AS PendingShip,
-                SUM(CASE WHEN r.dtDateOut IS NOT NULL AND CAST(r.dtShipDate AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS CompletedToday,
+                SUM(CASE WHEN CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS CompletedToday,
                 SUM(CASE WHEN CAST(r.dtDateIn AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS ReceivedToday
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
@@ -220,11 +224,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var cmd = new SqlCommand(@"
             SELECT
                 (SELECT COUNT(*) FROM tblRepair WHERE CAST(dtDateIn AS DATE) = @yesterday) AS Received,
-                -- Use dtShipDate (physical ship date) to count shipped; dtDateOut is repair-complete
-                -- date which may not match the actual dispatch date in the legacy workflow.
-                (SELECT COUNT(*) FROM tblRepair WHERE dtShipDate IS NOT NULL AND CAST(dtShipDate AS DATE) = @yesterday) AS Shipped,
+                -- Use dtShipDate when set, fall back to dtDateOut. ~46% of legacy closed
+                -- repairs have only dtDateOut (Goldmine quirk); without COALESCE we silently
+                -- undercount shipments by 30-40%. Phase 76 backfill heals existing data.
+                (SELECT COUNT(*) FROM tblRepair WHERE CAST(COALESCE(dtShipDate, dtDateOut) AS DATE) = @yesterday) AS Shipped,
                 (SELECT COUNT(*) FROM tblRepair WHERE CAST(dtAprRecvd AS DATE) = @yesterday) AS Approved,
-                (SELECT ISNULL(SUM(dblAmtRepair), 0) FROM tblRepair WHERE dtShipDate IS NOT NULL AND CAST(dtShipDate AS DATE) = @yesterday) AS Revenue,
+                (SELECT ISNULL(SUM(dblAmtRepair), 0) FROM tblRepair WHERE CAST(COALESCE(dtShipDate, dtDateOut) AS DATE) = @yesterday) AS Revenue,
                 (SELECT ISNULL(AVG(CAST(DATEDIFF(DAY, dtDateIn, ISNULL(dtDateOut, GETDATE())) AS DECIMAL(10,1))), 0)
                  FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
                  WHERE rs.sRepairStatus NOT IN ('Cancelled','Closed')) AS AvgTat,
@@ -242,16 +247,16 @@ public class DashboardController(IConfiguration config) : ControllerBase
         );
         await rdr.CloseAsync();
 
-        // Flow breakdown by scope type
+        // Flow breakdown by scope type — see note above on COALESCE(dtShipDate, dtDateOut)
         await using var flowCmd = new SqlCommand(@"
             SELECT
                 ISNULL(st.sRigidOrFlexible, 'O') AS ScopeCategory,
                 SUM(CASE WHEN CAST(r.dtDateIn AS DATE) = @yesterday THEN 1 ELSE 0 END) AS ReceivedYesterday,
-                SUM(CASE WHEN r.dtShipDate IS NOT NULL AND CAST(r.dtShipDate AS DATE) = @yesterday THEN 1 ELSE 0 END) AS ShippedYesterday
+                SUM(CASE WHEN CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = @yesterday THEN 1 ELSE 0 END) AS ShippedYesterday
             FROM tblRepair r
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
-            WHERE CAST(r.dtDateIn AS DATE) = @yesterday OR (r.dtShipDate IS NOT NULL AND CAST(r.dtShipDate AS DATE) = @yesterday)
+            WHERE CAST(r.dtDateIn AS DATE) = @yesterday OR CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = @yesterday
             GROUP BY st.sRigidOrFlexible
         ", conn);
         flowCmd.Parameters.AddWithValue("@yesterday", yesterday);
@@ -509,7 +514,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
         if (segment == "ready")
             where.Add("rs.sRepairStatus IN ('Complete','Pending Ship') AND r.sShipTrackingNumber IS NULL");
         else if (segment == "today")
-            where.Add("r.sShipTrackingNumber IS NOT NULL AND CAST(r.dtShipDate AS DATE) = CAST(GETDATE() AS DATE)");
+            where.Add("r.sShipTrackingNumber IS NOT NULL AND CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = CAST(GETDATE() AS DATE)");
         // segment == "all" -> shipped items, no extra filter on date
         else if (segment == "all")
             where.Add("r.sShipTrackingNumber IS NOT NULL");
@@ -588,11 +593,11 @@ public class DashboardController(IConfiguration config) : ControllerBase
         }
         await dataReader.CloseAsync();
 
-        // Stats
+        // Stats — see COALESCE note above on dtShipDate vs dtDateOut
         const string shipStatsSql = """
             SELECT
                 SUM(CASE WHEN rs.sRepairStatus IN ('Complete','Pending Ship') AND r.sShipTrackingNumber IS NULL THEN 1 ELSE 0 END) AS ReadyToShip,
-                SUM(CASE WHEN r.sShipTrackingNumber IS NOT NULL AND CAST(r.dtShipDate AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS ShippedToday,
+                SUM(CASE WHEN r.sShipTrackingNumber IS NOT NULL AND CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS ShippedToday,
                 SUM(CASE WHEN r.sShipTrackingNumber IS NOT NULL THEN ISNULL(r.dblAmtShipping,0) ELSE 0 END) AS TotalCharges
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
@@ -890,13 +895,13 @@ public class DashboardController(IConfiguration config) : ControllerBase
         }
         await dataReader.CloseAsync();
 
-        // Stats
+        // Stats — see COALESCE note above on dtShipDate vs dtDateOut
         const string tbStatsSql = """
             SELECT
                 SUM(CASE WHEN r.lTechnicianKey IS NOT NULL AND ISNULL(r.sRepairClosed, 'N') != 'Y' THEN 1 ELSE 0 END) AS Assigned,
                 SUM(CASE WHEN rs.sRepairStatus = 'In Repair' THEN 1 ELSE 0 END) AS InRepair,
                 SUM(CASE WHEN rs.sRepairStatus IN ('On Hold','Parts Hold','Approval Hold') THEN 1 ELSE 0 END) AS OnHold,
-                SUM(CASE WHEN rs.sRepairStatus IN ('Complete','Shipped') AND CAST(r.dtShipDate AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS CompletedToday
+                SUM(CASE WHEN rs.sRepairStatus IN ('Complete','Shipped') AND CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS CompletedToday
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             """;
@@ -923,12 +928,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Stats
+        // Stats — see COALESCE note above on dtShipDate vs dtDateOut
         const string aStatsSql = """
             SELECT
                 SUM(CASE WHEN ISNULL(r.sRepairClosed, 'N') != 'Y' THEN 1 ELSE 0 END) AS InHouse,
-                AVG(CASE WHEN r.dtDateOut IS NOT NULL THEN CAST(DATEDIFF(day, r.dtDateIn, r.dtShipDate) AS DECIMAL(10,1)) END) AS AvgTat,
-                COUNT(CASE WHEN r.dtDateOut IS NOT NULL AND MONTH(r.dtShipDate) = MONTH(GETDATE()) AND YEAR(r.dtShipDate) = YEAR(GETDATE()) THEN 1 END) AS Throughput
+                AVG(CASE WHEN r.dtDateOut IS NOT NULL THEN CAST(DATEDIFF(day, r.dtDateIn, COALESCE(r.dtShipDate, r.dtDateOut)) AS DECIMAL(10,1)) END) AS AvgTat,
+                COUNT(CASE WHEN r.dtDateOut IS NOT NULL AND MONTH(COALESCE(r.dtShipDate, r.dtDateOut)) = MONTH(GETDATE()) AND YEAR(COALESCE(r.dtShipDate, r.dtDateOut)) = YEAR(GETDATE()) THEN 1 END) AS Throughput
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             """;
@@ -944,12 +949,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
         }
         await aStatsReader.CloseAsync();
 
-        // Top scope types by volume
+        // Top scope types by volume — see COALESCE note above on dtShipDate vs dtDateOut
         const string metricsSql = """
             SELECT TOP 20
                    ISNULL(st.sScopeTypeDesc,'Unknown') AS ScopeType,
                    COUNT(*) AS RepairCount,
-                   AVG(CASE WHEN r.dtDateOut IS NOT NULL THEN CAST(DATEDIFF(day, r.dtDateIn, r.dtShipDate) AS DECIMAL(10,1)) END) AS AvgTat,
+                   AVG(CASE WHEN r.dtDateOut IS NOT NULL THEN CAST(DATEDIFF(day, r.dtDateIn, COALESCE(r.dtShipDate, r.dtDateOut)) AS DECIMAL(10,1)) END) AS AvgTat,
                    SUM(CASE WHEN ISNULL(r.sRepairClosed, 'N') != 'Y' THEN 1 ELSE 0 END) AS InProgress,
                    SUM(CASE WHEN r.dtDateOut IS NOT NULL THEN 1 ELSE 0 END) AS Completed
             FROM tblRepair r
@@ -995,35 +1000,36 @@ public class DashboardController(IConfiguration config) : ControllerBase
             DECLARE @lastMonthEnd DATE = DATEADD(DAY, -1, @monthStart);
             DECLARE @weekStart DATE = DATEADD(DAY, -7, @today);
 
-            -- Use dtShipDate (actual physical ship date) for all "shipped this period" metrics,
-            -- consistent with the analytics endpoint. dtDateOut is the internal repair-complete
-            -- date and may not be populated when dtShipDate is set (legacy workflow variation).
+            -- "Shipped" uses COALESCE(dtShipDate, dtDateOut). dtShipDate is the
+            -- preferred source of truth (physical ship date), but ~46% of legacy
+            -- closed repairs from Goldmine have only dtDateOut populated. Migration
+            -- phase 76 backfills existing rows; COALESCE here protects future ingest.
             -- For AvgTat: prefer completed repairs this month; fall back to in-flight TAT when
             -- no repairs have shipped yet this month (e.g. first days of a new month).
             SELECT
               SUM(CASE WHEN r.dtDateIn >= @weekStart THEN 1 ELSE 0 END) AS ReceivedThisWeek,
-              SUM(CASE WHEN r.dtShipDate IS NOT NULL AND CAST(r.dtShipDate AS DATE) >= @weekStart THEN 1 ELSE 0 END) AS ShippedThisWeek,
+              SUM(CASE WHEN CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) >= @weekStart THEN 1 ELSE 0 END) AS ShippedThisWeek,
               SUM(CASE WHEN r.dtDateIn >= @monthStart THEN 1 ELSE 0 END) AS ReceivedThisMonth,
-              SUM(CASE WHEN r.dtShipDate IS NOT NULL AND CAST(r.dtShipDate AS DATE) >= @monthStart THEN 1 ELSE 0 END) AS ShippedThisMonth,
+              SUM(CASE WHEN CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) >= @monthStart THEN 1 ELSE 0 END) AS ShippedThisMonth,
               -- AvgTat: completed repairs this month; if none yet, use in-flight TAT for open repairs
               ISNULL(
-                NULLIF(AVG(CASE WHEN r.dtShipDate IS NOT NULL AND CAST(r.dtShipDate AS DATE) >= @monthStart
-                  THEN CAST(DATEDIFF(DAY, r.dtDateIn, r.dtShipDate) AS DECIMAL(10,1)) END), 0),
+                NULLIF(AVG(CASE WHEN CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) >= @monthStart
+                  THEN CAST(DATEDIFF(DAY, r.dtDateIn, COALESCE(r.dtShipDate, r.dtDateOut)) AS DECIMAL(10,1)) END), 0),
                 AVG(CASE WHEN ISNULL(r.sRepairClosed, 'N') != 'Y' AND r.dtDateIn IS NOT NULL
                   THEN CAST(DATEDIFF(DAY, r.dtDateIn, GETDATE()) AS DECIMAL(10,1)) END)
               ) AS AvgTatThisMonth,
-              ISNULL(AVG(CASE WHEN r.dtShipDate IS NOT NULL AND CAST(r.dtShipDate AS DATE) >= @lastMonthStart AND CAST(r.dtShipDate AS DATE) <= @lastMonthEnd
-                THEN CAST(DATEDIFF(DAY, r.dtDateIn, r.dtShipDate) AS DECIMAL(10,1)) END), 0) AS AvgTatLastMonth,
+              ISNULL(AVG(CASE WHEN CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) >= @lastMonthStart AND CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) <= @lastMonthEnd
+                THEN CAST(DATEDIFF(DAY, r.dtDateIn, COALESCE(r.dtShipDate, r.dtDateOut)) AS DECIMAL(10,1)) END), 0) AS AvgTatLastMonth,
               SUM(CASE WHEN ISNULL(r.sRepairClosed, 'N') != 'Y' AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) BETWEEN 1 AND 7 THEN 1 ELSE 0 END) AS Backlog1to7,
               SUM(CASE WHEN ISNULL(r.sRepairClosed, 'N') != 'Y' AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) BETWEEN 8 AND 14 THEN 1 ELSE 0 END) AS Backlog8to14,
               SUM(CASE WHEN ISNULL(r.sRepairClosed, 'N') != 'Y' AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) BETWEEN 15 AND 30 THEN 1 ELSE 0 END) AS Backlog15to30,
               SUM(CASE WHEN ISNULL(r.sRepairClosed, 'N') != 'Y' AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) > 30 THEN 1 ELSE 0 END) AS Backlog30Plus,
-              ISNULL(SUM(CASE WHEN r.dtShipDate IS NOT NULL AND CAST(r.dtShipDate AS DATE) >= @monthStart THEN r.dblAmtRepair ELSE 0 END), 0) AS RevenueThisMonth,
-              ISNULL(SUM(CASE WHEN r.dtShipDate IS NOT NULL AND CAST(r.dtShipDate AS DATE) >= @lastMonthStart AND CAST(r.dtShipDate AS DATE) <= @lastMonthEnd THEN r.dblAmtRepair ELSE 0 END), 0) AS RevenueLastMonth,
+              ISNULL(SUM(CASE WHEN CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) >= @monthStart THEN r.dblAmtRepair ELSE 0 END), 0) AS RevenueThisMonth,
+              ISNULL(SUM(CASE WHEN CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) >= @lastMonthStart AND CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) <= @lastMonthEnd THEN r.dblAmtRepair ELSE 0 END), 0) AS RevenueLastMonth,
               0 AS WarrantyItemsMonth,
               0 AS TotalItemsMonth,
-              SUM(CASE WHEN r.dtShipDate IS NOT NULL AND CAST(r.dtShipDate AS DATE) >= @monthStart AND DATEDIFF(DAY, r.dtDateIn, r.dtShipDate) <= 14 THEN 1 ELSE 0 END) AS OnTimeShipped,
-              SUM(CASE WHEN r.dtShipDate IS NOT NULL AND CAST(r.dtShipDate AS DATE) >= @monthStart THEN 1 ELSE 0 END) AS TotalShippedMonth
+              SUM(CASE WHEN CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) >= @monthStart AND DATEDIFF(DAY, r.dtDateIn, COALESCE(r.dtShipDate, r.dtDateOut)) <= 14 THEN 1 ELSE 0 END) AS OnTimeShipped,
+              SUM(CASE WHEN CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) >= @monthStart THEN 1 ELSE 0 END) AS TotalShippedMonth
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             WHERE r.dtDateIn >= DATEADD(YEAR, -2, GETDATE())
