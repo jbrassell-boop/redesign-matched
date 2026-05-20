@@ -106,8 +106,7 @@ export interface RepairFull {
   discountPct?: number | null;
   // Financial
   amountApproved?: number; invoiceNumber?: string;
-  // Latest non-void invoice (from tblInvoice). Drafts have no sInvoiceNumber until
-  // finalized — UI uses latestInvoiceKey + latestInvoiceStatus to render "Draft #NNNN".
+  // Invoice for this repair (1:1 with tblInvoice). sTranNumber is always populated.
   latestInvoiceKey?: number | null;
   latestInvoiceStatus?: string | null;
   latestInvoiceNumber?: string | null;

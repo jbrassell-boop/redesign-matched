@@ -158,14 +158,7 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
               <div>
                 <div style={invoiceLabelStyle}>Invoice Number</div>
                 <div style={invoiceNumStyle}>
-                  {/* Show finalized invoice number when present; otherwise fall back to
-                      the latest draft from tblInvoice as "Draft #NNNN". tblRepair.sInvoiceNumber
-                      is only populated on finalize. */}
-                  {repair.invoiceNumber
-                    || repair.latestInvoiceNumber
-                    || (repair.latestInvoiceKey
-                        ? `${repair.latestInvoiceStatus ?? 'Draft'} #${repair.latestInvoiceKey}`
-                        : '—')}
+                  {repair.latestInvoiceNumber || repair.invoiceNumber || '—'}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -178,7 +171,7 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
                 { label: 'Draft Invoice', onClick: async () => {
                   try {
                     const r = await createDraftInvoice(repair.repairKey);
-                    message.success(`Draft invoice #${r.invoiceKey} created`);
+                    message.success(`Draft invoice ${r.invoiceNumber || r.invoiceKey} created`);
                     onRepairChanged?.();
                   } catch { message.error('Failed to create draft invoice'); }
                 } },
