@@ -26,10 +26,19 @@ public class LoanersController(
         [FromQuery] string? statusFilter = null,
         [FromQuery] int? salesRepKey = null)
     {
+        // Mandatory location scope. Loaners are scoped by HOME location —
+        // the service location of the scope's home department (tblScope.
+        // lDepartmentKey → tblDepartment.lServiceLocationKey). A UC-home
+        // loaner currently checked out to a Nashville client still appears
+        // on UC's loaner list (it'll come back to UC). Simplest defensible
+        // model; revisit if business preference says otherwise.
+        // See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string>();
+        var where = new List<string> { "scope_dept.lServiceLocationKey = @locationKey" };
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("""
                 (st.sScopeTypeDesc LIKE @search
@@ -102,6 +111,7 @@ public class LoanersController(
                 LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
                 LEFT JOIN tblRepair r ON r.lRepairKey = lt.lRepairKey
                 LEFT JOIN tblSalesRep sr ON sr.lSalesRepKey = lt.lSalesRepKey
+                LEFT JOIN tblDepartment scope_dept ON scope_dept.lDepartmentKey = s.lDepartmentKey
                 {whereClause}
             )
             SELECT *, COUNT(*) OVER() AS TotalCount
@@ -113,6 +123,7 @@ public class LoanersController(
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) cmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (salesRepKey.HasValue) cmd.Parameters.AddWithValue("@salesRepKey", salesRepKey.Value);
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "All")
