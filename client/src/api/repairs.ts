@@ -228,7 +228,7 @@ export const getRepairInventoryUsage = async (repairKey: number) => {
 // ── Draft Invoice ──
 export const createDraftInvoice = async (repairKey: number) => {
   const { data } = await apiClient.post(`/repairs/${repairKey}/draft-invoice`);
-  return data as { invoiceKey: number };
+  return data as { invoiceKey: number; invoiceNumber?: string };
 };
 
 // ── Create Repair ──

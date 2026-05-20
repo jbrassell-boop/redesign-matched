@@ -159,6 +159,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
                    ISNULL(sr.sRepFirst + ' ' + sr.sRepLast, '') AS SalesRep,
                    d.lPricingCategoryKey,
                    pc.sPricingDescription,
+                   c.dblDiscountPct,
                    d.dblShippingAmt,
                    d.sBillName1, d.sBillAddr1, d.sBillAddr2, d.sBillCity, d.sBillState, d.sBillZip, d.sBillEmail,
                    d.sMailAddr1, d.sMailAddr2, d.sMailCity, d.sMailState, d.sMailZip, d.sMailCountry,
@@ -212,7 +213,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
             SalesRep: reader["SalesRep"]?.ToString(),
             PricingCategoryKey: reader["lPricingCategoryKey"] as int?,
             PricingCategory: reader["sPricingDescription"]?.ToString(),
-            DiscountPct: reader["dblShippingAmt"] == DBNull.Value ? null : (double?)Convert.ToDouble(reader["dblShippingAmt"]),
+            DiscountPct: reader["dblDiscountPct"] == DBNull.Value ? null : (double?)Convert.ToDouble(reader["dblDiscountPct"]),
             DefaultShipping: reader["dblShippingAmt"] == DBNull.Value ? null : (double?)Convert.ToDouble(reader["dblShippingAmt"]),
             BillName1: reader["sBillName1"]?.ToString(),
             BillAddr1: reader["sBillAddr1"]?.ToString(),
@@ -281,13 +282,14 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         cmd.CommandTimeout = 30;
 
         if (update.Name != null) { sets.Add("sDepartmentName = @name"); cmd.Parameters.AddWithValue("@name", update.Name); }
+        if (update.IsActive != null) { sets.Add("bActive = @isActive"); cmd.Parameters.AddWithValue("@isActive", update.IsActive); }
         if (update.Address1 != null) { sets.Add("sShipAddr1 = @addr"); cmd.Parameters.AddWithValue("@addr", update.Address1); }
         if (update.City != null) { sets.Add("sShipCity = @city"); cmd.Parameters.AddWithValue("@city", update.City); }
         if (update.State != null) { sets.Add("sShipState = @state"); cmd.Parameters.AddWithValue("@state", update.State); }
         if (update.Zip != null) { sets.Add("sShipZip = @zip"); cmd.Parameters.AddWithValue("@zip", update.Zip); }
-        // ContactPhone and Phone both map to sContactPhoneVoice — ContactPhone takes precedence
+        // ContactPhone and Phone both map to sContactPhoneNumber — ContactPhone takes precedence
         var phoneValue = update.ContactPhone ?? update.Phone;
-        if (phoneValue != null) { sets.Add("sContactPhoneVoice = @phone"); cmd.Parameters.AddWithValue("@phone", phoneValue); }
+        if (phoneValue != null) { sets.Add("sContactPhoneNumber = @phone"); cmd.Parameters.AddWithValue("@phone", phoneValue); }
         if (update.ContactFirst != null) { sets.Add("sContactFirst = @cfirst"); cmd.Parameters.AddWithValue("@cfirst", update.ContactFirst); }
         if (update.ContactLast != null) { sets.Add("sContactLast = @clast"); cmd.Parameters.AddWithValue("@clast", update.ContactLast); }
         if (update.ContactEmail != null) { sets.Add("sContactEMail = @cemail"); cmd.Parameters.AddWithValue("@cemail", update.ContactEmail); }
@@ -303,7 +305,6 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         // Billing
         // DefaultShipping maps to dblShippingAmt (tblDepartment has no separate discount column)
         if (update.DefaultShipping != null) { sets.Add("dblShippingAmt = @defaultship"); cmd.Parameters.AddWithValue("@defaultship", update.DefaultShipping); }
-        else if (update.DiscountPct != null) { sets.Add("dblShippingAmt = @discpct"); cmd.Parameters.AddWithValue("@discpct", update.DiscountPct); }
         // Bill To
         if (update.BillName1 != null) { sets.Add("sBillName1 = @billname1"); cmd.Parameters.AddWithValue("@billname1", update.BillName1); }
         if (update.BillAddr1 != null) { sets.Add("sBillAddr1 = @billaddr1"); cmd.Parameters.AddWithValue("@billaddr1", update.BillAddr1); }
@@ -664,8 +665,8 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
                 FlagKey: Convert.ToInt32(reader["lFlagKey"]),
                 FlagType: reader["sFlagType"]?.ToString() ?? "",
                 Flag: reader["sFlag"]?.ToString() ?? "",
-                VisibleOnDI: Convert.ToBoolean(reader["bVisibleOnDI"]),
-                VisibleOnBlank: Convert.ToBoolean(reader["bVisibleOnBlank"])
+                VisibleOnDI: reader["bVisibleOnDI"] != DBNull.Value && Convert.ToBoolean(reader["bVisibleOnDI"]),
+                VisibleOnBlank: reader["bVisibleOnBlank"] != DBNull.Value && Convert.ToBoolean(reader["bVisibleOnBlank"])
             ));
         }
 
@@ -937,7 +938,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         const string sql = """
             INSERT INTO tblDepartment
                 (lClientKey, sDepartmentName, sShipAddr1, sShipCity, sShipState, sShipZip,
-                 sContactPhoneVoice, sContactFirst, sContactLast, sContactEMail,
+                 sContactPhoneNumber, sContactFirst, sContactLast, sContactEMail,
                  lShippingCarrierKey, lServiceLocationKey, dtCreateDate, bActive,
                  bIncludeConsumptionReportWithReq, bEnforceScopeTypeFiltering,
                  sDispProductID, bDisplayUAorNWT, bDisplayItemDescription,

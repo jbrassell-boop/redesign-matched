@@ -571,11 +571,13 @@ public class LoanersController(
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Step 1: Verify scope exists, also pull the dept's service-location key
-        // so the loaner-tracking repair WO carries the right N/S/F prefix.
+        // Step 1: Verify scope exists, pull dept key + service-location key
+        // so the loaner-tracking repair has a proper department and WO prefix.
         int serviceLocationKey;
+        int departmentKey;
         await using (var scopeCmd = new SqlCommand(@"
             SELECT s.lScopeTypeKey,
+                   ISNULL(s.lDepartmentKey, 0) AS lDepartmentKey,
                    ISNULL(d.lServiceLocationKey, 1) AS lServiceLocationKey
             FROM tblScope s
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = s.lDepartmentKey
@@ -588,6 +590,17 @@ public class LoanersController(
                 return NotFound("Scope not found");
             serviceLocationKey = scopeReader["lServiceLocationKey"] is null or DBNull
                 ? 1 : Convert.ToInt32(scopeReader["lServiceLocationKey"]);
+            departmentKey = scopeReader["lDepartmentKey"] is null or DBNull
+                ? 0 : Convert.ToInt32(scopeReader["lDepartmentKey"]);
+        }
+
+        // Resolve "Received" status for the new repair row
+        int repairStatusId;
+        await using (var statusCmd = new SqlCommand(
+            "SELECT TOP 1 lRepairStatusID FROM tblRepairStatuses WHERE sRepairStatus = 'Received' ORDER BY lRepairStatusSortOrder", conn))
+        {
+            var statusObj = await statusCmd.ExecuteScalarAsync();
+            repairStatusId = statusObj is not null and not DBNull ? Convert.ToInt32(statusObj) : 1;
         }
 
         // Step 2: Generate next WO number via the canonical proc.
@@ -601,9 +614,11 @@ public class LoanersController(
         var repairSql = """
             DISABLE TRIGGER ALL ON tblRepair;
             INSERT INTO tblRepair
-                (lScopeKey, sWorkOrderNumber, bLoanerRequested, dtCreateDate, lCreateUser)
+                (lScopeKey, lDepartmentKey, lRepairStatusID, sWorkOrderNumber,
+                 dtDateIn, bLoanerRequested, dtCreateDate, lCreateUser)
             VALUES
-                (@scopeKey, @wo, 0, GETDATE(), @userKey);
+                (@scopeKey, @deptKey, @statusId, @wo,
+                 GETDATE(), 0, GETDATE(), @userKey);
             ENABLE TRIGGER ALL ON tblRepair;
             SELECT SCOPE_IDENTITY();
             """;
@@ -611,6 +626,8 @@ public class LoanersController(
         await using var repairCmd = new SqlCommand(repairSql, conn);
         repairCmd.CommandTimeout = 30;
         repairCmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
+        repairCmd.Parameters.AddWithValue("@deptKey", departmentKey > 0 ? departmentKey : DBNull.Value);
+        repairCmd.Parameters.AddWithValue("@statusId", repairStatusId);
         repairCmd.Parameters.AddWithValue("@wo", woNumber);
         repairCmd.Parameters.AddWithValue("@userKey", this.GetCurrentUserKey());
         var repairKey = Convert.ToInt32(await repairCmd.ExecuteScalarAsync());

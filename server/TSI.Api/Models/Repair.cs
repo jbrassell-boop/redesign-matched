@@ -151,9 +151,11 @@ public record RepairFull(
     int? PaymentTermsKey,
     int? DistributorKey,
     string? Requisition,
-    // Latest non-void invoice for this repair (from tblInvoice via OUTER APPLY in GetRepairFull).
-    // Draft invoices have no sInvoiceNumber until finalized — the cockpit uses Key + Status to
-    // render "Draft #1733091235" feedback after Create Draft Invoice. NULL when no invoice exists.
+    // Distributor and package type (resolved from lookup tables via lDistributorKey / lPackageTypeKey)
+    string? Distributor = null,
+    string? PackageType = null,
+    // Invoice for this repair (1:1 with tblInvoice). sTranNumber is always populated.
+    // NULL when no invoice exists yet.
     int? LatestInvoiceKey = null,
     string? LatestInvoiceStatus = null,
     string? LatestInvoiceNumber = null

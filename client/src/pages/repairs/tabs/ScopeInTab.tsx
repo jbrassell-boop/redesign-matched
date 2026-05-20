@@ -115,9 +115,9 @@ export const ScopeInTab = ({ repair }: ScopeInTabProps) => {
   const [pricingCategoryKey, setPricingCategoryKey] = useState(repair.pricingCategoryKey ?? 0);
   const [paymentTermsKey, setPaymentTermsKey] = useState(repair.paymentTermsKey ?? 0);
   const [discountPct, setDiscountPct] = useState(repair.discountPct != null ? String(repair.discountPct) : '');
-  const [shippingCostIn, setShippingCostIn] = useState(repair.shippingCostIn != null ? String(repair.shippingCostIn) : '');
+  const [shippingCostIn, setShippingCostIn] = useState(repair.shippingClientIn != null ? String(repair.shippingClientIn) : '');
   const [inboundTracking, setInboundTracking] = useState(repair.trackingNumberIn ?? '');
-  const [requisition, setRequisition] = useState(repair.requisition ?? '');
+  const requisition = repair.requisition ?? '';
   // Ship To
   const [shipName, setShipName] = useState(repair.shipName ?? '');
   const [shipAddr1, setShipAddr1] = useState(repair.shipAddr1 ?? '');
@@ -160,7 +160,7 @@ export const ScopeInTab = ({ repair }: ScopeInTabProps) => {
       <div>
         <Section title="Inbound Shipping" extra={<AutosaveIndicator status={status} />}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px' }}>
-            <F label="Inbound Service Level" value={repair.inboundServiceLevel} />
+            <F label="Inbound Service Level" value={repair.deliveryServiceLevel} />
             <TF label="Inbound Tracking" value={inboundTracking} onChange={onText('inboundTracking', setInboundTracking)} />
             <NF label="Shipping Cost In" value={shippingCostIn} onChange={onNumber('shippingCostIn', setShippingCostIn)} prefix="$" />
             <F label="Distributor" value={repair.distributor} />
@@ -175,7 +175,7 @@ export const ScopeInTab = ({ repair }: ScopeInTabProps) => {
           <div style={{ marginBottom: 6 }}>
             <F label="Name on Approval via Portal" value={repair.approvalName} />
           </div>
-          <TF label="Requisition #" value={requisition} onChange={onText('requisition', setRequisition)} />
+          <F label="Requisition #" value={requisition || '—'} />
         </Section>
 
         <Section title="Sales & Reporting">
@@ -218,9 +218,9 @@ export const ScopeInTab = ({ repair }: ScopeInTabProps) => {
 
         <Section title="Invoice Options">
           {[
-            { key: 'displayComplaintOnInvoice', label: 'Display customer complaint on invoice' },
-            { key: 'displayItemizedDesc',       label: 'Display itemized description' },
-            { key: 'displayItemizedAmounts',    label: 'Display itemized amounts' },
+            { key: 'displayCustomerComplaint', label: 'Display customer complaint on invoice' },
+            { key: 'displayItemDescription',    label: 'Display itemized description' },
+            { key: 'displayItemAmount',         label: 'Display itemized amounts' },
           ].map(({ key, label }) => (
             <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--label)', padding: '3px 0' }}>
               <input type="checkbox" readOnly
@@ -230,7 +230,7 @@ export const ScopeInTab = ({ repair }: ScopeInTabProps) => {
             </div>
           ))}
           <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px' }}>
-            <F label="Bill to Customer / Distro" value={repair.billToCustomer} />
+            <F label="Bill to Customer / Distro" value={repair.billTo} />
             <DF label="Payment Terms" value={paymentTermsKey} options={payTerms} onChange={onDropdown('paymentTermsKey', setPaymentTermsKey)} />
           </div>
         </Section>

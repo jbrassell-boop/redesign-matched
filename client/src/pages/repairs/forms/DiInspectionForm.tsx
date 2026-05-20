@@ -83,7 +83,7 @@ export const DiInspectionForm = ({ repair, onClose }: Props) => {
           <div><span className="dii-fl">Work Order #</span><div className="dii-fv">{repair.wo ?? em}</div></div>
           <div><span className="dii-fl">Serial #</span><div className="dii-fv">{repair.serial ?? em}</div></div>
           <div className="dii-cam-span3"><span className="dii-fl">Complaint</span><div className="dii-fv--tall">{repair.complaint ?? em}</div></div>
-          <div><span className="dii-fl">Rack #</span><div className="dii-fv">{repair.rackLocation ?? em}</div></div>
+          <div><span className="dii-fl">Rack #</span><div className="dii-fv">{repair.rackPosition ?? em}</div></div>
           <div className="dii-cam-span2"><span className="dii-fl">Inspected By</span><div className="dii-fv">&nbsp;</div></div>
         </div>
 

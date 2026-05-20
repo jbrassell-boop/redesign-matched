@@ -797,9 +797,11 @@ public class ProductSalesController(
             // NI26140001-style 10-char numbers, atomic per-day counter.
             var invoiceNumber = await invoiceNumbers.NextAsync('I', serviceLocationKey, conn, txn);
 
-            // B. Generate a unique lInvoiceKey for the snapshot detail rows
+            // B. Generate a unique lInvoiceKey for the snapshot detail rows.
+            // UPDLOCK + HOLDLOCK prevents concurrent reads from generating the
+            // same key when two invoices are created simultaneously.
             await using var maxKeyCmd = new SqlCommand(
-                "SELECT ISNULL(MAX(lInvoiceKey), 0) + 1 FROM tblProductSaleInvoiceDetail", conn, txn);
+                "SELECT ISNULL(MAX(lInvoiceKey), 0) + 1 FROM tblProductSaleInvoiceDetail WITH (UPDLOCK, HOLDLOCK)", conn, txn);
             maxKeyCmd.CommandTimeout = 30;
             var invoiceKey = Convert.ToInt32(await maxKeyCmd.ExecuteScalarAsync());
 

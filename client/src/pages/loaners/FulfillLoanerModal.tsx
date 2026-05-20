@@ -71,7 +71,7 @@ export const FulfillLoanerModal = ({
           message.success(`Repair WO #${res.workOrder} created — scope sent to repair`);
           setSelectedScope(null);
           setStep('pick');
-          getAvailableScopes(scopeTypeKey).then(setScopes).catch(() => {});
+          getAvailableScopes(scopeTypeKey).then(setScopes).catch(() => message.error('Failed to reload available scopes'));
         })
         .catch(() => message.error('Failed to create repair'))
         .finally(() => setSaving(false));

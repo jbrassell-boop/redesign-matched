@@ -287,6 +287,10 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         okText: 'Ship & Invoice',
         onOk: async () => {
           if (trackingValue.trim()) {
+            // TODO: PatchRepairHeaderRequest currently has no outbound tracking field
+            // (e.g. OutboundTracking / ShipTrackingNumberOut). Using inboundTracking
+            // here is a known bug — once the backend PATCH model adds an outbound
+            // tracking property, switch to that field name.
             try {
               await patchRepairHeader(rk, { inboundTracking: trackingValue.trim() });
             } catch {
@@ -534,7 +538,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         <div style={{ flex: 1, overflow: 'auto' }}>
           {activeTab === 'scope-in'    && <ScopeInTab repair={fullRepair} />}
           {activeTab === 'details'     && <DetailsTab repair={fullRepair} flags={flags} />}
-          {activeTab === 'outgoing'    && <OutgoingTab repair={fullRepair} items={lineItems} onRepairChanged={() => resolvedKey && getRepairFull(resolvedKey).then(setFullRepair).catch(() => {})} />}
+          {activeTab === 'outgoing'    && <OutgoingTab repair={fullRepair} items={lineItems} onRepairChanged={() => resolvedKey && getRepairFull(resolvedKey).then(setFullRepair).catch(() => message.error('Failed to reload repair'))} />}
           {activeTab === 'expense'     && <ExpenseTab repairKey={fullRepair.repairKey} />}
           {activeTab === 'inspections' && <InspectionsTab repairKey={fullRepair.repairKey} rigidOrFlexible={fullRepair.rigidOrFlexible} />}
           {activeTab === 'financials'  && <FinancialsTab repairKey={fullRepair.repairKey} />}

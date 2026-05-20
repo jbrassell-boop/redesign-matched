@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using TSI.Api.Models;
+using TSI.Api.Services;
 
 namespace TSI.Api.Controllers;
 
 [ApiController]
 [Route("api/repairs")]
 [Authorize]
-public class RepairsController(IConfiguration config) : ControllerBase
+public class RepairsController(IConfiguration config, IInvoiceNumberService invoiceNumbers) : ControllerBase
 {
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
@@ -259,7 +260,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
                    -- Extended 4-tab fields
                    r.sRackPosition,
                    r.dtReqSent,
-                   c.dblDiscountPct,
+                   ISNULL(r.dblDiscountPct, c.dblDiscountPct) AS dblDiscountPct,
                    r.dblShippingClientIn,
                    r.bTrackingNumberRequired,
                    r.dtDeliveryDateGuaranteed,
@@ -283,23 +284,14 @@ public class RepairsController(IConfiguration config) : ControllerBase
                     ORDER BY r2.lRepairKey DESC) AS DaysLastIn,
                    ISNULL(dist.sDistName1, '') AS sDistributor,
                    ISNULL(pkg.sPackageType, '') AS sPackageType,
-                   -- Latest non-void invoice for this repair (draft or finalized).
-                   -- The invoice number lives in tblInvoice.sTranNumber; drafts have it
-                   -- NULL until finalized. Status derives from bFinalized (1 = finalized,
-                   -- else Draft) since sInvoiceStatus on this schema is nvarchar(0).
+                   -- Invoice for this repair (1:1 — one tblInvoice row per repair).
+                   -- sTranNumber is populated at creation, not deferred to finalization.
                    inv.lInvoiceKey AS latestInvoiceKey,
-                   inv.sLatestInvoiceStatus AS latestInvoiceStatus,
+                   CASE WHEN ISNULL(inv.bFinalized, 0) = 1 THEN 'Finalized' ELSE 'Draft' END AS latestInvoiceStatus,
                    inv.sTranNumber AS latestInvoiceNumber
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
-            OUTER APPLY (
-                SELECT TOP 1 i.lInvoiceKey, i.sTranNumber,
-                       CASE WHEN ISNULL(i.bFinalized, 0) = 1 THEN 'Finalized' ELSE 'Draft' END AS sLatestInvoiceStatus
-                FROM tblInvoice i
-                WHERE i.lRepairKey = r.lRepairKey
-                  AND ISNULL(i.bIsVoid, 0) = 0
-                ORDER BY i.lInvoiceKey DESC
-            ) inv
+            LEFT JOIN tblInvoice inv ON inv.lRepairKey = r.lRepairKey
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
             LEFT JOIN tblScopeTypeCategories stc2 ON stc2.lScopeTypeCategoryKey = st.lScopeTypeCatKey
@@ -423,6 +415,8 @@ public class RepairsController(IConfiguration config) : ControllerBase
             PaymentTermsKey: reader["lPaymentTermsKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lPaymentTermsKey"]),
             DistributorKey: reader["lDistributorKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lDistributorKey"]),
             Requisition: ReadStr("sRequisition"),
+            Distributor: ReadStr("sDistributor"),
+            PackageType: ReadStr("sPackageType"),
             LatestInvoiceKey: reader["latestInvoiceKey"] == DBNull.Value ? null : Convert.ToInt32(reader["latestInvoiceKey"]),
             LatestInvoiceStatus: ReadStr("latestInvoiceStatus"),
             LatestInvoiceNumber: ReadStr("latestInvoiceNumber")
@@ -469,7 +463,6 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 sPS3                      = COALESCE(@psLevel, sPS3),
                 lDistributorKey           = COALESCE(@distributorKey, lDistributorKey),
                 dblShippingClientIn       = COALESCE(@shippingCostIn, dblShippingClientIn),
-                sRequisition              = COALESCE(@requisition, sRequisition),
                 sShipName1                = COALESCE(@shipName, sShipName1),
                 sShipAddr1                = COALESCE(@shipAddr1, sShipAddr1),
                 sShipAddr2                = COALESCE(@shipAddr2, sShipAddr2),
@@ -492,7 +485,11 @@ public class RepairsController(IConfiguration config) : ControllerBase
         cmd.Parameters.AddWithValue("@complaint", (object?)body.Complaint ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@reason", (object?)body.RepairReason ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@inboundTracking", (object?)body.InboundTracking ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@displayCustomerComplaint", (object?)body.DisplayCustomerComplaint ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@displayCustomerComplaint",
+            body.DisplayCustomerComplaint == null ? DBNull.Value
+            : (object)(body.DisplayCustomerComplaint.Equals("true", StringComparison.OrdinalIgnoreCase) ? "Y"
+                     : body.DisplayCustomerComplaint.Equals("false", StringComparison.OrdinalIgnoreCase) ? "N"
+                     : body.DisplayCustomerComplaint));
         cmd.Parameters.AddWithValue("@displayItemDesc", (object?)body.DisplayItemizedDesc ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@displayItemAmt", (object?)body.DisplayItemizedAmounts ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@billTo", (object?)body.BillToCustomer ?? DBNull.Value);
@@ -503,7 +500,6 @@ public class RepairsController(IConfiguration config) : ControllerBase
         cmd.Parameters.AddWithValue("@psLevel", (object?)body.PsLevel ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@distributorKey", (object?)body.DistributorKey ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@shippingCostIn", (object?)body.ShippingCostIn ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@requisition", (object?)body.Requisition ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@shipName", (object?)body.ShipName ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@shipAddr1", (object?)body.ShipAddr1 ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@shipAddr2", (object?)body.ShipAddr2 ?? DBNull.Value);
@@ -538,6 +534,8 @@ public class RepairsController(IConfiguration config) : ControllerBase
                    ISNULL(rit.dblRepairPriceBase, 0) AS dblRepairPriceBase,
                    ISNULL(t.sTechName,'') AS sTechName,
                    ISNULL(rit.sComments,'') AS sComments,
+                   -- AmendmentCount is per-repair (not per-line-item) by design:
+                   -- tblAmendRepairComments has no lRepairItemTranKey column.
                    (SELECT COUNT(*) FROM tblAmendRepairComments a
                     WHERE a.lRepairKey = rit.lRepairKey) AS AmendmentCount
             FROM tblRepairItemTran rit
@@ -768,8 +766,10 @@ public class RepairsController(IConfiguration config) : ControllerBase
 
         const string sql = """
             SELECT sl.lRepairStatusLogID, ISNULL(sl.sRepairStatus, '') AS sRepairStatus,
-                   sl.ChangeDate
+                   sl.ChangeDate,
+                   ISNULL(u.sUserFullName, '') AS sChangedBy
             FROM tblRepairStatusLog sl
+            LEFT JOIN tblUsers u ON u.lUserKey = sl.Created_UserKey
             WHERE sl.lRepairKey = @repairKey
             ORDER BY sl.ChangeDate DESC
             """;
@@ -785,7 +785,7 @@ public class RepairsController(IConfiguration config) : ControllerBase
                 LogId: Convert.ToInt32(reader["lRepairStatusLogID"]),
                 StatusName: reader["sRepairStatus"]?.ToString() ?? "",
                 ChangedAt: reader["ChangeDate"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(reader["ChangeDate"]),
-                ChangedBy: null
+                ChangedBy: reader["sChangedBy"]?.ToString() is { Length: > 0 } name ? name : null
             ));
         }
         return Ok(history);
@@ -1464,46 +1464,67 @@ public class RepairsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Idempotent: if a non-void unfinalized draft already exists for this repair,
-        // refresh its dtTranDate/dblTranAmount and return the existing key. Otherwise
-        // INSERT a new row. Previously a fresh row was created on every click — two
-        // clicks left two pending tblInvoice rows behind.
-        const string sql = """
-            DECLARE @existingKey int;
-            SELECT TOP 1 @existingKey = lInvoiceKey
+        // 1:1 — one tblInvoice row per repair. If one already exists, refresh
+        // its amounts and return it. Otherwise create a new row with sTranNumber
+        // populated immediately (sTranNumber is never deferred to finalization).
+        const string checkSql = """
+            SELECT lInvoiceKey
             FROM tblInvoice
             WHERE lRepairKey = @repairKey
-              AND ISNULL(bIsVoid, 0) = 0
-              AND ISNULL(bFinalized, 0) = 0
-            ORDER BY lInvoiceKey DESC;
+            """;
 
-            IF @existingKey IS NOT NULL
-            BEGIN
+        await using var checkCmd = new SqlCommand(checkSql, conn);
+        checkCmd.CommandTimeout = 30;
+        checkCmd.Parameters.AddWithValue("@repairKey", repairKey);
+        var existing = await checkCmd.ExecuteScalarAsync();
+
+        if (existing is not null and not DBNull)
+        {
+            var existingKey = Convert.ToInt32(existing);
+            const string updateSql = """
                 UPDATE tblInvoice
                 SET dtTranDate = GETDATE(),
                     dblTranAmount = (SELECT ISNULL(dblAmtRepair, 0) FROM tblRepair WHERE lRepairKey = @repairKey)
                 WHERE lInvoiceKey = @existingKey;
-                SELECT @existingKey AS lInvoiceKey;
-            END
-            ELSE
-            BEGIN
-                INSERT INTO tblInvoice (lRepairKey, lClientKey, lDepartmentKey, lScopeKey,
-                    dtTranDate, dblTranAmount, sInvoiceStatus, bIsManual, bIsVoid, bFinalized)
-                OUTPUT INSERTED.lInvoiceKey
-                SELECT r.lRepairKey, d.lClientKey, r.lDepartmentKey, r.lScopeKey,
-                    GETDATE(), ISNULL(r.dblAmtRepair, 0), 'Draft', 0, 0, 0
-                FROM tblRepair r
-                JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-                WHERE r.lRepairKey = @repairKey;
-            END
+                """;
+            await using var updateCmd = new SqlCommand(updateSql, conn);
+            updateCmd.CommandTimeout = 30;
+            updateCmd.Parameters.AddWithValue("@repairKey", repairKey);
+            updateCmd.Parameters.AddWithValue("@existingKey", existingKey);
+            await updateCmd.ExecuteNonQueryAsync();
+            return Ok(new { invoiceKey = existingKey });
+        }
+
+        // Resolve service location for invoice number generation
+        int serviceLocationKey;
+        await using (var svcCmd = new SqlCommand(
+            "SELECT ISNULL(d.lServiceLocationKey, 1) FROM tblRepair r JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey WHERE r.lRepairKey = @rk", conn))
+        {
+            svcCmd.Parameters.AddWithValue("@rk", repairKey);
+            var svcObj = await svcCmd.ExecuteScalarAsync();
+            serviceLocationKey = svcObj is null or DBNull ? 1 : Convert.ToInt32(svcObj);
+        }
+
+        var tranNumber = await invoiceNumbers.NextAsync('R', serviceLocationKey, conn);
+
+        const string insertSql = """
+            INSERT INTO tblInvoice (lRepairKey, lClientKey, lDepartmentKey, lScopeKey,
+                dtTranDate, dblTranAmount, sTranNumber, sInvoiceStatus, bIsManual, bIsVoid, bFinalized)
+            OUTPUT INSERTED.lInvoiceKey
+            SELECT r.lRepairKey, d.lClientKey, r.lDepartmentKey, r.lScopeKey,
+                GETDATE(), ISNULL(r.dblAmtRepair, 0), @tranNumber, 'Draft', 0, 0, 0
+            FROM tblRepair r
+            JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            WHERE r.lRepairKey = @repairKey;
             """;
 
-        await using var cmd = new SqlCommand(sql, conn);
-        cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@repairKey", repairKey);
-        var result = await cmd.ExecuteScalarAsync();
+        await using var insertCmd = new SqlCommand(insertSql, conn);
+        insertCmd.CommandTimeout = 30;
+        insertCmd.Parameters.AddWithValue("@repairKey", repairKey);
+        insertCmd.Parameters.AddWithValue("@tranNumber", tranNumber);
+        var result = await insertCmd.ExecuteScalarAsync();
         if (result == null || result == DBNull.Value) return NotFound();
-        return Ok(new { invoiceKey = Convert.ToInt32(result) });
+        return Ok(new { invoiceKey = Convert.ToInt32(result), invoiceNumber = tranNumber });
     }
 
     // ── Repair Notes ──

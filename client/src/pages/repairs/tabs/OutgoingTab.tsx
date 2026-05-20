@@ -113,7 +113,7 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
               {(['Yes', 'No'] as const).map(opt => (
                 <label key={opt} style={radioLabelStyle}>
                   <input type="radio" name="trackingReq" readOnly
-                    checked={opt === 'Yes' ? !!repair.trackingRequired : !repair.trackingRequired}
+                    checked={opt === 'Yes' ? !!repair.trackingNumberRequired : !repair.trackingNumberRequired}
                   />
                   {opt}
                 </label>
@@ -125,8 +125,8 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
         <Section title="Delivery Dates">
           <div style={shipGridStyle}>
             <F label="GTD Delivery Date & Time" value={repair.gtdDeliveryDate} />
-            <F label="Winscope GTD Delivery" value={repair.winscopeGtdDate} />
-            <F label="Actual Delivery Date & Time" value={repair.actualDeliveryDate} />
+            <F label="Winscope GTD Delivery" value={repair.carrierGtdDate} />
+            <F label="Actual Delivery Date & Time" value={repair.deliveryDate} />
           </div>
         </Section>
 
@@ -158,14 +158,7 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
               <div>
                 <div style={invoiceLabelStyle}>Invoice Number</div>
                 <div style={invoiceNumStyle}>
-                  {/* Show finalized invoice number when present; otherwise fall back to
-                      the latest draft from tblInvoice as "Draft #NNNN". tblRepair.sInvoiceNumber
-                      is only populated on finalize. */}
-                  {repair.invoiceNumber
-                    || repair.latestInvoiceNumber
-                    || (repair.latestInvoiceKey
-                        ? `${repair.latestInvoiceStatus ?? 'Draft'} #${repair.latestInvoiceKey}`
-                        : '—')}
+                  {repair.latestInvoiceNumber || repair.invoiceNumber || '—'}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -178,7 +171,7 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
                 { label: 'Draft Invoice', onClick: async () => {
                   try {
                     const r = await createDraftInvoice(repair.repairKey);
-                    message.success(`Draft invoice #${r.invoiceKey} created`);
+                    message.success(`Draft invoice ${r.invoiceNumber || r.invoiceKey} created`);
                     onRepairChanged?.();
                   } catch { message.error('Failed to create draft invoice'); }
                 } },

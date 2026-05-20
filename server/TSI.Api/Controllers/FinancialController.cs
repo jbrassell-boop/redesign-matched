@@ -42,6 +42,18 @@ public class FinancialController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // SQL CASE expression that mirrors DeriveStatus() logic so status
+        // filtering and pagination happen in the database, not in C#.
+        const string statusCaseSql = """
+            CASE
+                WHEN ISNULL(i.bIsVoid, 0) = 1 THEN 'Void'
+                WHEN DATEDIFF(day, ISNULL(i.dtDueDate, i.dtTranDate), GETDATE()) > 90 THEN 'Overdue'
+                WHEN DATEDIFF(day, ISNULL(i.dtDueDate, i.dtTranDate), GETDATE()) > 60 THEN 'Past Due'
+                WHEN DATEDIFF(day, ISNULL(i.dtDueDate, i.dtTranDate), GETDATE()) > 0 THEN 'Unpaid'
+                ELSE 'Current'
+            END
+            """;
+
         var where = new List<string>();
         if (tab == "outstanding")
             where.Add("i.dblTranAmount > 0");
@@ -52,6 +64,8 @@ public class FinancialController(IConfiguration config) : ControllerBase
             where.Add("(i.sTranNumber LIKE @search OR i.sBillName1 LIKE @search)");
         if (!string.IsNullOrWhiteSpace(clientFilter))
             where.Add("i.sBillName1 = @clientFilter");
+        if (!string.IsNullOrWhiteSpace(statusFilter))
+            where.Add($"({statusCaseSql}) = @statusFilter");
 
         var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
 
@@ -65,7 +79,11 @@ public class FinancialController(IConfiguration config) : ControllerBase
                    i.dtTranDate, i.dtDueDate,
                    i.sPurchaseOrder, i.sSerialNumber, i.sScopeTypeDesc,
                    ISNULL(i.dblShippingAmt, 0) AS dblShippingAmt,
-                   i.sExported
+                   i.sExported,
+                   {statusCaseSql} AS DerivedStatus,
+                   CASE WHEN DATEDIFF(day, ISNULL(i.dtDueDate, i.dtTranDate), GETDATE()) > 0
+                        THEN DATEDIFF(day, ISNULL(i.dtDueDate, i.dtTranDate), GETDATE())
+                        ELSE 0 END AS AgingDays
             FROM tblInvoice i
             {whereClause}
             ORDER BY i.dblTranAmount DESC
@@ -76,12 +94,14 @@ public class FinancialController(IConfiguration config) : ControllerBase
         countCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(clientFilter)) countCmd.Parameters.AddWithValue("@clientFilter", clientFilter);
+        if (!string.IsNullOrWhiteSpace(statusFilter)) countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 30;
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(clientFilter)) dataCmd.Parameters.AddWithValue("@clientFilter", clientFilter);
+        if (!string.IsNullOrWhiteSpace(statusFilter)) dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
 
@@ -89,10 +109,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
         var items = new List<InvoiceListItem>();
         while (await reader.ReadAsync())
         {
-            var dueDate = reader["dtDueDate"] as DateTime?;
-            var tranDate = reader["dtTranDate"] as DateTime?;
-            var agingDays = CalcAgingDays(dueDate, tranDate);
-            var exported = reader["sExported"]?.ToString() ?? "";
+            var agingDays = Convert.ToInt32(reader["AgingDays"]);
 
             items.Add(new InvoiceListItem(
                 InvoiceKey: Convert.ToInt32(reader["lInvoiceKey"]),
@@ -103,20 +120,13 @@ public class FinancialController(IConfiguration config) : ControllerBase
                 Discount: 0,
                 PaymentTerms: reader["sTermsDesc"]?.ToString() ?? "",
                 GLAccount: "",
-                IssuedDate: tranDate?.ToString("yyyy-MM-dd"),
-                DueDate: dueDate?.ToString("yyyy-MM-dd"),
+                IssuedDate: (reader["dtTranDate"] as DateTime?)?.ToString("yyyy-MM-dd"),
+                DueDate: (reader["dtDueDate"] as DateTime?)?.ToString("yyyy-MM-dd"),
                 AgingDays: agingDays,
-                Status: DeriveStatus(false, false, agingDays),
+                Status: reader["DerivedStatus"]?.ToString() ?? "Current",
                 DeliveryMethod: reader["sDeliveryDesc"]?.ToString() ?? "",
                 GreatPlainsId: ""
             ));
-        }
-
-        // Post-filter by status if requested
-        if (!string.IsNullOrWhiteSpace(statusFilter))
-        {
-            var sf = statusFilter.ToLower();
-            items = items.Where(i => i.Status.ToLower().Contains(sf)).ToList();
         }
 
         return Ok(new InvoiceListResponse(items, totalCount));

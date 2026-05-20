@@ -88,7 +88,7 @@ export interface RepairFull {
   dateIn: string; dateApproved?: string; estDelivery?: string; shipDate?: string; dateOut?: string;
   daysIn: number;
   // Command strip fields
-  rackLocation?: string;
+  rackPosition?: string;
   repairLevel?: string;
   leadTime?: string;
   turnAroundTime?: string;
@@ -106,8 +106,7 @@ export interface RepairFull {
   discountPct?: number | null;
   // Financial
   amountApproved?: number; invoiceNumber?: string;
-  // Latest non-void invoice (from tblInvoice). Drafts have no sInvoiceNumber until
-  // finalized — UI uses latestInvoiceKey + latestInvoiceStatus to render "Draft #NNNN".
+  // Invoice for this repair (1:1 with tblInvoice). sTranNumber is always populated.
   latestInvoiceKey?: number | null;
   latestInvoiceStatus?: string | null;
   latestInvoiceNumber?: string | null;
@@ -117,13 +116,12 @@ export interface RepairFull {
   psLevel?: string;
   customerRef?: string;
   // Invoice options
-  displayComplaintOnInvoice?: boolean;
-  displayItemizedDesc?: boolean;
-  displayItemizedAmounts?: boolean;
-  billToCustomer?: string;
+  displayCustomerComplaint?: string;
+  displayItemDescription?: string;
+  displayItemAmount?: string;
+  billTo?: string;
   // Inbound
-  inboundServiceLevel?: string;
-  shippingCostIn?: number | null;
+  shippingClientIn?: number | null;
   distributor?: string;
   trackingNumberIn?: string;
   // Addresses
@@ -135,10 +133,10 @@ export interface RepairFull {
   trackingNumber?: string; trackingNumberFedEx?: string;
   shipWeight?: string; deliveryServiceLevel?: string;
   packageType?: string;
-  trackingRequired?: boolean;
+  trackingNumberRequired?: boolean;
   gtdDeliveryDate?: string;
-  winscopeGtdDate?: string;
-  actualDeliveryDate?: string;
+  carrierGtdDate?: string;
+  deliveryDate?: string;
   // Outsource
   outsourced: boolean; outsourceVendor?: string;
   outsourceCost?: number | null;
