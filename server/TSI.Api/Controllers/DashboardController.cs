@@ -1130,7 +1130,15 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        const string sql = """
+        // Per-client KPI scope — same NR/SR + non-onsite filter as the
+        // dashboard widgets so per-client report-card numbers reconcile to
+        // the KPI framework's per-client view. Test-client exclusion omitted
+        // (each subquery is already pinned to d.lClientKey = @ck).
+        const string clientKpiScope = """
+            LEFT(r.sWorkOrderNumber, 2) IN ('NR','SR')
+            AND ISNULL(r.sComplaintDesc, '') NOT LIKE '%Onsite Instrument Service%'
+            """;
+        var sql = $"""
             DECLARE @monthStart DATE = DATEFROMPARTS(YEAR(GETDATE()), MONTH(GETDATE()), 1);
             DECLARE @yearStart DATE = DATEFROMPARTS(YEAR(GETDATE()), 1, 1);
 
@@ -1141,49 +1149,57 @@ public class DashboardController(IConfiguration config) : ControllerBase
                JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
                JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
                WHERE d.lClientKey = @ck AND r.dtDateOut IS NOT NULL
-               AND CAST(r.dtDateOut AS DATE) >= @yearStart) AS RepairsCompletedYTD,
+               AND CAST(r.dtDateOut AS DATE) >= @yearStart
+               AND {clientKpiScope}) AS RepairsCompletedYTD,
               -- Average TAT
               (SELECT ISNULL(AVG(CAST(DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) AS DECIMAL(10,1))), 0)
                FROM tblRepair r
                JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
                JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
                WHERE d.lClientKey = @ck AND r.dtDateOut IS NOT NULL
-               AND CAST(r.dtDateOut AS DATE) >= @yearStart) AS AvgTatYTD,
+               AND CAST(r.dtDateOut AS DATE) >= @yearStart
+               AND {clientKpiScope}) AS AvgTatYTD,
               -- On-time % (within 14 days)
               (SELECT COUNT(*) FROM tblRepair r
                JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
                JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
                WHERE d.lClientKey = @ck AND r.dtDateOut IS NOT NULL
                AND CAST(r.dtDateOut AS DATE) >= @yearStart
-               AND DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) <= 14) AS OnTimeYTD,
+               AND DATEDIFF(DAY, r.dtDateIn, r.dtDateOut) <= 14
+               AND {clientKpiScope}) AS OnTimeYTD,
               -- Total revenue YTD
               (SELECT ISNULL(SUM(r.dblAmtRepair), 0) FROM tblRepair r
                JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
                JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
                WHERE d.lClientKey = @ck AND r.dtDateOut IS NOT NULL
-               AND CAST(r.dtDateOut AS DATE) >= @yearStart) AS RevenueYTD,
+               AND CAST(r.dtDateOut AS DATE) >= @yearStart
+               AND {clientKpiScope}) AS RevenueYTD,
               -- Currently in-house
               (SELECT COUNT(*) FROM tblRepair r
                JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
                JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-               WHERE d.lClientKey = @ck AND ISNULL(r.sRepairClosed, 'N') != 'Y') AS InHouseNow,
+               WHERE d.lClientKey = @ck AND ISNULL(r.sRepairClosed, 'N') != 'Y'
+               AND {clientKpiScope}) AS InHouseNow,
               -- Warranty items YTD
               (SELECT COUNT(*) FROM tblRepairItemTran rit
                JOIN tblRepair r ON r.lRepairKey = rit.lRepairKey
                JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
                WHERE d.lClientKey = @ck AND rit.sFixType = 'W'
-               AND CAST(r.dtDateIn AS DATE) >= @yearStart) AS WarrantyItemsYTD,
+               AND CAST(r.dtDateIn AS DATE) >= @yearStart
+               AND {clientKpiScope}) AS WarrantyItemsYTD,
               -- Total items YTD
               (SELECT COUNT(*) FROM tblRepairItemTran rit
                JOIN tblRepair r ON r.lRepairKey = rit.lRepairKey
                JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
                WHERE d.lClientKey = @ck
-               AND CAST(r.dtDateIn AS DATE) >= @yearStart) AS TotalItemsYTD,
+               AND CAST(r.dtDateIn AS DATE) >= @yearStart
+               AND {clientKpiScope}) AS TotalItemsYTD,
               -- Departments served
               (SELECT COUNT(DISTINCT r.lDepartmentKey) FROM tblRepair r
                JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
                WHERE d.lClientKey = @ck
-               AND CAST(r.dtDateIn AS DATE) >= @yearStart) AS DepartmentsServedYTD
+               AND CAST(r.dtDateIn AS DATE) >= @yearStart
+               AND {clientKpiScope}) AS DepartmentsServedYTD
             FROM tblClient c WHERE c.lClientKey = @ck
             """;
 
