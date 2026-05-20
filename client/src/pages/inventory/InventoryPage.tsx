@@ -62,13 +62,15 @@ export const InventoryPage = () => {
   }, []);
 
   // Single fetch path — fires on initial select (selectedKey 0→N) AND on banner
-  // location change (locationKey 1↔2). Earlier handleSelect also fetched, which
-  // doubled every row click; that's gone now.
+  // location change (locationKey 1↔2). The locationKey value itself isn't passed
+  // to the API call (the axios interceptor reads it from localStorage and sets
+  // X-Service-Location), but it's kept as an effect dep so a banner switch
+  // re-fires the fetch with the new header.
   useEffect(() => {
     if (selectedKey == null) return;
     let cancelled = false;
     setDetailLoading(true);
-    getInventoryDetail(selectedKey, locationKey)
+    getInventoryDetail(selectedKey)
       .then(d => { if (!cancelled) setDetail(d); })
       .catch(() => { if (!cancelled) message.error('Failed to load inventory detail'); })
       .finally(() => { if (!cancelled) setDetailLoading(false); });

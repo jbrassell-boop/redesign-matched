@@ -87,16 +87,17 @@ public class InventoryController(IConfiguration config) : ControllerBase
     }
 
     [HttpGet("{inventoryKey:int}")]
-    public async Task<IActionResult> GetInventoryItem(int inventoryKey, [FromQuery] int? locationKey = null)
+    public async Task<IActionResult> GetInventoryItem(int inventoryKey)
     {
+        // Inventory exists at multiple service locations simultaneously, so
+        // the per-size detail (qty / cost / bin) is scoped to the user's
+        // currently-active location from the banner. Throws if the
+        // X-Service-Location header is missing — see ServiceLocationExtensions.
+        // Matches the cloud canonical shape (Steve's f1797dd).
+        var svcKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
-
-        // Default to Upper Chichester (1) when caller doesn't pass locationKey —
-        // matches the frontend's useServiceLocation localStorage default. Aggregating
-        // SUM/MAX across locations is wrong: a user in UC shouldn't see Nashville
-        // stock summed into their on-hand total.
-        var svcKey = locationKey ?? 1;
 
         const string itemSql = """
             SELECT i.lInventoryKey,

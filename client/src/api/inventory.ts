@@ -18,10 +18,10 @@ export const getInventoryList = async (params: {
   return data;
 };
 
-export const getInventoryDetail = async (inventoryKey: number, locationKey: number): Promise<InventoryDetail> => {
-  const { data } = await apiClient.get<InventoryDetail>(`/inventory/${inventoryKey}`, {
-    params: { locationKey },
-  });
+export const getInventoryDetail = async (inventoryKey: number): Promise<InventoryDetail> => {
+  // Location is sent automatically by the axios interceptor in api/client.ts
+  // as the X-Service-Location header — no need to pass it explicitly.
+  const { data } = await apiClient.get<InventoryDetail>(`/inventory/${inventoryKey}`);
   return data;
 };
 
