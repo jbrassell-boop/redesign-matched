@@ -2,13 +2,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using TSI.Api.Models;
+using TSI.Api.Services;
 
 namespace TSI.Api.Controllers;
 
 [ApiController]
 [Route("api/product-sales")]
 [Authorize]
-public class ProductSalesController(IConfiguration config) : ControllerBase
+public class ProductSalesController(
+    IConfiguration config,
+    IInvoiceNumberService invoiceNumbers) : ControllerBase
 {
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
@@ -769,30 +772,30 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
         if (shippedCount == 0)
             return BadRequest(new { error = "No items are marked as Shipped. Mark at least one item Shipped before invoicing." });
 
+        // Resolve the order's service-location key from its dept — drives
+        // the leading N/S/F character on the invoice number.
+        int serviceLocationKey;
+        await using (var locCmd = new SqlCommand(@"
+            SELECT ISNULL(d.lServiceLocationKey, 1) AS lServiceLocationKey
+            FROM tblProductSales ps
+            JOIN tblDepartment d ON d.lDepartmentKey = ps.lDepartmentKey
+            WHERE ps.lProductSaleKey = @key", conn))
+        {
+            locCmd.Parameters.AddWithValue("@key", key);
+            var locResult = await locCmd.ExecuteScalarAsync();
+            serviceLocationKey = locResult is null or DBNull ? 1 : Convert.ToInt32(locResult);
+        }
+
         // ── Begin transaction ───────────────────────────────────────────────
         await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
         try
         {
-            var today = DateTime.Today;
-            // Format: yy + day-of-year (3 digits), e.g. "26103" for April 13, 2026
-            var yearDay = today.ToString("yy") + today.DayOfYear.ToString("D3");
-
-            // A. Generate invoice number — type 'P' for product sale (1 char max)
-            const string mergeSql = """
-                MERGE tblInvoiceNumbersDaily AS target
-                USING (SELECT @yearDay AS sYearDay, 'P' AS sInvoiceType) AS source
-                ON target.sYearDay = source.sYearDay AND target.sInvoiceType = source.sInvoiceType
-                WHEN MATCHED THEN
-                    UPDATE SET lNextInvoiceNumber = target.lNextInvoiceNumber + 1
-                WHEN NOT MATCHED THEN
-                    INSERT (sYearDay, sInvoiceType, lNextInvoiceNumber) VALUES (@yearDay, 'P', 2)
-                OUTPUT CASE WHEN $action = 'UPDATE' THEN INSERTED.lNextInvoiceNumber - 1 ELSE 1 END;
-                """;
-            await using var mergeCmd = new SqlCommand(mergeSql, conn, txn);
-            mergeCmd.CommandTimeout = 30;
-            mergeCmd.Parameters.AddWithValue("@yearDay", yearDay);
-            var seqNum = Convert.ToInt32(await mergeCmd.ExecuteScalarAsync());
-            var invoiceNumber = $"NP{yearDay}{seqNum:D2}";
+            // Generate invoice number via the canonical proc — type 'I'
+            // (product-sale Invoice). Replaces the legacy inline MERGE that
+            // used type 'P' and 2-digit seq, producing NP-prefixed 9-char
+            // numbers ('NP26140 01'). New format matches the cloud deploy:
+            // NI26140001-style 10-char numbers, atomic per-day counter.
+            var invoiceNumber = await invoiceNumbers.NextAsync('I', serviceLocationKey, conn, txn);
 
             // B. Generate a unique lInvoiceKey for the snapshot detail rows
             await using var maxKeyCmd = new SqlCommand(
@@ -910,7 +913,7 @@ public class ProductSalesController(IConfiguration config) : ControllerBase
 
             return Ok(new InvoiceResponse(
                 InvoiceNumber: invoiceNumber,
-                InvoiceDate: today.ToString("yyyy-MM-dd"),
+                InvoiceDate: DateTime.Today.ToString("yyyy-MM-dd"),
                 ChildOrderKey: childKey,
                 ChildOrderItemCount: childItemCount
             ));

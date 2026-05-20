@@ -2,13 +2,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using TSI.Api.Models;
+using TSI.Api.Services;
 
 namespace TSI.Api.Controllers;
 
 [ApiController]
 [Route("api/receiving")]
 [Authorize]
-public class ReceivingController(IConfiguration config) : ControllerBase
+public class ReceivingController(
+    IConfiguration config,
+    IInvoiceNumberService invoiceNumbers) : ControllerBase
 {
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
@@ -101,19 +104,27 @@ public class ReceivingController(IConfiguration config) : ControllerBase
                 scopeKey = Convert.ToInt32(existing);
         }
 
-        // Wrap WO number generation and INSERT in a SERIALIZABLE transaction
-        // to prevent duplicate work order numbers under concurrent requests
-        await using var transaction = (SqlTransaction)await conn.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
+        // Resolve the dept's service-location key so the WO carries the right
+        // leading N/S/F character. Falls back to 1 (Upper Chichester / North)
+        // if the dept doesn't have one assigned.
+        int serviceLocationKey;
+        await using (var svcCmd = new SqlCommand(
+            "SELECT ISNULL(lServiceLocationKey, 1) FROM tblDepartment WHERE lDepartmentKey = @dk", conn))
+        {
+            svcCmd.Parameters.AddWithValue("@dk", request.DepartmentKey);
+            var svcObj = await svcCmd.ExecuteScalarAsync();
+            serviceLocationKey = svcObj is null or DBNull ? 1 : Convert.ToInt32(svcObj);
+        }
+
+        await using var transaction = (SqlTransaction)await conn.BeginTransactionAsync();
 
         try
         {
-            // Generate next WO number inside the transaction
-            await using var woCmd = new SqlCommand(
-                "SELECT ISNULL(MAX(CAST(sWorkOrderNumber AS INT)), 0) + 1 FROM tblRepair WITH (UPDLOCK, HOLDLOCK) WHERE ISNUMERIC(sWorkOrderNumber) = 1",
-                conn, transaction);
-            woCmd.CommandTimeout = 30;
-            var nextWo = Convert.ToInt64(await woCmd.ExecuteScalarAsync());
-            var woNumber = nextWo.ToString().PadLeft(7, '0');
+            // Generate WO via the canonical proc — atomic per-day counter
+            // (MERGE-with-HOLDLOCK). Replaces the racy MAX(...)+1 antipattern
+            // that produced 7-digit numeric WOs and ignored every NR/SR-
+            // prefixed row in the table via the ISNUMERIC=1 filter.
+            var woNumber = await invoiceNumbers.NextAsync('R', serviceLocationKey, conn, transaction);
 
             // Insert repair
             var insertSql = """

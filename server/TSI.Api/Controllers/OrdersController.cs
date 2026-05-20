@@ -2,13 +2,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using TSI.Api.Models;
+using TSI.Api.Services;
 
 namespace TSI.Api.Controllers;
 
 [ApiController]
 [Route("api/orders")]
 [Authorize]
-public class OrdersController(IConfiguration config) : ControllerBase
+public class OrdersController(
+    IConfiguration config,
+    IInvoiceNumberService invoiceNumbers) : ControllerBase
 {
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
@@ -318,16 +321,17 @@ public class OrdersController(IConfiguration config) : ControllerBase
             var statusObj = await statusCmd.ExecuteScalarAsync();
             var statusId = statusObj != null ? Convert.ToInt32(statusObj) : 1;
 
-            // 4. Generate WO number: {N|S}{R|I|K} + YYMMDDHHMM
-            var locPrefix = svcKey == 2 ? "S" : "N";
-            var typeCode = request.OrderType switch
+            // Generate WO via the canonical proc (matches cloud deploy format).
+            // 10-char output: <N|S|F><R|I|K|V><yyDDD><seq3>, e.g. NR26140003.
+            // Atomic per-day counter via MERGE-with-HOLDLOCK in the proc.
+            var typeChar = request.OrderType switch
             {
-                "product-sale" => "I",
-                "endocart" => "K",
-                _ => "R" // repair, instrument
+                "product-sale" => 'I',
+                "endocart"     => 'K',
+                "onsite"       => 'V',   // not currently sent by wizard, but supported
+                _              => 'R',   // repair, instrument (instrument is repair-shaped)
             };
-            var now = DateTime.Now;
-            var woNumber = $"{locPrefix}{typeCode}{now:yyMMddHHmm}";
+            var woNumber = await invoiceNumbers.NextAsync(typeChar, svcKey, conn);
 
             // 5. Insert the repair record
             const string insertSql = """

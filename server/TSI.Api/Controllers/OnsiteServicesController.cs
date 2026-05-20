@@ -2,13 +2,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using TSI.Api.Models;
+using TSI.Api.Services;
 
 namespace TSI.Api.Controllers;
 
 [ApiController]
 [Route("api/onsite-services")]
 [Authorize]
-public class OnsiteServicesController(IConfiguration config) : ControllerBase
+public class OnsiteServicesController(
+    IConfiguration config,
+    IInvoiceNumberService invoiceNumbers) : ControllerBase
 {
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
@@ -206,60 +209,60 @@ public class OnsiteServicesController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        await using var transaction = (SqlTransaction)await conn.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
-
-        // Generate next invoice number inside the transaction to prevent duplicates
-        await using var seqCmd = new SqlCommand(
-            "SELECT ISNULL(MAX(CAST(REPLACE(sInvoiceNumber, 'INV-', '') AS INT)), 4000) + 1 FROM tblOnsiteService WITH (UPDLOCK, HOLDLOCK) WHERE sInvoiceNumber LIKE 'INV-%'",
-            conn, transaction);
-        seqCmd.CommandTimeout = 30;
-
-        int nextNum;
-        try
+        // Resolve the dept's service-location key — drives both the
+        // sWorkOrderNumber prefix (via the canonical proc) and the
+        // lServiceLocationKey column on the new row so list filtering
+        // by location lines up post-create.
+        int serviceLocationKey;
+        await using (var locCmd = new SqlCommand(@"
+            SELECT ISNULL(d.lServiceLocationKey, 1) AS lServiceLocationKey
+            FROM tblDepartment d
+            WHERE d.lDepartmentKey = @deptKey AND d.Deleted_datetime IS NULL", conn))
         {
-            nextNum = Convert.ToInt32(await seqCmd.ExecuteScalarAsync());
-        }
-        catch
-        {
-            nextNum = new Random().Next(5000, 9999);
+            locCmd.Parameters.AddWithValue("@deptKey", req.DepartmentKey);
+            var locResult = await locCmd.ExecuteScalarAsync();
+            if (locResult is null)
+                return BadRequest(new { message = $"Department {req.DepartmentKey} not found." });
+            serviceLocationKey = Convert.ToInt32(locResult);
         }
 
-        var invoiceNum = $"INV-{nextNum}";
+        // Generate the next onsite-service WO via the canonical proc.
+        // Type 'V' for Van service; produces NV26140001-style numbers.
+        // Replaces the legacy "INV-NNNN" format that wrote to the wrong
+        // table (tblOnsiteService) — now writes to tblSiteServices to
+        // match the cloud deploy.
+        var invoiceNum = await invoiceNumbers.NextAsync('V', serviceLocationKey, conn);
 
+        // Location/PriceClass from the legacy request are intentionally not
+        // persisted — tblSiteServices doesn't have columns for them. If the
+        // wizard needs to surface those fields again, add columns first.
         const string sql = """
-            INSERT INTO tblOnsiteService
-                (sInvoiceNumber, lClientKey, lDepartmentKey, lTechnicianKey, dtOnsiteDate,
-                 sLocation, sPONumber, sTruckNum, sPriceClass, sNotes, sStatus, dtCreated)
+            INSERT INTO tblSiteServices
+                (sWorkOrderNumber, lClientKey, lDepartmentKey, lTechnicianKey, dtOnsiteDate,
+                 sPurchaseOrder, sTruckNumber, sNotes, lServiceLocationKey,
+                 Created_datetime, Created_UserKey)
+            OUTPUT INSERTED.lSiteServiceKey
             VALUES
                 (@invoiceNum, @clientKey, @deptKey, @techKey, @visitDate,
-                 @location, @po, @truckNum, @priceClass, @notes, 'Draft', GETDATE());
-            SELECT SCOPE_IDENTITY();
+                 @po, @truckNum, @notes, @serviceLocationKey,
+                 GETDATE(), @userKey);
             """;
 
-        await using var cmd = new SqlCommand(sql, conn, transaction);
+        await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@invoiceNum", invoiceNum);
         cmd.Parameters.AddWithValue("@clientKey", req.ClientKey);
         cmd.Parameters.AddWithValue("@deptKey", req.DepartmentKey);
         cmd.Parameters.AddWithValue("@techKey", req.TechnicianKey);
         cmd.Parameters.AddWithValue("@visitDate", DateTime.Parse(req.VisitDate));
-        cmd.Parameters.AddWithValue("@location", (object?)req.Location ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@po", (object?)req.Po ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@truckNum", (object?)req.TruckNum ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@priceClass", (object?)req.PriceClass ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@serviceLocationKey", serviceLocationKey);
+        cmd.Parameters.AddWithValue("@userKey", this.GetCurrentUserKey());
 
-        try
-        {
-            var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-            await transaction.CommitAsync();
-            return Ok(new { onsiteServiceKey = newKey, invoiceNum });
-        }
-        catch (SqlException ex)
-        {
-            await transaction.RollbackAsync();
-            return StatusCode(500, new { error = "Database error", detail = ex.Message });
-        }
+        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return Ok(new { onsiteServiceKey = newKey, invoiceNum });
     }
 
     [HttpPut("{id}/status")]

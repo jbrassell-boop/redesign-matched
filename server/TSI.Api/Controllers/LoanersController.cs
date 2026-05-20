@@ -2,13 +2,16 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using TSI.Api.Models;
+using TSI.Api.Services;
 
 namespace TSI.Api.Controllers;
 
 [ApiController]
 [Route("api/loaners")]
 [Authorize]
-public class LoanersController(IConfiguration config) : ControllerBase
+public class LoanersController(
+    IConfiguration config,
+    IInvoiceNumberService invoiceNumbers) : ControllerBase
 {
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
@@ -568,28 +571,39 @@ public class LoanersController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Step 1: Verify scope exists
-        await using var scopeCmd = new SqlCommand(
-            "SELECT lScopeTypeKey FROM tblScope WHERE lScopeKey = @scopeKey", conn);
-        scopeCmd.CommandTimeout = 30;
-        scopeCmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
-        var scopeTypeKeyObj = await scopeCmd.ExecuteScalarAsync();
-        if (scopeTypeKeyObj == null || scopeTypeKeyObj == DBNull.Value)
-            return NotFound("Scope not found");
+        // Step 1: Verify scope exists, also pull the dept's service-location key
+        // so the loaner-tracking repair WO carries the right N/S/F prefix.
+        int serviceLocationKey;
+        await using (var scopeCmd = new SqlCommand(@"
+            SELECT s.lScopeTypeKey,
+                   ISNULL(d.lServiceLocationKey, 1) AS lServiceLocationKey
+            FROM tblScope s
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = s.lDepartmentKey
+            WHERE s.lScopeKey = @scopeKey", conn))
+        {
+            scopeCmd.CommandTimeout = 30;
+            scopeCmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
+            await using var scopeReader = await scopeCmd.ExecuteReaderAsync();
+            if (!await scopeReader.ReadAsync())
+                return NotFound("Scope not found");
+            serviceLocationKey = scopeReader["lServiceLocationKey"] is null or DBNull
+                ? 1 : Convert.ToInt32(scopeReader["lServiceLocationKey"]);
+        }
 
-        // Step 2: Generate next WO number
-        await using var woCmd = new SqlCommand(
-            "SELECT ISNULL(MAX(CAST(sWorkOrderNumber AS INT)), 0) + 1 FROM tblRepair WHERE ISNUMERIC(sWorkOrderNumber) = 1", conn);
-        woCmd.CommandTimeout = 30;
-        var nextWo = Convert.ToInt32(await woCmd.ExecuteScalarAsync());
+        // Step 2: Generate next WO number via the canonical proc.
+        // Type 'R' — the loaner-tracking row IS a repair (status drives the
+        // loaner workflow downstream). Replaces racy MAX(...)+1 numeric WOs.
+        var woNumber = await invoiceNumbers.NextAsync('R', serviceLocationKey, conn);
 
-        // Step 3: Create repair (disable triggers — tblRepair has triggers)
+        // Step 3: Create repair (disable triggers — tblRepair has triggers).
+        // Uses GetCurrentUserKey() so audit columns identify who's creating the
+        // loaner, not the legacy hardcoded lCreateUser=1.
         var repairSql = """
             DISABLE TRIGGER ALL ON tblRepair;
             INSERT INTO tblRepair
                 (lScopeKey, sWorkOrderNumber, bLoanerRequested, dtCreateDate, lCreateUser)
             VALUES
-                (@scopeKey, @wo, 0, GETDATE(), 1);
+                (@scopeKey, @wo, 0, GETDATE(), @userKey);
             ENABLE TRIGGER ALL ON tblRepair;
             SELECT SCOPE_IDENTITY();
             """;
@@ -597,7 +611,8 @@ public class LoanersController(IConfiguration config) : ControllerBase
         await using var repairCmd = new SqlCommand(repairSql, conn);
         repairCmd.CommandTimeout = 30;
         repairCmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
-        repairCmd.Parameters.AddWithValue("@wo", nextWo.ToString());
+        repairCmd.Parameters.AddWithValue("@wo", woNumber);
+        repairCmd.Parameters.AddWithValue("@userKey", this.GetCurrentUserKey());
         var repairKey = Convert.ToInt32(await repairCmd.ExecuteScalarAsync());
 
         // Step 4: Create loaner tran linked to repair (scope goes to "Repair" status)
@@ -615,7 +630,7 @@ public class LoanersController(IConfiguration config) : ControllerBase
         tranCmd.Parameters.AddWithValue("@repairKey", repairKey);
         var tranKey = Convert.ToInt32(await tranCmd.ExecuteScalarAsync());
 
-        return Ok(new { repairKey, loanerTranKey = tranKey, workOrder = nextWo.ToString() });
+        return Ok(new { repairKey, loanerTranKey = tranKey, workOrder = woNumber });
     }
 
     // ── Check-In ─────────────────────────────────────────────────────────────

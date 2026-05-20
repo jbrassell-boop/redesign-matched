@@ -33,6 +33,9 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddAuthorization();
 builder.Services.AddScoped<JwtService>();
+// Canonical WO/invoice number generator — wraps dbo.invoiceNumberDailyGet.
+// Singleton (stateless wrapper over a proc); see Services/InvoiceNumberService.cs.
+builder.Services.AddSingleton<IInvoiceNumberService, InvoiceNumberService>();
 builder.Services.AddControllers();
 
 // CORS
