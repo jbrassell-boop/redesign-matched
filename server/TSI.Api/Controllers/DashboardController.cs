@@ -13,6 +13,28 @@ public class DashboardController(IConfiguration config) : ControllerBase
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
 
+    // KPI dashboard repair scope — matches Push-ProfitabilityToKpi.ps1
+    // (the SQL behind https://calm-ground-0b4c10d0f.7.azurestaticapps.net).
+    // Apply to any widget that counts/sums repairs so cloud numbers reconcile
+    // to KPI framework numbers without surprise gaps.
+    //
+    //   • NR/SR prefix only — excludes endocarts (SK), product sales (NS/SS),
+    //     legacy numeric-prefix WOs (pre-2024 historical), contracts (NC),
+    //     and the new NV site-service flow.
+    //   • Test clients out — Testing Client (5027), Merge Testing (6402/6479),
+    //     Smoke Test 1 (7533), test (8085). Per Joe 2026-05-12 these never
+    //     count in any analytic.
+    //   • Legacy "Onsite Instrument Service" complaint-text WOs out — those
+    //     are the pre-NV van-service flow and count as site service, not
+    //     non-contract repair, in the KPI dashboard.
+    //
+    // Assumes "r" alias for tblRepair and "d" alias for tblDepartment.
+    private const string KpiRepairScopeWhere = """
+        LEFT(r.sWorkOrderNumber, 2) IN ('NR','SR')
+        AND ISNULL(d.lClientKey, 0) NOT IN (5027, 6402, 6479, 7533, 8085)
+        AND ISNULL(r.sComplaintDesc, '') NOT LIKE '%Onsite Instrument Service%'
+        """;
+
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
@@ -23,7 +45,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
         // NULL even when dtDateOut is set (Goldmine workflow quirk). The cloud
         // backfill (migration phase 76) heals existing data; COALESCE here is
         // defense-in-depth against future ingest that re-introduces the gap.
-        const string sql = """
+        // Department join added for KpiRepairScopeWhere test-client exclusion.
+        var sql = $"""
             SELECT
                 SUM(CASE WHEN ISNULL(r.sRepairClosed, 'N') != 'Y' THEN 1 ELSE 0 END) AS OpenRepairs,
                 SUM(CASE WHEN r.bHotList = 1 AND ISNULL(r.sRepairClosed, 'N') != 'Y' THEN 1 ELSE 0 END) AS UrgentRepairs,
@@ -33,6 +56,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
                 SUM(CASE WHEN CAST(r.dtDateIn AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS ReceivedToday
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            WHERE {KpiRepairScopeWhere}
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
@@ -79,7 +104,15 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string> { "ISNULL(r.sRepairClosed, 'N') != 'Y'", "r.dtDateIn >= DATEADD(MONTH, -12, GETDATE())" };
+        // KPI dashboard repair scope — apply to LIST view so cloud rows mirror
+        // what the KPI framework counts as a "repair" (NR/SR only, no test
+        // clients, no legacy onsite-service WOs).
+        var where = new List<string>
+        {
+            "ISNULL(r.sRepairClosed, 'N') != 'Y'",
+            "r.dtDateIn >= DATEADD(MONTH, -12, GETDATE())",
+            KpiRepairScopeWhere,
+        };
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("""
                 (r.sWorkOrderNumber LIKE @search
@@ -221,21 +254,33 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
         var yesterday = DateTime.Today.AddDays(-1);
-        await using var cmd = new SqlCommand(@"
+        // Each subquery applies KpiRepairScopeWhere via department join.
+        // Inlined because each subquery has its own date predicate.
+        await using var cmd = new SqlCommand($@"
             SELECT
-                (SELECT COUNT(*) FROM tblRepair WHERE CAST(dtDateIn AS DATE) = @yesterday) AS Received,
+                (SELECT COUNT(*) FROM tblRepair r
+                  LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+                  WHERE CAST(r.dtDateIn AS DATE) = @yesterday AND {KpiRepairScopeWhere}) AS Received,
                 -- Use dtShipDate when set, fall back to dtDateOut. ~46% of legacy closed
                 -- repairs have only dtDateOut (Goldmine quirk); without COALESCE we silently
                 -- undercount shipments by 30-40%. Phase 76 backfill heals existing data.
-                (SELECT COUNT(*) FROM tblRepair WHERE CAST(COALESCE(dtShipDate, dtDateOut) AS DATE) = @yesterday) AS Shipped,
-                (SELECT COUNT(*) FROM tblRepair WHERE CAST(dtAprRecvd AS DATE) = @yesterday) AS Approved,
-                (SELECT ISNULL(SUM(dblAmtRepair), 0) FROM tblRepair WHERE CAST(COALESCE(dtShipDate, dtDateOut) AS DATE) = @yesterday) AS Revenue,
-                (SELECT ISNULL(AVG(CAST(DATEDIFF(DAY, dtDateIn, ISNULL(dtDateOut, GETDATE())) AS DECIMAL(10,1))), 0)
+                (SELECT COUNT(*) FROM tblRepair r
+                  LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+                  WHERE CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = @yesterday AND {KpiRepairScopeWhere}) AS Shipped,
+                (SELECT COUNT(*) FROM tblRepair r
+                  LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+                  WHERE CAST(r.dtAprRecvd AS DATE) = @yesterday AND {KpiRepairScopeWhere}) AS Approved,
+                (SELECT ISNULL(SUM(r.dblAmtRepair), 0) FROM tblRepair r
+                  LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+                  WHERE CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = @yesterday AND {KpiRepairScopeWhere}) AS Revenue,
+                (SELECT ISNULL(AVG(CAST(DATEDIFF(DAY, r.dtDateIn, ISNULL(r.dtDateOut, GETDATE())) AS DECIMAL(10,1))), 0)
                  FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
-                 WHERE rs.sRepairStatus NOT IN ('Cancelled','Closed')) AS AvgTat,
+                  LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+                 WHERE rs.sRepairStatus NOT IN ('Cancelled','Closed') AND {KpiRepairScopeWhere}) AS AvgTat,
                 (SELECT COUNT(*) FROM tblRepair r JOIN tblRepairStatuses rs ON r.lRepairStatusID = rs.lRepairStatusID
+                  LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
                  WHERE ISNULL(r.sRepairClosed, 'N') != 'Y'
-                 AND DATEDIFF(DAY, dtDateIn, GETDATE()) > 14) AS Overdue
+                 AND DATEDIFF(DAY, r.dtDateIn, GETDATE()) > 14 AND {KpiRepairScopeWhere}) AS Overdue
         ", conn);
         cmd.CommandTimeout = 60;
         cmd.Parameters.AddWithValue("@yesterday", yesterday);
@@ -247,8 +292,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
         );
         await rdr.CloseAsync();
 
-        // Flow breakdown by scope type — see note above on COALESCE(dtShipDate, dtDateOut)
-        await using var flowCmd = new SqlCommand(@"
+        // Flow breakdown by scope type — see note above on COALESCE + KpiRepairScopeWhere
+        await using var flowCmd = new SqlCommand($@"
             SELECT
                 ISNULL(st.sRigidOrFlexible, 'O') AS ScopeCategory,
                 SUM(CASE WHEN CAST(r.dtDateIn AS DATE) = @yesterday THEN 1 ELSE 0 END) AS ReceivedYesterday,
@@ -256,7 +301,9 @@ public class DashboardController(IConfiguration config) : ControllerBase
             FROM tblRepair r
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
-            WHERE CAST(r.dtDateIn AS DATE) = @yesterday OR CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = @yesterday
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            WHERE (CAST(r.dtDateIn AS DATE) = @yesterday OR CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = @yesterday)
+              AND {KpiRepairScopeWhere}
             GROUP BY st.sRigidOrFlexible
         ", conn);
         flowCmd.Parameters.AddWithValue("@yesterday", yesterday);
@@ -510,7 +557,9 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string>();
+        // KPI dashboard repair scope — applied to all shipping segments so cloud
+        // reconciles to the KPI framework's NR/SR repair scope.
+        var where = new List<string> { KpiRepairScopeWhere };
         if (segment == "ready")
             where.Add("rs.sRepairStatus IN ('Complete','Pending Ship') AND r.sShipTrackingNumber IS NULL");
         else if (segment == "today")
@@ -593,14 +642,16 @@ public class DashboardController(IConfiguration config) : ControllerBase
         }
         await dataReader.CloseAsync();
 
-        // Stats — see COALESCE note above on dtShipDate vs dtDateOut
-        const string shipStatsSql = """
+        // Stats — see COALESCE + KpiRepairScopeWhere notes above
+        var shipStatsSql = $"""
             SELECT
                 SUM(CASE WHEN rs.sRepairStatus IN ('Complete','Pending Ship') AND r.sShipTrackingNumber IS NULL THEN 1 ELSE 0 END) AS ReadyToShip,
                 SUM(CASE WHEN r.sShipTrackingNumber IS NOT NULL AND CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS ShippedToday,
                 SUM(CASE WHEN r.sShipTrackingNumber IS NOT NULL THEN ISNULL(r.dblAmtShipping,0) ELSE 0 END) AS TotalCharges
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            WHERE {KpiRepairScopeWhere}
             """;
         await using var shipStatsCmd = new SqlCommand(shipStatsSql, conn);
         shipStatsCmd.CommandTimeout = 60;
@@ -825,7 +876,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string> { "ISNULL(r.sRepairClosed, 'N') != 'Y'" };
+        var where = new List<string> { "ISNULL(r.sRepairClosed, 'N') != 'Y'", KpiRepairScopeWhere };
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("""
                 (r.sWorkOrderNumber LIKE @search
@@ -836,12 +887,14 @@ public class DashboardController(IConfiguration config) : ControllerBase
             where.Add("rs.sRepairStatus = @statusFilter");
         var whereClause = "WHERE " + string.Join(" AND ", where);
 
+        // tblDepartment join added so KpiRepairScopeWhere can reach d.lClientKey.
         var countSql = $"""
             SELECT COUNT(*)
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
-            LEFT JOIN tblClient c ON c.lClientKey = (SELECT TOP 1 lClientKey FROM tblDepartment WHERE lDepartmentKey = r.lDepartmentKey)
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             {whereClause}
             """;
 
@@ -895,8 +948,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
         }
         await dataReader.CloseAsync();
 
-        // Stats — see COALESCE note above on dtShipDate vs dtDateOut
-        const string tbStatsSql = """
+        // Stats — see COALESCE + KpiRepairScopeWhere notes above
+        var tbStatsSql = $"""
             SELECT
                 SUM(CASE WHEN r.lTechnicianKey IS NOT NULL AND ISNULL(r.sRepairClosed, 'N') != 'Y' THEN 1 ELSE 0 END) AS Assigned,
                 SUM(CASE WHEN rs.sRepairStatus = 'In Repair' THEN 1 ELSE 0 END) AS InRepair,
@@ -904,6 +957,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
                 SUM(CASE WHEN rs.sRepairStatus IN ('Complete','Shipped') AND CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS CompletedToday
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            WHERE {KpiRepairScopeWhere}
             """;
         await using var tbStatsCmd = new SqlCommand(tbStatsSql, conn);
         tbStatsCmd.CommandTimeout = 60;
@@ -928,14 +983,16 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Stats — see COALESCE note above on dtShipDate vs dtDateOut
-        const string aStatsSql = """
+        // Stats — see COALESCE + KpiRepairScopeWhere notes above
+        var aStatsSql = $"""
             SELECT
                 SUM(CASE WHEN ISNULL(r.sRepairClosed, 'N') != 'Y' THEN 1 ELSE 0 END) AS InHouse,
                 AVG(CASE WHEN r.dtDateOut IS NOT NULL THEN CAST(DATEDIFF(day, r.dtDateIn, COALESCE(r.dtShipDate, r.dtDateOut)) AS DECIMAL(10,1)) END) AS AvgTat,
                 COUNT(CASE WHEN r.dtDateOut IS NOT NULL AND MONTH(COALESCE(r.dtShipDate, r.dtDateOut)) = MONTH(GETDATE()) AND YEAR(COALESCE(r.dtShipDate, r.dtDateOut)) = YEAR(GETDATE()) THEN 1 END) AS Throughput
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            WHERE {KpiRepairScopeWhere}
             """;
         await using var aStatsCmd = new SqlCommand(aStatsSql, conn);
         aStatsCmd.CommandTimeout = 60;
@@ -949,8 +1006,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
         }
         await aStatsReader.CloseAsync();
 
-        // Top scope types by volume — see COALESCE note above on dtShipDate vs dtDateOut
-        const string metricsSql = """
+        // Top scope types by volume — see COALESCE + KpiRepairScopeWhere notes above
+        var metricsSql = $"""
             SELECT TOP 20
                    ISNULL(st.sScopeTypeDesc,'Unknown') AS ScopeType,
                    COUNT(*) AS RepairCount,
@@ -961,6 +1018,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            WHERE {KpiRepairScopeWhere}
             GROUP BY st.sScopeTypeDesc
             ORDER BY COUNT(*) DESC
             """;
@@ -993,7 +1052,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        const string sql = """
+        var sql = $"""
             DECLARE @today DATE = CAST(GETDATE() AS DATE);
             DECLARE @monthStart DATE = DATEFROMPARTS(YEAR(@today), MONTH(@today), 1);
             DECLARE @lastMonthStart DATE = DATEADD(MONTH, -1, @monthStart);
@@ -1004,6 +1063,8 @@ public class DashboardController(IConfiguration config) : ControllerBase
             -- preferred source of truth (physical ship date), but ~46% of legacy
             -- closed repairs from Goldmine have only dtDateOut populated. Migration
             -- phase 76 backfills existing rows; COALESCE here protects future ingest.
+            -- KpiRepairScopeWhere applied so cloud KPIs reconcile to the KPI framework
+            -- (NR/SR prefix, no test clients, no legacy onsite-service WOs).
             -- For AvgTat: prefer completed repairs this month; fall back to in-flight TAT when
             -- no repairs have shipped yet this month (e.g. first days of a new month).
             SELECT
@@ -1032,7 +1093,9 @@ public class DashboardController(IConfiguration config) : ControllerBase
               SUM(CASE WHEN CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) >= @monthStart THEN 1 ELSE 0 END) AS TotalShippedMonth
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             WHERE r.dtDateIn >= DATEADD(YEAR, -2, GETDATE())
+              AND {KpiRepairScopeWhere}
             """;
 
         await using var cmd = new SqlCommand(sql, conn);

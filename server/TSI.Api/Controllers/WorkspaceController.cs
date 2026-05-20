@@ -13,6 +13,16 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
 
+    // Matches DashboardController.KpiRepairScopeWhere. Workspace widgets count
+    // repairs in flight / overdue; aligning the scope to the KPI dashboard
+    // keeps both views from telling different stories. See DashboardController
+    // for the full rationale.
+    private const string KpiRepairScopeWhere = """
+        LEFT(r.sWorkOrderNumber, 2) IN ('NR','SR')
+        AND ISNULL(d.lClientKey, 0) NOT IN (5027, 6402, 6479, 7533, 8085)
+        AND ISNULL(r.sComplaintDesc, '') NOT LIKE '%Onsite Instrument Service%'
+        """;
+
     [HttpGet]
     public async Task<IActionResult> GetWorkspace()
     {
@@ -29,7 +39,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
 
     private static async Task<RepairQueueWidget> GetRepairQueue(SqlConnection conn)
     {
-        const string sql = """
+        var sql = $"""
             SELECT
                 SUM(CASE WHEN rs.sRepairStatus LIKE '%Received%' OR rs.sRepairStatus LIKE '%Logged%' THEN 1 ELSE 0 END) AS Received,
                 SUM(CASE WHEN rs.sRepairStatus LIKE '%Repair%' OR rs.sRepairStatus LIKE '%Progress%' THEN 1 ELSE 0 END) AS InRepair,
@@ -38,7 +48,8 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
                 SUM(CASE WHEN DATEDIFF(day, r.dtDateIn, GETDATE()) > 7 THEN 1 ELSE 0 END) AS Overdue
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
-            WHERE r.dtDateOut IS NULL
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            WHERE r.dtDateOut IS NULL AND {KpiRepairScopeWhere}
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
@@ -54,7 +65,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
         await reader.CloseAsync();
 
         // Recent 5 open repairs
-        const string recentSql = """
+        var recentSql = $"""
             SELECT TOP 5 r.sWorkOrderNumber,
                    ISNULL(c.sClientName1, '') AS sClientName1,
                    ISNULL(st.sScopeTypeDesc, '') AS sScopeTypeDesc,
@@ -66,7 +77,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
-            WHERE r.dtDateOut IS NULL
+            WHERE r.dtDateOut IS NULL AND {KpiRepairScopeWhere}
             ORDER BY r.dtDateIn DESC
             """;
         await using var recentCmd = new SqlCommand(recentSql, conn);
@@ -89,7 +100,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
 
     private static async Task<OverdueWidget> GetOverdue(SqlConnection conn)
     {
-        const string sql = """
+        var sql = $"""
             SELECT TOP 5 r.sWorkOrderNumber,
                    ISNULL(c.sClientName1, '') AS sClientName1,
                    DATEDIFF(day, r.dtDateIn, GETDATE()) AS DaysIn
@@ -98,6 +109,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             WHERE r.dtDateOut IS NULL
                   AND DATEDIFF(day, r.dtDateIn, GETDATE()) > 7
+                  AND {KpiRepairScopeWhere}
             ORDER BY r.dtDateIn ASC
             """;
         await using var cmd = new SqlCommand(sql, conn);
@@ -118,14 +130,15 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
 
     private static async Task<InvoicesWidget> GetInvoices(SqlConnection conn)
     {
-        const string sql = """
+        var sql = $"""
             SELECT
                 ISNULL(SUM(CASE WHEN r.dtDateOut IS NOT NULL AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS TotalOutstanding,
                 ISNULL(SUM(CASE WHEN DATEDIFF(day, r.dtDateOut, GETDATE()) > 30 AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS PastDue30,
                 ISNULL(SUM(CASE WHEN DATEDIFF(day, r.dtDateOut, GETDATE()) > 60 AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS PastDue60,
                 ISNULL(SUM(CASE WHEN MONTH(r.dtDateOut) = MONTH(GETDATE()) AND YEAR(r.dtDateOut) = YEAR(GETDATE()) AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS InvoicedThisMonth
             FROM tblRepair r
-            WHERE r.dtDateOut IS NOT NULL
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+            WHERE r.dtDateOut IS NOT NULL AND {KpiRepairScopeWhere}
             """;
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
