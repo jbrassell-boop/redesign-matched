@@ -26,18 +26,24 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetWorkspace()
     {
+        // Mandatory location scope — workspace widgets show the user's own
+        // repair queue / overdue / invoices, scoped to their banner location.
+        // Contracts stay cross-location (a client may have departments at
+        // multiple locations). See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var repairQueue = await GetRepairQueue(conn);
-        var overdue = await GetOverdue(conn);
-        var invoices = await GetInvoices(conn);
+        var repairQueue = await GetRepairQueue(conn, locationKey);
+        var overdue = await GetOverdue(conn, locationKey);
+        var invoices = await GetInvoices(conn, locationKey);
         var contracts = await GetContractsExpiring(conn);
 
         return Ok(new WorkspaceData(repairQueue, overdue, invoices, contracts));
     }
 
-    private static async Task<RepairQueueWidget> GetRepairQueue(SqlConnection conn)
+    private static async Task<RepairQueueWidget> GetRepairQueue(SqlConnection conn, int locationKey)
     {
         var sql = $"""
             SELECT
@@ -49,11 +55,14 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-            WHERE r.dtDateOut IS NULL AND {KpiRepairScopeWhere}
+            WHERE r.dtDateOut IS NULL
+              AND r.lServiceLocationKey = @locationKey
+              AND {KpiRepairScopeWhere}
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
@@ -77,11 +86,14 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
-            WHERE r.dtDateOut IS NULL AND {KpiRepairScopeWhere}
+            WHERE r.dtDateOut IS NULL
+              AND r.lServiceLocationKey = @locationKey
+              AND {KpiRepairScopeWhere}
             ORDER BY r.dtDateIn DESC
             """;
         await using var recentCmd = new SqlCommand(recentSql, conn);
         recentCmd.CommandTimeout = 30;
+        recentCmd.Parameters.AddWithValue("@locationKey", locationKey);
         var items = new List<RepairQueueItem>();
         await using var rr = await recentCmd.ExecuteReaderAsync();
         while (await rr.ReadAsync())
@@ -98,7 +110,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
         return new RepairQueueWidget(received, inRepair, qcHold, shipReady, overdue, items);
     }
 
-    private static async Task<OverdueWidget> GetOverdue(SqlConnection conn)
+    private static async Task<OverdueWidget> GetOverdue(SqlConnection conn, int locationKey)
     {
         var sql = $"""
             SELECT TOP 5 r.sWorkOrderNumber,
@@ -108,12 +120,14 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             WHERE r.dtDateOut IS NULL
+                  AND r.lServiceLocationKey = @locationKey
                   AND DATEDIFF(day, r.dtDateIn, GETDATE()) > 7
                   AND {KpiRepairScopeWhere}
             ORDER BY r.dtDateIn ASC
             """;
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         var items = new List<OverdueItem>();
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync())
@@ -128,7 +142,7 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
         return new OverdueWidget(items);
     }
 
-    private static async Task<InvoicesWidget> GetInvoices(SqlConnection conn)
+    private static async Task<InvoicesWidget> GetInvoices(SqlConnection conn, int locationKey)
     {
         var sql = $"""
             SELECT
@@ -138,10 +152,13 @@ public class WorkspaceController(IConfiguration config) : ControllerBase
                 ISNULL(SUM(CASE WHEN MONTH(r.dtDateOut) = MONTH(GETDATE()) AND YEAR(r.dtDateOut) = YEAR(GETDATE()) AND r.dblAmtRepair > 0 THEN r.dblAmtRepair ELSE 0 END), 0) AS InvoicedThisMonth
             FROM tblRepair r
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-            WHERE r.dtDateOut IS NOT NULL AND {KpiRepairScopeWhere}
+            WHERE r.dtDateOut IS NOT NULL
+              AND r.lServiceLocationKey = @locationKey
+              AND {KpiRepairScopeWhere}
             """;
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
         var result = new InvoicesWidget(
