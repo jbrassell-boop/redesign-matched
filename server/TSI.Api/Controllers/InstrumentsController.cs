@@ -20,10 +20,13 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string>();
+        var where = new List<string> { "r.lServiceLocationKey = @locationKey" };
         // Instrument repairs only — exclude scope repairs (Flex/Rigid/Camera)
         where.Add("ISNULL(st.sRigidOrFlexible, '') NOT IN ('R','F','C')");
         if (!string.IsNullOrWhiteSpace(search))
@@ -62,12 +65,14 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
 
         await using var countCmd = new SqlCommand(countSql, conn);
         countCmd.CommandTimeout = 30;
+        countCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter)) countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 30;
+        dataCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter)) dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);

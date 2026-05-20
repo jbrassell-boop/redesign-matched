@@ -20,10 +20,14 @@ public class EndoCartsController(IConfiguration config) : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
+        // Mandatory location scope. Scope inventory filters through the
+        // home department's service location. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string>();
+        var where = new List<string> { "d.lServiceLocationKey = @locationKey" };
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("(s.sSerialNumber LIKE @search OR st.sScopeTypeDesc LIKE @search OR c.sClientName1 LIKE @search OR d.sDepartmentName LIKE @search)");
         if (!string.IsNullOrWhiteSpace(rigidOrFlexible))
@@ -61,12 +65,14 @@ public class EndoCartsController(IConfiguration config) : ControllerBase
 
         await using var countCmd = new SqlCommand(countSql, conn);
         countCmd.CommandTimeout = 30;
+        countCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(rigidOrFlexible)) countCmd.Parameters.AddWithValue("@rigidOrFlexible", rigidOrFlexible);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 30;
+        dataCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(rigidOrFlexible)) dataCmd.Parameters.AddWithValue("@rigidOrFlexible", rigidOrFlexible);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);

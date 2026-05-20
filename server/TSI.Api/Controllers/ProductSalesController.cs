@@ -82,10 +82,15 @@ public class ProductSalesController(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
+        // Mandatory location scope — product sales filter through the dept's
+        // service location (tblProductSales has lDepartmentKey, tblDepartment
+        // has lServiceLocationKey). See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string>();
+        var where = new List<string> { "d.lServiceLocationKey = @locationKey" };
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("(ps.sInvoiceNumber LIKE @search OR c.sClientName1 LIKE @search OR ps.sPurchaseOrder LIKE @search)");
         if (!string.IsNullOrWhiteSpace(status))
@@ -93,10 +98,12 @@ public class ProductSalesController(
 
         var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
 
+        // Count query needs tblDepartment join too for the location filter.
         var countSql = $"""
             SELECT COUNT(*)
             FROM tblProductSales ps
             LEFT JOIN tblClient c ON c.lClientKey = ps.lClientKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = ps.lDepartmentKey
             {whereClause}
             """;
 
@@ -126,12 +133,14 @@ public class ProductSalesController(
 
         await using var countCmd = new SqlCommand(countSql, conn);
         countCmd.CommandTimeout = 30;
+        countCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(status)) countCmd.Parameters.AddWithValue("@status", status);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 30;
+        dataCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(status)) dataCmd.Parameters.AddWithValue("@status", status);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -165,6 +174,9 @@ public class ProductSalesController(
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -188,10 +200,13 @@ public class ProductSalesController(
                 ISNULL(SUM(CASE WHEN ps.dtInvoiceDate IS NOT NULL AND ps.dtCanceledDate IS NULL
                                 AND ps.dtDeniedDate IS NULL THEN ps.nTotalAmount ELSE 0 END), 0) AS Revenue
             FROM tblProductSales ps
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = ps.lDepartmentKey
+            WHERE d.lServiceLocationKey = @locationKey
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
