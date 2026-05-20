@@ -1,36 +1,69 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ComponentType } from 'react';
 import { createBrowserRouter } from 'react-router-dom';
 import { Spin } from 'antd';
 import { AppShell } from './components/shell/AppShell';
 import { RouteGuard } from './components/common/RouteGuard';
 
-// Lazy-loaded pages (all use named exports)
-const LoginPage = lazy(() => import('./pages/login/LoginPage').then(m => ({ default: m.LoginPage })));
-const ClientsPage = lazy(() => import('./pages/clients/ClientsPage').then(m => ({ default: m.ClientsPage })));
-const ContractsPage = lazy(() => import('./pages/contracts/ContractsPage').then(m => ({ default: m.ContractsPage })));
-const DashboardPage = lazy(() => import('./pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })));
-const DepartmentsPage = lazy(() => import('./pages/departments/DepartmentsPage').then(m => ({ default: m.DepartmentsPage })));
-const InventoryPage = lazy(() => import('./pages/inventory/InventoryPage').then(m => ({ default: m.InventoryPage })));
-const RepairsPage = lazy(() => import('./pages/repairs/RepairsPage').then(m => ({ default: m.RepairsPage })));
-const QualityPage = lazy(() => import('./pages/quality/QualityPage').then(m => ({ default: m.QualityPage })));
-const LoanersPage = lazy(() => import('./pages/loaners/LoanersPage').then(m => ({ default: m.LoanersPage })));
-const SuppliersPage = lazy(() => import('./pages/suppliers/SuppliersPage').then(m => ({ default: m.SuppliersPage })));
-const FinancialPage = lazy(() => import('./pages/financial/FinancialPage').then(m => ({ default: m.FinancialPage })));
-const OnsiteServicesPage = lazy(() => import('./pages/onsite-services/OnsiteServicesPage').then(m => ({ default: m.OnsiteServicesPage })));
-const ScopeModelPage = lazy(() => import('./pages/scope-model/ScopeModelPage').then(m => ({ default: m.ScopeModelPage })));
-const InstrumentsPage = lazy(() => import('./pages/instruments/InstrumentsPage').then(m => ({ default: m.InstrumentsPage })));
-const OutsourceValidationPage = lazy(() => import('./pages/outsource-validation/OutsourceValidationPage').then(m => ({ default: m.OutsourceValidationPage })));
-const AcquisitionsPage = lazy(() => import('./pages/acquisitions/AcquisitionsPage').then(m => ({ default: m.AcquisitionsPage })));
-const ProductSalePage = lazy(() => import('./pages/product-sale/ProductSalePage').then(m => ({ default: m.ProductSalePage })));
-const ReportsPage = lazy(() => import('./pages/reports/ReportsPage').then(m => ({ default: m.ReportsPage })));
-const WorkspacePage = lazy(() => import('./pages/workspace/WorkspacePage').then(m => ({ default: m.WorkspacePage })));
-const AdministrationPage = lazy(() => import('./pages/administration/AdministrationPage').then(m => ({ default: m.AdministrationPage })));
-const DevelopmentListPage = lazy(() => import('./pages/development-list/DevelopmentListPage').then(m => ({ default: m.DevelopmentListPage })));
-const EndoCartsPage = lazy(() => import('./pages/endocarts/EndoCartsPage').then(m => ({ default: m.EndoCartsPage })));
-const ReceivingPage = lazy(() => import('./pages/receiving/ReceivingPage').then(m => ({ default: m.ReceivingPage })));
-const RepairItemsPage = lazy(() => import('./pages/repair-items/RepairItemsPage').then(m => ({ default: m.RepairItemsPage })));
-const FieldVerifierPage = lazy(() => import('./pages/FieldVerifier/index').then(m => ({ default: m.FieldVerifierPage })));
-const NotFoundPage = lazy(() => import('./pages/not-found/NotFoundPage').then(m => ({ default: m.NotFoundPage })));
+// Stale-chunk recovery: when a new deploy lands while a user has the app
+// open, dynamic-import chunks 404 because their content hash changed. The
+// dashboard becomes unusable until the user manually hard-refreshes.
+// Wrap every lazy() loader so a chunk-load failure triggers one reload to
+// pick up the new bundle. sessionStorage guard prevents an infinite reload
+// loop if the import fails for a different reason (e.g., genuine 500).
+const CHUNK_RELOAD_KEY = 'tsi_chunkReloadAt';
+function withChunkReload<T extends ComponentType<unknown>>(
+  loader: () => Promise<{ default: T }>,
+): () => Promise<{ default: T }> {
+  return async () => {
+    try {
+      return await loader();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const looksLikeStaleChunk =
+        /Failed to fetch dynamically imported module|Loading chunk .+ failed|ChunkLoadError|error loading dynamically imported module/i.test(msg);
+      if (looksLikeStaleChunk) {
+        const lastReloadAt = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY) || 0);
+        const sinceLast = Date.now() - lastReloadAt;
+        // Only reload once per ~30s — if a fresh reload still hits this, it's
+        // not a stale-chunk issue and re-reloading would loop forever.
+        if (sinceLast > 30000) {
+          sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+          window.location.reload();
+          return new Promise<{ default: T }>(() => { /* never resolves */ });
+        }
+      }
+      throw err;
+    }
+  };
+}
+
+// Lazy-loaded pages (all use named exports). Each wrapped via withChunkReload.
+const LoginPage = lazy(withChunkReload(() => import('./pages/login/LoginPage').then(m => ({ default: m.LoginPage }))));
+const ClientsPage = lazy(withChunkReload(() => import('./pages/clients/ClientsPage').then(m => ({ default: m.ClientsPage }))));
+const ContractsPage = lazy(withChunkReload(() => import('./pages/contracts/ContractsPage').then(m => ({ default: m.ContractsPage }))));
+const DashboardPage = lazy(withChunkReload(() => import('./pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage }))));
+const DepartmentsPage = lazy(withChunkReload(() => import('./pages/departments/DepartmentsPage').then(m => ({ default: m.DepartmentsPage }))));
+const InventoryPage = lazy(withChunkReload(() => import('./pages/inventory/InventoryPage').then(m => ({ default: m.InventoryPage }))));
+const RepairsPage = lazy(withChunkReload(() => import('./pages/repairs/RepairsPage').then(m => ({ default: m.RepairsPage }))));
+const QualityPage = lazy(withChunkReload(() => import('./pages/quality/QualityPage').then(m => ({ default: m.QualityPage }))));
+const LoanersPage = lazy(withChunkReload(() => import('./pages/loaners/LoanersPage').then(m => ({ default: m.LoanersPage }))));
+const SuppliersPage = lazy(withChunkReload(() => import('./pages/suppliers/SuppliersPage').then(m => ({ default: m.SuppliersPage }))));
+const FinancialPage = lazy(withChunkReload(() => import('./pages/financial/FinancialPage').then(m => ({ default: m.FinancialPage }))));
+const OnsiteServicesPage = lazy(withChunkReload(() => import('./pages/onsite-services/OnsiteServicesPage').then(m => ({ default: m.OnsiteServicesPage }))));
+const ScopeModelPage = lazy(withChunkReload(() => import('./pages/scope-model/ScopeModelPage').then(m => ({ default: m.ScopeModelPage }))));
+const InstrumentsPage = lazy(withChunkReload(() => import('./pages/instruments/InstrumentsPage').then(m => ({ default: m.InstrumentsPage }))));
+const OutsourceValidationPage = lazy(withChunkReload(() => import('./pages/outsource-validation/OutsourceValidationPage').then(m => ({ default: m.OutsourceValidationPage }))));
+const AcquisitionsPage = lazy(withChunkReload(() => import('./pages/acquisitions/AcquisitionsPage').then(m => ({ default: m.AcquisitionsPage }))));
+const ProductSalePage = lazy(withChunkReload(() => import('./pages/product-sale/ProductSalePage').then(m => ({ default: m.ProductSalePage }))));
+const ReportsPage = lazy(withChunkReload(() => import('./pages/reports/ReportsPage').then(m => ({ default: m.ReportsPage }))));
+const WorkspacePage = lazy(withChunkReload(() => import('./pages/workspace/WorkspacePage').then(m => ({ default: m.WorkspacePage }))));
+const AdministrationPage = lazy(withChunkReload(() => import('./pages/administration/AdministrationPage').then(m => ({ default: m.AdministrationPage }))));
+const DevelopmentListPage = lazy(withChunkReload(() => import('./pages/development-list/DevelopmentListPage').then(m => ({ default: m.DevelopmentListPage }))));
+const EndoCartsPage = lazy(withChunkReload(() => import('./pages/endocarts/EndoCartsPage').then(m => ({ default: m.EndoCartsPage }))));
+const ReceivingPage = lazy(withChunkReload(() => import('./pages/receiving/ReceivingPage').then(m => ({ default: m.ReceivingPage }))));
+const RepairItemsPage = lazy(withChunkReload(() => import('./pages/repair-items/RepairItemsPage').then(m => ({ default: m.RepairItemsPage }))));
+const FieldVerifierPage = lazy(withChunkReload(() => import('./pages/FieldVerifier/index').then(m => ({ default: m.FieldVerifierPage }))));
+const NotFoundPage = lazy(withChunkReload(() => import('./pages/not-found/NotFoundPage').then(m => ({ default: m.NotFoundPage }))));
 
 const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', padding: '2rem' }}><Spin size="large" /></div>}>
