@@ -154,6 +154,39 @@ Validated all 10 dashboard endpoints + workspace by running each SQL block direc
 
 **Net: Dashboard + Workspace are dry-run ready.** No 500s, no schema mismatches, all 12 endpoints execute cleanly.
 
+### Late-night correction — ship-date undercount (2026-05-19 evening)
+
+Joe flagged that the throughput numbers looked low. Investigation:
+
+```
+tblRepair: 217,637 total / 216,757 closed / 880 currently open
+  has dtShipDate: 99,162  ←  before backfill
+  has dtDateOut:  216,489
+  ───────────────────────
+  difference:     117,328 closed repairs with dtDateOut but NO dtShipDate
+```
+
+Goldmine workflow quirk: `dtDateOut` (repair-complete) was the universal exit-date field, but `dtShipDate` (physical ship) was only populated by some users some of the time over the years. Migration faithfully preserved that state. Every dashboard widget keyed off `dtShipDate` was silently undercounting shipped throughput by ~38%.
+
+**Two-part fix shipped:**
+
+1. **Backfill on happy-plant Azure SQL** — `UPDATE tblRepair SET dtShipDate = dtDateOut WHERE dtShipDate IS NULL AND dtDateOut IS NOT NULL`. 117,328 rows healed. Verified post-state: `still_missing = 0`, `has_dtShipDate = 216,490` (+117,328). Permanent.
+
+2. **`COALESCE(dtShipDate, dtDateOut)` in every shipped-throughput SQL** — defense-in-depth in case future ingest re-introduces the gap. Applied to DashboardController.cs (stats, briefing, shipping, techbench, analytics, executive-kpi) and FinancialController.cs (RevenueMTD). Commit e268f73, deployed to happy-plant. SELECT-list display fields left as-is (those should show actual ship date, NULL if absent).
+
+3. **Phase 76 migration for Steve's repo** — `76-backfill-ship-dates.sql`, idempotent, slots between phase 75 (site services) and phase 80 (invoices) in `run-all.sql`. Added to PR #56. When Steve runs the migration in prod, the same heal happens automatically. Audit columns intentionally untouched per migration-cleanup policy.
+
+**Corrected dashboard numbers** (verified post-fix against cloud DB):
+
+| Metric | Reported earlier | True value | Delta |
+|---|---|---|---|
+| ShippedThisWeek | 75 | **98** | +31% |
+| ShippedThisMonth | 248 | **381** | +54% |
+| AvgTAT (days) | 30.6 | **19.3** | -37% (correct picture — historical short-TAT repairs were invisible) |
+| RevenueThisMonth | $0 | **$457,983** | revealed |
+
+This was the largest single accuracy lift of the session — every executive-facing KPI was systemically wrong, and the fix is now in both the data and the code.
+
 ## Dry-run go signal (2026-05-20)
 
 **Ready for a focused 2-3 tester dry-run now.** The repair-lifecycle path is solid, Administration works, Loaners works, Quality is correctly labeled. Testers can ignore the empty Onsite/Outsource-vendor/Scope-Model-joins/Suppliers-roles/Acquisitions columns since those flip green data-wise on next migration run.
