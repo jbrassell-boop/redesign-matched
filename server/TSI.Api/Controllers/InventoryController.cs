@@ -62,7 +62,8 @@ public class InventoryController(IConfiguration config) : ControllerBase
                    ISNULL(SUM(li.nLevelMaximum), 0) AS nLevelMaximum,
                    ISNULL(i.bActive, 0) AS bActive,
                    COUNT(DISTINCT s.lInventorySizeKey) AS SizeCount,
-                   CASE WHEN ISNULL(SUM(li.nLevelCurrent), 0) <= ISNULL(SUM(li.nLevelMinimum), 0)
+                   CASE WHEN ISNULL(SUM(li.nLevelMinimum), 0) > 0
+                         AND ISNULL(SUM(li.nLevelCurrent), 0) <= ISNULL(SUM(li.nLevelMinimum), 0)
                         THEN 1 ELSE 0 END AS IsLowStock
             FROM tblInventory i
             LEFT JOIN tblInventorySize s
@@ -327,30 +328,63 @@ public class InventoryController(IConfiguration config) : ControllerBase
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
+        // Mandatory location scope. LowStockCount is per-location (items
+        // below their UC min are different from items below their Nashville
+        // min). Total/Active/Inactive remain org-level — those reflect
+        // catalog membership, not per-location presence. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        const string sql = """
+        // Catalog-level counts from tblInventory.bActive.
+        const string catalogSql = """
             SELECT
                 COUNT(*) AS TotalCount,
                 SUM(CASE WHEN ISNULL(bActive, 0) = 1 THEN 1 ELSE 0 END) AS ActiveCount,
-                SUM(CASE WHEN ISNULL(bActive, 0) = 0 THEN 1 ELSE 0 END) AS InactiveCount,
-                SUM(CASE WHEN ISNULL(bActive, 0) = 1
-                          AND ISNULL(nLevelCurrent, 0) <= ISNULL(nLevelMinimum, 0)
-                          THEN 1 ELSE 0 END) AS LowStockCount
+                SUM(CASE WHEN ISNULL(bActive, 0) = 0 THEN 1 ELSE 0 END) AS InactiveCount
             FROM tblInventory
             """;
 
-        await using var cmd = new SqlCommand(sql, conn);
-        cmd.CommandTimeout = 30;
-        await using var reader = await cmd.ExecuteReaderAsync();
-        await reader.ReadAsync();
+        await using var catalogCmd = new SqlCommand(catalogSql, conn);
+        catalogCmd.CommandTimeout = 30;
+        await using var catalogReader = await catalogCmd.ExecuteReaderAsync();
+        await catalogReader.ReadAsync();
+        var totalCount = Convert.ToInt32(catalogReader["TotalCount"]);
+        var activeCount = Convert.ToInt32(catalogReader["ActiveCount"]);
+        var inactiveCount = Convert.ToInt32(catalogReader["InactiveCount"]);
+        await catalogReader.CloseAsync();
+
+        // LowStock: per-location rollup from tblInventorySizeLocationInfo.
+        // Item is low if SUM(currentLevel) <= SUM(minLevel) AND there's a
+        // non-zero min set somewhere (items with no reorder threshold at
+        // this location don't count as "low").
+        const string lowStockSql = """
+            SELECT COUNT(*) AS LowStockCount
+            FROM tblInventory i
+            JOIN tblInventorySize s ON s.lInventoryKey = i.lInventoryKey AND s.Deleted_datetime IS NULL
+            LEFT JOIN tblInventorySizeLocationInfo li
+                   ON li.lInventorySizeKey = s.lInventorySizeKey
+                  AND li.lServiceLocationKey = @locationKey
+                  AND li.Deleted_datetime IS NULL
+            WHERE ISNULL(i.bActive, 0) = 1
+            GROUP BY i.lInventoryKey
+            HAVING ISNULL(SUM(li.nLevelMinimum), 0) > 0
+               AND ISNULL(SUM(li.nLevelCurrent), 0) <= ISNULL(SUM(li.nLevelMinimum), 0)
+            """;
+
+        await using var lowCmd = new SqlCommand(lowStockSql, conn);
+        lowCmd.CommandTimeout = 30;
+        lowCmd.Parameters.AddWithValue("@locationKey", locationKey);
+        var lowStockCount = 0;
+        await using var lowReader = await lowCmd.ExecuteReaderAsync();
+        while (await lowReader.ReadAsync()) lowStockCount++;
 
         return Ok(new InventoryStats(
-            TotalCount: Convert.ToInt32(reader["TotalCount"]),
-            ActiveCount: Convert.ToInt32(reader["ActiveCount"]),
-            InactiveCount: Convert.ToInt32(reader["InactiveCount"]),
-            LowStockCount: Convert.ToInt32(reader["LowStockCount"])
+            TotalCount: totalCount,
+            ActiveCount: activeCount,
+            InactiveCount: inactiveCount,
+            LowStockCount: lowStockCount
         ));
     }
 
