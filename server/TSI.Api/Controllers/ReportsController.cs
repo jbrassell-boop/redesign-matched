@@ -31,6 +31,9 @@ public class ReportsController(IConfiguration config) : ControllerBase
         [FromQuery] string period = "month",
         [FromQuery] int months = 12)
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -48,12 +51,14 @@ public class ReportsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             WHERE r.dtDateIn >= DATEADD(MONTH, -@months, GETDATE())
+              AND r.lServiceLocationKey = @locationKey
               AND {KpiRepairScopeWhere}
             GROUP BY {groupBy}
             ORDER BY MIN(r.dtDateIn)";
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -69,6 +74,9 @@ public class ReportsController(IConfiguration config) : ControllerBase
     [HttpGet("tat-analysis")]
     public async Task<IActionResult> TatAnalysis([FromQuery] int months = 6)
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -87,12 +95,14 @@ public class ReportsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             WHERE r.dtDateOut IS NOT NULL
               AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
+              AND r.lServiceLocationKey = @locationKey
               AND {KpiRepairScopeWhere}
             GROUP BY FORMAT(r.dtDateOut, 'yyyy-MM'), st.sScopeTypeDesc
             ORDER BY MIN(r.dtDateOut), st.sScopeTypeDesc";
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -108,6 +118,9 @@ public class ReportsController(IConfiguration config) : ControllerBase
     [HttpGet("revenue-client")]
     public async Task<IActionResult> RevenueByClient([FromQuery] int months = 12)
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -123,12 +136,14 @@ public class ReportsController(IConfiguration config) : ControllerBase
             JOIN tblClient c ON c.lClientKey = d.lClientKey
             WHERE r.dtDateOut IS NOT NULL
               AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
+              AND r.lServiceLocationKey = @locationKey
               AND {KpiRepairScopeWhere}
             GROUP BY c.sClientName1
             ORDER BY SUM(r.dblAmtRepair) DESC";
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -144,6 +159,9 @@ public class ReportsController(IConfiguration config) : ControllerBase
     [HttpGet("client-scorecard")]
     public async Task<IActionResult> ClientScorecard([FromQuery] int months = 12)
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -163,12 +181,14 @@ public class ReportsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairItemTran rit ON rit.lRepairKey = r.lRepairKey
             WHERE r.dtDateOut IS NOT NULL
               AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
+              AND r.lServiceLocationKey = @locationKey
               AND {KpiRepairScopeWhere}
             GROUP BY c.sClientName1
             ORDER BY SUM(r.dblAmtRepair) DESC";
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -190,6 +210,9 @@ public class ReportsController(IConfiguration config) : ControllerBase
     [HttpGet("tech-productivity")]
     public async Task<IActionResult> TechProductivity([FromQuery] int months = 3)
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -205,12 +228,14 @@ public class ReportsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             WHERE r.dtDateOut IS NOT NULL
               AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
+              AND r.lServiceLocationKey = @locationKey
               AND {KpiRepairScopeWhere}
             GROUP BY t.sTechName
             ORDER BY COUNT(*) DESC";
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -224,6 +249,9 @@ public class ReportsController(IConfiguration config) : ControllerBase
     [HttpGet("warranty-claims")]
     public async Task<IActionResult> WarrantyClaims([FromQuery] int months = 12)
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -239,12 +267,14 @@ public class ReportsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairItem ri ON ri.lRepairItemKey = rit.lRepairItemKey
             WHERE rit.sFixType = 'W'
               AND r.dtDateIn >= DATEADD(MONTH, -@months, GETDATE())
+              AND r.lServiceLocationKey = @locationKey
               AND {KpiRepairScopeWhere}
             GROUP BY c.sClientName1, ri.sItemDescription
             ORDER BY COUNT(*) DESC";
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
@@ -258,6 +288,9 @@ public class ReportsController(IConfiguration config) : ControllerBase
     [HttpGet("scope-repair-list")]
     public async Task<IActionResult> ScopeRepairList([FromQuery] int months = 6)
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -285,11 +318,13 @@ public class ReportsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             WHERE r.dtDateIn >= DATEADD(MONTH, -@months, GETDATE())
+              AND r.lServiceLocationKey = @locationKey
               AND {KpiRepairScopeWhere}
             ORDER BY r.dtDateIn DESC";
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.Parameters.AddWithValue("@months", months);
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         cmd.CommandTimeout = 60;
         await using var reader = await cmd.ExecuteReaderAsync();
 
