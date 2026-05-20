@@ -57,26 +57,20 @@ export const InventoryPage = () => {
     return () => { cancelled = true; };
   }, []);
 
-  const handleSelect = useCallback(async (item: InventoryListItem) => {
+  const handleSelect = useCallback((item: InventoryListItem) => {
     setSelectedKey(item.inventoryKey);
-    setDetailLoading(true);
-    try {
-      const d = await getInventoryDetail(item.inventoryKey, locationKey);
-      setDetail(d);
-    } finally {
-      setDetailLoading(false);
-    }
-  }, [locationKey]);
+  }, []);
 
-  // Re-fetch the open detail when the banner location changes so size-level
-  // qty/cost/bin reflect the newly selected service location.
+  // Single fetch path — fires on initial select (selectedKey 0→N) AND on banner
+  // location change (locationKey 1↔2). Earlier handleSelect also fetched, which
+  // doubled every row click; that's gone now.
   useEffect(() => {
     if (selectedKey == null) return;
     let cancelled = false;
     setDetailLoading(true);
     getInventoryDetail(selectedKey, locationKey)
       .then(d => { if (!cancelled) setDetail(d); })
-      .catch(() => { if (!cancelled) message.error('Failed to reload inventory detail'); })
+      .catch(() => { if (!cancelled) message.error('Failed to load inventory detail'); })
       .finally(() => { if (!cancelled) setDetailLoading(false); });
     return () => { cancelled = true; };
   }, [locationKey, selectedKey]);
