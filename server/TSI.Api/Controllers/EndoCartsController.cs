@@ -106,10 +106,13 @@ public class EndoCartsController(IConfiguration config) : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string>();
+        var where = new List<string> { "r.lServiceLocationKey = @locationKey" };
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("(r.sWorkOrderNumber LIKE @search OR s.sSerialNumber LIKE @search OR st.sScopeTypeDesc LIKE @search OR c.sClientName1 LIKE @search)");
         if (!string.IsNullOrWhiteSpace(status))
@@ -150,12 +153,14 @@ public class EndoCartsController(IConfiguration config) : ControllerBase
 
         await using var countCmd = new SqlCommand(countSql, conn);
         countCmd.CommandTimeout = 30;
+        countCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(status)) countCmd.Parameters.AddWithValue("@status", status);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 30;
+        dataCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(status)) dataCmd.Parameters.AddWithValue("@status", status);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
@@ -187,6 +192,11 @@ public class EndoCartsController(IConfiguration config) : ControllerBase
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
+        // Mandatory location scope. Scope counts gate by home-department's
+        // location; repair counts gate by r.lServiceLocationKey. See CLAUDE.md
+        // rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -196,10 +206,13 @@ public class EndoCartsController(IConfiguration config) : ControllerBase
                 SUM(CASE WHEN ISNULL(s.sScopeIsDead, 'N') = 'N' THEN 1 ELSE 0 END) AS ActiveScopes,
                 SUM(CASE WHEN s.sScopeIsDead = 'Y' THEN 1 ELSE 0 END) AS InactiveScopes
             FROM tblScope s
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = s.lDepartmentKey
+            WHERE d.lServiceLocationKey = @locationKey
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
@@ -213,10 +226,12 @@ public class EndoCartsController(IConfiguration config) : ControllerBase
                 COUNT(*) AS TotalRepairs,
                 SUM(CASE WHEN r.dtDateIn >= DATEADD(DAY, -90, GETDATE()) THEN 1 ELSE 0 END) AS RecentRepairs
             FROM tblRepair r
+            WHERE r.lServiceLocationKey = @locationKey
             """;
 
         await using var repairCmd = new SqlCommand(repairSql, conn);
         repairCmd.CommandTimeout = 30;
+        repairCmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var repairReader = await repairCmd.ExecuteReaderAsync();
         await repairReader.ReadAsync();
 

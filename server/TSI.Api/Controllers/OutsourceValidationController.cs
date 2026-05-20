@@ -22,10 +22,14 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 25)
     {
+        // Mandatory location scope. Outsource validation is per-location:
+        // UC's outsourced repairs aren't Nashville's. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string> { "r.bOutsourced = 1" };
+        var where = new List<string> { "r.bOutsourced = 1", "r.lServiceLocationKey = @locationKey" };
 
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("(r.sWorkOrderNumber LIKE @search OR s.sSerialNumber LIKE @search OR c.sClientName1 LIKE @search OR v.sVendName1 LIKE @search)");
@@ -73,14 +77,16 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
 
         await using var countCmd = new SqlCommand(countSql, conn);
         countCmd.CommandTimeout = 30;
+        countCmd.Parameters.AddWithValue("@locationKey", locationKey);
         countCmd.Parameters.AddWithValue("@search", string.IsNullOrWhiteSpace(search) ? (object)DBNull.Value : $"%{search}%");
         if (!string.IsNullOrWhiteSpace(dateFrom)) countCmd.Parameters.AddWithValue("@dateFrom", dateFrom);
         if (!string.IsNullOrWhiteSpace(dateTo)) countCmd.Parameters.AddWithValue("@dateTo", dateTo);
         // Only add @search if used in query
         if (string.IsNullOrWhiteSpace(search))
         {
-            // Remove unused parameter
+            // Remove unused parameter (keep @locationKey + dates)
             countCmd.Parameters.Clear();
+            countCmd.Parameters.AddWithValue("@locationKey", locationKey);
             if (!string.IsNullOrWhiteSpace(dateFrom)) countCmd.Parameters.AddWithValue("@dateFrom", dateFrom);
             if (!string.IsNullOrWhiteSpace(dateTo)) countCmd.Parameters.AddWithValue("@dateTo", dateTo);
         }
@@ -88,6 +94,7 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 30;
+        dataCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(dateFrom)) dataCmd.Parameters.AddWithValue("@dateFrom", dateFrom);
         if (!string.IsNullOrWhiteSpace(dateTo)) dataCmd.Parameters.AddWithValue("@dateTo", dateTo);
@@ -233,6 +240,9 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -247,10 +257,12 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
                 AVG(DATEDIFF(day, r.dtDateIn, ISNULL(r.dtDateOut, GETDATE()))) AS AvgDaysOut
             FROM tblRepair r
             WHERE r.bOutsourced = 1
+              AND r.lServiceLocationKey = @locationKey
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         await using var reader = await cmd.ExecuteReaderAsync();
         await reader.ReadAsync();
 
@@ -269,11 +281,13 @@ public class OutsourceValidationController(IConfiguration config) : ControllerBa
             FROM tblRepair r
             LEFT JOIN tblVendor v ON v.lVendorKey = r.lVendorKey
             WHERE r.bOutsourced = 1
+              AND r.lServiceLocationKey = @locationKey
             GROUP BY ISNULL(v.sVendName1, '(Unassigned)')
             ORDER BY VendorSpend DESC
             """;
         await using var vendorCmd = new SqlCommand(vendorSql, conn);
         vendorCmd.CommandTimeout = 30;
+        vendorCmd.Parameters.AddWithValue("@locationKey", locationKey);
         var topVendor = "--";
         var topVendorSpend = 0.0;
         await using var vr = await vendorCmd.ExecuteReaderAsync();

@@ -34,10 +34,13 @@ public class QualityController(IConfiguration config) : ControllerBase
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string>();
+        var where = new List<string> { "r.lServiceLocationKey = @locationKey" };
 
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("(r.sWorkOrderNumber LIKE @search OR c.sClientName1 LIKE @search OR s.sSerialNumber LIKE @search)");
@@ -92,11 +95,13 @@ public class QualityController(IConfiguration config) : ControllerBase
 
         await using var countCmd = new SqlCommand(countSql, conn);
         countCmd.CommandTimeout = 30;
+        countCmd.Parameters.AddWithValue("@locationKey", locationKey);
         AddCommonParams(countCmd, search, dateFrom, dateTo, resultFilter);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 30;
+        dataCmd.Parameters.AddWithValue("@locationKey", locationKey);
         AddCommonParams(dataCmd, search, dateFrom, dateTo, resultFilter);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         dataCmd.Parameters.AddWithValue("@pageSize", pageSize);
