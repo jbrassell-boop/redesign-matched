@@ -18,8 +18,10 @@ export const getInventoryList = async (params: {
   return data;
 };
 
-export const getInventoryDetail = async (inventoryKey: number): Promise<InventoryDetail> => {
-  const { data } = await apiClient.get<InventoryDetail>(`/inventory/${inventoryKey}`);
+export const getInventoryDetail = async (inventoryKey: number, locationKey: number): Promise<InventoryDetail> => {
+  const { data } = await apiClient.get<InventoryDetail>(`/inventory/${inventoryKey}`, {
+    params: { locationKey },
+  });
   return data;
 };
 

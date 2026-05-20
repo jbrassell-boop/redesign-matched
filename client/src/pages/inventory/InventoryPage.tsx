@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { message, Modal } from 'antd';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 import { getInventoryList, getInventoryDetail, getInventoryStats } from '../../api/inventory';
 import { InventoryList } from './InventoryList';
 import { InventoryDetailPane } from './InventoryDetailPane';
@@ -19,6 +20,7 @@ const INVENTORY_EXPORT_COLS = [
 ];
 
 export const InventoryPage = () => {
+  const { locationKey } = useServiceLocation();
   const [items, setItems] = useState<InventoryListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -59,12 +61,25 @@ export const InventoryPage = () => {
     setSelectedKey(item.inventoryKey);
     setDetailLoading(true);
     try {
-      const d = await getInventoryDetail(item.inventoryKey);
+      const d = await getInventoryDetail(item.inventoryKey, locationKey);
       setDetail(d);
     } finally {
       setDetailLoading(false);
     }
-  }, []);
+  }, [locationKey]);
+
+  // Re-fetch the open detail when the banner location changes so size-level
+  // qty/cost/bin reflect the newly selected service location.
+  useEffect(() => {
+    if (selectedKey == null) return;
+    let cancelled = false;
+    setDetailLoading(true);
+    getInventoryDetail(selectedKey, locationKey)
+      .then(d => { if (!cancelled) setDetail(d); })
+      .catch(() => { if (!cancelled) message.error('Failed to reload inventory detail'); })
+      .finally(() => { if (!cancelled) setDetailLoading(false); });
+    return () => { cancelled = true; };
+  }, [locationKey, selectedKey]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', overflow: 'hidden', background: 'var(--bg)' }}>

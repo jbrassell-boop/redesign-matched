@@ -87,10 +87,16 @@ public class InventoryController(IConfiguration config) : ControllerBase
     }
 
     [HttpGet("{inventoryKey:int}")]
-    public async Task<IActionResult> GetInventoryItem(int inventoryKey)
+    public async Task<IActionResult> GetInventoryItem(int inventoryKey, [FromQuery] int? locationKey = null)
     {
         await using var conn = CreateConnection();
         await conn.OpenAsync();
+
+        // Default to Upper Chichester (1) when caller doesn't pass locationKey —
+        // matches the frontend's useServiceLocation localStorage default. Aggregating
+        // SUM/MAX across locations is wrong: a user in UC shouldn't see Nashville
+        // stock summed into their on-hand total.
+        var svcKey = locationKey ?? 1;
 
         const string itemSql = """
             SELECT i.lInventoryKey,
@@ -111,24 +117,26 @@ public class InventoryController(IConfiguration config) : ControllerBase
             WHERE i.lInventoryKey = @inventoryKey
             """;
 
-        // Per-location qty/cost/bin moved off tblInventorySize onto
-        // tblInventorySizeLocationInfo on WinscopeWeb. Aggregate across all
-        // service locations: SUM the integer levels, MAX the unit cost,
-        // first non-null bin. bActive isn't on either side any more — surface
-        // active=true as a placeholder so the row renders.
+        // Per-location qty/cost/bin lives on tblInventorySizeLocationInfo. LEFT JOIN
+        // with the location filter on the join condition so sizes that have no row
+        // for this location still render (zeros via ISNULL), rather than disappearing.
+        // Quick patch ahead of Steve's eventual canonical shape — see memory note
+        // inventory-port-back-from-steve.md.
         const string sizesSql = """
             SELECT s.lInventorySizeKey,
                    ISNULL(s.sSizeDescription, '') AS sSizeDescription,
-                   ISNULL(SUM(li.nLevelCurrent), 0) AS nLevelCurrent,
-                   ISNULL(SUM(li.nLevelMinimum), 0) AS nLevelMinimum,
-                   ISNULL(SUM(li.nLevelMaximum), 0) AS nLevelMaximum,
-                   ISNULL(MAX(li.dblUnitCost), 0) AS dblUnitCost,
-                   MAX(li.sBinNumber) AS sBinNumber,
+                   ISNULL(li.nLevelCurrent, 0) AS nLevelCurrent,
+                   ISNULL(li.nLevelMinimum, 0) AS nLevelMinimum,
+                   ISNULL(li.nLevelMaximum, 0) AS nLevelMaximum,
+                   ISNULL(li.dblUnitCost, 0) AS dblUnitCost,
+                   li.sBinNumber AS sBinNumber,
                    CAST(1 AS bit) AS bActive
             FROM tblInventorySize s
-            LEFT JOIN tblInventorySizeLocationInfo li ON li.lInventorySizeKey = s.lInventorySizeKey
+            LEFT JOIN tblInventorySizeLocationInfo li
+                ON li.lInventorySizeKey = s.lInventorySizeKey
+               AND li.lServiceLocationKey = @locationKey
+               AND li.Deleted_datetime IS NULL
             WHERE s.lInventoryKey = @inventoryKey
-            GROUP BY s.lInventorySizeKey, s.sSizeDescription
             ORDER BY s.sSizeDescription
             """;
 
@@ -161,6 +169,7 @@ public class InventoryController(IConfiguration config) : ControllerBase
         await using var sizesCmd = new SqlCommand(sizesSql, conn);
         sizesCmd.CommandTimeout = 30;
         sizesCmd.Parameters.AddWithValue("@inventoryKey", inventoryKey);
+        sizesCmd.Parameters.AddWithValue("@locationKey", svcKey);
         await using var sizesReader = await sizesCmd.ExecuteReaderAsync();
 
         var sizes = new List<InventorySizeItem>();
