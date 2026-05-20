@@ -260,7 +260,7 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                    -- Extended 4-tab fields
                    r.sRackPosition,
                    r.dtReqSent,
-                   ISNULL(r.dblDiscountPct, c.dblDiscountPct) AS dblDiscountPct,
+                   c.dblDiscountPct,
                    r.dblShippingClientIn,
                    r.bTrackingNumberRequired,
                    r.dtDeliveryDateGuaranteed,
