@@ -20,10 +20,13 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         [FromQuery] int pageSize = 100,
         [FromQuery] int? clientKey = null)
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string>();
+        var where = new List<string> { "d.lServiceLocationKey = @locationKey" };
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("(d.sDepartmentName LIKE @search OR c.sClientName1 LIKE @search OR d.sMailZip LIKE @search OR d.sShipZip LIKE @search)");
         if (clientKey.HasValue)
@@ -52,12 +55,14 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
 
         await using var countCmd = new SqlCommand(countSql, conn);
         countCmd.CommandTimeout = 30;
+        countCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (clientKey.HasValue) countCmd.Parameters.AddWithValue("@clientKey", clientKey.Value);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 30;
+        dataCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (clientKey.HasValue) dataCmd.Parameters.AddWithValue("@clientKey", clientKey.Value);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);

@@ -25,6 +25,11 @@ public class OnsiteServicesController(
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 25)
     {
+        // Mandatory location scope. tblSiteServices.lServiceLocationKey is
+        // populated at INSERT (see CreateOnsiteService below); same column
+        // gates the read here. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -42,7 +47,11 @@ public class OnsiteServicesController(
         // Push search / status / date filters into SQL rather than the C# loop so
         // pagination + totalCount work correctly when real data lands (the legacy
         // in-memory filter was breaking page totals).
-        var where = new List<string> { "ss.Deleted_datetime IS NULL" };
+        var where = new List<string>
+        {
+            "ss.Deleted_datetime IS NULL",
+            "ss.lServiceLocationKey = @locationKey",
+        };
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("(ss.sWorkOrderNumber LIKE @search OR c.sClientName1 LIKE @search OR d.sDepartmentName LIKE @search OR t.sTechName LIKE @search)");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all")
@@ -85,11 +94,13 @@ public class OnsiteServicesController(
 
         await using var countCmd = new SqlCommand(countSql, conn);
         countCmd.CommandTimeout = 30;
+        countCmd.Parameters.AddWithValue("@locationKey", locationKey);
         AddListParams(countCmd, search, statusFilter, dateFrom, dateTo);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var cmd = new SqlCommand(pagedSql, conn);
         cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
         AddListParams(cmd, search, statusFilter, dateFrom, dateTo);
         cmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);
         cmd.Parameters.AddWithValue("@pageSize", pageSize);
@@ -133,6 +144,9 @@ public class OnsiteServicesController(
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {
+        // Mandatory location scope. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -144,9 +158,11 @@ public class OnsiteServicesController(
                    ISNULL(ss.nInvoiceAmount, 0) AS dblTotalBilled
             FROM tblSiteServices ss
             WHERE ss.Deleted_datetime IS NULL
+              AND ss.lServiceLocationKey = @locationKey
             """;
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
 
         var total = 0;
         var submitted = 0;
