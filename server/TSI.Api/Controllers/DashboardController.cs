@@ -98,9 +98,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
         [FromQuery] string? statusFilter = null,
         [FromQuery] string type = "all",
         [FromQuery] string location = "all",
-        [FromQuery] string groupBy = "none",
-        [FromQuery] int? svcKey = null)
+        [FromQuery] string groupBy = "none")
     {
+        // Mandatory location scope — replaces the optional ?svcKey query param
+        // + WO-prefix LIKE workaround. See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
@@ -111,6 +114,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
         {
             "ISNULL(r.sRepairClosed, 'N') != 'Y'",
             "r.dtDateIn >= DATEADD(MONTH, -12, GETDATE())",
+            "r.lServiceLocationKey = @locationKey",
             KpiRepairScopeWhere,
         };
         if (!string.IsNullOrWhiteSpace(search))
@@ -143,14 +147,6 @@ public class DashboardController(IConfiguration config) : ControllerBase
             where.Add("ISNULL(r.bOutsourced, 0) = 1");
         else if (location == "hotlist")
             where.Add("ISNULL(r.bHotList, 0) = 1");
-        if (svcKey.HasValue && svcKey.Value > 0)
-        {
-            // Filter by WO prefix (source of truth) — S-prefix = Nashville (2), N-prefix = UC (1)
-            if (svcKey.Value == 2)
-                where.Add("r.sWorkOrderNumber LIKE 'S[RICKV]%'");
-            else
-                where.Add("r.sWorkOrderNumber NOT LIKE 'S[RICKV]%'");
-        }
 
         var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
 
@@ -202,6 +198,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
 
         await using var countCmd = new SqlCommand(countSql, conn);
         countCmd.CommandTimeout = 60;
+        countCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         if (type != "all" && type != "Carts") { var tc = type switch { "Flexible" => "F", "Rigid" => "R", "Instrument" => "I", "Camera" => "C", _ => type }; countCmd.Parameters.AddWithValue("@type", tc); }
@@ -210,6 +207,7 @@ public class DashboardController(IConfiguration config) : ControllerBase
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 60;
+        dataCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         if (type != "all" && type != "Carts") { var tc2 = type switch { "Flexible" => "F", "Rigid" => "R", "Instrument" => "I", "Camera" => "C", _ => type }; dataCmd.Parameters.AddWithValue("@type", tc2); }

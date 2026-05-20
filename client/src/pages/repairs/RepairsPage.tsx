@@ -51,7 +51,10 @@ const RepairsListView = () => {
   const loadRepairs = useCallback(async (s: string) => {
     setListLoading(true);
     try {
-      const result = await getRepairs({ search: s, page: 1, pageSize: 100, statusFilter: 'all', svcKey: locationKey });
+      // locationKey is kept as a callback dep so a banner switch re-fires the
+      // fetch; the value itself is sent via the X-Service-Location header by
+      // the axios interceptor (api/client.ts), not as a query param.
+      const result = await getRepairs({ search: s, page: 1, pageSize: 100, statusFilter: 'all' });
       setRepairs(result.repairs);
     } finally {
       setListLoading(false);

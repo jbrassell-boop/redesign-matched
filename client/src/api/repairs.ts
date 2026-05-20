@@ -2,13 +2,14 @@ import apiClient from './client';
 import type { RepairDetail, RepairListResponse, RepairsFilters } from '../pages/repairs/types';
 
 export const getRepairs = async (filters: RepairsFilters): Promise<RepairListResponse> => {
+  // Location is sent automatically by the axios interceptor in api/client.ts
+  // as the X-Service-Location header — no svcKey query param needed.
   const { data } = await apiClient.get<RepairListResponse>('/repairs', {
     params: {
       search: filters.search || undefined,
       page: filters.page,
       pageSize: filters.pageSize,
       statusFilter: filters.statusFilter !== 'all' ? filters.statusFilter : undefined,
-      svcKey: filters.svcKey,
     },
   });
   return data;

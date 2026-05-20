@@ -23,7 +23,8 @@ export const getDashboardRepairs = async (filters: DashboardFilters | DashboardT
   if ('type' in filters && filters.type !== 'all') params.type = filters.type;
   if ('location' in filters && filters.location !== 'all') params.location = filters.location;
   if ('groupBy' in filters && filters.groupBy !== 'none') params.groupBy = filters.groupBy;
-  if ('svcKey' in filters && filters.svcKey) params.svcKey = filters.svcKey;
+  // Service location is sent automatically via the X-Service-Location header
+  // (axios interceptor in api/client.ts) — no svcKey query param needed.
   const { data } = await apiClient.get<DashboardRepairsResponse>('/dashboard/repairs', { params });
   return data;
 };

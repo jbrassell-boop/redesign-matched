@@ -19,27 +19,24 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         [FromQuery] string? search = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50,
-        [FromQuery] string? statusFilter = null,
-        [FromQuery] int? svcKey = null)
+        [FromQuery] string? statusFilter = null)
     {
+        // Mandatory location scope — throws if X-Service-Location header missing.
+        // Replaces the optional ?svcKey query param + WO-prefix LIKE workaround.
+        // See CLAUDE.md rule #5.
+        var locationKey = this.GetActiveServiceLocation();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
         var where = new List<string>();
         // Scope repairs only (Flex/Rigid/Camera) — instruments go to /instruments
         where.Add("ISNULL(st.sRigidOrFlexible, '') IN ('R','F','C')");
+        where.Add("r.lServiceLocationKey = @locationKey");
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("(r.sWorkOrderNumber LIKE @search OR c.sClientName1 LIKE @search OR d.sDepartmentName LIKE @search OR st.sScopeTypeDesc LIKE @search OR s.sSerialNumber LIKE @search)");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all")
             where.Add("rs.sRepairStatus = @statusFilter");
-        if (svcKey.HasValue && svcKey.Value > 0)
-        {
-            // Filter by WO prefix (source of truth) — S-prefix = Nashville (2), N-prefix = UC (1)
-            if (svcKey.Value == 2)
-                where.Add("r.sWorkOrderNumber LIKE 'S[RICKV]%'");
-            else
-                where.Add("r.sWorkOrderNumber NOT LIKE 'S[RICKV]%'");
-        }
 
         var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
 
@@ -77,12 +74,14 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
 
         await using var countCmd = new SqlCommand(countSql, conn);
         countCmd.CommandTimeout = 30;
+        countCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) countCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") countCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         var totalCount = Convert.ToInt32(await countCmd.ExecuteScalarAsync());
 
         await using var dataCmd = new SqlCommand(dataSql, conn);
         dataCmd.CommandTimeout = 30;
+        dataCmd.Parameters.AddWithValue("@locationKey", locationKey);
         if (!string.IsNullOrWhiteSpace(search)) dataCmd.Parameters.AddWithValue("@search", $"%{search}%");
         if (!string.IsNullOrWhiteSpace(statusFilter) && statusFilter != "all") dataCmd.Parameters.AddWithValue("@statusFilter", statusFilter);
         dataCmd.Parameters.AddWithValue("@offset", (page - 1) * pageSize);

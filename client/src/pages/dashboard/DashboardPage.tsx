@@ -69,7 +69,9 @@ export const DashboardPage = () => {
       const params = { search: s.search, page: s.page, pageSize: s.pageSize };
       switch (s.view) {
         case 'repairs': {
-          const r = await getDashboardRepairs({ ...s, svcKey: locationKey });
+          // locationKey is kept in deps so banner switch refetches; the value
+          // travels via the X-Service-Location header (api/client.ts interceptor).
+          const r = await getDashboardRepairs(s);
           if (!cancelled()) { setData(r.repairs); setTotalCount(r.totalCount); }
           break;
         }

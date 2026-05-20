@@ -209,6 +209,25 @@ cd client && npx tsc --noEmit 2>&1 | head -20
 ```
 Remove all unused imports before committing.
 
+### 5. Location-Scoped Endpoints (X-Service-Location)
+The system is location-based: a user signed into Upper Chichester must not see Nashville (or any other location) data, and vice versa.
+
+**Backend** — Every list / detail / mutation endpoint that touches a table with `lServiceLocationKey` (or that joins to one — e.g. `tblInventorySizeLocationInfo`, `tblDepartment.lServiceLocationKey`, `tblSiteServices.lServiceLocationKey`, `tblRepair.lServiceLocationKey`) must call:
+
+```csharp
+var locationKey = this.GetActiveServiceLocation();
+```
+
+and filter by it. Extension method lives in `Controllers/ServiceLocationExtensions.cs`. Throws `InvalidOperationException` if the `X-Service-Location` header is missing — that's intentional (a missing header is a wiring bug, not a normal control-flow case; defaulting silently to UC would leak cross-location data).
+
+**Frontend** — `client/src/api/client.ts` axios interceptor sets `X-Service-Location` from `localStorage.tsi_svcLocation` on every request. The banner DDL (via `useServiceLocation` hook) is the single source of truth. Components that need to refetch on banner change should keep `locationKey` from `useServiceLocation` as an effect dep — the value isn't passed to the API call (the interceptor handles that), it's just a refetch trigger.
+
+**Do not** `GROUP BY` away the location dimension or `SUM/MAX` across locations to "make the data complete" — that's how you get aggregated qty-on-hand totals that span 1,500 miles of warehouses. Use a `LEFT JOIN` filtered by `lServiceLocationKey` when a row may not exist for the active location yet (sizes with no stock at this location still render with zero on-hand).
+
+**Exempt pages** — Administration screens that manage system-wide entities (Manage Staff, Security Groups, Service Locations themselves) are location-agnostic. They simply don't call the extension. Use judgment; when in doubt, ask.
+
+Mirrors cloud commit `f1797dd`. Canonical shape — happy-plant and Steve's cloud now share the same wire mechanism.
+
 ---
 
 ## Known Gotchas
