@@ -44,9 +44,16 @@ public class FinancialController(IConfiguration config) : ControllerBase
 
         // SQL CASE expression that mirrors DeriveStatus() logic so status
         // filtering and pagination happen in the database, not in C#.
+        // Updated to consider payment status before aging — an invoice paid
+        // years ago should never display "Overdue" because of its old due date.
         const string statusCaseSql = """
             CASE
                 WHEN ISNULL(i.bIsVoid, 0) = 1 THEN 'Void'
+                WHEN ISNULL(i.bMarkAsPaid, 0) = 1
+                  OR i.dblTranAmount <= ISNULL((SELECT SUM(p.nInvoicePayment)
+                                                FROM tblInvoicePayments p
+                                                WHERE p.lInvoiceKey = i.lInvoiceKey), 0)
+                  THEN 'Paid'
                 WHEN DATEDIFF(day, ISNULL(i.dtDueDate, i.dtTranDate), GETDATE()) > 90 THEN 'Overdue'
                 WHEN DATEDIFF(day, ISNULL(i.dtDueDate, i.dtTranDate), GETDATE()) > 60 THEN 'Past Due'
                 WHEN DATEDIFF(day, ISNULL(i.dtDueDate, i.dtTranDate), GETDATE()) > 0 THEN 'Unpaid'
@@ -56,7 +63,14 @@ public class FinancialController(IConfiguration config) : ControllerBase
 
         var where = new List<string>();
         if (tab == "outstanding")
+        {
+            // Outstanding = positive amount that's not void, not marked-paid,
+            // and not fully covered by applied payments. Matches GetStats.
             where.Add("i.dblTranAmount > 0");
+            where.Add("ISNULL(i.bIsVoid, 0) = 0");
+            where.Add("ISNULL(i.bMarkAsPaid, 0) = 0");
+            where.Add("i.dblTranAmount > ISNULL((SELECT SUM(p.nInvoicePayment) FROM tblInvoicePayments p WHERE p.lInvoiceKey = i.lInvoiceKey), 0)");
+        }
         else if (tab == "drafts")
             where.Add("(i.sExported IS NULL OR i.sExported = '')");
 
