@@ -401,8 +401,10 @@ public class FinancialController(IConfiguration config) : ControllerBase
                 SELECT SUM(nInvoicePayment) AS TotalPaid
                 FROM tblInvoicePayments
                 WHERE lInvoiceKey = i.lInvoiceKey
+                  AND Deleted_datetime IS NULL
             ) p
             WHERE i.dblTranAmount > 0
+              AND i.Deleted_datetime IS NULL
               AND ISNULL(i.bIsVoid, 0) = 0
               AND ISNULL(i.bMarkAsPaid, 0) = 0
               AND i.dblTranAmount > ISNULL(p.TotalPaid, 0)
@@ -423,11 +425,13 @@ public class FinancialController(IConfiguration config) : ControllerBase
             SELECT COUNT(*) FROM tblInvoice i
             WHERE i.dblTranAmount > 0
               AND i.dtDueDate < DATEADD(day, -90, GETDATE())
+              AND i.Deleted_datetime IS NULL
               AND ISNULL(i.bIsVoid, 0) = 0
               AND ISNULL(i.bMarkAsPaid, 0) = 0
               AND i.dblTranAmount > ISNULL((SELECT SUM(p.nInvoicePayment)
                                             FROM tblInvoicePayments p
-                                            WHERE p.lInvoiceKey = i.lInvoiceKey), 0)
+                                            WHERE p.lInvoiceKey = i.lInvoiceKey
+                                              AND p.Deleted_datetime IS NULL), 0)
             """;
         await using var overdueCmd = new SqlCommand(overdueSql, conn);
         overdueCmd.CommandTimeout = 30;
@@ -439,11 +443,13 @@ public class FinancialController(IConfiguration config) : ControllerBase
             FROM tblInvoice i
             WHERE i.dblTranAmount > 0
               AND ISNULL(i.dtDueDate, i.dtTranDate) IS NOT NULL
+              AND i.Deleted_datetime IS NULL
               AND ISNULL(i.bIsVoid, 0) = 0
               AND ISNULL(i.bMarkAsPaid, 0) = 0
               AND i.dblTranAmount > ISNULL((SELECT SUM(p.nInvoicePayment)
                                             FROM tblInvoicePayments p
-                                            WHERE p.lInvoiceKey = i.lInvoiceKey), 0)
+                                            WHERE p.lInvoiceKey = i.lInvoiceKey
+                                              AND p.Deleted_datetime IS NULL), 0)
               AND i.dtTranDate >= DATEADD(year, -1, GETDATE())
             """;
         await using var agingCmd = new SqlCommand(agingSql, conn);
