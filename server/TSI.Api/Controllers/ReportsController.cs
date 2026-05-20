@@ -13,6 +13,18 @@ public class ReportsController(IConfiguration config) : ControllerBase
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
 
+    // Repair-scope filter that mirrors the KPI dashboard
+    // (Push-ProfitabilityToKpi.ps1 in tsi-kpi-framework). Apply to every
+    // report-generating query so CSV exports reconcile to the KPI framework.
+    // See DashboardController.KpiRepairScopeWhere for full rationale.
+    //
+    // Assumes "r" alias for tblRepair and "d" alias for tblDepartment.
+    private const string KpiRepairScopeWhere = """
+        LEFT(r.sWorkOrderNumber, 2) IN ('NR','SR')
+        AND ISNULL(d.lClientKey, 0) NOT IN (5027, 6402, 6479, 7533, 8085)
+        AND ISNULL(r.sComplaintDesc, '') NOT LIKE '%Onsite Instrument Service%'
+        """;
+
     // ── Repair Volume by Period ──
     [HttpGet("repair-volume")]
     public async Task<IActionResult> RepairVolume(
@@ -34,7 +46,9 @@ public class ReportsController(IConfiguration config) : ControllerBase
                    ISNULL(SUM(r.dblAmtRepair), 0) AS Revenue
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             WHERE r.dtDateIn >= DATEADD(MONTH, -@months, GETDATE())
+              AND {KpiRepairScopeWhere}
             GROUP BY {groupBy}
             ORDER BY MIN(r.dtDateIn)";
 
@@ -58,7 +72,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        const string sql = @"
+        var sql = $@"
             SELECT FORMAT(r.dtDateOut, 'yyyy-MM') AS Period,
                    ISNULL(st.sScopeTypeDesc, 'Unknown') AS ScopeType,
                    COUNT(*) AS RepairCount,
@@ -70,8 +84,10 @@ public class ReportsController(IConfiguration config) : ControllerBase
             JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
             LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             WHERE r.dtDateOut IS NOT NULL
               AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
+              AND {KpiRepairScopeWhere}
             GROUP BY FORMAT(r.dtDateOut, 'yyyy-MM'), st.sScopeTypeDesc
             ORDER BY MIN(r.dtDateOut), st.sScopeTypeDesc";
 
@@ -95,7 +111,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        const string sql = @"
+        var sql = $@"
             SELECT c.sClientName1 AS Client,
                    COUNT(*) AS RepairCount,
                    ISNULL(SUM(r.dblAmtRepair), 0) AS TotalRevenue,
@@ -107,6 +123,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
             JOIN tblClient c ON c.lClientKey = d.lClientKey
             WHERE r.dtDateOut IS NOT NULL
               AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
+              AND {KpiRepairScopeWhere}
             GROUP BY c.sClientName1
             ORDER BY SUM(r.dblAmtRepair) DESC";
 
@@ -130,7 +147,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        const string sql = @"
+        var sql = $@"
             SELECT c.sClientName1 AS Client,
                    COUNT(*) AS Repairs,
                    ISNULL(SUM(r.dblAmtRepair), 0) AS Revenue,
@@ -146,6 +163,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairItemTran rit ON rit.lRepairKey = r.lRepairKey
             WHERE r.dtDateOut IS NOT NULL
               AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
+              AND {KpiRepairScopeWhere}
             GROUP BY c.sClientName1
             ORDER BY SUM(r.dblAmtRepair) DESC";
 
@@ -175,7 +193,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        const string sql = @"
+        var sql = $@"
             SELECT ISNULL(t.sTechName, 'Unassigned') AS Tech,
                    COUNT(*) AS RepairsCompleted,
                    ISNULL(SUM(r.dblAmtRepair), 0) AS Revenue,
@@ -184,8 +202,10 @@ public class ReportsController(IConfiguration config) : ControllerBase
             FROM tblRepair r
             JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             WHERE r.dtDateOut IS NOT NULL
               AND r.dtDateOut >= DATEADD(MONTH, -@months, GETDATE())
+              AND {KpiRepairScopeWhere}
             GROUP BY t.sTechName
             ORDER BY COUNT(*) DESC";
 
@@ -207,7 +227,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        const string sql = @"
+        var sql = $@"
             SELECT c.sClientName1 AS Client,
                    ISNULL(ri.sItemDescription, 'Unknown') AS RepairItem,
                    COUNT(*) AS WarrantyCount,
@@ -219,6 +239,7 @@ public class ReportsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblRepairItem ri ON ri.lRepairItemKey = rit.lRepairItemKey
             WHERE rit.sFixType = 'W'
               AND r.dtDateIn >= DATEADD(MONTH, -@months, GETDATE())
+              AND {KpiRepairScopeWhere}
             GROUP BY c.sClientName1, ri.sItemDescription
             ORDER BY COUNT(*) DESC";
 
@@ -240,7 +261,10 @@ public class ReportsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        const string sql = @"
+        // Note: this query already joins tblDepartment as 'dep' for the client lookup.
+        // KpiRepairScopeWhere expects 'd' — so add a second join 'd' for the filter
+        // (cheap and keeps the comment-block constant readable).
+        var sql = $@"
             SELECT r.sWorkOrderNumber AS WO,
                    CONVERT(varchar, r.dtDateIn, 101) AS DateIn,
                    CONVERT(varchar, r.dtDateOut, 101) AS DateOut,
@@ -259,7 +283,9 @@ public class ReportsController(IConfiguration config) : ControllerBase
             LEFT JOIN tblDepartment dep ON dep.lDepartmentKey = r.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = dep.lClientKey
             LEFT JOIN tblTechnicians t ON t.lTechnicianKey = r.lTechnicianKey
+            LEFT JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
             WHERE r.dtDateIn >= DATEADD(MONTH, -@months, GETDATE())
+              AND {KpiRepairScopeWhere}
             ORDER BY r.dtDateIn DESC";
 
         await using var cmd = new SqlCommand(sql, conn);
