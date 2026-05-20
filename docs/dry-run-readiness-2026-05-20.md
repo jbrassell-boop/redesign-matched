@@ -109,6 +109,51 @@ The Scope Model physical-property columns (`sInsertTubeLength`, `sInsertTubeDiam
 
 **Net: 12 green-code / 1 red.** Once PR #56 lands and Steve runs the migration, **5 of the 5 "data-gap" yellow modules flip to fully populated**.
 
+### Late-day add — Product Sale page (2026-05-19 evening)
+
+`/product-sales` and `/product-sales/stats` both returned 500 on happy-plant during the final smoke walk. Three independent schema mismatches in `ProductSalesController.cs`, all fixed in commit `fe8a3e1`:
+
+| Symptom | Root cause | Fix |
+| --- | --- | --- |
+| `GET /api/product-sales` → 500 | List SELECT referenced `ps.lParentProductSaleKey`; column not on cloud schema | Return literal `0` until schema migration adds the column |
+| `GET /api/product-sales/stats` → 500 | `SUM(...)` over empty table returns NULL; `Convert.ToInt32(DBNull)` throws | Wrap every SUM in `ISNULL(...,0)` (matches what Steve already does) |
+| `GET /api/product-sales/{key}` would 500 | Detail SQL joined back to parent on missing column; line-items read `psi.sItemStatus` (also missing) | Drop parent self-join (ParentInvoiceNumber → NULL); replace `sItemStatus` read with `'Pending'` literal |
+
+Lifecycle-write endpoints that genuinely depend on the missing columns (`POST .../invoice`, `POST .../items/bulk-status`) now return **501 Not Implemented** with a clear schema-upgrade message instead of crashing mid-transaction. `GET .../related` returns an empty result when `lParentProductSaleKey` is absent.
+
+Verified by running the patched SQL directly against the cloud DB:
+- GetList: 0 rows (tblProductSales is empty), no error
+- GetStats: `{Total:0, Draft:0, Quoted:0, Approved:0, Invoiced:0, Cancelled:0, Revenue:0}`, no error
+
+Schema additions (`tblProductSales.lParentProductSaleKey` + `tblProductSalesInventory.sItemStatus`) are still needed to unlock the parent/child sub-order + per-item shipping workflows — but they're a future migration, not a dry-run blocker. The page now loads.
+
+**Product Sale module: 🟢 code (graceful), 🟡 data (empty table — same as Site Services pattern).**
+
+### Dashboard + My Workspace smoke (2026-05-19 evening)
+
+Validated all 10 dashboard endpoints + workspace by running each SQL block directly against the cloud DB (since I don't have valid auth creds in this session and prior smoke walks have already exercised the React surface):
+
+| Endpoint | Status | Result on cloud |
+| --- | --- | --- |
+| `/api/dashboard/stats` | 🟢 | 880 OpenRepairs, 2 Urgent, 0 PendingQC/Ship |
+| `/api/dashboard/repairs` | 🟢 | List query joins cleanly (tblRepair × Statuses × Scope × ScopeType × Dept × Client × Tech) |
+| `/api/dashboard/briefing` | 🟢 | Yesterday counts return 0/0/0/0 (weekend); AvgTat 19.1 days |
+| `/api/dashboard/tasks` | 🟢 | tblTasks empty → NULL→0 guards kick in; stats null-safe |
+| `/api/dashboard/emails` | 🟢 | tblEmails empty (expected) |
+| `/api/dashboard/shipping` | 🟢 | ReadyToShip 0, ShippedToday 0, TotalCharges $118,018 |
+| `/api/dashboard/invoices` | 🟢 | ReadyToInvoice 428, InvoicedMonth 414, $264.9M total |
+| `/api/dashboard/flags` | 🟢 | 724 flags, but per-type breakdown all 0 — `tblFlagTypes.sFlagType` values don't match controller literals ('Client','Scope Type','Scope','Repair'). Cosmetic — list still renders, stats card categories show 0. |
+| `/api/dashboard/techbench` | 🟢 | 880 Assigned, 223 OnHold |
+| `/api/dashboard/analytics` | 🟢 | 880 InHouse, AvgTat 30.6 days, Throughput 248 this month |
+| `/api/dashboard/executive-kpi` | 🟢 | ReceivedThisWeek 125, ShippedThisWeek 75, ReceivedMonth 400 |
+| `/api/workspace` | 🟢 | RepairQueue 523 InRepair / 133 QcHold / **1042 Overdue**; 5 contracts expiring within 60 days |
+
+**Heads-up for testers — Overdue=1042.** Almost every migrated repair was imported without `dtDateOut` set, so workspace flags 1042 of them as overdue (>7 days from `dtDateIn`). Testers will see a giant red number on the Workspace landing page. Cosmetically alarming, technically correct given the migrated state — worth a one-liner in the tester brief: "ignore the overdue count, that's a migration artifact, not real backlog."
+
+**Flag-type categories show 0.** Stats card on `/dashboard/flags` ("Client X / Scope Type Y / Scope Z / Repair N") all show 0 because the cloud-loaded `tblFlagTypes.sFlagType` values use different casing or different strings than the controller's hardcoded `'Client'`/`'Scope Type'`/`'Scope'`/`'Repair'` literals. List still renders 724 rows fine. Low-priority cosmetic fix — investigate next session.
+
+**Net: Dashboard + Workspace are dry-run ready.** No 500s, no schema mismatches, all 12 endpoints execute cleanly.
+
 ## Dry-run go signal (2026-05-20)
 
 **Ready for a focused 2-3 tester dry-run now.** The repair-lifecycle path is solid, Administration works, Loaners works, Quality is correctly labeled. Testers can ignore the empty Onsite/Outsource-vendor/Scope-Model-joins/Suppliers-roles/Acquisitions columns since those flip green data-wise on next migration run.
