@@ -125,8 +125,8 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
         <Section title="Delivery Dates">
           <div style={shipGridStyle}>
             <F label="GTD Delivery Date & Time" value={repair.gtdDeliveryDate} />
-            <F label="Winscope GTD Delivery" value={repair.winscopeGtdDate} />
-            <F label="Actual Delivery Date & Time" value={repair.actualDeliveryDate} />
+            <F label="Winscope GTD Delivery" value={repair.carrierGtdDate} />
+            <F label="Actual Delivery Date & Time" value={repair.deliveryDate} />
           </div>
         </Section>
 

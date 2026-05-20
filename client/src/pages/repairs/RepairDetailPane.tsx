@@ -287,6 +287,10 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
         okText: 'Ship & Invoice',
         onOk: async () => {
           if (trackingValue.trim()) {
+            // TODO: PatchRepairHeaderRequest currently has no outbound tracking field
+            // (e.g. OutboundTracking / ShipTrackingNumberOut). Using inboundTracking
+            // here is a known bug — once the backend PATCH model adds an outbound
+            // tracking property, switch to that field name.
             try {
               await patchRepairHeader(rk, { inboundTracking: trackingValue.trim() });
             } catch {

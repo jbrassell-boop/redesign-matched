@@ -23,6 +23,7 @@ export interface DashboardStats {
   pendingShip: number;
   completedToday: number;
   receivedToday: number;
+  expiringContracts?: number;
 }
 
 export interface DashboardRepairsResponse {
@@ -64,6 +65,7 @@ export interface BriefingStats {
   revenue: number;
   avgTat: number;
   overdue: number;
+  flow?: { category: string; received: number; shipped: number }[];
 }
 
 // ── Tasks ──

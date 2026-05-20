@@ -113,7 +113,7 @@ export const DiFlexibleForm = ({ repair, lineItems, onClose }: Props) => {
   const clientName = repair.client ?? em;
   const model = [repair.scopeType, repair.scopeModel].filter(Boolean).join(' ') || em;
   const complaint = repair.complaint ?? em;
-  const rackNum = repair.rackLocation ?? em;
+  const rackNum = repair.rackPosition ?? em;
   const techName = repair.tech ?? em;
   const mfg = repair.manufacturer ?? em;
   const estDelivery = repair.estDelivery ?? em;

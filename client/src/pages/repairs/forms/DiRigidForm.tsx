@@ -134,7 +134,7 @@ export const DiRigidForm = ({ repair, onClose }: Props) => {
           <Fld label="Work Order #" value={repair.wo} />
           <Fld label="Serial #" value={repair.serial} />
           <Fld label="Date" value={today} />
-          <Fld label="Rack #" value={repair.rackLocation} />
+          <Fld label="Rack #" value={repair.rackPosition} />
           <Fld label="Checked In By" value={null} />
           <div className="dir-col-flex">
             <span className="dir-fl">Shipping Container</span>

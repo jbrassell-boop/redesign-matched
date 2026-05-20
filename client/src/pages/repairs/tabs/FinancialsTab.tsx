@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Spin } from 'antd';
+import { Spin, message } from 'antd';
 import { getRepairFinancials } from '../../../api/repairs';
 import type { RepairFinancials } from '../types';
 
@@ -29,6 +29,7 @@ export const FinancialsTab = ({ repairKey }: { repairKey: number }) => {
     setLoading(true);
     getRepairFinancials(repairKey)
       .then(setData)
+      .catch(() => message.error('Failed to load financial data'))
       .finally(() => setLoading(false));
   }, [repairKey]);
 

@@ -102,7 +102,7 @@ export const OpsBriefing = ({ stats }: Props) => {
       setBriefing(b);
       setKpi(k);
       // Flow data comes back with the briefing now
-      if ((b as any)?.flow) setFlow((b as any).flow);
+      if (b?.flow) setFlow(b.flow);
     })
       .catch(() => { message.error('Failed to load ops briefing data'); })
       .finally(() => setLoading(false));

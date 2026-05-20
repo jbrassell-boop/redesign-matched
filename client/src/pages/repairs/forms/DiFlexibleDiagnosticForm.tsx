@@ -61,7 +61,7 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
   const client = repair.client ?? em;
   const model = `${repair.scopeType ?? ''} ${repair.scopeModel ?? ''}`.trim() || em;
   const complaint = repair.complaint ?? em;
-  const rack = repair.rackLocation ?? em;
+  const rack = repair.rackPosition ?? em;
 
   return (
     <div
