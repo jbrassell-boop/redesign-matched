@@ -117,7 +117,7 @@ export const ScopeInTab = ({ repair }: ScopeInTabProps) => {
   const [discountPct, setDiscountPct] = useState(repair.discountPct != null ? String(repair.discountPct) : '');
   const [shippingCostIn, setShippingCostIn] = useState(repair.shippingCostIn != null ? String(repair.shippingCostIn) : '');
   const [inboundTracking, setInboundTracking] = useState(repair.trackingNumberIn ?? '');
-  const [requisition, setRequisition] = useState(repair.requisition ?? '');
+  const requisition = repair.requisition ?? '';
   // Ship To
   const [shipName, setShipName] = useState(repair.shipName ?? '');
   const [shipAddr1, setShipAddr1] = useState(repair.shipAddr1 ?? '');
@@ -175,7 +175,7 @@ export const ScopeInTab = ({ repair }: ScopeInTabProps) => {
           <div style={{ marginBottom: 6 }}>
             <F label="Name on Approval via Portal" value={repair.approvalName} />
           </div>
-          <TF label="Requisition #" value={requisition} onChange={onText('requisition', setRequisition)} />
+          <F label="Requisition #" value={requisition || '—'} />
         </Section>
 
         <Section title="Sales & Reporting">

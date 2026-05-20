@@ -137,9 +137,9 @@ public class OnsiteServicesController(
         await conn.OpenAsync();
 
         const string sql = """
-            SELECT CASE WHEN ss.dtVoidDate IS NOT NULL THEN 'Voided'
-                        WHEN ss.dtDateSubmitted IS NOT NULL THEN 'Submitted'
+            SELECT CASE WHEN ss.dtVoidDate IS NOT NULL THEN 'Void'
                         WHEN ss.dtInvoiceDate IS NOT NULL THEN 'Invoiced'
+                        WHEN ss.dtDateSubmitted IS NOT NULL THEN 'Submitted'
                         ELSE 'Draft' END AS sStatus,
                    ISNULL(ss.nInvoiceAmount, 0) AS dblTotalBilled
             FROM tblSiteServices ss

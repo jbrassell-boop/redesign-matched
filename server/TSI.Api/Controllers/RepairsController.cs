@@ -461,7 +461,6 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                 sPS3                      = COALESCE(@psLevel, sPS3),
                 lDistributorKey           = COALESCE(@distributorKey, lDistributorKey),
                 dblShippingClientIn       = COALESCE(@shippingCostIn, dblShippingClientIn),
-                sRequisition              = COALESCE(@requisition, sRequisition),
                 sShipName1                = COALESCE(@shipName, sShipName1),
                 sShipAddr1                = COALESCE(@shipAddr1, sShipAddr1),
                 sShipAddr2                = COALESCE(@shipAddr2, sShipAddr2),
@@ -495,7 +494,6 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         cmd.Parameters.AddWithValue("@psLevel", (object?)body.PsLevel ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@distributorKey", (object?)body.DistributorKey ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@shippingCostIn", (object?)body.ShippingCostIn ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@requisition", (object?)body.Requisition ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@shipName", (object?)body.ShipName ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@shipAddr1", (object?)body.ShipAddr1 ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@shipAddr2", (object?)body.ShipAddr2 ?? DBNull.Value);
