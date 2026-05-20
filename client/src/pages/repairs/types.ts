@@ -88,7 +88,7 @@ export interface RepairFull {
   dateIn: string; dateApproved?: string; estDelivery?: string; shipDate?: string; dateOut?: string;
   daysIn: number;
   // Command strip fields
-  rackLocation?: string;
+  rackPosition?: string;
   repairLevel?: string;
   leadTime?: string;
   turnAroundTime?: string;
@@ -116,13 +116,12 @@ export interface RepairFull {
   psLevel?: string;
   customerRef?: string;
   // Invoice options
-  displayComplaintOnInvoice?: boolean;
-  displayItemizedDesc?: boolean;
-  displayItemizedAmounts?: boolean;
-  billToCustomer?: string;
+  displayCustomerComplaint?: string;
+  displayItemDescription?: string;
+  displayItemAmount?: string;
+  billTo?: string;
   // Inbound
-  inboundServiceLevel?: string;
-  shippingCostIn?: number | null;
+  shippingClientIn?: number | null;
   distributor?: string;
   trackingNumberIn?: string;
   // Addresses
@@ -134,10 +133,10 @@ export interface RepairFull {
   trackingNumber?: string; trackingNumberFedEx?: string;
   shipWeight?: string; deliveryServiceLevel?: string;
   packageType?: string;
-  trackingRequired?: boolean;
+  trackingNumberRequired?: boolean;
   gtdDeliveryDate?: string;
-  winscopeGtdDate?: string;
-  actualDeliveryDate?: string;
+  carrierGtdDate?: string;
+  deliveryDate?: string;
   // Outsource
   outsourced: boolean; outsourceVendor?: string;
   outsourceCost?: number | null;

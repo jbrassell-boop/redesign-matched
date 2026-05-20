@@ -87,7 +87,7 @@ public record DepartmentUpdate(
     string? Name, string? Address1, string? City, string? State, string? Zip,
     string? Phone, string? ContactFirst, string? ContactLast,
     string? ContactPhone, string? ContactEmail,
-    bool? IsActive = null,
+    bool? IsActive,
     // Options
     bool? ShowConsumptionOnReq, bool? EnforceScopeTypeFiltering,
     bool? ShowProductId, bool? ShowUaOrNwt, bool? ShowItemizedDescriptions,

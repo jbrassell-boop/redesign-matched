@@ -10,7 +10,7 @@ export const CommandStrip = ({ repair }: CommandStripProps) => {
     { label: 'Department',     value: repair.dept },
     { label: 'WO#',            value: repair.wo, title: 'Work Order Number' },
     { label: 'PO#',            value: repair.purchaseOrder, title: 'Purchase Order Number' },
-    { label: 'Rack',           value: repair.rackLocation },
+    { label: 'Rack',           value: repair.rackPosition },
     { label: 'Repair Level',   value: repair.repairLevel },
     { label: 'Lead Time',      value: repair.leadTime },
     { label: 'TAT',            value: repair.turnAroundTime, title: 'Turn Around Time (days in repair)' },

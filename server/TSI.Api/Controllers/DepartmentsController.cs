@@ -287,7 +287,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         if (update.City != null) { sets.Add("sShipCity = @city"); cmd.Parameters.AddWithValue("@city", update.City); }
         if (update.State != null) { sets.Add("sShipState = @state"); cmd.Parameters.AddWithValue("@state", update.State); }
         if (update.Zip != null) { sets.Add("sShipZip = @zip"); cmd.Parameters.AddWithValue("@zip", update.Zip); }
-        // ContactPhone and Phone both map to sContactPhoneVoice — ContactPhone takes precedence
+        // ContactPhone and Phone both map to sContactPhoneNumber — ContactPhone takes precedence
         var phoneValue = update.ContactPhone ?? update.Phone;
         if (phoneValue != null) { sets.Add("sContactPhoneNumber = @phone"); cmd.Parameters.AddWithValue("@phone", phoneValue); }
         if (update.ContactFirst != null) { sets.Add("sContactFirst = @cfirst"); cmd.Parameters.AddWithValue("@cfirst", update.ContactFirst); }

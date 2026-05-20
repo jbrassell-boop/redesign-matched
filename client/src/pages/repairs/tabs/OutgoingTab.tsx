@@ -113,7 +113,7 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
               {(['Yes', 'No'] as const).map(opt => (
                 <label key={opt} style={radioLabelStyle}>
                   <input type="radio" name="trackingReq" readOnly
-                    checked={opt === 'Yes' ? !!repair.trackingRequired : !repair.trackingRequired}
+                    checked={opt === 'Yes' ? !!repair.trackingNumberRequired : !repair.trackingNumberRequired}
                   />
                   {opt}
                 </label>
