@@ -1466,52 +1466,62 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         // 1:1 — one tblInvoice row per repair. If one already exists, refresh
         // its amounts and return it. Otherwise create a new row with sTranNumber
         // populated immediately (sTranNumber is never deferred to finalization).
-        const string checkSql = """
-            SELECT lInvoiceKey
-            FROM tblInvoice
-            WHERE lRepairKey = @repairKey
-            """;
-
-        await using var checkCmd = new SqlCommand(checkSql, conn);
-        checkCmd.CommandTimeout = 30;
-        checkCmd.Parameters.AddWithValue("@repairKey", repairKey);
-        var existing = await checkCmd.ExecuteScalarAsync();
-
-        if (existing is not null and not DBNull)
-        {
-            var existingKey = Convert.ToInt32(existing);
-            const string updateSql = """
-                UPDATE tblInvoice
-                SET dtTranDate = GETDATE(),
-                    dblTranAmount = (SELECT ISNULL(dblAmtRepair, 0) FROM tblRepair WHERE lRepairKey = @repairKey)
-                WHERE lInvoiceKey = @existingKey;
-                """;
-            await using var updateCmd = new SqlCommand(updateSql, conn);
-            updateCmd.CommandTimeout = 30;
-            updateCmd.Parameters.AddWithValue("@repairKey", repairKey);
-            updateCmd.Parameters.AddWithValue("@existingKey", existingKey);
-            await updateCmd.ExecuteNonQueryAsync();
-            return Ok(new { invoiceKey = existingKey });
-        }
-
-        // Resolve service location for invoice number generation
-        int serviceLocationKey;
-        await using (var svcCmd = new SqlCommand(
-            "SELECT ISNULL(d.lServiceLocationKey, 1) FROM tblRepair r JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey WHERE r.lRepairKey = @rk", conn))
-        {
-            svcCmd.Parameters.AddWithValue("@rk", repairKey);
-            var svcObj = await svcCmd.ExecuteScalarAsync();
-            serviceLocationKey = svcObj is null or DBNull ? 1 : Convert.ToInt32(svcObj);
-        }
-
-        // Invoice number generation + tblInvoice INSERT wrapped in a transaction
-        // so a failure between NextAsync and the INSERT can't leave the counter
-        // ahead of the row. dbo.invoiceNumberDailyGet enrolls in the outer txn
-        // (single MERGE WITH (HOLDLOCK), no autonomous-txn tricks), so a rollback
-        // rolls back the counter increment too. Same pattern as ReceivingController.
+        //
+        // Everything runs inside a single transaction:
+        //   • The existence check uses WITH (UPDLOCK, HOLDLOCK) so two
+        //     concurrent finalize calls for the same repairKey serialize —
+        //     the second call blocks on the first's lock until it commits,
+        //     then sees the row the first call inserted. Without these hints,
+        //     both calls could pass the "no existing invoice" check and both
+        //     create invoices, violating the 1:1 invariant.
+        //   • NextAsync + tblInvoice INSERT are atomic — counter increment
+        //     rolls back if the INSERT fails (same counter-burn fix as
+        //     ReceivingController.Intake and OrdersController.CreateOrder).
+        // The service-location lookup also runs inside the txn but is a
+        // read with a brief shared lock; lock duration is negligible.
         await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
         try
         {
+            const string checkSql = """
+                SELECT lInvoiceKey
+                FROM tblInvoice WITH (UPDLOCK, HOLDLOCK)
+                WHERE lRepairKey = @repairKey
+                """;
+
+            await using var checkCmd = new SqlCommand(checkSql, conn, txn);
+            checkCmd.CommandTimeout = 30;
+            checkCmd.Parameters.AddWithValue("@repairKey", repairKey);
+            var existing = await checkCmd.ExecuteScalarAsync();
+
+            if (existing is not null and not DBNull)
+            {
+                var existingKey = Convert.ToInt32(existing);
+                const string updateSql = """
+                    UPDATE tblInvoice
+                    SET dtTranDate = GETDATE(),
+                        dblTranAmount = (SELECT ISNULL(dblAmtRepair, 0) FROM tblRepair WHERE lRepairKey = @repairKey)
+                    WHERE lInvoiceKey = @existingKey;
+                    """;
+                await using var updateCmd = new SqlCommand(updateSql, conn, txn);
+                updateCmd.CommandTimeout = 30;
+                updateCmd.Parameters.AddWithValue("@repairKey", repairKey);
+                updateCmd.Parameters.AddWithValue("@existingKey", existingKey);
+                await updateCmd.ExecuteNonQueryAsync();
+
+                await txn.CommitAsync();
+                return Ok(new { invoiceKey = existingKey });
+            }
+
+            // Resolve service location for invoice number generation
+            int serviceLocationKey;
+            await using (var svcCmd = new SqlCommand(
+                "SELECT ISNULL(d.lServiceLocationKey, 1) FROM tblRepair r JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey WHERE r.lRepairKey = @rk", conn, txn))
+            {
+                svcCmd.Parameters.AddWithValue("@rk", repairKey);
+                var svcObj = await svcCmd.ExecuteScalarAsync();
+                serviceLocationKey = svcObj is null or DBNull ? 1 : Convert.ToInt32(svcObj);
+            }
+
             var tranNumber = await invoiceNumbers.NextAsync('R', serviceLocationKey, conn, txn);
 
             const string insertSql = """

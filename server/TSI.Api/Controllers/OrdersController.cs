@@ -252,69 +252,7 @@ public class OrdersController(
             }
             await deptReader.CloseAsync();
 
-            // 2. If no existing scope, create one
-            int scopeKey = request.ScopeKey ?? 0;
-            if (scopeKey == 0 && !string.IsNullOrWhiteSpace(request.SerialNumber))
-            {
-                const string scopeSql = """
-                    DISABLE TRIGGER ALL ON tblScope;
-                    INSERT INTO tblScope (lDepartmentKey, lScopeTypeKey, sSerialNumber, dtCreateDate)
-                    VALUES (@deptKey, @scopeTypeKey, @sn, GETDATE());
-                    DECLARE @sk INT = SCOPE_IDENTITY();
-                    ENABLE TRIGGER ALL ON tblScope;
-                    SELECT @sk;
-                    """;
-                await using var scopeCmd = new SqlCommand(scopeSql, conn);
-                scopeCmd.CommandTimeout = 30;
-                scopeCmd.Parameters.AddWithValue("@deptKey", request.DepartmentKey);
-                scopeCmd.Parameters.AddWithValue("@scopeTypeKey", (object?)request.ScopeTypeKey ?? DBNull.Value);
-                scopeCmd.Parameters.AddWithValue("@sn", request.SerialNumber);
-                scopeKey = Convert.ToInt32(await scopeCmd.ExecuteScalarAsync());
-            }
-
-            // 3. Look up max charge: dept override → scope type default
-            decimal? maxCharge = null;
-            int scopeTypeKey = request.ScopeTypeKey ?? 0;
-            if (scopeKey > 0)
-            {
-                // Get scopeTypeKey from the scope if we don't already have it
-                if (scopeTypeKey == 0)
-                {
-                    await using var stCmd = new SqlCommand(
-                        "SELECT ISNULL(lScopeTypeKey, 0) FROM tblScope WHERE lScopeKey = @sk", conn);
-                    stCmd.CommandTimeout = 30;
-                    stCmd.Parameters.AddWithValue("@sk", scopeKey);
-                    var stObj = await stCmd.ExecuteScalarAsync();
-                    scopeTypeKey = stObj != null ? Convert.ToInt32(stObj) : 0;
-                }
-
-                if (scopeTypeKey > 0)
-                {
-                    // Try department-specific max charge first
-                    await using var mcCmd = new SqlCommand(
-                        "SELECT nMaxCharge FROM tblScopeTypeDepartmentMaxCharges WHERE lScopeTypeKey = @stk AND lDepartmentKey = @dk", conn);
-                    mcCmd.CommandTimeout = 30;
-                    mcCmd.Parameters.AddWithValue("@stk", scopeTypeKey);
-                    mcCmd.Parameters.AddWithValue("@dk", request.DepartmentKey);
-                    var mcObj = await mcCmd.ExecuteScalarAsync();
-                    if (mcObj != null && mcObj != DBNull.Value)
-                        maxCharge = Convert.ToDecimal(mcObj);
-
-                    // Fall back to scope type default
-                    if (maxCharge == null)
-                    {
-                        await using var mcDef = new SqlCommand(
-                            "SELECT mMaxCharge FROM tblScopeType WHERE lScopeTypeKey = @stk", conn);
-                        mcDef.CommandTimeout = 30;
-                        mcDef.Parameters.AddWithValue("@stk", scopeTypeKey);
-                        var defObj = await mcDef.ExecuteScalarAsync();
-                        if (defObj != null && defObj != DBNull.Value)
-                            maxCharge = Convert.ToDecimal(defObj);
-                    }
-                }
-            }
-
-            // 4. Get "Received" status ID
+            // 2. Get "Received" status ID (read-only, stays outside the txn)
             await using var statusCmd = new SqlCommand(
                 "SELECT TOP 1 lRepairStatusID FROM tblRepairStatuses WHERE sRepairStatus = 'Received' ORDER BY lRepairStatusSortOrder", conn);
             statusCmd.CommandTimeout = 30;
@@ -332,14 +270,80 @@ public class OrdersController(
                 _              => 'R',   // repair, instrument (instrument is repair-shaped)
             };
 
-            // WO generation + tblRepair INSERT wrapped in a transaction so the
-            // counter increment and the row INSERT are atomic. NextAsync enrolls
-            // in this transaction (proc is a single MERGE WITH HOLDLOCK, no
+            // Scope-create + WO generation + tblRepair INSERT all wrapped in a
+            // single transaction so the three operations are atomic. NextAsync
+            // enrolls in the txn (proc is a single MERGE WITH HOLDLOCK, no
             // autonomous-txn markers), so a rollback rolls back the counter
-            // increment too. Same pattern as ReceivingController / ProductSales.
+            // increment too. Pulling the scope-create into the txn fixes a
+            // pre-existing race: if the final tblRepair INSERT failed AFTER
+            // a new tblScope row was created, the scope was orphaned.
+            // Max-charge lookups run inside the txn but are reads with brief
+            // shared locks released on each SELECT — negligible lock duration.
             await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
             try
             {
+                // 3. If no existing scope, create one (now inside the txn).
+                int scopeKey = request.ScopeKey ?? 0;
+                if (scopeKey == 0 && !string.IsNullOrWhiteSpace(request.SerialNumber))
+                {
+                    const string scopeSql = """
+                        DISABLE TRIGGER ALL ON tblScope;
+                        INSERT INTO tblScope (lDepartmentKey, lScopeTypeKey, sSerialNumber, dtCreateDate)
+                        VALUES (@deptKey, @scopeTypeKey, @sn, GETDATE());
+                        DECLARE @sk INT = SCOPE_IDENTITY();
+                        ENABLE TRIGGER ALL ON tblScope;
+                        SELECT @sk;
+                        """;
+                    await using var scopeCmd = new SqlCommand(scopeSql, conn, txn);
+                    scopeCmd.CommandTimeout = 30;
+                    scopeCmd.Parameters.AddWithValue("@deptKey", request.DepartmentKey);
+                    scopeCmd.Parameters.AddWithValue("@scopeTypeKey", (object?)request.ScopeTypeKey ?? DBNull.Value);
+                    scopeCmd.Parameters.AddWithValue("@sn", request.SerialNumber);
+                    scopeKey = Convert.ToInt32(await scopeCmd.ExecuteScalarAsync());
+                }
+
+                // 4. Look up max charge: dept override → scope type default.
+                decimal? maxCharge = null;
+                int scopeTypeKey = request.ScopeTypeKey ?? 0;
+                if (scopeKey > 0)
+                {
+                    // Get scopeTypeKey from the scope if we don't already have it
+                    if (scopeTypeKey == 0)
+                    {
+                        await using var stCmd = new SqlCommand(
+                            "SELECT ISNULL(lScopeTypeKey, 0) FROM tblScope WHERE lScopeKey = @sk", conn, txn);
+                        stCmd.CommandTimeout = 30;
+                        stCmd.Parameters.AddWithValue("@sk", scopeKey);
+                        var stObj = await stCmd.ExecuteScalarAsync();
+                        scopeTypeKey = stObj != null ? Convert.ToInt32(stObj) : 0;
+                    }
+
+                    if (scopeTypeKey > 0)
+                    {
+                        // Try department-specific max charge first
+                        await using var mcCmd = new SqlCommand(
+                            "SELECT nMaxCharge FROM tblScopeTypeDepartmentMaxCharges WHERE lScopeTypeKey = @stk AND lDepartmentKey = @dk", conn, txn);
+                        mcCmd.CommandTimeout = 30;
+                        mcCmd.Parameters.AddWithValue("@stk", scopeTypeKey);
+                        mcCmd.Parameters.AddWithValue("@dk", request.DepartmentKey);
+                        var mcObj = await mcCmd.ExecuteScalarAsync();
+                        if (mcObj != null && mcObj != DBNull.Value)
+                            maxCharge = Convert.ToDecimal(mcObj);
+
+                        // Fall back to scope type default
+                        if (maxCharge == null)
+                        {
+                            await using var mcDef = new SqlCommand(
+                                "SELECT mMaxCharge FROM tblScopeType WHERE lScopeTypeKey = @stk", conn, txn);
+                            mcDef.CommandTimeout = 30;
+                            mcDef.Parameters.AddWithValue("@stk", scopeTypeKey);
+                            var defObj = await mcDef.ExecuteScalarAsync();
+                            if (defObj != null && defObj != DBNull.Value)
+                                maxCharge = Convert.ToDecimal(defObj);
+                        }
+                    }
+                }
+
                 var woNumber = await invoiceNumbers.NextAsync(typeChar, svcKey, conn, txn);
 
                 // 5. Insert the repair record
