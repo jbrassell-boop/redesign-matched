@@ -223,24 +223,56 @@ public class OnsiteServicesController(
     [HttpPost]
     public async Task<IActionResult> CreateVisit([FromBody] CreateOnsiteVisitRequest req)
     {
+        // tblSiteServices NOT NULL: lClientKey, lDepartmentKey, lTechnicianKey,
+        // lSalesRepKey, lVanServicePricingListKey, sWorkOrderNumber, dtOnsiteDate,
+        // lTrayCount. The prior INSERT omitted lSalesRepKey, lVanServicePricingListKey,
+        // and lTrayCount — all 500'd against the schema. This now derives salesRep
+        // from dept (fallback client → 0), defaults lTrayCount to 0, defaults
+        // lVanServicePricingListKey to 0 (no FK enforcement; the table is empty
+        // in this environment and the column isn't surfaced in the wizard yet).
+        if (req.ClientKey <= 0 || req.DepartmentKey <= 0 || req.TechnicianKey <= 0)
+            return BadRequest(new { error = "ClientKey, DepartmentKey, TechnicianKey are required." });
+
+        // VisitDate -> dtOnsiteDate is NOT NULL. Parse + validate up front so
+        // bad input returns 400 instead of 500'ing inside DateTime.Parse below.
+        if (string.IsNullOrWhiteSpace(req.VisitDate)
+            || !DateTime.TryParse(req.VisitDate, System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.None, out var visitDate))
+            return BadRequest(new { error = "VisitDate is required and must be a parseable date." });
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Resolve the dept's service-location key — drives both the
-        // sWorkOrderNumber prefix (via the canonical proc) and the
-        // lServiceLocationKey column on the new row so list filtering
-        // by location lines up post-create.
+        // Resolve dept-belongs-to-client + service-location + salesRep in one trip.
+        // serviceLocationKey drives the WO prefix; salesRepKey satisfies the NOT NULL.
         int serviceLocationKey;
+        int? deptSalesRep = null;
         await using (var locCmd = new SqlCommand(@"
-            SELECT ISNULL(d.lServiceLocationKey, 1) AS lServiceLocationKey
+            SELECT ISNULL(d.lServiceLocationKey, 1) AS lServiceLocationKey,
+                   d.lSalesRepKey
             FROM tblDepartment d
-            WHERE d.lDepartmentKey = @deptKey AND d.Deleted_datetime IS NULL", conn))
+            WHERE d.lDepartmentKey = @deptKey
+              AND d.lClientKey = @clientKey
+              AND d.Deleted_datetime IS NULL", conn))
         {
             locCmd.Parameters.AddWithValue("@deptKey", req.DepartmentKey);
-            var locResult = await locCmd.ExecuteScalarAsync();
-            if (locResult is null)
-                return BadRequest(new { message = $"Department {req.DepartmentKey} not found." });
-            serviceLocationKey = Convert.ToInt32(locResult);
+            locCmd.Parameters.AddWithValue("@clientKey", req.ClientKey);
+            await using var reader = await locCmd.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return BadRequest(new { error = $"Department {req.DepartmentKey} doesn't belong to client {req.ClientKey} (or doesn't exist)." });
+            serviceLocationKey = Convert.ToInt32(reader["lServiceLocationKey"]);
+            if (reader["lSalesRepKey"] is not DBNull) deptSalesRep = Convert.ToInt32(reader["lSalesRepKey"]);
+        }
+
+        // Fallback: dept → client → 0
+        var salesRepKey = deptSalesRep ?? 0;
+        if (salesRepKey == 0)
+        {
+            await using var clientRep = new SqlCommand(
+                "SELECT lSalesRepKey FROM tblClient WHERE lClientKey = @client AND Deleted_datetime IS NULL", conn);
+            clientRep.Parameters.AddWithValue("@client", req.ClientKey);
+            var v = await clientRep.ExecuteScalarAsync();
+            if (v is not null and not DBNull) salesRepKey = Convert.ToInt32(v);
         }
 
         // WO generation + tblSiteServices INSERT wrapped in a transaction so
@@ -262,16 +294,24 @@ public class OnsiteServicesController(
             // Location/PriceClass from the legacy request are intentionally not
             // persisted — tblSiteServices doesn't have columns for them. If the
             // wizard needs to surface those fields again, add columns first.
+            //
+            // lSalesRepKey, lVanServicePricingListKey, lTrayCount are required
+            // by the schema (NOT NULL) but not yet wired through the wizard UX.
+            // Defaults: salesRep from dept lookup (above), pricing list 0
+            // (no FK; tblVanServicePricingLists currently empty in this env),
+            // trayCount 0 (set when the tech reports trays on the visit).
             const string sql = """
                 INSERT INTO tblSiteServices
-                    (sWorkOrderNumber, lClientKey, lDepartmentKey, lTechnicianKey, dtOnsiteDate,
-                     sPurchaseOrder, sTruckNumber, sNotes, lServiceLocationKey,
-                     Created_datetime, Created_UserKey)
+                    (sWorkOrderNumber, lClientKey, lDepartmentKey, lTechnicianKey,
+                     lSalesRepKey, lVanServicePricingListKey, lTrayCount,
+                     dtOnsiteDate, sPurchaseOrder, sTruckNumber, sNotes,
+                     lServiceLocationKey, Created_datetime, Created_UserKey)
                 OUTPUT INSERTED.lSiteServiceKey
                 VALUES
-                    (@invoiceNum, @clientKey, @deptKey, @techKey, @visitDate,
-                     @po, @truckNum, @notes, @serviceLocationKey,
-                     GETDATE(), @userKey);
+                    (@invoiceNum, @clientKey, @deptKey, @techKey,
+                     @salesRepKey, 0, 0,
+                     @visitDate, @po, @truckNum, @notes,
+                     @serviceLocationKey, GETDATE(), @userKey);
                 """;
 
             await using var cmd = new SqlCommand(sql, conn, txn);
@@ -280,7 +320,8 @@ public class OnsiteServicesController(
             cmd.Parameters.AddWithValue("@clientKey", req.ClientKey);
             cmd.Parameters.AddWithValue("@deptKey", req.DepartmentKey);
             cmd.Parameters.AddWithValue("@techKey", req.TechnicianKey);
-            cmd.Parameters.AddWithValue("@visitDate", DateTime.Parse(req.VisitDate));
+            cmd.Parameters.AddWithValue("@salesRepKey", salesRepKey);
+            cmd.Parameters.AddWithValue("@visitDate", visitDate);
             cmd.Parameters.AddWithValue("@po", (object?)req.Po ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@truckNum", (object?)req.TruckNum ?? DBNull.Value);
             cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);

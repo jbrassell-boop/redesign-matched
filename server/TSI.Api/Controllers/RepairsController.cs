@@ -856,6 +856,13 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
 
         // tblRepair has a trigger that calls dbo.clientAdditionalInfoUpdate (not migrated to Azure).
         // Disable triggers around the UPDATE to prevent a 500 on inspection saves.
+        //
+        // SAFETY NOTE: DISABLE/ENABLE TRIGGER must run inside a transaction.
+        // If the UPDATE fails between DISABLE and ENABLE in autocommit mode,
+        // the ENABLE never runs and triggers stay disabled GLOBALLY — affecting
+        // every subsequent insert/update across all connections. The txn wrap
+        // ensures a rollback reverts the DISABLE state along with the failed
+        // UPDATE. Same defensive pattern as Orders/Loaners/Repairs invoice-create.
         const string sql = """
             DISABLE TRIGGER ALL ON tblRepair;
             UPDATE tblRepair SET
@@ -881,7 +888,10 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             ENABLE TRIGGER ALL ON tblRepair;
             """;
 
-        await using var cmd = new SqlCommand(sql, conn);
+        await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+        await using var cmd = new SqlCommand(sql, conn, txn);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         cmd.Parameters.AddWithValue("@scopeRepairable", (object?)body.ScopeRepairable ?? DBNull.Value);
@@ -921,7 +931,14 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         cmd.Parameters.AddWithValue("@insFinalPF", (object?)body.InsFinalPF ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@diInsComments", (object?)body.DiInsComments ?? DBNull.Value);
         var rows = await cmd.ExecuteNonQueryAsync();
+        await txn.CommitAsync();
         return rows > 0 ? NoContent() : NotFound();
+        }
+        catch
+        {
+            await txn.RollbackAsync();
+            throw;
+        }
     }
 
     // ── Repair Item Catalog ──

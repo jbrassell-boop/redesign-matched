@@ -376,29 +376,92 @@ public class ProductSalesController(
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateProductSaleRequest body)
     {
+        // tblProductSales NOT NULL: lClientKey, lDepartmentKey, lSalesRepKey,
+        // sInvoiceNumber, dtOrderDate. The pre-existing version omitted both
+        // lSalesRepKey and sInvoiceNumber and 500'd against the schema.
+        //
+        // Port of Steve's cloud Create (BrightLogix repo's ProductSalesController):
+        //   - Validate client + dept inputs (400 on bad)
+        //   - Dept lookup pulls salesRep + serviceLocationKey in one query
+        //   - Fallback to client's salesRep, then 0
+        //   - NextAsync('I', svcLocKey, conn, txn) generates a real NI/SI/FI
+        //     invoice number — sInvoiceNumber is populated at create time, not
+        //     deferred to a finalize step (matches the cloud schema's invariant)
+        //   - NextAsync + INSERT wrapped in a txn so counter rolls back with INSERT
+        if (body.ClientKey <= 0 || body.DepartmentKey <= 0)
+            return BadRequest(new { error = "ClientKey and DepartmentKey are required." });
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        const string sql = """
-            INSERT INTO tblProductSales
-                (lClientKey, lDepartmentKey, lSalesRepKey, dtOrderDate,
-                 sPurchaseOrder, sNote, nQuoteAmount, nShippingAmount, nTaxAmount, nTotalAmount)
-            OUTPUT INSERTED.lProductSaleKey
-            VALUES
-                (@clientKey, @deptKey, @salesRepKey, GETDATE(),
-                 @po, @note, 0, 0, 0, 0)
-            """;
+        // Validate dept-belongs-to-client + pull salesRep + serviceLocationKey in one trip.
+        int? deptSalesRep = null;
+        int serviceLocationKey;
+        await using (var validate = new SqlCommand(@"
+            SELECT d.lSalesRepKey, ISNULL(d.lServiceLocationKey, 1) AS lServiceLocationKey
+            FROM dbo.tblDepartment d
+            WHERE d.lDepartmentKey = @dept
+              AND d.lClientKey = @client
+              AND d.Deleted_datetime IS NULL", conn))
+        {
+            validate.Parameters.AddWithValue("@dept", body.DepartmentKey);
+            validate.Parameters.AddWithValue("@client", body.ClientKey);
+            await using var reader = await validate.ExecuteReaderAsync();
+            if (!await reader.ReadAsync())
+                return BadRequest(new { error = "Department doesn't belong to that client (or doesn't exist)." });
+            if (reader["lSalesRepKey"] is not DBNull) deptSalesRep = Convert.ToInt32(reader["lSalesRepKey"]);
+            serviceLocationKey = Convert.ToInt32(reader["lServiceLocationKey"]);
+        }
 
-        await using var cmd = new SqlCommand(sql, conn);
-        cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@clientKey", body.ClientKey);
-        cmd.Parameters.AddWithValue("@deptKey", body.DepartmentKey);
-        cmd.Parameters.AddWithValue("@salesRepKey", (object?)body.SalesRepKey ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@po", (object?)body.PurchaseOrder ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@note", (object?)body.Note ?? DBNull.Value);
+        // Fallback chain for salesRep: explicit body value → dept → client → 0.
+        var salesRepKey = body.SalesRepKey ?? deptSalesRep ?? 0;
+        if (salesRepKey == 0)
+        {
+            await using var clientRep = new SqlCommand(
+                "SELECT lSalesRepKey FROM dbo.tblClient WHERE lClientKey = @client AND Deleted_datetime IS NULL", conn);
+            clientRep.Parameters.AddWithValue("@client", body.ClientKey);
+            var v = await clientRep.ExecuteScalarAsync();
+            if (v is not null and not DBNull) salesRepKey = Convert.ToInt32(v);
+        }
 
-        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-        return Ok(new { productSaleKey = newKey });
+        // NextAsync + INSERT wrapped in a txn so the counter rolls back with
+        // a failed INSERT (same counter-burn fix as the rest of the create
+        // endpoints — Receiving, Orders, OnsiteServices, Loaners, etc.).
+        await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            // Type 'I' for product-sale Invoice. Produces NI26140001-style numbers.
+            var invoiceNumber = await invoiceNumbers.NextAsync('I', serviceLocationKey, conn, txn);
+
+            const string sql = """
+                INSERT INTO tblProductSales
+                    (lClientKey, lDepartmentKey, lSalesRepKey, sInvoiceNumber, dtOrderDate,
+                     sPurchaseOrder, sNote, nQuoteAmount, nShippingAmount, nTaxAmount, nTotalAmount)
+                OUTPUT INSERTED.lProductSaleKey
+                VALUES
+                    (@clientKey, @deptKey, @salesRepKey, @inv, GETDATE(),
+                     @po, @note, 0, 0, 0, 0)
+                """;
+
+            await using var cmd = new SqlCommand(sql, conn, txn);
+            cmd.CommandTimeout = 30;
+            cmd.Parameters.AddWithValue("@clientKey", body.ClientKey);
+            cmd.Parameters.AddWithValue("@deptKey", body.DepartmentKey);
+            cmd.Parameters.AddWithValue("@salesRepKey", salesRepKey);
+            cmd.Parameters.AddWithValue("@inv", invoiceNumber);
+            cmd.Parameters.AddWithValue("@po", (object?)body.PurchaseOrder ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@note", (object?)body.Note ?? DBNull.Value);
+
+            var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+
+            await txn.CommitAsync();
+            return Ok(new { productSaleKey = newKey, invoiceNumber });
+        }
+        catch
+        {
+            await txn.RollbackAsync();
+            throw;
+        }
     }
 
     // ── PATCH /api/product-sales/{key} ───────────────────────────────────────
