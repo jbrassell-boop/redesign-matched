@@ -331,53 +331,69 @@ public class OrdersController(
                 "onsite"       => 'V',   // not currently sent by wizard, but supported
                 _              => 'R',   // repair, instrument (instrument is repair-shaped)
             };
-            var woNumber = await invoiceNumbers.NextAsync(typeChar, svcKey, conn);
 
-            // 5. Insert the repair record
-            const string insertSql = """
-                DISABLE TRIGGER ALL ON tblRepair;
-                INSERT INTO tblRepair (
-                    lDepartmentKey, lScopeKey, lRepairStatusID, sWorkOrderNumber,
-                    dtDateIn, lServiceLocationKey, sComplaintDesc, sPurchaseOrder,
-                    sRackPosition, lPackageTypeKey,
-                    sIncludesCaseYN, sIncludesETOCapYN, sIncludesWaterProofCapYN,
-                    lSalesRepKey, lPricingCategoryKey, lPaymentTermsKey,
-                    mMaxCharge
-                ) VALUES (
-                    @deptKey, @scopeKey, @statusId, @woNumber,
-                    GETDATE(), @svcKey, @complaint, @po,
-                    @rack, @pkgTypeKey,
-                    @inclCase, @inclETOCap, @inclWPCap,
-                    @salesRepKey, @pricingKey, @payTermsKey,
-                    @maxCharge
-                );
-                DECLARE @newKey INT = SCOPE_IDENTITY();
-                ENABLE TRIGGER ALL ON tblRepair;
-                SELECT @newKey;
-                """;
+            // WO generation + tblRepair INSERT wrapped in a transaction so the
+            // counter increment and the row INSERT are atomic. NextAsync enrolls
+            // in this transaction (proc is a single MERGE WITH HOLDLOCK, no
+            // autonomous-txn markers), so a rollback rolls back the counter
+            // increment too. Same pattern as ReceivingController / ProductSales.
+            await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
+            try
+            {
+                var woNumber = await invoiceNumbers.NextAsync(typeChar, svcKey, conn, txn);
 
-            await using var insertCmd = new SqlCommand(insertSql, conn);
-            insertCmd.CommandTimeout = 30;
-            insertCmd.Parameters.AddWithValue("@deptKey", request.DepartmentKey);
-            insertCmd.Parameters.AddWithValue("@scopeKey", scopeKey > 0 ? scopeKey : DBNull.Value);
-            insertCmd.Parameters.AddWithValue("@statusId", statusId);
-            insertCmd.Parameters.AddWithValue("@woNumber", woNumber);
-            insertCmd.Parameters.AddWithValue("@svcKey", svcKey);
-            insertCmd.Parameters.AddWithValue("@complaint", (object?)request.Complaint ?? DBNull.Value);
-            insertCmd.Parameters.AddWithValue("@po", (object?)request.PurchaseOrder ?? DBNull.Value);
-            insertCmd.Parameters.AddWithValue("@rack", (object?)request.RackPosition ?? DBNull.Value);
-            insertCmd.Parameters.AddWithValue("@pkgTypeKey", (object?)request.PackageTypeKey ?? DBNull.Value);
-            insertCmd.Parameters.AddWithValue("@inclCase", (object?)request.IncludesCaseYN ?? DBNull.Value);
-            insertCmd.Parameters.AddWithValue("@inclETOCap", (object?)request.IncludesETOCapYN ?? DBNull.Value);
-            insertCmd.Parameters.AddWithValue("@inclWPCap", (object?)request.IncludesWaterProofCapYN ?? DBNull.Value);
-            insertCmd.Parameters.AddWithValue("@salesRepKey", salesRepKey > 0 ? salesRepKey : DBNull.Value);
-            insertCmd.Parameters.AddWithValue("@pricingKey", pricingKey > 0 ? pricingKey : DBNull.Value);
-            insertCmd.Parameters.AddWithValue("@payTermsKey", payTermsKey > 0 ? payTermsKey : DBNull.Value);
-            insertCmd.Parameters.AddWithValue("@maxCharge", maxCharge.HasValue ? maxCharge.Value : DBNull.Value);
+                // 5. Insert the repair record
+                const string insertSql = """
+                    DISABLE TRIGGER ALL ON tblRepair;
+                    INSERT INTO tblRepair (
+                        lDepartmentKey, lScopeKey, lRepairStatusID, sWorkOrderNumber,
+                        dtDateIn, lServiceLocationKey, sComplaintDesc, sPurchaseOrder,
+                        sRackPosition, lPackageTypeKey,
+                        sIncludesCaseYN, sIncludesETOCapYN, sIncludesWaterProofCapYN,
+                        lSalesRepKey, lPricingCategoryKey, lPaymentTermsKey,
+                        mMaxCharge
+                    ) VALUES (
+                        @deptKey, @scopeKey, @statusId, @woNumber,
+                        GETDATE(), @svcKey, @complaint, @po,
+                        @rack, @pkgTypeKey,
+                        @inclCase, @inclETOCap, @inclWPCap,
+                        @salesRepKey, @pricingKey, @payTermsKey,
+                        @maxCharge
+                    );
+                    DECLARE @newKey INT = SCOPE_IDENTITY();
+                    ENABLE TRIGGER ALL ON tblRepair;
+                    SELECT @newKey;
+                    """;
 
-            var newKey = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
+                await using var insertCmd = new SqlCommand(insertSql, conn, txn);
+                insertCmd.CommandTimeout = 30;
+                insertCmd.Parameters.AddWithValue("@deptKey", request.DepartmentKey);
+                insertCmd.Parameters.AddWithValue("@scopeKey", scopeKey > 0 ? scopeKey : DBNull.Value);
+                insertCmd.Parameters.AddWithValue("@statusId", statusId);
+                insertCmd.Parameters.AddWithValue("@woNumber", woNumber);
+                insertCmd.Parameters.AddWithValue("@svcKey", svcKey);
+                insertCmd.Parameters.AddWithValue("@complaint", (object?)request.Complaint ?? DBNull.Value);
+                insertCmd.Parameters.AddWithValue("@po", (object?)request.PurchaseOrder ?? DBNull.Value);
+                insertCmd.Parameters.AddWithValue("@rack", (object?)request.RackPosition ?? DBNull.Value);
+                insertCmd.Parameters.AddWithValue("@pkgTypeKey", (object?)request.PackageTypeKey ?? DBNull.Value);
+                insertCmd.Parameters.AddWithValue("@inclCase", (object?)request.IncludesCaseYN ?? DBNull.Value);
+                insertCmd.Parameters.AddWithValue("@inclETOCap", (object?)request.IncludesETOCapYN ?? DBNull.Value);
+                insertCmd.Parameters.AddWithValue("@inclWPCap", (object?)request.IncludesWaterProofCapYN ?? DBNull.Value);
+                insertCmd.Parameters.AddWithValue("@salesRepKey", salesRepKey > 0 ? salesRepKey : DBNull.Value);
+                insertCmd.Parameters.AddWithValue("@pricingKey", pricingKey > 0 ? pricingKey : DBNull.Value);
+                insertCmd.Parameters.AddWithValue("@payTermsKey", payTermsKey > 0 ? payTermsKey : DBNull.Value);
+                insertCmd.Parameters.AddWithValue("@maxCharge", maxCharge.HasValue ? maxCharge.Value : DBNull.Value);
 
-            return Ok(new CreateOrderResponse(newKey, woNumber));
+                var newKey = Convert.ToInt32(await insertCmd.ExecuteScalarAsync());
+
+                await txn.CommitAsync();
+                return Ok(new CreateOrderResponse(newKey, woNumber));
+            }
+            catch
+            {
+                await txn.RollbackAsync();
+                throw;
+            }
         }
         catch (Exception ex)
         {

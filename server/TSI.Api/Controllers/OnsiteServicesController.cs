@@ -243,43 +243,60 @@ public class OnsiteServicesController(
             serviceLocationKey = Convert.ToInt32(locResult);
         }
 
-        // Generate the next onsite-service WO via the canonical proc.
-        // Type 'V' for Van service; produces NV26140001-style numbers.
-        // Replaces the legacy "INV-NNNN" format that wrote to the wrong
-        // table (tblOnsiteService) — now writes to tblSiteServices to
-        // match the cloud deploy.
-        var invoiceNum = await invoiceNumbers.NextAsync('V', serviceLocationKey, conn);
+        // WO generation + tblSiteServices INSERT wrapped in a transaction so
+        // a failure between NextAsync and the INSERT can't leave the counter
+        // ahead of the row. dbo.invoiceNumberDailyGet enrolls in the outer
+        // transaction (single MERGE WITH (HOLDLOCK), no autonomous-txn
+        // tricks), so a rollback here rolls back the counter increment too.
+        // Same pattern as ReceivingController.Intake and ProductSalesController.
+        await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            // Generate the next onsite-service WO via the canonical proc.
+            // Type 'V' for Van service; produces NV26140001-style numbers.
+            // Replaces the legacy "INV-NNNN" format that wrote to the wrong
+            // table (tblOnsiteService) — now writes to tblSiteServices to
+            // match the cloud deploy.
+            var invoiceNum = await invoiceNumbers.NextAsync('V', serviceLocationKey, conn, txn);
 
-        // Location/PriceClass from the legacy request are intentionally not
-        // persisted — tblSiteServices doesn't have columns for them. If the
-        // wizard needs to surface those fields again, add columns first.
-        const string sql = """
-            INSERT INTO tblSiteServices
-                (sWorkOrderNumber, lClientKey, lDepartmentKey, lTechnicianKey, dtOnsiteDate,
-                 sPurchaseOrder, sTruckNumber, sNotes, lServiceLocationKey,
-                 Created_datetime, Created_UserKey)
-            OUTPUT INSERTED.lSiteServiceKey
-            VALUES
-                (@invoiceNum, @clientKey, @deptKey, @techKey, @visitDate,
-                 @po, @truckNum, @notes, @serviceLocationKey,
-                 GETDATE(), @userKey);
-            """;
+            // Location/PriceClass from the legacy request are intentionally not
+            // persisted — tblSiteServices doesn't have columns for them. If the
+            // wizard needs to surface those fields again, add columns first.
+            const string sql = """
+                INSERT INTO tblSiteServices
+                    (sWorkOrderNumber, lClientKey, lDepartmentKey, lTechnicianKey, dtOnsiteDate,
+                     sPurchaseOrder, sTruckNumber, sNotes, lServiceLocationKey,
+                     Created_datetime, Created_UserKey)
+                OUTPUT INSERTED.lSiteServiceKey
+                VALUES
+                    (@invoiceNum, @clientKey, @deptKey, @techKey, @visitDate,
+                     @po, @truckNum, @notes, @serviceLocationKey,
+                     GETDATE(), @userKey);
+                """;
 
-        await using var cmd = new SqlCommand(sql, conn);
-        cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@invoiceNum", invoiceNum);
-        cmd.Parameters.AddWithValue("@clientKey", req.ClientKey);
-        cmd.Parameters.AddWithValue("@deptKey", req.DepartmentKey);
-        cmd.Parameters.AddWithValue("@techKey", req.TechnicianKey);
-        cmd.Parameters.AddWithValue("@visitDate", DateTime.Parse(req.VisitDate));
-        cmd.Parameters.AddWithValue("@po", (object?)req.Po ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@truckNum", (object?)req.TruckNum ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@serviceLocationKey", serviceLocationKey);
-        cmd.Parameters.AddWithValue("@userKey", this.GetCurrentUserKey());
+            await using var cmd = new SqlCommand(sql, conn, txn);
+            cmd.CommandTimeout = 30;
+            cmd.Parameters.AddWithValue("@invoiceNum", invoiceNum);
+            cmd.Parameters.AddWithValue("@clientKey", req.ClientKey);
+            cmd.Parameters.AddWithValue("@deptKey", req.DepartmentKey);
+            cmd.Parameters.AddWithValue("@techKey", req.TechnicianKey);
+            cmd.Parameters.AddWithValue("@visitDate", DateTime.Parse(req.VisitDate));
+            cmd.Parameters.AddWithValue("@po", (object?)req.Po ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@truckNum", (object?)req.TruckNum ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@serviceLocationKey", serviceLocationKey);
+            cmd.Parameters.AddWithValue("@userKey", this.GetCurrentUserKey());
 
-        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
-        return Ok(new { onsiteServiceKey = newKey, invoiceNum });
+            var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+
+            await txn.CommitAsync();
+            return Ok(new { onsiteServiceKey = newKey, invoiceNum });
+        }
+        catch
+        {
+            await txn.RollbackAsync();
+            throw;
+        }
     }
 
     [HttpPut("{id}/status")]

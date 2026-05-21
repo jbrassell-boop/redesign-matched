@@ -1504,26 +1504,46 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             serviceLocationKey = svcObj is null or DBNull ? 1 : Convert.ToInt32(svcObj);
         }
 
-        var tranNumber = await invoiceNumbers.NextAsync('R', serviceLocationKey, conn);
+        // Invoice number generation + tblInvoice INSERT wrapped in a transaction
+        // so a failure between NextAsync and the INSERT can't leave the counter
+        // ahead of the row. dbo.invoiceNumberDailyGet enrolls in the outer txn
+        // (single MERGE WITH (HOLDLOCK), no autonomous-txn tricks), so a rollback
+        // rolls back the counter increment too. Same pattern as ReceivingController.
+        await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            var tranNumber = await invoiceNumbers.NextAsync('R', serviceLocationKey, conn, txn);
 
-        const string insertSql = """
-            INSERT INTO tblInvoice (lRepairKey, lClientKey, lDepartmentKey, lScopeKey,
-                dtTranDate, dblTranAmount, sTranNumber, sInvoiceStatus, bIsManual, bIsVoid, bFinalized)
-            OUTPUT INSERTED.lInvoiceKey
-            SELECT r.lRepairKey, d.lClientKey, r.lDepartmentKey, r.lScopeKey,
-                GETDATE(), ISNULL(r.dblAmtRepair, 0), @tranNumber, 'Draft', 0, 0, 0
-            FROM tblRepair r
-            JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
-            WHERE r.lRepairKey = @repairKey;
-            """;
+            const string insertSql = """
+                INSERT INTO tblInvoice (lRepairKey, lClientKey, lDepartmentKey, lScopeKey,
+                    dtTranDate, dblTranAmount, sTranNumber, sInvoiceStatus, bIsManual, bIsVoid, bFinalized)
+                OUTPUT INSERTED.lInvoiceKey
+                SELECT r.lRepairKey, d.lClientKey, r.lDepartmentKey, r.lScopeKey,
+                    GETDATE(), ISNULL(r.dblAmtRepair, 0), @tranNumber, 'Draft', 0, 0, 0
+                FROM tblRepair r
+                JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+                WHERE r.lRepairKey = @repairKey;
+                """;
 
-        await using var insertCmd = new SqlCommand(insertSql, conn);
-        insertCmd.CommandTimeout = 30;
-        insertCmd.Parameters.AddWithValue("@repairKey", repairKey);
-        insertCmd.Parameters.AddWithValue("@tranNumber", tranNumber);
-        var result = await insertCmd.ExecuteScalarAsync();
-        if (result == null || result == DBNull.Value) return NotFound();
-        return Ok(new { invoiceKey = Convert.ToInt32(result), invoiceNumber = tranNumber });
+            await using var insertCmd = new SqlCommand(insertSql, conn, txn);
+            insertCmd.CommandTimeout = 30;
+            insertCmd.Parameters.AddWithValue("@repairKey", repairKey);
+            insertCmd.Parameters.AddWithValue("@tranNumber", tranNumber);
+            var result = await insertCmd.ExecuteScalarAsync();
+            if (result == null || result == DBNull.Value)
+            {
+                await txn.RollbackAsync();
+                return NotFound();
+            }
+
+            await txn.CommitAsync();
+            return Ok(new { invoiceKey = Convert.ToInt32(result), invoiceNumber = tranNumber });
+        }
+        catch
+        {
+            await txn.RollbackAsync();
+            throw;
+        }
     }
 
     // ── Repair Notes ──

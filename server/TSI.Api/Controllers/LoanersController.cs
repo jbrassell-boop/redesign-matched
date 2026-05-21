@@ -614,51 +614,67 @@ public class LoanersController(
             repairStatusId = statusObj is not null and not DBNull ? Convert.ToInt32(statusObj) : 1;
         }
 
-        // Step 2: Generate next WO number via the canonical proc.
-        // Type 'R' — the loaner-tracking row IS a repair (status drives the
-        // loaner workflow downstream). Replaces racy MAX(...)+1 numeric WOs.
-        var woNumber = await invoiceNumbers.NextAsync('R', serviceLocationKey, conn);
+        // WO generation + tblRepair INSERT + tblLoanerTran INSERT all wrapped
+        // in a single transaction so the three operations are atomic. NextAsync
+        // enrolls in the txn (proc is a single MERGE WITH HOLDLOCK, no
+        // autonomous-txn markers), so a rollback rolls back the counter
+        // increment too. If either INSERT fails, neither row exists and the
+        // counter stays at the original value — no orphan repair, no burned WO.
+        await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            // Step 2: Generate next WO number via the canonical proc.
+            // Type 'R' — the loaner-tracking row IS a repair (status drives the
+            // loaner workflow downstream). Replaces racy MAX(...)+1 numeric WOs.
+            var woNumber = await invoiceNumbers.NextAsync('R', serviceLocationKey, conn, txn);
 
-        // Step 3: Create repair (disable triggers — tblRepair has triggers).
-        // Uses GetCurrentUserKey() so audit columns identify who's creating the
-        // loaner, not the legacy hardcoded lCreateUser=1.
-        var repairSql = """
-            DISABLE TRIGGER ALL ON tblRepair;
-            INSERT INTO tblRepair
-                (lScopeKey, lDepartmentKey, lRepairStatusID, sWorkOrderNumber,
-                 dtDateIn, bLoanerRequested, dtCreateDate, lCreateUser)
-            VALUES
-                (@scopeKey, @deptKey, @statusId, @wo,
-                 GETDATE(), 0, GETDATE(), @userKey);
-            ENABLE TRIGGER ALL ON tblRepair;
-            SELECT SCOPE_IDENTITY();
-            """;
+            // Step 3: Create repair (disable triggers — tblRepair has triggers).
+            // Uses GetCurrentUserKey() so audit columns identify who's creating the
+            // loaner, not the legacy hardcoded lCreateUser=1.
+            var repairSql = """
+                DISABLE TRIGGER ALL ON tblRepair;
+                INSERT INTO tblRepair
+                    (lScopeKey, lDepartmentKey, lRepairStatusID, sWorkOrderNumber,
+                     dtDateIn, bLoanerRequested, dtCreateDate, lCreateUser)
+                VALUES
+                    (@scopeKey, @deptKey, @statusId, @wo,
+                     GETDATE(), 0, GETDATE(), @userKey);
+                ENABLE TRIGGER ALL ON tblRepair;
+                SELECT SCOPE_IDENTITY();
+                """;
 
-        await using var repairCmd = new SqlCommand(repairSql, conn);
-        repairCmd.CommandTimeout = 30;
-        repairCmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
-        repairCmd.Parameters.AddWithValue("@deptKey", departmentKey > 0 ? departmentKey : DBNull.Value);
-        repairCmd.Parameters.AddWithValue("@statusId", repairStatusId);
-        repairCmd.Parameters.AddWithValue("@wo", woNumber);
-        repairCmd.Parameters.AddWithValue("@userKey", this.GetCurrentUserKey());
-        var repairKey = Convert.ToInt32(await repairCmd.ExecuteScalarAsync());
+            await using var repairCmd = new SqlCommand(repairSql, conn, txn);
+            repairCmd.CommandTimeout = 30;
+            repairCmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
+            repairCmd.Parameters.AddWithValue("@deptKey", departmentKey > 0 ? departmentKey : DBNull.Value);
+            repairCmd.Parameters.AddWithValue("@statusId", repairStatusId);
+            repairCmd.Parameters.AddWithValue("@wo", woNumber);
+            repairCmd.Parameters.AddWithValue("@userKey", this.GetCurrentUserKey());
+            var repairKey = Convert.ToInt32(await repairCmd.ExecuteScalarAsync());
 
-        // Step 4: Create loaner tran linked to repair (scope goes to "Repair" status)
-        var tranSql = """
-            INSERT INTO tblLoanerTran
-                (lScopeKey, lRepairKey, dtCreateDate, lCreateUser)
-            VALUES
-                (@scopeKey, @repairKey, GETDATE(), 1);
-            SELECT SCOPE_IDENTITY();
-            """;
+            // Step 4: Create loaner tran linked to repair (scope goes to "Repair" status)
+            var tranSql = """
+                INSERT INTO tblLoanerTran
+                    (lScopeKey, lRepairKey, dtCreateDate, lCreateUser)
+                VALUES
+                    (@scopeKey, @repairKey, GETDATE(), 1);
+                SELECT SCOPE_IDENTITY();
+                """;
 
-        await using var tranCmd = new SqlCommand(tranSql, conn);
-        tranCmd.CommandTimeout = 30;
-        tranCmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
-        tranCmd.Parameters.AddWithValue("@repairKey", repairKey);
-        var tranKey = Convert.ToInt32(await tranCmd.ExecuteScalarAsync());
+            await using var tranCmd = new SqlCommand(tranSql, conn, txn);
+            tranCmd.CommandTimeout = 30;
+            tranCmd.Parameters.AddWithValue("@scopeKey", body.ScopeKey);
+            tranCmd.Parameters.AddWithValue("@repairKey", repairKey);
+            var tranKey = Convert.ToInt32(await tranCmd.ExecuteScalarAsync());
 
-        return Ok(new { repairKey, loanerTranKey = tranKey, workOrder = woNumber });
+            await txn.CommitAsync();
+            return Ok(new { repairKey, loanerTranKey = tranKey, workOrder = woNumber });
+        }
+        catch
+        {
+            await txn.RollbackAsync();
+            throw;
+        }
     }
 
     // ── Check-In ─────────────────────────────────────────────────────────────

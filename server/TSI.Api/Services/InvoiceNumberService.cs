@@ -30,9 +30,14 @@ public interface IInvoiceNumberService
     /// </param>
     /// <param name="conn">An open <c>SqlConnection</c>. The caller manages
     /// its lifecycle; we do not open/close it.</param>
-    /// <param name="tx">Optional transaction to enroll the EXEC in. Counter
-    /// increments are NOT rolled back if the surrounding transaction aborts
-    /// (legacy behaviour — gaps in the sequence are tolerated).</param>
+    /// <param name="tx">Optional transaction to enroll the EXEC in. When
+    /// supplied, the counter increment participates in the outer transaction
+    /// — a rollback DOES roll back the increment (the proc is a single
+    /// <c>MERGE WITH (HOLDLOCK)</c> with no autonomous-txn markers).
+    /// Pass <c>null</c> for autocommit, which leaves the increment in place
+    /// even if the caller's subsequent work fails (gaps in the sequence are
+    /// tolerated by the business, so autocommit is acceptable for read-only
+    /// or fire-and-forget callers).</param>
     Task<string> NextAsync(
         char invoiceType,
         int serviceLocationKey,
