@@ -214,12 +214,21 @@ public class OrdersController(
     [HttpPost]
     public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
     {
+        // Basic input validation. Was previously trusting the request entirely
+        // and silently using default 1/0 fallbacks for missing dept defaults
+        // — which let invalid DepartmentKey/ScopeTypeKey values create real
+        // tblRepair rows with svcKey=1 even when the dept didn't exist. The
+        // dept FK on tblRepair didn't catch it (and trRepairIns may not either
+        // depending on how it derives location). 400-on-invalid is cleaner.
+        if (request.DepartmentKey <= 0)
+            return BadRequest(new { error = "DepartmentKey is required." });
+
         try
         {
             await using var conn = CreateConnection();
             await conn.OpenAsync();
 
-            // 1. Look up department defaults
+            // 1. Look up department defaults (and confirm the dept exists at all).
             const string deptSql = """
                 SELECT d.lServiceLocationKey, d.lSalesRepKey, d.lPricingCategoryKey,
                        ISNULL(c.lPaymentTermsKey, 0) AS lPaymentTermsKey,
@@ -235,8 +244,10 @@ public class OrdersController(
             await using var deptReader = await deptCmd.ExecuteReaderAsync();
 
             int svcKey = 1, salesRepKey = 0, pricingKey = 0, payTermsKey = 0;
+            bool deptFound = false;
             if (await deptReader.ReadAsync())
             {
+                deptFound = true;
                 svcKey = deptReader["lServiceLocationKey"] != DBNull.Value
                     ? Convert.ToInt32(deptReader["lServiceLocationKey"]) : 1;
                 salesRepKey = deptReader["lSalesRepKey"] != DBNull.Value
@@ -251,6 +262,24 @@ public class OrdersController(
                     ? Convert.ToInt32(deptReader["lPaymentTermsKey"]) : 0;
             }
             await deptReader.CloseAsync();
+
+            if (!deptFound)
+                return BadRequest(new { error = $"Department {request.DepartmentKey} not found or has been deleted." });
+
+            // Validate ScopeTypeKey if provided — pre-existing code silently
+            // passed invalid values straight to the scope INSERT, which then
+            // either succeeded with a dangling FK (no FK enforcement) or
+            // failed mid-transaction and now rolls back gracefully.
+            if (request.ScopeTypeKey is int stk && stk > 0)
+            {
+                await using var stCheck = new SqlCommand(
+                    "SELECT 1 FROM tblScopeType WHERE lScopeTypeKey = @stk", conn);
+                stCheck.CommandTimeout = 30;
+                stCheck.Parameters.AddWithValue("@stk", stk);
+                var stExists = await stCheck.ExecuteScalarAsync();
+                if (stExists is null or DBNull)
+                    return BadRequest(new { error = $"ScopeTypeKey {stk} not found." });
+            }
 
             // 2. Get "Received" status ID (read-only, stays outside the txn)
             await using var statusCmd = new SqlCommand(
