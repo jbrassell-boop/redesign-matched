@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import './InstrumentsPage.css';
 import { Input, Select, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 import {
   getInstrumentRepairs,
   getInstrumentRepairDetail,
@@ -52,6 +53,7 @@ const STAT_CHIPS: {
 ];
 
 export const InstrumentsPage = () => {
+  const { locationKey } = useServiceLocation();
   const [activeTab, setActiveTab] = useState<InstrumentTab>('repairs');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -76,11 +78,13 @@ export const InstrumentsPage = () => {
   const [selectedCatalogKey, setSelectedCatalogKey] = useState<number | null>(null);
   const [catalogDetailLoading, setCatalogDetailLoading] = useState(false);
 
+  // Stats refetch on location switch — header carries the location via the
+  // interceptor; locationKey in deps triggers the new fetch.
   useEffect(() => {
     let cancelled = false;
     getInstrumentStats().then(d => { if (!cancelled) setStats(d); }).catch(() => { if (!cancelled) message.error('Failed to load instrument stats'); });
     return () => { cancelled = true; };
-  }, []);
+  }, [locationKey]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -110,7 +114,7 @@ export const InstrumentsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [activeTab, search, statusFilter, typeFilter, activeFilter, page, pageSize]);
+  }, [activeTab, search, statusFilter, typeFilter, activeFilter, page, pageSize, locationKey]);
 
   useEffect(() => {
     const timer = setTimeout(() => loadData(), search ? 300 : 0);

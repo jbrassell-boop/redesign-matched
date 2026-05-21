@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Input, Button, message } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 import { StatStrip, StatusBadge, DevNotice } from '../../components/shared';
 import type { StatChipDef } from '../../components/shared';
 import { getProductSales, getProductSaleStats } from '../../api/product-sales';
@@ -38,6 +39,7 @@ const STATUS_FILTER_MAP: Record<string, string> = {
 };
 
 export const ProductSalePage = () => {
+  const { locationKey } = useServiceLocation();
   const [search, setSearch] = useState('');
   const [activeChip, setActiveChip] = useState('all');
   const [loading, setLoading] = useState(true);
@@ -51,17 +53,27 @@ export const ProductSalePage = () => {
   const [drawerKey, setDrawerKey] = useState<number | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const loadStats = useCallback(() => {
+  // Both loaders take a `cancelled` checker so the caller's useEffect can flip
+  // it on cleanup and prevent a slow stale response from overwriting a faster
+  // fresh one (rapid banner-switch or rapid typing both trigger this race).
+  // locationKey is kept in deps so banner switches refire via new function refs.
+  const loadStats = useCallback((cancelled: () => boolean = () => false) => {
     getProductSaleStats()
-      .then(setStats)
-      .catch(() => message.error('Failed to load stats'));
-  }, []);
+      .then(s => { if (!cancelled()) setStats(s); })
+      .catch(() => { if (!cancelled()) message.error('Failed to load stats'); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationKey]);
 
-  useEffect(() => { loadStats(); }, [loadStats]);
+  // Stats refetch on initial mount + every location switch, cancel-guarded.
+  useEffect(() => {
+    let cancelled = false;
+    loadStats(() => cancelled);
+    return () => { cancelled = true; };
+  }, [loadStats]);
 
   const statusFilter = STATUS_FILTER_MAP[activeChip] ?? undefined;
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (cancelled: () => boolean = () => false) => {
     setLoading(true);
     try {
       const res = await getProductSales({
@@ -70,18 +82,21 @@ export const ProductSalePage = () => {
         page,
         pageSize,
       });
-      setSales(res.items);
-      setTotalCount(res.totalCount);
+      if (!cancelled()) {
+        setSales(res.items);
+        setTotalCount(res.totalCount);
+      }
     } catch {
-      message.error('Failed to load product sales');
+      if (!cancelled()) message.error('Failed to load product sales');
     } finally {
-      setLoading(false);
+      if (!cancelled()) setLoading(false);
     }
-  }, [search, statusFilter, page, pageSize]);
+  }, [search, statusFilter, page, pageSize, locationKey]);
 
   useEffect(() => {
-    const timer = setTimeout(() => loadData(), search ? 300 : 0);
-    return () => clearTimeout(timer);
+    let cancelled = false;
+    const timer = setTimeout(() => loadData(() => cancelled), search ? 300 : 0);
+    return () => { cancelled = true; clearTimeout(timer); };
   }, [loadData, search]);
 
   const handleRowClick = (key: number) => {

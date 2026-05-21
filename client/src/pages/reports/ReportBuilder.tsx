@@ -1,4 +1,5 @@
 import { message } from 'antd';
+import apiClient from '../../api/client';
 import type { ParamType } from './types';
 import './ReportBuilder.css';
 
@@ -408,17 +409,18 @@ export const handleGenerate = async (id: string) => {
   }
   message.loading({ content: 'Generating report...', key: 'report', duration: 0 });
   try {
-    const token = localStorage.getItem('tsi_token');
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
-    const resp = await fetch(`${baseUrl}${endpoint}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!resp.ok) throw new Error('Failed');
-    const blob = await resp.blob();
+    // Go through apiClient instead of raw fetch so the request carries:
+    //   • Authorization (sessionStorage token via interceptor — was reading the
+    //     WRONG storage layer before; localStorage never had the token)
+    //   • X-Service-Location header (ReportsController endpoints all call
+    //     GetActiveServiceLocation() — must be scoped to the user's banner)
+    const resp = await apiClient.get(endpoint, { responseType: 'blob' });
+    const blob = resp.data as Blob;
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = resp.headers.get('content-disposition')?.split('filename=')[1]?.replace(/"/g, '') || `${id}-${new Date().toISOString().slice(0, 10)}.csv`;
+    const disposition = (resp.headers as { 'content-disposition'?: string })['content-disposition'];
+    a.download = disposition?.split('filename=')[1]?.replace(/"/g, '') || `${id}-${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();

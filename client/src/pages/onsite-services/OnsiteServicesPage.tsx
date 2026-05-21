@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 import { getOnsiteServices, getOnsiteServiceStats } from '../../api/onsite-services';
 import { ExportButton } from '../../components/common/ExportButton';
 import './OnsiteServicesPage.css';
@@ -90,6 +91,7 @@ const IconDollar = () => (
 const PAGE_SIZE = 25;
 
 export const OnsiteServicesPage = () => {
+  const { locationKey } = useServiceLocation();
   const [stats, setStats] = useState<OnsiteServiceStats | null>(null);
   const [items, setItems] = useState<OnsiteServiceListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -111,12 +113,14 @@ export const OnsiteServicesPage = () => {
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Stats refetch on location switch — header carries the location via the
+  // interceptor; locationKey in deps triggers the new fetch.
   useEffect(() => {
     let cancelled = false;
     setStatsLoading(true);
     getOnsiteServiceStats().then(d => { if (!cancelled) setStats(d); }).finally(() => { if (!cancelled) setStatsLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [locationKey]);
 
   const loadData = useCallback(async (filters: OnsiteServiceFilters) => {
     setLoading(true);
@@ -127,7 +131,8 @@ export const OnsiteServicesPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationKey]);
 
   useEffect(() => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current);

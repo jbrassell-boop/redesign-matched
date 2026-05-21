@@ -54,14 +54,21 @@ export const DashboardPage = () => {
     deptName?: string;
   } | null>(null);
 
+  // Re-fetch stats whenever the active service location changes — the
+  // X-Service-Location header travels via the api/client.ts interceptor, but
+  // React needs `locationKey` in the deps array to actually trigger the
+  // refetch on banner switch. Without this, badge counts (urgent repairs,
+  // expiring contracts, pending QC, etc.) stay stale at whatever location
+  // was active when the dashboard first mounted.
   useEffect(() => {
     let cancelled = false;
+    setStatsLoading(true);
     getDashboardStats()
       .then(s => { if (!cancelled) setStats(s); })
       .catch(() => { if (!cancelled) message.error('Failed to load dashboard stats'); })
       .finally(() => { if (!cancelled) setStatsLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [locationKey]);
 
   const fetchData = useCallback(async (s: DashboardToolbarState, cancelled: () => boolean) => {
     setLoading(true);

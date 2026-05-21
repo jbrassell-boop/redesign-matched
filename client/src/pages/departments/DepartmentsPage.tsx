@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { FixedSizeList } from 'react-window';
 import { Input, Button, message } from 'antd';
 import { SearchOutlined, PlusOutlined } from '@ant-design/icons';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 import { getDepartments } from '../../api/departments';
 import { DepartmentDetailPane } from './DepartmentDetailPane';
 import { NewDepartmentModal } from './NewDepartmentModal';
@@ -15,6 +16,7 @@ const DEPT_EXPORT_COLS = [
 ];
 
 export const DepartmentsPage = () => {
+  const { locationKey } = useServiceLocation();
   const [departments, setDepartments] = useState<DepartmentListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -34,6 +36,9 @@ export const DepartmentsPage = () => {
     return () => ro.disconnect();
   }, []);
 
+  // locationKey is kept in deps so banner switch returns a new function
+  // reference and fires the calling useEffect for a refetch. The value
+  // travels via the X-Service-Location header (api/client.ts interceptor).
   const loadDepartments = useCallback(async (s: string, cancelled: () => boolean) => {
     setLoading(true);
     try {
@@ -44,7 +49,8 @@ export const DepartmentsPage = () => {
     } finally {
       if (!cancelled()) setLoading(false);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationKey]);
 
   useEffect(() => {
     let cancelled = false;

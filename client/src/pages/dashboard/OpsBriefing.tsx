@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 import { getDashboardBriefing } from '../../api/dashboard';
 import apiClient from '../../api/client';
 import type { BriefingStats, DashboardStats } from './types';
@@ -89,24 +90,33 @@ const FlowRow = ({ type, inn, closed, missed, net, bold }: {
 };
 
 export const OpsBriefing = ({ stats }: Props) => {
+  const { locationKey } = useServiceLocation();
   const [briefing, setBriefing] = useState<BriefingStats | null>(null);
   const [flow, setFlow] = useState<{ category: string; received: number; shipped: number }[]>([]);
   const [kpi, setKpi] = useState<{ backlog1to7: number; backlog8to14: number; backlog15to30: number; backlog30Plus: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Refetch on location switch — header carries the location via the interceptor;
+  // locationKey in deps is what triggers both calls to re-issue. Cancel flag
+  // protects against a slow stale response overwriting a faster fresh one when
+  // the user switches banner rapidly.
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     Promise.all([
       getDashboardBriefing(),
-      apiClient.get('/dashboard/executive-kpi').then(r => r.data).catch(() => { message.error('Failed to load executive KPI data'); return null; }),
+      apiClient.get('/dashboard/executive-kpi').then(r => r.data).catch(() => { if (!cancelled) message.error('Failed to load executive KPI data'); return null; }),
     ]).then(([b, k]) => {
+      if (cancelled) return;
       setBriefing(b);
       setKpi(k);
       // Flow data comes back with the briefing now
       if (b?.flow) setFlow(b.flow);
     })
-      .catch(() => { message.error('Failed to load ops briefing data'); })
-      .finally(() => setLoading(false));
-  }, []);
+      .catch(() => { if (!cancelled) message.error('Failed to load ops briefing data'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [locationKey]);
 
   if (loading) return (
     <div style={loadingContainerStyle}>

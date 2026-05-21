@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Skeleton } from 'antd';
+import { useServiceLocation } from '../../../hooks/useServiceLocation';
 import { getDashboardStats } from '../../../api/dashboard';
 import type { DashboardStats } from '../../dashboard/types';
 import './MorningBriefing.css';
@@ -11,14 +12,19 @@ const fmtDate = () => {
 };
 
 export const MorningBriefing = () => {
+  const { locationKey } = useServiceLocation();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Refetch when the active service location changes — the X-Service-Location
+  // header is set by the api/client.ts interceptor, but React needs locationKey
+  // in deps to actually trigger the new fetch on banner switch.
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     getDashboardStats().then(d => { if (!cancelled) setStats(d); }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [locationKey]);
 
   if (loading) return <Skeleton active paragraph={{ rows: 2 }} />;
 

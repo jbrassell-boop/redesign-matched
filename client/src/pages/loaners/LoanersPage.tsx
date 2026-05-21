@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Input, Spin, message } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 import { getLoaners, getLoanerStats, checkInLoaner } from '../../api/loaners';
 import type { LoanerListItem, LoanerStats, CheckInPayload } from './types';
 import { StatStrip, InlineExpandRow } from '../../components/shared';
@@ -53,6 +54,7 @@ const daysClass = (days: number, status: string) => {
 /*  LOANERS PAGE                                                */
 /* ═════════════════════════════════════════════════════════════ */
 export const LoanersPage = () => {
+  const { locationKey } = useServiceLocation();
   const [items, setItems] = useState<LoanerListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -76,6 +78,9 @@ export const LoanersPage = () => {
 
   const pageSize = 50;
 
+  // Both loaders keep locationKey in deps so a banner switch returns a new
+  // function reference, which fires the calling useEffects for a refetch.
+  // The X-Service-Location header travels via the api/client.ts interceptor.
   const loadData = useCallback(async (s: string, sf: string, p: number, cancelled: () => boolean) => {
     setLoading(true);
     try {
@@ -94,7 +99,8 @@ export const LoanersPage = () => {
     } finally {
       if (!cancelled()) setLoading(false);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationKey]);
 
   const loadStats = useCallback(async (cancelled: () => boolean = () => false) => {
     setStatsLoading(true);
@@ -106,7 +112,8 @@ export const LoanersPage = () => {
     } finally {
       if (!cancelled()) setStatsLoading(false);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationKey]);
 
   useEffect(() => {
     let cancelled = false;

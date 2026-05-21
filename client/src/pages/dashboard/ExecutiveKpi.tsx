@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 import apiClient from '../../api/client';
 import './ExecutiveKpi.css';
 
@@ -49,15 +50,23 @@ const KpiCard = ({ label, value, sub, color }: { label: string; value: string; s
 );
 
 export const ExecutiveKpi = () => {
+  const { locationKey } = useServiceLocation();
   const [data, setData] = useState<KpiData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Refetch on location switch — header carries the location via the interceptor;
+  // locationKey in deps is what triggers the new fetch. Cancel flag protects
+  // against a slow stale response overwriting a faster fresh one on rapid
+  // banner switches.
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
     apiClient.get('/dashboard/executive-kpi')
-      .then(r => setData(r.data))
-      .catch(() => { message.error('Failed to load KPI data'); })
-      .finally(() => setLoading(false));
-  }, []);
+      .then(r => { if (!cancelled) setData(r.data); })
+      .catch(() => { if (!cancelled) message.error('Failed to load KPI data'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [locationKey]);
 
   if (loading) return (
     <div className="exec-kpi" style={{ padding: '12px 16px' }}>

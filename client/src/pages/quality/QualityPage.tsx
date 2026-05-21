@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { message, Modal, Form, Input, Select } from 'antd';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 import { getQualityInspections, getQualityStats, getQualityNcr, getQualityRework } from '../../api/quality';
 import type { QualityInspectionListItem, QualityStats, QualityFilters, NcrListItem, ReworkListItem } from './types';
 import { ExportButton } from '../../components/common/ExportButton';
@@ -192,6 +193,7 @@ const REWORK_COLS = [
 ];
 
 export const QualityPage = () => {
+  const { locationKey } = useServiceLocation();
   const [activeTab, setActiveTab] = useState('QC Inspections');
   const [stats, setStats] = useState<QualityStats | null>(null);
   const [inspections, setInspections] = useState<QualityInspectionListItem[]>([]);
@@ -233,7 +235,8 @@ export const QualityPage = () => {
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load stats once
+  // Stats refetch on location switch — header carries the location via the
+  // interceptor; locationKey in deps triggers the new fetch.
   useEffect(() => {
     let cancelled = false;
     setStatsLoading(true);
@@ -242,7 +245,7 @@ export const QualityPage = () => {
       .catch(() => { if (!cancelled) message.error('Failed to load quality stats'); })
       .finally(() => { if (!cancelled) setStatsLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [locationKey]);
 
   const loadInspections = useCallback(async (filters: QualityFilters, cancelled: () => boolean) => {
     setLoading(true);
@@ -257,7 +260,8 @@ export const QualityPage = () => {
     } finally {
       if (!cancelled()) setLoading(false);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationKey]);
 
   useEffect(() => {
     let cancelled = false;

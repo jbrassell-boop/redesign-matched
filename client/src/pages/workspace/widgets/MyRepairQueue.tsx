@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Skeleton } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import { useServiceLocation } from '../../../hooks/useServiceLocation';
 import { getDashboardRepairs } from '../../../api/dashboard';
 import { StatusBadge } from '../../../components/shared';
 import type { DashboardRepair } from '../../dashboard/types';
@@ -18,17 +19,21 @@ const NEXT_ACTION: Record<string, string> = {
 };
 
 export const MyRepairQueue = () => {
+  const { locationKey } = useServiceLocation();
   const [repairs, setRepairs] = useState<DashboardRepair[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Refetch on location switch — header carries the location via the interceptor;
+  // locationKey in deps is what triggers the new fetch.
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     getDashboardRepairs({ search: '', page: 1, pageSize: 10, statusFilter: 'all' })
       .then(r => { if (!cancelled) setRepairs(r.repairs.slice(0, 10)); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [locationKey]);
 
   if (loading) return <Skeleton active paragraph={{ rows: 4 }} />;
 

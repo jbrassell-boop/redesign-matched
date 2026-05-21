@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Spin } from 'antd';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 import { QUOTES, CATALOG, MODELS, SALES_REPS, CATALOG_CATEGORIES } from './endoCartData';
 import { getEndoCartScopeInventory, getEndoCartServiceHistory } from '../../api/endocarts';
 import type { EndoCartFilters, CatalogPart, CartModel, EndoCartScopeItem, EndoCartServiceHistoryItem } from './types';
@@ -98,6 +99,7 @@ const SectionCard = ({ title, children }: { title: string; children: React.React
    MAIN PAGE
    ════════════════════════════════════════════════════════════════ */
 export const EndoCartsPage = () => {
+  const { locationKey } = useServiceLocation();
   const [activeTab, setActiveTab] = useState<'quotes' | 'catalog' | 'models' | 'scope-inventory' | 'service-history'>('quotes');
 
   /* ── Quotes state ─── */
@@ -193,6 +195,8 @@ export const EndoCartsPage = () => {
   }, [modelSearch]);
 
   /* ── Scope Inventory loader ─── */
+  // locationKey is kept in deps so a banner switch refetches via a new function
+  // reference; the value travels via the X-Service-Location header.
   const loadScopeInventory = useCallback(async () => {
     setScopeLoading(true);
     try {
@@ -201,13 +205,14 @@ export const EndoCartsPage = () => {
       setScopeTotal(res.totalCount);
     } catch (err) { console.error('[EndoCarts] loadScopeInventory failed', err); }
     finally { setScopeLoading(false); }
-  }, [scopeSearch, scopeTypeFilter, scopePage]);
+  }, [scopeSearch, scopeTypeFilter, scopePage, locationKey]);
 
   useEffect(() => {
     if (activeTab === 'scope-inventory') { const t = setTimeout(() => loadScopeInventory(), scopeSearch ? 300 : 0); return () => clearTimeout(t); }
   }, [activeTab, loadScopeInventory, scopeSearch]);
 
   /* ── Service History loader ─── */
+  // locationKey kept in deps for same reason as loadScopeInventory above.
   const loadServiceHistory = useCallback(async () => {
     setServiceLoading(true);
     try {
@@ -216,7 +221,7 @@ export const EndoCartsPage = () => {
       setServiceTotal(res.totalCount);
     } catch (err) { console.error('[EndoCarts] loadServiceHistory failed', err); }
     finally { setServiceLoading(false); }
-  }, [serviceSearch, servicePage]);
+  }, [serviceSearch, servicePage, locationKey]);
 
   useEffect(() => {
     if (activeTab === 'service-history') { const t = setTimeout(() => loadServiceHistory(), serviceSearch ? 300 : 0); return () => clearTimeout(t); }

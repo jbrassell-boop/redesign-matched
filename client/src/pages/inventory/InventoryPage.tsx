@@ -33,6 +33,10 @@ export const InventoryPage = () => {
   const [poSupplier, setPoSupplier] = useState('');
   const [poNotes, setPoNotes] = useState('');
 
+  // loadItems doesn't use locationKey in its body — the X-Service-Location
+  // header travels via the axios interceptor — but locationKey is kept in
+  // deps so a banner switch returns a new function reference, which fires
+  // the calling useEffect (which has loadItems in deps) for a refetch.
   const loadItems = useCallback(async (s: string) => {
     setLoading(true);
     try {
@@ -42,7 +46,8 @@ export const InventoryPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationKey]);
 
   useEffect(() => {
     const timer = setTimeout(() => loadItems(search), search ? 300 : 0);
@@ -55,7 +60,7 @@ export const InventoryPage = () => {
       .then(data => { if (!cancelled) setStats(data); })
       .catch(() => { if (!cancelled) message.error('Failed to load inventory stats'); });
     return () => { cancelled = true; };
-  }, []);
+  }, [locationKey]);
 
   const handleSelect = useCallback((item: InventoryListItem) => {
     setSelectedKey(item.inventoryKey);

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Dropdown } from 'antd';
 import type { MenuProps } from 'antd';
+import { useServiceLocation } from '../../hooks/useServiceLocation';
 import { getOutsourceValidation, getOutsourceStats } from '../../api/outsource-validation';
 import { SendToVendorModal } from './SendToVendorModal';
 import { ReceiveBackModal } from './ReceiveBackModal';
@@ -68,6 +69,7 @@ const fmtMoney = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractio
 const fmtMoneyShort = (n: number) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
 export const OutsourceValidationPage = () => {
+  const { locationKey } = useServiceLocation();
   const [stats, setStats] = useState<OutsourceStats | null>(null);
   const [items, setItems] = useState<OutsourceListItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -87,12 +89,14 @@ export const OutsourceValidationPage = () => {
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Stats refetch on location switch — header carries the location via the
+  // interceptor; locationKey in deps triggers the new fetch.
   useEffect(() => {
     let cancelled = false;
     setStatsLoading(true);
     getOutsourceStats().then(d => { if (!cancelled) setStats(d); }).finally(() => { if (!cancelled) setStatsLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [locationKey]);
 
   const loadData = useCallback(async (filters: OutsourceFilters) => {
     setLoading(true);
@@ -103,7 +107,8 @@ export const OutsourceValidationPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationKey]);
 
   useEffect(() => {
     if (searchTimeout.current) clearTimeout(searchTimeout.current);

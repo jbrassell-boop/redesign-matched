@@ -1,18 +1,23 @@
 import { useState, useEffect } from 'react';
 import { Skeleton } from 'antd';
+import { useServiceLocation } from '../../../hooks/useServiceLocation';
 import { getDashboardAnalytics } from '../../../api/dashboard';
 import type { DashboardAnalyticsStats } from '../../dashboard/types';
 
 
 export const AnalyticsWidget = () => {
+  const { locationKey } = useServiceLocation();
   const [stats, setStats] = useState<DashboardAnalyticsStats | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Refetch on location switch — header carries the location via the interceptor;
+  // locationKey in deps is what triggers the new fetch.
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     getDashboardAnalytics().then(r => { if (!cancelled) setStats(r.stats); }).finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [locationKey]);
 
   if (loading) return <Skeleton active paragraph={{ rows: 2 }} />;
 
