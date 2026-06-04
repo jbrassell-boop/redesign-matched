@@ -5,7 +5,7 @@ import { getRepairStatuses } from '../../../api/repairs';
 import {
   lookupScopeBySerial, getScopeTypes, getClientsSimple,
   getDepartmentsByClient, getSalesReps, getPricingCategories,
-  getPaymentTerms, getCarriers, getRepairLevels, getRepairReasonOptions,
+  getPaymentTerms, getCarriers, getRepairReasonOptions,
   type LookupOption, type ScopeLookupResult,
 } from '../../../api/lookups';
 
@@ -24,7 +24,6 @@ const sectionHead: React.CSSProperties = {
   fontSize: 11.5, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em',
   borderRadius: 3, marginBottom: 6, marginTop: 12,
 };
-const grid2: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 10px' };
 const grid3: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px 10px' };
 
 const F = ({ label: lbl, children }: { label: string; children: React.ReactNode }) => (
@@ -64,18 +63,28 @@ const Inp = ({ value, onChange, placeholder, type, 'aria-label': ariaLabel }: {
   />
 );
 
+const pickRow = (active: boolean): React.CSSProperties => ({
+  display: 'grid', gridTemplateColumns: '1.4fr 1fr 1fr', gap: 8, width: '100%',
+  textAlign: 'left', padding: '7px 10px', fontSize: 11, cursor: 'pointer',
+  border: 'none', borderTop: '1px solid var(--neutral-100)', alignItems: 'center',
+  background: active ? 'var(--primary-light)' : 'var(--card)',
+  fontFamily: 'inherit', color: 'var(--label)',
+});
+
 interface Props {
   open: boolean;
   onClose: () => void;
   onCreated: () => void;
 }
 
+type LookupMsg = { tone: 'ok' | 'warn' | 'info'; text: string } | null;
+
 export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
   // ── Scope lookup state ──
   const [snInput, setSnInput] = useState('');
   const [lookingUp, setLookingUp] = useState(false);
-  const [scopeResult, setScopeResult] = useState<ScopeLookupResult | null | 'not-found'>(undefined as unknown as null);
-  const scopeFound = scopeResult !== null && scopeResult !== 'not-found' && scopeResult !== undefined;
+  const [matches, setMatches] = useState<ScopeLookupResult[]>([]); // shown as a picker when >1
+  const [lookupMsg, setLookupMsg] = useState<LookupMsg>(null);
 
   // ── Lookups ──
   const [statuses, setStatuses]       = useState<LookupOption[]>([]);
@@ -86,14 +95,13 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
   const [pricingCats, setPricingCats] = useState<LookupOption[]>([]);
   const [payTerms, setPayTerms]       = useState<LookupOption[]>([]);
   const [carriers, setCarriers]       = useState<LookupOption[]>([]);
-  const [levels, setLevels]           = useState<LookupOption[]>([]);
   const [reasons, setReasons]         = useState<LookupOption[]>([]);
 
   // ── Form state ──
   const [form, setForm] = useState<Partial<CreateRepairPayload>>({
     dateIn: new Date().toISOString().split('T')[0],
   });
-  const [newClientKey, setNewClientKey] = useState<number | null>(null);
+  const [clientKey, setClientKey] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const set = (k: keyof CreateRepairPayload, v: unknown) =>
@@ -109,9 +117,8 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
       getPricingCategories(),
       getPaymentTerms(),
       getCarriers(),
-      getRepairLevels(),
       getRepairReasonOptions(),
-    ]).then(([s, st, c, sr, pc, pt, car, lv, rr]) => {
+    ]).then(([s, st, c, sr, pc, pt, car, rr]) => {
       setStatuses(s.map(x => ({ key: x.statusId, name: x.statusName })));
       setScopeTypes(st);
       setClients(c);
@@ -119,32 +126,58 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
       setPricingCats(pc);
       setPayTerms(pt);
       setCarriers(car);
-      setLevels(lv);
       setReasons(rr);
     }).catch(() => message.error('Failed to load form data'));
   }, [open]);
 
-  // Load depts when new-scope client changes
+  // Load departments whenever the selected client changes.
   useEffect(() => {
-    if (!newClientKey) { setDepts([]); return; }
-    getDepartmentsByClient(newClientKey).then(setDepts).catch(() => { message.error('Failed to load departments'); });
-  }, [newClientKey]);
+    if (!clientKey) { setDepts([]); return; }
+    getDepartmentsByClient(clientKey).then(setDepts).catch(() => { message.error('Failed to load departments'); });
+  }, [clientKey]);
+
+  // Apply a matched scope to the form (auto-fills client/dept/type and links the scope).
+  const chooseScope = (m: ScopeLookupResult) => {
+    setClientKey(m.clientKey ?? null);
+    setMatches([]);
+    setForm(prev => ({
+      ...prev,
+      scopeKey: m.scopeKey,
+      deptKey: m.deptKey ?? prev.deptKey,
+      scopeTypeKey: m.scopeTypeKey ?? prev.scopeTypeKey,
+      serialNumber: m.serialNumber || prev.serialNumber,
+    }));
+    setLookupMsg({ tone: 'ok', text: `Matched ${m.clientName || '—'} · ${m.deptName || '—'}` });
+  };
+
+  // Changing client manually invalidates the prior department and any linked scope.
+  const handleClientChange = (v: string) => {
+    setClientKey(Number(v) || null);
+    setForm(prev => ({ ...prev, deptKey: undefined, scopeKey: null }));
+  };
+
+  // Changing department manually means we're no longer using the matched scope.
+  const handleDeptChange = (v: string) => {
+    setForm(prev => ({ ...prev, deptKey: Number(v) || undefined, scopeKey: null }));
+  };
 
   const handleLookup = async () => {
-    if (!snInput.trim()) return;
+    const sn = snInput.trim();
+    if (!sn) return;
     setLookingUp(true);
+    setMatches([]);
     try {
-      const result = await lookupScopeBySerial(snInput.trim());
-      if (result) {
-        setScopeResult(result);
-        setForm(prev => ({
-          ...prev,
-          scopeKey: result.scopeKey,
-          deptKey: result.deptKey ?? prev.deptKey,
-        }));
+      const results = await lookupScopeBySerial(sn);
+      if (results.length === 0) {
+        // Not found — keep what they typed; a new scope is created on submit.
+        setForm(prev => ({ ...prev, scopeKey: null, serialNumber: sn }));
+        setLookupMsg({ tone: 'warn', text: 'No scope found for that serial — pick a client & department and a new one will be created.' });
+      } else if (results.length === 1) {
+        chooseScope(results[0]);
       } else {
-        setScopeResult('not-found');
-        setForm(prev => ({ ...prev, scopeKey: null, serialNumber: snInput.trim() }));
+        setMatches(results);
+        setForm(prev => ({ ...prev, serialNumber: sn }));
+        setLookupMsg({ tone: 'info', text: `${results.length} scopes share this serial — choose the owner below.` });
       }
     } catch {
       message.error('Scope lookup failed');
@@ -159,10 +192,13 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
     setSubmitting(true);
     try {
       const payload: CreateRepairPayload = {
-        ...form as CreateRepairPayload,
+        ...(form as CreateRepairPayload),
         deptKey: Number(form.deptKey),
         dateIn: form.dateIn,
-        serialNumber: scopeResult === 'not-found' ? snInput.trim() : (form.serialNumber ?? null),
+        scopeKey: form.scopeKey ?? null,
+        // Linked to an existing scope → serial follows it; otherwise the typed
+        // serial seeds the new scope the backend creates.
+        serialNumber: form.scopeKey ? (form.serialNumber ?? null) : (snInput.trim() || null),
       };
       const { repairKey } = await createRepair(payload);
       message.success(`Repair #${repairKey} created`);
@@ -178,11 +214,14 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
 
   const handleClose = () => {
     setSnInput('');
-    setScopeResult(undefined as unknown as null);
+    setMatches([]);
+    setLookupMsg(null);
     setForm({ dateIn: new Date().toISOString().split('T')[0] });
-    setNewClientKey(null);
+    setClientKey(null);
     onClose();
   };
+
+  const searchDisabled = lookingUp || !snInput.trim();
 
   return (
     <Modal
@@ -193,82 +232,94 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
       footer={null}
       styles={{ body: { maxHeight: 'calc(100vh - 200px)', overflowY: 'auto', padding: '12px 16px' } }}
     >
-      {/* ── Instrument Lookup ── */}
+      {/* ── Instrument Lookup (optional accelerator) ── */}
       <div style={sectionHead}>Instrument Lookup</div>
       <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
         <div style={{ flex: 1 }}>
-          <div style={label}>Serial Number</div>
+          <div style={label}>
+            Serial Number{' '}
+            <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--muted)' }}>
+              — optional, auto-fills client &amp; department
+            </span>
+          </div>
           <input
             value={snInput}
             onChange={e => setSnInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleLookup()}
-            placeholder="Enter serial number and press Search"
+            placeholder="Enter a serial to auto-fill, or skip and pick a department below"
             aria-label="Instrument serial number lookup"
             style={field}
           />
         </div>
         <button
           onClick={handleLookup}
-          disabled={lookingUp}
+          disabled={searchDisabled}
           style={{
             height: 28, padding: '0 14px', fontSize: 11, fontWeight: 700,
             background: 'var(--primary)', color: 'var(--card)', border: 'none',
-            borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap',
+            borderRadius: 3, cursor: searchDisabled ? 'default' : 'pointer',
+            opacity: searchDisabled ? 0.5 : 1, fontFamily: 'inherit', whiteSpace: 'nowrap',
           }}
         >
           {lookingUp ? 'Searching…' : 'Search'}
         </button>
       </div>
 
-      {/* Found */}
-      {scopeFound && (
+      {/* Lookup status */}
+      {lookupMsg && (
         <div style={{
-          marginTop: 8, padding: '8px 10px', background: 'var(--primary-light)',
-          border: '1px solid var(--primary)', borderRadius: 4, fontSize: 11,
+          marginTop: 6, fontSize: 11, fontWeight: 600,
+          color: lookupMsg.tone === 'ok' ? 'var(--primary)'
+               : lookupMsg.tone === 'warn' ? 'var(--danger)' : 'var(--navy)',
         }}>
-          <div style={{ fontWeight: 700, color: 'var(--primary)', marginBottom: 4 }}>Scope Found</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 16px' }}>
-            <span><b>Client:</b> {(scopeResult as ScopeLookupResult).clientName}</span>
-            <span><b>Dept:</b> {(scopeResult as ScopeLookupResult).deptName}</span>
-            <span><b>Type:</b> {(scopeResult as ScopeLookupResult).scopeTypeDesc}</span>
-            <span><b>Mfr:</b> {(scopeResult as ScopeLookupResult).manufacturer}</span>
-          </div>
+          {lookupMsg.text}
         </div>
       )}
 
-      {/* Not found — new scope fields */}
-      {scopeResult === 'not-found' && (
-        <div style={{ marginTop: 8, padding: '8px 10px', background: 'var(--danger-light)', border: '1px solid var(--badge-red-border)', borderRadius: 4 }}>
-          <div style={{ fontWeight: 700, color: 'var(--danger)', marginBottom: 8, fontSize: 11 }}>
-            Serial not found — fill in scope details below
+      {/* Multi-match disambiguation */}
+      {matches.length > 1 && (
+        <div style={{ marginTop: 8, border: '1px solid var(--neutral-200)', borderRadius: 4, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--neutral-50)', padding: '6px 10px', fontSize: 11, fontWeight: 700, color: 'var(--navy)' }}>
+            Choose the owner of serial “{snInput.trim()}”:
           </div>
-          <div style={grid2}>
-            <F label="Client *">
-              <Sel
-                value={newClientKey ?? undefined}
-                onChange={v => { setNewClientKey(Number(v) || null); }}
-                options={clients}
-              />
-            </F>
-            <F label="Department *">
-              <Sel
-                value={form.deptKey ?? undefined}
-                onChange={v => set('deptKey', Number(v) || undefined)}
-                options={depts}
-              />
-            </F>
-          </div>
-          <div style={{ ...grid2, marginTop: 6 }}>
-            <F label="Scope Type">
-              <Sel
-                value={form.scopeTypeKey ?? undefined}
-                onChange={v => set('scopeTypeKey', Number(v) || undefined)}
-                options={scopeTypes}
-              />
-            </F>
-          </div>
+          {matches.map(m => (
+            <button key={m.scopeKey} type="button" onClick={() => chooseScope(m)} style={pickRow(form.scopeKey === m.scopeKey)}>
+              <span style={{ fontWeight: 600, color: 'var(--navy)' }}>{m.clientName || '—'}</span>
+              <span style={{ color: 'var(--muted)' }}>{m.deptName || '—'}</span>
+              <span style={{ color: 'var(--muted)' }}>{m.scopeTypeDesc || m.manufacturer || ''}</span>
+            </button>
+          ))}
         </div>
       )}
+
+      {/* ── Scope Details (always visible — never gated behind a serial search) ── */}
+      <div style={sectionHead}>Scope Details</div>
+      <div style={grid3}>
+        <F label="Client *">
+          <Sel value={clientKey ?? undefined} onChange={handleClientChange} options={clients} aria-label="Client" />
+        </F>
+        <F label="Department *">
+          <Sel
+            value={form.deptKey ?? undefined}
+            onChange={handleDeptChange}
+            options={depts}
+            placeholder={clientKey ? '— select —' : 'select a client first'}
+            aria-label="Department"
+          />
+        </F>
+        <F label="Scope Type">
+          <Sel value={form.scopeTypeKey ?? undefined} onChange={v => set('scopeTypeKey', Number(v) || undefined)} options={scopeTypes} aria-label="Scope type" />
+        </F>
+      </div>
+      {form.scopeKey ? (
+        <div style={{ marginTop: 4, fontSize: 11, color: 'var(--primary)' }}>
+          Linked to existing scope #{form.scopeKey}. Changing client or department creates a new scope.
+        </div>
+      ) : snInput.trim() && lookupMsg?.tone === 'warn' ? (
+        <div style={{ marginTop: 4, fontSize: 11, color: 'var(--muted)' }}>
+          A new scope will be created for serial “{snInput.trim()}”.
+        </div>
+      ) : null}
 
       {/* ── Repair Info ── */}
       <div style={sectionHead}>Repair Info</div>
@@ -281,18 +332,6 @@ export const NewRepairModal = ({ open, onClose, onCreated }: Props) => {
         </F>
         <F label="PO #">
           <Inp value={form.purchaseOrder ?? ''} onChange={v => set('purchaseOrder', v)} />
-        </F>
-        <F label="Customer Ref / CMMS WO#">
-          <Inp value={form.rackPosition ?? ''} onChange={v => set('rackPosition', v)} />
-        </F>
-        <F label="Source">
-          <select value={form.displayCustomerComplaint ?? ''} onChange={e => set('displayCustomerComplaint', e.target.value)} style={field}>
-            <option value="">— select —</option>
-            {['Email','Phone','Portal','Van Service','Walk-in'].map(s => <option key={s} value={s}>{s}</option>)}
-          </select>
-        </F>
-        <F label="Level">
-          <Sel value={undefined} onChange={v => set('billType', Number(v) || undefined)} options={levels} />
         </F>
         <F label="Reason">
           <Sel value={form.reasonKey ?? undefined} onChange={v => set('reasonKey', Number(v) || undefined)} options={reasons} />

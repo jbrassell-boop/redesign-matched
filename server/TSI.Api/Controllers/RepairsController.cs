@@ -1704,8 +1704,12 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // Return ALL scopes matching the serial. A serial is not unique across
+        // clients/departments, so a single-row lookup (TOP 1) silently hid every
+        // other owner's scope — making it impossible to receive a repair for them.
+        // The caller disambiguates when more than one row comes back.
         const string sql = """
-            SELECT TOP 1
+            SELECT
                 s.lScopeKey,
                 s.sSerialNumber,
                 s.lScopeTypeKey,
@@ -1722,7 +1726,7 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             LEFT JOIN tblDepartment d ON d.lDepartmentKey = s.lDepartmentKey
             LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
             WHERE s.sSerialNumber = @sn
-            ORDER BY s.lScopeKey DESC
+            ORDER BY c.sClientName1, d.sDepartmentName, s.lScopeKey DESC
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
@@ -1730,20 +1734,26 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         cmd.Parameters.AddWithValue("@sn", sn.Trim());
         await using var reader = await cmd.ExecuteReaderAsync();
 
-        if (!await reader.ReadAsync()) return Ok(null);
+        var matches = new List<object>();
+        while (await reader.ReadAsync())
+        {
+            matches.Add(new {
+                scopeKey       = Convert.ToInt32(reader["lScopeKey"]),
+                serialNumber   = reader["sSerialNumber"]?.ToString() ?? "",
+                scopeTypeKey   = reader["lScopeTypeKey"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["lScopeTypeKey"]),
+                scopeTypeDesc  = reader["sScopeTypeDesc"].ToString()!,
+                manufacturerKey= reader["lManufacturerKey"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["lManufacturerKey"]),
+                manufacturer   = reader["sManufacturer"].ToString()!,
+                deptKey        = reader["lDepartmentKey"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["lDepartmentKey"]),
+                deptName       = reader["sDepartmentName"].ToString()!,
+                clientKey      = reader["lClientKey"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["lClientKey"]),
+                clientName     = reader["sClientName1"].ToString()!
+            });
+        }
 
-        return Ok(new {
-            scopeKey       = Convert.ToInt32(reader["lScopeKey"]),
-            serialNumber   = reader["sSerialNumber"]?.ToString() ?? "",
-            scopeTypeKey   = reader["lScopeTypeKey"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["lScopeTypeKey"]),
-            scopeTypeDesc  = reader["sScopeTypeDesc"].ToString()!,
-            manufacturerKey= reader["lManufacturerKey"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["lManufacturerKey"]),
-            manufacturer   = reader["sManufacturer"].ToString()!,
-            deptKey        = reader["lDepartmentKey"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["lDepartmentKey"]),
-            deptName       = reader["sDepartmentName"].ToString()!,
-            clientKey      = reader["lClientKey"] == DBNull.Value ? (int?)null : Convert.ToInt32(reader["lClientKey"]),
-            clientName     = reader["sClientName1"].ToString()!
-        });
+        // Always an array (possibly empty) — the client treats 0 as "not found",
+        // 1 as auto-select, >1 as a disambiguation prompt.
+        return Ok(matches);
     }
 
     // ── Create Repair ──
