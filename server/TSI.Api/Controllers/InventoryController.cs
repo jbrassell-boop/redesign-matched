@@ -621,8 +621,8 @@ public class InventoryController(IConfiguration config, ILotNumberService lotNum
                        ISNULL(po.sSupplierPONumber, '') AS sSupplierPONumber,
                        ISNULL(po.bCancelled, 0) AS bCancelled
                 FROM tblSupplierPOTran pot WITH (UPDLOCK, HOLDLOCK)
-                INNER JOIN tblSupplierPO po ON po.lSupplierPOKey = pot.lSupplierPOKey
-                INNER JOIN tblSupplierSizes ss ON ss.lSupplierSizesKey = pot.lSupplierSizesKey
+                INNER JOIN tblSupplierPO po ON po.lSupplierPOKey = pot.lSupplierPOKey AND po.Deleted_datetime IS NULL
+                INNER JOIN tblSupplierSizes ss ON ss.lSupplierSizesKey = pot.lSupplierSizesKey AND ss.Deleted_datetime IS NULL
                 WHERE pot.lSupplierPOTranKey = @poTranKey AND pot.Deleted_datetime IS NULL
                 """;
 
@@ -751,20 +751,27 @@ public class InventoryController(IConfiguration config, ILotNumberService lotNum
             var pieces = req.QuantityReceived * qtyPerUnit;
             const string upsertSql = """
                 SET NOCOUNT ON;
-                -- UPDLOCK + HOLDLOCK take a key-range lock on the (size, location)
-                -- target so two concurrent first-time receipts cannot both fall to
-                -- the INSERT branch and create duplicate rows (no unique key here).
+                -- The PK is (lInventorySizeKey, lServiceLocationKey) — at most ONE
+                -- row per (size, location), live OR soft-deleted. The UPDATE matches
+                -- by PK regardless of Deleted_datetime and revives a soft-deleted row
+                -- (clears Deleted_*, restores sStatus, resets the level); only a
+                -- genuinely-absent row falls through to INSERT, which then can't
+                -- collide on the PK. UPDLOCK/HOLDLOCK key-range-locks the target so
+                -- two concurrent first-time receipts can't race into duplicate INSERTs.
+                -- sStatus is NOT NULL with no default on WinscopeWeb; seed 'Active'.
                 UPDATE tblInventorySizeLocationInfo WITH (UPDLOCK, HOLDLOCK)
-                   SET nLevelCurrent = ISNULL(nLevelCurrent, 0) + @pieces,
+                   SET nLevelCurrent = CASE WHEN Deleted_datetime IS NULL THEN ISNULL(nLevelCurrent, 0) + @pieces ELSE @pieces END,
                        sBinNumber = CASE WHEN @bin IS NOT NULL THEN @bin ELSE sBinNumber END,
+                       sStatus = CASE WHEN Deleted_datetime IS NULL THEN sStatus ELSE 'Active' END,
+                       Deleted_datetime = NULL, Deleted_UserKey = NULL,
                        Updated_UserKey = @user, Updated_datetime = GETDATE()
-                 WHERE lInventorySizeKey = @size AND lServiceLocationKey = @loc AND Deleted_datetime IS NULL;
+                 WHERE lInventorySizeKey = @size AND lServiceLocationKey = @loc;
                 IF @@ROWCOUNT = 0
                     INSERT INTO tblInventorySizeLocationInfo
-                        (lInventorySizeKey, lServiceLocationKey, nLevelCurrent, nLevelMinimum, nLevelMaximum, sBinNumber, Created_UserKey, Created_datetime)
-                    VALUES (@size, @loc, @pieces, 0, 0, @bin, @user, GETDATE());
+                        (lInventorySizeKey, lServiceLocationKey, sStatus, nLevelCurrent, nLevelMinimum, nLevelMaximum, sBinNumber, Created_UserKey, Created_datetime)
+                    VALUES (@size, @loc, 'Active', @pieces, 0, 0, @bin, @user, GETDATE());
                 SELECT ISNULL(nLevelCurrent, 0) FROM tblInventorySizeLocationInfo
-                 WHERE lInventorySizeKey = @size AND lServiceLocationKey = @loc AND Deleted_datetime IS NULL;
+                 WHERE lInventorySizeKey = @size AND lServiceLocationKey = @loc;
                 """;
             int newLevel;
             await using (var lvlCmd = new SqlCommand(upsertSql, conn, txn))
