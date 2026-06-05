@@ -93,3 +93,55 @@ export interface InventorySupplierItem {
   orderMinimum: number;
   isActive: boolean;
 }
+
+// ── Purchase-order create + receive ──────────────────────────────────────────
+
+export interface CreatePurchaseOrderLine {
+  supplierSizesKey: number;
+  orderQuantity: number;
+  unitCost: number;
+}
+
+export interface CreatePurchaseOrderRequest {
+  serviceLocationKey: number;
+  supplierPOTypeKey: number;
+  dateOfPO?: string | null;
+  lines: CreatePurchaseOrderLine[];
+}
+
+export interface CreatePurchaseOrderResponse {
+  supplierPOKey: number;
+  supplierPONumber: string;
+  poTotal: number;
+}
+
+export interface PoReceiptLine {
+  supplierPOTranKey: number;
+  supplierPOKey: number;
+  poNumber: string;
+  supplierName: string;
+  itemDescription: string;
+  sizeDescription: string;
+  inventorySizeKey: number;
+  orderedQuantity: number;
+  receivedQuantity: number;
+  remainingQuantity: number;
+  unitCost: number;
+  qtyPerUnit: number;
+  poDate: string | null;
+}
+
+export interface ReceivePoLineRequest {
+  supplierPOTranKey: number;
+  quantityReceived: number;
+  binNumber?: string | null;
+  storageLocation?: string | null;
+  expirationDate?: string | null;
+  lotNumberOverride?: string | null;
+}
+
+export interface ReceivePoLineResponse {
+  lotNumber: string;
+  receivedQuantityTotal: number;
+  newLocationLevel: number;
+}

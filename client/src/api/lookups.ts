@@ -58,6 +58,11 @@ export const getManufacturers = async (): Promise<LookupOption[]> => {
   return data;
 };
 
+export const getSupplierPoTypes = async (): Promise<LookupOption[]> => {
+  const { data } = await apiClient.get<LookupOption[]>('/lookups/supplier-po-types');
+  return data;
+};
+
 // Returns every scope matching the serial. Serials are not unique across
 // clients/departments, so the caller disambiguates when more than one matches.
 // Tolerates a legacy single-object/null response as well as the array form.

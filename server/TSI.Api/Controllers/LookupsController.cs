@@ -195,4 +195,26 @@ public class LookupsController(IConfiguration config) : ControllerBase
             });
         return Ok(list);
     }
+
+    [HttpGet("supplier-po-types")]
+    public async Task<IActionResult> GetSupplierPoTypes()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        const string sql = """
+            SELECT lSupplierPOTypeKey, ISNULL(sSupplierPOType,'') AS sSupplierPOType
+            FROM tblSupplierPOTypes
+            ORDER BY sSupplierPOType
+            """;
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var list = new List<object>();
+        while (await reader.ReadAsync())
+            list.Add(new {
+                key  = Convert.ToInt32(reader["lSupplierPOTypeKey"]),
+                name = reader["sSupplierPOType"].ToString()!
+            });
+        return Ok(list);
+    }
 }

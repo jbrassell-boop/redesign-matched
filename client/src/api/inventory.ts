@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { InventoryListResponse, InventoryDetail, InventoryStats, InventoryPurchaseOrder, InventorySupplierItem, InventoryReceivingItem, ReceiveInventoryRequest } from '../pages/inventory/types';
+import type { InventoryListResponse, InventoryDetail, InventoryStats, InventoryPurchaseOrder, InventorySupplierItem, InventoryReceivingItem, ReceiveInventoryRequest, CreatePurchaseOrderRequest, CreatePurchaseOrderResponse, PoReceiptLine, ReceivePoLineRequest, ReceivePoLineResponse } from '../pages/inventory/types';
 
 export const getInventoryList = async (params: {
   search?: string;
@@ -47,4 +47,26 @@ export const getInventoryPendingReceipt = async (): Promise<InventoryReceivingIt
 
 export const receiveInventory = async (req: ReceiveInventoryRequest): Promise<void> => {
   await apiClient.post('/inventory/receive', req);
+};
+
+// Create a draft Inventory supplier PO (header + lines) under the given supplier.
+export const createPurchaseOrder = async (
+  supplierKey: number,
+  req: CreatePurchaseOrderRequest,
+): Promise<CreatePurchaseOrderResponse> => {
+  const { data } = await apiClient.post<CreatePurchaseOrderResponse>(
+    `/suppliers/${supplierKey}/purchase-orders`, req);
+  return data;
+};
+
+// Open PO lines awaiting receipt at the active service location.
+export const getOpenPoReceipts = async (): Promise<PoReceiptLine[]> => {
+  const { data } = await apiClient.get<PoReceiptLine[]>('/inventory/po-receipts');
+  return data;
+};
+
+// Receive stock against one PO line (allocates a lot number server-side).
+export const receivePoLine = async (req: ReceivePoLineRequest): Promise<ReceivePoLineResponse> => {
+  const { data } = await apiClient.post<ReceivePoLineResponse>('/inventory/po-receipts/receive', req);
+  return data;
 };

@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using TSI.Api.Models;
+using TSI.Api.Services;
 
 namespace TSI.Api.Controllers;
 
 [ApiController]
 [Route("api/inventory")]
 [Authorize]
-public class InventoryController(IConfiguration config) : ControllerBase
+public class InventoryController(IConfiguration config, ILotNumberService lotNumbers) : ControllerBase
 {
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
@@ -508,6 +509,254 @@ public class InventoryController(IConfiguration config) : ControllerBase
         {
             await transaction.RollbackAsync();
             return StatusCode(500, new { error = "Database error", detail = ex.Message });
+        }
+    }
+
+    // ── Receiving against a purchase order ──────────────────────────────────────
+
+    /// <summary>
+    /// GET /api/inventory/po-receipts — open PO lines awaiting receipt
+    /// (ordered &gt; received, PO not cancelled), scoped to the active service
+    /// location (plus legacy location-less POs). This is the receiving work
+    /// queue that backs the "receive against PO" screen.
+    /// </summary>
+    [HttpGet("po-receipts")]
+    public async Task<IActionResult> GetOpenPurchaseOrderReceipts()
+    {
+        var locationKey = this.GetActiveServiceLocation();
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            SELECT pot.lSupplierPOTranKey, pot.lSupplierPOKey,
+                   ISNULL(po.sSupplierPONumber, '') AS sSupplierPONumber,
+                   ISNULL(s.sSupplierName1, '') AS sSupplierName1,
+                   ISNULL(inv.sItemDescription, '') AS sItemDescription,
+                   ISNULL(isz.sSizeDescription, '') AS sSizeDescription,
+                   isz.lInventorySizeKey,
+                   ISNULL(pot.nOrderQuantity, 0) AS nOrderQuantity,
+                   ISNULL(pot.nReceivedQuantity, 0) AS nReceivedQuantity,
+                   ISNULL(pot.dblUnitCost, 0) AS dblUnitCost,
+                   ISNULL(ss.nQtyPerUnit, 1) AS nQtyPerUnit,
+                   po.dtDateOfPO
+            FROM tblSupplierPOTran pot
+            INNER JOIN tblSupplierPO po ON po.lSupplierPOKey = pot.lSupplierPOKey AND po.Deleted_datetime IS NULL
+            INNER JOIN tblSupplierSizes ss ON ss.lSupplierSizesKey = pot.lSupplierSizesKey
+            INNER JOIN tblInventorySize isz ON isz.lInventorySizeKey = ss.lInventorySizeKey
+            INNER JOIN tblInventory inv ON inv.lInventoryKey = isz.lInventoryKey
+            LEFT JOIN tblSupplier s ON s.lSupplierKey = po.lSupplierKey
+            WHERE pot.Deleted_datetime IS NULL
+              AND ISNULL(po.bCancelled, 0) = 0
+              AND ISNULL(pot.nOrderQuantity, 0) > ISNULL(pot.nReceivedQuantity, 0)
+              AND (po.lServiceLocationKey = @locationKey OR ISNULL(po.lServiceLocationKey, 0) = 0)
+            ORDER BY po.dtDateOfPO DESC, po.sSupplierPONumber
+            """;
+
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@locationKey", locationKey);
+
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var items = new List<PoReceiptLine>();
+        while (await reader.ReadAsync())
+        {
+            var ordered = Convert.ToInt32(reader["nOrderQuantity"]);
+            var received = Convert.ToInt32(reader["nReceivedQuantity"]);
+            items.Add(new PoReceiptLine(
+                SupplierPOTranKey: Convert.ToInt32(reader["lSupplierPOTranKey"]),
+                SupplierPOKey: Convert.ToInt32(reader["lSupplierPOKey"]),
+                PONumber: reader["sSupplierPONumber"]?.ToString() ?? "",
+                SupplierName: reader["sSupplierName1"]?.ToString() ?? "",
+                ItemDescription: reader["sItemDescription"]?.ToString() ?? "",
+                SizeDescription: reader["sSizeDescription"]?.ToString() ?? "",
+                InventorySizeKey: Convert.ToInt32(reader["lInventorySizeKey"]),
+                OrderedQuantity: ordered,
+                ReceivedQuantity: received,
+                RemainingQuantity: ordered - received,
+                UnitCost: Convert.ToDouble(reader["dblUnitCost"]),
+                QtyPerUnit: Convert.ToInt32(reader["nQtyPerUnit"]),
+                PODate: reader["dtDateOfPO"] == DBNull.Value ? null : Convert.ToDateTime(reader["dtDateOfPO"]).ToString("MM/dd/yyyy")
+            ));
+        }
+
+        return Ok(items);
+    }
+
+    /// <summary>
+    /// POST /api/inventory/po-receipts/receive — receive stock against one PO
+    /// line. In a single transaction: allocate (or accept an override) lot
+    /// number, write the receipt to tblInventoryTran (linked to the PO line and
+    /// stamped with the location), bump the PO line's received-to-date, and bump
+    /// on-hand at the PO's service location (tblInventorySizeLocationInfo —
+    /// upserting the (size, location) row if this location hasn't stocked the
+    /// size before). This is the legacy WSSupplierPOReceipt flow.
+    /// </summary>
+    [HttpPost("po-receipts/receive")]
+    public async Task<IActionResult> ReceivePurchaseOrderLine([FromBody] ReceivePoLineRequest req)
+    {
+        if (req is null)
+            return BadRequest(new { message = "Request body is required." });
+        if (req.SupplierPOTranKey <= 0)
+            return BadRequest(new { message = "SupplierPOTranKey is required." });
+        if (req.QuantityReceived <= 0)
+            return BadRequest(new { message = "QuantityReceived must be greater than zero." });
+
+        var activeLocation = this.GetActiveServiceLocation();
+        var userKey = this.GetCurrentUserKey();
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            // Lock + fetch the PO line and its context so a concurrent receipt of
+            // the same line can't race the received-qty update.
+            const string lineSql = """
+                SELECT pot.lSupplierSizesKey,
+                       ISNULL(pot.nReceivedQuantity, 0) AS nReceivedQuantity,
+                       ss.lInventorySizeKey, ISNULL(ss.nQtyPerUnit, 1) AS nQtyPerUnit,
+                       ISNULL(po.lServiceLocationKey, 0) AS lServiceLocationKey,
+                       ISNULL(po.sSupplierPONumber, '') AS sSupplierPONumber,
+                       ISNULL(po.bCancelled, 0) AS bCancelled
+                FROM tblSupplierPOTran pot WITH (UPDLOCK, HOLDLOCK)
+                INNER JOIN tblSupplierPO po ON po.lSupplierPOKey = pot.lSupplierPOKey
+                INNER JOIN tblSupplierSizes ss ON ss.lSupplierSizesKey = pot.lSupplierSizesKey
+                WHERE pot.lSupplierPOTranKey = @poTranKey AND pot.Deleted_datetime IS NULL
+                """;
+
+            int sizeKey, qtyPerUnit, receivedSoFar, poLocation;
+            string poNumber;
+            bool cancelled;
+            await using (var lineCmd = new SqlCommand(lineSql, conn, txn))
+            {
+                lineCmd.Parameters.AddWithValue("@poTranKey", req.SupplierPOTranKey);
+                await using var r = await lineCmd.ExecuteReaderAsync();
+                if (!await r.ReadAsync())
+                {
+                    await txn.RollbackAsync();
+                    return NotFound(new { message = $"PO line {req.SupplierPOTranKey} not found." });
+                }
+                sizeKey = Convert.ToInt32(r["lInventorySizeKey"]);
+                qtyPerUnit = Convert.ToInt32(r["nQtyPerUnit"]);
+                receivedSoFar = Convert.ToInt32(r["nReceivedQuantity"]);
+                poLocation = Convert.ToInt32(r["lServiceLocationKey"]);
+                poNumber = r["sSupplierPONumber"]?.ToString() ?? "";
+                cancelled = Convert.ToBoolean(r["bCancelled"]);
+            }
+
+            if (cancelled)
+            {
+                await txn.RollbackAsync();
+                return BadRequest(new { message = "Cannot receive against a cancelled PO." });
+            }
+
+            // Receipt belongs to the PO's location; fall back to the caller's
+            // active banner location for legacy location-less POs.
+            var locationKey = poLocation > 0 ? poLocation : activeLocation;
+
+            // Lot number: caller override (used verbatim) or server-allocated.
+            var autoAllocated = string.IsNullOrWhiteSpace(req.LotNumberOverride);
+            var lotNumber = autoAllocated
+                ? await lotNumbers.NextAsync(conn, txn, userKey)
+                : req.LotNumberOverride!.Trim();
+
+            var description = $"Received - PO# {poNumber}";
+            if (description.Length > 40) description = description[..40];
+
+            const string tranSql = """
+                INSERT INTO tblInventoryTran
+                    (lInventorySizeKey, lRepairKey, lSupplierPOTranKey, nTranQuantity,
+                     dtTranDate, sLotNumber, sPostedToCurrent, sTranDescription,
+                     dtExpDate, sBinNumber, sStorageLocation, lUserKey, nQtyPerUnit,
+                     lServiceLocationKey, lSessionID, dtCreateDate,
+                     Created_UserKey, Created_datetime)
+                VALUES
+                    (@size, 0, @poTranKey, @qty,
+                     GETDATE(), @lot, 'Y', @desc,
+                     @exp, @bin, @storage, @user, @qpu,
+                     @loc, 0, GETDATE(),
+                     @user, GETDATE());
+                """;
+            await using (var tranCmd = new SqlCommand(tranSql, conn, txn))
+            {
+                tranCmd.Parameters.AddWithValue("@size", sizeKey);
+                tranCmd.Parameters.AddWithValue("@poTranKey", req.SupplierPOTranKey);
+                tranCmd.Parameters.AddWithValue("@qty", req.QuantityReceived);
+                tranCmd.Parameters.AddWithValue("@lot", lotNumber);
+                tranCmd.Parameters.AddWithValue("@desc", description);
+                tranCmd.Parameters.AddWithValue("@exp", (object?)req.ExpirationDate ?? DBNull.Value);
+                tranCmd.Parameters.AddWithValue("@bin", (object?)req.BinNumber ?? DBNull.Value);
+                tranCmd.Parameters.AddWithValue("@storage", (object?)req.StorageLocation ?? DBNull.Value);
+                tranCmd.Parameters.AddWithValue("@user", userKey);
+                tranCmd.Parameters.AddWithValue("@qpu", qtyPerUnit);
+                tranCmd.Parameters.AddWithValue("@loc", locationKey);
+                await tranCmd.ExecuteNonQueryAsync();
+            }
+
+            // The lot is now permanently on the ledger row, so release the
+            // transient reservation the allocator took in tblLotNumberLock
+            // (keeps that table from growing one row per receipt). Only
+            // auto-allocated lots have a reservation.
+            if (autoAllocated)
+            {
+                await using var unclaim = new SqlCommand(
+                    "DELETE FROM tblLotNumberLock WHERE sLotNumber = @lot", conn, txn);
+                unclaim.Parameters.AddWithValue("@lot", lotNumber);
+                await unclaim.ExecuteNonQueryAsync();
+            }
+
+            // Bump received-to-date on the PO line.
+            var receivedTotal = receivedSoFar + req.QuantityReceived;
+            await using (var potCmd = new SqlCommand(
+                "UPDATE tblSupplierPOTran SET nReceivedQuantity = @recv, Updated_UserKey = @user, Updated_datetime = GETDATE() WHERE lSupplierPOTranKey = @poTranKey", conn, txn))
+            {
+                potCmd.Parameters.AddWithValue("@recv", receivedTotal);
+                potCmd.Parameters.AddWithValue("@user", userKey);
+                potCmd.Parameters.AddWithValue("@poTranKey", req.SupplierPOTranKey);
+                await potCmd.ExecuteNonQueryAsync();
+            }
+
+            // Bump on-hand at the PO's location. Per-location levels live on
+            // tblInventorySizeLocationInfo (the table the inventory screens read);
+            // upsert so a size first stocked at this location gets a row.
+            // On-hand is counted in PIECES (Joe, 2026-06-05): received packs ×
+            // nQtyPerUnit, matching how the legacy desktop counted. The ledger
+            // row keeps the received pack count (nTranQuantity) and pack size
+            // (nQtyPerUnit) separately, so packs and pieces are both recoverable.
+            var pieces = req.QuantityReceived * qtyPerUnit;
+            const string upsertSql = """
+                SET NOCOUNT ON;
+                UPDATE tblInventorySizeLocationInfo
+                   SET nLevelCurrent = ISNULL(nLevelCurrent, 0) + @pieces,
+                       sBinNumber = CASE WHEN @bin IS NOT NULL THEN @bin ELSE sBinNumber END,
+                       Updated_UserKey = @user, Updated_datetime = GETDATE()
+                 WHERE lInventorySizeKey = @size AND lServiceLocationKey = @loc AND Deleted_datetime IS NULL;
+                IF @@ROWCOUNT = 0
+                    INSERT INTO tblInventorySizeLocationInfo
+                        (lInventorySizeKey, lServiceLocationKey, nLevelCurrent, nLevelMinimum, nLevelMaximum, sBinNumber, Created_UserKey, Created_datetime)
+                    VALUES (@size, @loc, @pieces, 0, 0, @bin, @user, GETDATE());
+                SELECT ISNULL(nLevelCurrent, 0) FROM tblInventorySizeLocationInfo
+                 WHERE lInventorySizeKey = @size AND lServiceLocationKey = @loc AND Deleted_datetime IS NULL;
+                """;
+            int newLevel;
+            await using (var lvlCmd = new SqlCommand(upsertSql, conn, txn))
+            {
+                lvlCmd.Parameters.AddWithValue("@pieces", pieces);
+                lvlCmd.Parameters.AddWithValue("@bin", (object?)req.BinNumber ?? DBNull.Value);
+                lvlCmd.Parameters.AddWithValue("@user", userKey);
+                lvlCmd.Parameters.AddWithValue("@size", sizeKey);
+                lvlCmd.Parameters.AddWithValue("@loc", locationKey);
+                newLevel = Convert.ToInt32(await lvlCmd.ExecuteScalarAsync());
+            }
+
+            await txn.CommitAsync();
+            return Ok(new ReceivePoLineResponse(lotNumber, receivedTotal, newLevel));
+        }
+        catch
+        {
+            await txn.RollbackAsync();
+            throw;
         }
     }
 }
