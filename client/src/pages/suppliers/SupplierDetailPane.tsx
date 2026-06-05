@@ -9,6 +9,7 @@ import { updateSupplier } from '../../api/suppliers';
 import type { PatchSupplierPayload } from '../../api/suppliers';
 import { useAutosave } from '../../hooks/useAutosave';
 import { AutosaveIndicator } from '../../components/common/AutosaveIndicator';
+import { CreateInventoryPoModal } from './CreateInventoryPoModal';
 import './SupplierDetailPane.css';
 
 /* ── Editable field input ──────────────────────────────────────── */
@@ -58,6 +59,9 @@ const RoleChip = ({ label, active }: { label: string; active: boolean }) => (
 interface SupplierDetailPaneProps {
   detail: SupplierDetail | null;
   loading: boolean;
+  /** Fired after a new PO is created so the parent can refresh the detail
+   *  (and therefore the Recent POs list). Optional — pane works without it. */
+  onPoCreated?: () => void;
 }
 
 const TABS: TabDef[] = [
@@ -71,8 +75,9 @@ const SectionLabel = ({ title }: { title: string }) => (
   <div className="sdp-section-label">{title}</div>
 );
 
-export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps) => {
+export const SupplierDetailPane = ({ detail, loading, onPoCreated }: SupplierDetailPaneProps) => {
   const [activeTab, setActiveTab] = useState('main');
+  const [newPoOpen, setNewPoOpen] = useState(false);
 
   // Local editable copy of main-tab fields
   const [localDetail, setLocalDetail] = useState<SupplierDetail | null>(null);
@@ -188,6 +193,21 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
 
   const posTab = (
     <div className="sdp-po-tab">
+      {/* Action row — primary entry point for the create-PO flow. Kept inline
+          here so the trigger sits next to the list of POs it'll add to. */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '8px 0' }}>
+        <button
+          type="button"
+          onClick={() => setNewPoOpen(true)}
+          style={{
+            height: 28, padding: '0 14px', fontSize: 11, fontWeight: 700,
+            background: 'var(--primary)', color: 'var(--card)',
+            border: 'none', borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          + New PO
+        </button>
+      </div>
       {localDetail.recentPos.length === 0 ? (
         <div className="sdp-po-empty">No purchase orders found</div>
       ) : (
@@ -245,6 +265,20 @@ export const SupplierDetailPane = ({ detail, loading }: SupplierDetailPaneProps)
       {activeTab === 'pos'  && posTab}
       {activeTab === 'inv'  && <InventorySuppliedTab supplierKey={localDetail.supplierKey} />}
       {activeTab === 'docs' && <DocumentsTab supplierKey={localDetail.supplierKey} />}
+
+      <CreateInventoryPoModal
+        open={newPoOpen}
+        supplierKey={localDetail.supplierKey}
+        supplierName={localDetail.name}
+        onClose={() => setNewPoOpen(false)}
+        onCreated={() => {
+          setNewPoOpen(false);
+          // Jump to the Recent POs tab so the user can see the new row, then
+          // ask the parent to re-fetch the detail (which contains recentPos).
+          setActiveTab('pos');
+          onPoCreated?.();
+        }}
+      />
     </div>
   );
 };

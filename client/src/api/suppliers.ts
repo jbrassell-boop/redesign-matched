@@ -44,3 +44,37 @@ export interface PatchSupplierPayload {
 export const updateSupplier = async (id: number, patch: PatchSupplierPayload): Promise<void> => {
   await apiClient.patch(`/suppliers/${id}`, patch);
 };
+
+// ── Inventory PO create ───────────────────────────────────────────
+// Matches CreateInventoryPurchaseOrderRequest/Response on the backend.
+// Draft-only: server forces bGenerated=0 / bCancelled=0; create never feeds GP.
+
+export interface CreateInventoryPoLine {
+  supplierSizesKey: number;
+  orderQuantity: number;
+  unitCost: number;
+}
+
+export interface CreateInventoryPoRequest {
+  serviceLocationKey: number;
+  supplierPOTypeKey: number;
+  dateOfPO?: string | null;
+  lines: CreateInventoryPoLine[];
+}
+
+export interface CreateInventoryPoResponse {
+  supplierPOKey: number;
+  supplierPONumber: string;
+  poTotal: number;
+}
+
+export const createInventoryPurchaseOrder = async (
+  supplierKey: number,
+  body: CreateInventoryPoRequest,
+): Promise<CreateInventoryPoResponse> => {
+  const { data } = await apiClient.post<CreateInventoryPoResponse>(
+    `/suppliers/${supplierKey}/purchase-orders`,
+    body,
+  );
+  return data;
+};

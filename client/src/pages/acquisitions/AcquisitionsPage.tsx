@@ -6,6 +6,7 @@ import { TabBar, Field, FormGrid, StatusBadge } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
 import type { AcquisitionListItem, AcquisitionSoldItem, AcquisitionStats, AcquisitionDetail } from './types';
 import { StatStrip } from '../../components/shared/StatStrip';
+import { CreateAcquisitionPoModal } from './CreateAcquisitionPoModal';
 
 
 
@@ -148,6 +149,9 @@ export const AcquisitionsPage = () => {
   const [selectedKey, setSelectedKey] = useState<number | null>(null);
   const [detail, setDetail] = useState<AcquisitionDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+
+  // Create-PO modal trigger.
+  const [newPoOpen, setNewPoOpen] = useState(false);
 
   const handleRowClick = async (scopeKey: number) => {
     setSelectedKey(scopeKey);
@@ -368,6 +372,26 @@ export const AcquisitionsPage = () => {
       {statStrip}
       <TabBar tabs={TABS} activeKey={activeTab} onChange={tab => { setActiveTab(tab); handleCloseDetail(); }} />
 
+      {/* Action bar — primary entry point for the create-PO flow. Thin row,
+          right-aligned, so it doesn't compete with the tab + list. */}
+      <div style={{
+        display: 'flex', justifyContent: 'flex-end',
+        padding: '6px 12px', borderBottom: '1px solid var(--neutral-200)',
+        background: 'var(--card)', flexShrink: 0,
+      }}>
+        <button
+          type="button"
+          onClick={() => setNewPoOpen(true)}
+          style={{
+            height: 28, padding: '0 14px', fontSize: 11, fontWeight: 700,
+            background: 'var(--primary)', color: 'var(--card)',
+            border: 'none', borderRadius: 3, cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
+          + New Acquisition PO
+        </button>
+      </div>
+
       {/* Split pane */}
       <div style={acqSplitPaneStyle}>
         {/* Left panel — list */}
@@ -395,6 +419,12 @@ export const AcquisitionsPage = () => {
           </section>
         )}
       </div>
+
+      <CreateAcquisitionPoModal
+        open={newPoOpen}
+        onClose={() => setNewPoOpen(false)}
+        onCreated={() => setNewPoOpen(false)}
+      />
     </div>
   );
 };

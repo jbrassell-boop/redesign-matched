@@ -144,7 +144,16 @@ export const SuppliersPage = () => {
 
         {/* Right panel */}
         <section aria-label="Supplier details" style={{ flex: 1, overflow: 'auto', background: 'var(--card)' }}>
-          <SupplierDetailPane detail={detail} loading={detailLoading} />
+          <SupplierDetailPane
+            detail={detail}
+            loading={detailLoading}
+            onPoCreated={() => {
+              // Re-fetch detail so the new PO appears in Recent POs.
+              if (selectedKey !== null) {
+                getSupplierDetail(selectedKey).then(setDetail).catch(() => { /* toast already raised by modal */ });
+              }
+            }}
+          />
         </section>
       </div>
 

@@ -36,6 +36,11 @@ builder.Services.AddScoped<JwtService>();
 // Canonical WO/invoice number generator — wraps dbo.invoiceNumberDailyGet.
 // Singleton (stateless wrapper over a proc); see Services/InvoiceNumberService.cs.
 builder.Services.AddSingleton<IInvoiceNumberService, InvoiceNumberService>();
+// Supplier-PO number generator (wraps dbo.poNumberDailyGet) and inventory
+// lot-number generator (gap-fill over tblInventoryTran + tblLotNumberLock).
+// Both stateless wrappers; see Services/PONumberService.cs and LotNumberService.cs.
+builder.Services.AddSingleton<IPONumberService, PONumberService>();
+builder.Services.AddSingleton<ILotNumberService, LotNumberService>();
 builder.Services.AddControllers();
 
 // CORS
