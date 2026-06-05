@@ -615,6 +615,7 @@ public class InventoryController(IConfiguration config, ILotNumberService lotNum
             const string lineSql = """
                 SELECT pot.lSupplierSizesKey,
                        ISNULL(pot.nReceivedQuantity, 0) AS nReceivedQuantity,
+                       ISNULL(pot.nOrderQuantity, 0) AS nOrderQuantity,
                        ss.lInventorySizeKey, ISNULL(ss.nQtyPerUnit, 1) AS nQtyPerUnit,
                        ISNULL(po.lServiceLocationKey, 0) AS lServiceLocationKey,
                        ISNULL(po.sSupplierPONumber, '') AS sSupplierPONumber,
@@ -625,7 +626,7 @@ public class InventoryController(IConfiguration config, ILotNumberService lotNum
                 WHERE pot.lSupplierPOTranKey = @poTranKey AND pot.Deleted_datetime IS NULL
                 """;
 
-            int sizeKey, qtyPerUnit, receivedSoFar, poLocation;
+            int sizeKey, qtyPerUnit, receivedSoFar, ordered, poLocation;
             string poNumber;
             bool cancelled;
             await using (var lineCmd = new SqlCommand(lineSql, conn, txn))
@@ -640,6 +641,7 @@ public class InventoryController(IConfiguration config, ILotNumberService lotNum
                 sizeKey = Convert.ToInt32(r["lInventorySizeKey"]);
                 qtyPerUnit = Convert.ToInt32(r["nQtyPerUnit"]);
                 receivedSoFar = Convert.ToInt32(r["nReceivedQuantity"]);
+                ordered = Convert.ToInt32(r["nOrderQuantity"]);
                 poLocation = Convert.ToInt32(r["lServiceLocationKey"]);
                 poNumber = r["sSupplierPONumber"]?.ToString() ?? "";
                 cancelled = Convert.ToBoolean(r["bCancelled"]);
@@ -649,6 +651,28 @@ public class InventoryController(IConfiguration config, ILotNumberService lotNum
             {
                 await txn.RollbackAsync();
                 return BadRequest(new { message = "Cannot receive against a cancelled PO." });
+            }
+
+            // Cap at the still-outstanding quantity, read here under the line's
+            // UPDLOCK/HOLDLOCK so a stale or double-submitted client cannot push
+            // nReceivedQuantity past nOrderQuantity (over-receive / double-count).
+            var remaining = ordered - receivedSoFar;
+            if (req.QuantityReceived > remaining)
+            {
+                await txn.RollbackAsync();
+                return BadRequest(new { message =
+                    $"Cannot receive {req.QuantityReceived} — only {(remaining < 0 ? 0 : remaining)} remaining on this PO line "
+                    + $"(ordered {ordered}, already received {receivedSoFar})." });
+            }
+
+            // Writes scope to the active banner location: the GET queue is already
+            // location-scoped, so reject a stale/guessed key for a PO that belongs
+            // to a different location rather than mutating another location's stock.
+            if (poLocation > 0 && poLocation != activeLocation)
+            {
+                await txn.RollbackAsync();
+                return BadRequest(new { message =
+                    "This PO belongs to a different service location than the active one." });
             }
 
             // Receipt belongs to the PO's location; fall back to the caller's
@@ -727,7 +751,10 @@ public class InventoryController(IConfiguration config, ILotNumberService lotNum
             var pieces = req.QuantityReceived * qtyPerUnit;
             const string upsertSql = """
                 SET NOCOUNT ON;
-                UPDATE tblInventorySizeLocationInfo
+                -- UPDLOCK + HOLDLOCK take a key-range lock on the (size, location)
+                -- target so two concurrent first-time receipts cannot both fall to
+                -- the INSERT branch and create duplicate rows (no unique key here).
+                UPDATE tblInventorySizeLocationInfo WITH (UPDLOCK, HOLDLOCK)
                    SET nLevelCurrent = ISNULL(nLevelCurrent, 0) + @pieces,
                        sBinNumber = CASE WHEN @bin IS NOT NULL THEN @bin ELSE sBinNumber END,
                        Updated_UserKey = @user, Updated_datetime = GETDATE()
