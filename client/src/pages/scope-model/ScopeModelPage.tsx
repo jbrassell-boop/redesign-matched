@@ -6,6 +6,7 @@ import { getScopeModels, getScopeModelDetail, getScopeModelStats, getManufacture
 import type { PatchScopeModelPayload } from '../../api/scopeModels';
 import { RepairItemsTab } from './tabs/RepairItemsTab';
 import { MaxChargesTab } from './tabs/MaxChargesTab';
+import { CreateScopeModelModal } from './CreateScopeModelModal';
 import type { ScopeModelListItem, ScopeModelDetail, ScopeModelStats, Manufacturer, ScopeTypeInventoryItem, ScopeTypeFlag } from './types';
 import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../components/shared';
 import type { TabDef } from '../../components/shared';
@@ -136,9 +137,6 @@ export const ScopeModelPage = () => {
 
   // New Model modal
   const [newModelOpen, setNewModelOpen] = useState(false);
-  const [newModelName, setNewModelName] = useState('');
-  const [newModelMfg, setNewModelMfg] = useState('');
-  const [newModelType, setNewModelType] = useState('F');
 
   const handleRowContextMenu = (e: React.MouseEvent, item: ScopeModelListItem) => {
     e.preventDefault();
@@ -230,12 +228,20 @@ export const ScopeModelPage = () => {
     }
   }, []);
 
+  const loadStats = useCallback(async () => {
+    try {
+      setStats(await getScopeModelStats());
+    } catch {
+      message.error('Failed to load scope model stats');
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
-    getScopeModelStats().then(d => { if (!cancelled) setStats(d); }).catch(() => { if (!cancelled) message.error('Failed to load scope model stats'); });
+    loadStats();
     getManufacturers().then(d => { if (!cancelled) setManufacturers(d); }).catch(() => { if (!cancelled) message.error('Failed to load manufacturers'); });
     return () => { cancelled = true; };
-  }, []);
+  }, [loadStats]);
 
   useEffect(() => {
     const timer = setTimeout(() => loadData(search, typeFilter, statusFilter, mfgKey, page), search ? 300 : 0);
@@ -344,7 +350,7 @@ export const ScopeModelPage = () => {
         allowClear
       />
       <button
-        onClick={() => { setNewModelName(''); setNewModelMfg(''); setNewModelType('F'); setNewModelOpen(true); }}
+        onClick={() => setNewModelOpen(true)}
         style={{
           height: 30, padding: '0 12px', fontSize: 11, fontWeight: 700, fontFamily: 'inherit',
           background: 'var(--navy)', color: 'var(--card)', border: 'none', borderRadius: 6, cursor: 'pointer',
@@ -616,54 +622,11 @@ export const ScopeModelPage = () => {
         onClose={closeMenu}
       />
 
-      <Modal
+      <CreateScopeModelModal
         open={newModelOpen}
-        onCancel={() => setNewModelOpen(false)}
-        title={<span style={{ fontSize: 14, fontWeight: 700, color: 'var(--navy)' }}>New Scope Model</span>}
-        okText="Create Model"
-        okButtonProps={{ disabled: !newModelName.trim() }}
-        onOk={() => {
-          message.success(`Scope model "${newModelName}" created`);
-          setNewModelOpen(false);
-        }}
-      >
-        <div className="sm-modal-body">
-          <div>
-            <div className="sm-modal-field-label">Model Name *</div>
-            <input
-              value={newModelName}
-              onChange={e => setNewModelName(e.target.value)}
-              placeholder="e.g. GIF-H190"
-              aria-label="Model name"
-              className="sm-modal-input"
-            />
-          </div>
-          <div>
-            <div className="sm-modal-field-label">Manufacturer</div>
-            <input
-              value={newModelMfg}
-              onChange={e => setNewModelMfg(e.target.value)}
-              placeholder="e.g. Olympus"
-              aria-label="Manufacturer"
-              className="sm-modal-input"
-            />
-          </div>
-          <div>
-            <div className="sm-modal-field-label">Type</div>
-            <select
-              value={newModelType}
-              onChange={e => setNewModelType(e.target.value)}
-              aria-label="Scope type"
-              className="sm-modal-input"
-            >
-              <option value="F">Flexible</option>
-              <option value="R">Rigid</option>
-              <option value="C">Camera</option>
-              <option value="I">Instrument</option>
-            </select>
-          </div>
-        </div>
-      </Modal>
+        onClose={() => setNewModelOpen(false)}
+        onCreated={() => { loadData(search, typeFilter, statusFilter, mfgKey, page); loadStats(); }}
+      />
     </div>
   );
 };

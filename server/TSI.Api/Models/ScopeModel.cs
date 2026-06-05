@@ -128,3 +128,12 @@ public record PatchScopeModelRequest(
     decimal? ContractCost,
     decimal? MaxCharge
 );
+
+public record CreateScopeModelRequest(
+    string Description,
+    string Type,
+    int ScopeTypeCatKey,
+    int? ManufacturerKey,
+    int? ScopeCategoryKey,
+    string? ItemCode
+);

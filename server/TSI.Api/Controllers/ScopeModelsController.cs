@@ -108,6 +108,76 @@ public class ScopeModelsController(IConfiguration config) : ControllerBase
         return Ok(new ScopeModelListResponse(items, totalCount));
     }
 
+    // ── Create Scope Model (tblScopeType — the model/type catalog) ──
+    [HttpPost]
+    public async Task<IActionResult> CreateScopeModel([FromBody] CreateScopeModelRequest body)
+    {
+        if (string.IsNullOrWhiteSpace(body.Description))
+            return BadRequest(new { message = "Description is required." });
+
+        var type = body.Type?.Trim().ToUpperInvariant();
+        if (string.IsNullOrEmpty(type) || !ScopeModelRules.ValidTypes.Contains(type))
+            return BadRequest(new { message = "Type must be one of F, R, I, or C." });
+
+        if (body.ScopeTypeCatKey <= 0)
+            return BadRequest(new { message = "A scope type category is required." });
+
+        // Instrument models must specify a scope category.
+        if (type == "I" && (!body.ScopeCategoryKey.HasValue || body.ScopeCategoryKey.Value <= 0))
+            return BadRequest(new { message = "A scope category is required for instrument models." });
+
+        var itemCode = string.IsNullOrWhiteSpace(body.ItemCode) ? null : body.ItemCode.Trim().ToUpperInvariant();
+        if (itemCode != null && !ScopeModelRules.IsValidItemCode(itemCode))
+            return BadRequest(new { message = "Item code must be two uppercase letters followed by up to four digits (e.g. AB1234)." });
+
+        var desc = body.Description.Trim();
+        var userKey = this.GetCurrentUserKey();
+        // Flexible scopes track angulation + broken fibers; other types do not.
+        var appliesAng = ScopeModelRules.AppliesAngulation(type);
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Item-code uniqueness guard (only when supplied).
+        if (itemCode != null)
+        {
+            await using var dupCmd = new SqlCommand(
+                "SELECT 1 FROM tblScopeType WHERE LTRIM(RTRIM(sItemCode)) = @itemCode", conn);
+            dupCmd.CommandTimeout = 30;
+            dupCmd.Parameters.AddWithValue("@itemCode", itemCode);
+            if (await dupCmd.ExecuteScalarAsync() != null)
+                return Conflict(new { message = $"Item code \"{itemCode}\" is already in use." });
+        }
+
+        const string insertSql = """
+            INSERT INTO tblScopeType
+                (sScopeTypeDesc, sRigidOrFlexible, lScopeTypeCatKey,
+                 sInspReqd, sAppliesAngUpDown, sAppliesAngLeftRight, sAppliesBrokenFibers,
+                 lManufacturerKey, lScopeCategoryKey, sItemCode,
+                 bActive, dtCreateDate, lCreateUser, Created_UserKey, Created_datetime)
+            OUTPUT INSERTED.lScopeTypeKey
+            VALUES
+                (@desc, @type, @catKey,
+                 'N', @appliesAng, @appliesAng, @appliesAng,
+                 @mfgKey, @scopeCatKey, @itemCode,
+                 1, GETDATE(), @userKey, @userKey, GETDATE())
+            """;
+
+        await using var cmd = new SqlCommand(insertSql, conn);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@desc",        desc);
+        cmd.Parameters.AddWithValue("@type",        type);
+        cmd.Parameters.AddWithValue("@catKey",      body.ScopeTypeCatKey);
+        cmd.Parameters.AddWithValue("@appliesAng",  appliesAng);
+        cmd.Parameters.AddWithValue("@mfgKey",      (object?)body.ManufacturerKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@scopeCatKey", (object?)body.ScopeCategoryKey ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@itemCode",    (object?)itemCode ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("@userKey",     userKey);
+
+        var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+        return CreatedAtAction(nameof(GetDetail), new { id = newKey }, new { scopeTypeKey = newKey });
+    }
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetDetail(int id)
     {

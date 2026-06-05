@@ -217,4 +217,51 @@ public class LookupsController(IConfiguration config) : ControllerBase
             });
         return Ok(list);
     }
+
+    [HttpGet("scope-type-categories")]
+    public async Task<IActionResult> GetScopeTypeCategories()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        const string sql = """
+            SELECT lScopeTypeCategoryKey, ISNULL(sScopeTypeCategory,'') AS sScopeTypeCategory
+            FROM tblScopeTypeCategories
+            ORDER BY sScopeTypeCategory
+            """;
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var list = new List<object>();
+        while (await reader.ReadAsync())
+            list.Add(new {
+                key  = Convert.ToInt32(reader["lScopeTypeCategoryKey"]),
+                name = reader["sScopeTypeCategory"].ToString()!
+            });
+        return Ok(list);
+    }
+
+    // Scope categories (tblScopeCategories) — distinct from the scope-TYPE catalog above.
+    // Used as tblScopeType.lScopeCategoryKey, required when creating an Instrument ('I') model.
+    [HttpGet("scope-categories")]
+    public async Task<IActionResult> GetScopeCategories()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        const string sql = """
+            SELECT lScopeCategoryKey, ISNULL(sScopeCategory,'') AS sScopeCategory
+            FROM tblScopeCategories
+            WHERE ISNULL(bActive,1) = 1
+            ORDER BY sScopeCategory
+            """;
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var list = new List<object>();
+        while (await reader.ReadAsync())
+            list.Add(new {
+                key  = Convert.ToInt32(reader["lScopeCategoryKey"]),
+                name = reader["sScopeCategory"].ToString()!
+            });
+        return Ok(list);
+    }
 }

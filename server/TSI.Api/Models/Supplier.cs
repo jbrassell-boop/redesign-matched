@@ -122,3 +122,32 @@ public record PatchSupplierRequest(
     string? ContactLast,
     string? Comments
 );
+
+public record CreateSupplierRequest(
+    string Name,
+    List<int> RoleKeys,
+    string? Name2,
+    string? ShipAddr1,
+    string? ShipAddr2,
+    string? ShipCity,
+    string? ShipState,
+    string? ShipZip,
+    string? ShipCountry,
+    string? MailAddr1,
+    string? MailAddr2,
+    string? MailCity,
+    string? MailState,
+    string? MailZip,
+    string? MailCountry,
+    string? BillAddr1,
+    string? BillAddr2,
+    string? BillCity,
+    string? BillState,
+    string? BillZip,
+    string? BillCountry,
+    string? Phone,
+    string? Fax,
+    string? ContactFirst,
+    string? ContactLast,
+    bool? IsAcquisitionSupplier
+);

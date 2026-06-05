@@ -78,3 +78,37 @@ export const createInventoryPurchaseOrder = async (
   );
   return data;
 };
+
+export interface CreateSupplierPayload {
+  name: string;
+  roleKeys: number[];
+  name2?: string | null;
+  shipAddr1?: string | null;
+  shipAddr2?: string | null;
+  shipCity?: string | null;
+  shipState?: string | null;
+  shipZip?: string | null;
+  shipCountry?: string | null;
+  mailAddr1?: string | null;
+  mailAddr2?: string | null;
+  mailCity?: string | null;
+  mailState?: string | null;
+  mailZip?: string | null;
+  mailCountry?: string | null;
+  billAddr1?: string | null;
+  billAddr2?: string | null;
+  billCity?: string | null;
+  billState?: string | null;
+  billZip?: string | null;
+  billCountry?: string | null;
+  phone?: string | null;
+  fax?: string | null;
+  contactFirst?: string | null;
+  contactLast?: string | null;
+  isAcquisitionSupplier?: boolean;
+}
+
+export const createSupplier = async (payload: CreateSupplierPayload): Promise<{ supplierKey: number }> => {
+  const { data } = await apiClient.post<{ supplierKey: number }>('/suppliers', payload);
+  return data;
+};

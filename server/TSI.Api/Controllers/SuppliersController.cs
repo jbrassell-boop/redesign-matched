@@ -106,6 +106,117 @@ public class SuppliersController(IConfiguration config, IPONumberService poNumbe
         return Ok(new SupplierListResponse(suppliers, totalCount));
     }
 
+    // ── Create Supplier ──
+    [HttpPost]
+    public async Task<IActionResult> CreateSupplier([FromBody] CreateSupplierRequest body)
+    {
+        if (string.IsNullOrWhiteSpace(body.Name))
+            return BadRequest(new { message = "Supplier name is required." });
+        if (body.RoleKeys is null || body.RoleKeys.Count == 0)
+            return BadRequest(new { message = "At least one role is required." });
+
+        var roleKeys = body.RoleKeys.Distinct().ToList();
+        var name = body.Name.Trim();
+        var userKey = this.GetCurrentUserKey();
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Duplicate-name guard (case-insensitive via collation; LTRIM/RTRIM to ignore padding).
+        await using (var dupCmd = new SqlCommand(
+            "SELECT 1 FROM tblSupplier WHERE LTRIM(RTRIM(sSupplierName1)) = @name", conn))
+        {
+            dupCmd.CommandTimeout = 30;
+            dupCmd.Parameters.AddWithValue("@name", name);
+            var exists = await dupCmd.ExecuteScalarAsync();
+            if (exists != null)
+                return Conflict(new { message = $"A supplier named \"{name}\" already exists." });
+        }
+
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            // NO GP sync — sGPID / sPeachTreeSupplierID intentionally left null on create.
+            const string insertSql = """
+                INSERT INTO tblSupplier
+                    (sSupplierName1, sSupplierName2,
+                     sShipAddr1, sShipAddr2, sShipCity, sShipState, sShipZip, sShipCountry,
+                     sMailAddr1, sMailAddr2, sMailCity, sMailState, sMailZip, sMailCountry,
+                     sBillAddr1, sBillAddr2, sBillCity, sBillState, sBillZip, sBillCountry,
+                     sPhoneNumber, sFaxNumber, sContactFirst, sContactLast,
+                     bAcquisitionSupplier, bActive,
+                     dtCreateDate, lCreateUser, Created_UserKey, Created_datetime)
+                OUTPUT INSERTED.lSupplierKey
+                VALUES
+                    (@name, @name2,
+                     @shipAddr1, @shipAddr2, @shipCity, @shipState, @shipZip, @shipCountry,
+                     @mailAddr1, @mailAddr2, @mailCity, @mailState, @mailZip, @mailCountry,
+                     @billAddr1, @billAddr2, @billCity, @billState, @billZip, @billCountry,
+                     @phone, @fax, @contactFirst, @contactLast,
+                     @isAcquisition, 1,
+                     GETDATE(), @userKey, @userKey, GETDATE())
+                """;
+
+            int newKey;
+            await using (var cmd = new SqlCommand(insertSql, conn, tx))
+            {
+                cmd.CommandTimeout = 30;
+                cmd.Parameters.AddWithValue("@name",         name);
+                cmd.Parameters.AddWithValue("@name2",        (object?)body.Name2 ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@shipAddr1",    (object?)body.ShipAddr1 ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@shipAddr2",    (object?)body.ShipAddr2 ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@shipCity",     (object?)body.ShipCity ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@shipState",    (object?)body.ShipState ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@shipZip",      (object?)body.ShipZip ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@shipCountry",  (object?)body.ShipCountry ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@mailAddr1",    (object?)body.MailAddr1 ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@mailAddr2",    (object?)body.MailAddr2 ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@mailCity",     (object?)body.MailCity ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@mailState",    (object?)body.MailState ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@mailZip",      (object?)body.MailZip ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@mailCountry",  (object?)body.MailCountry ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@billAddr1",    (object?)body.BillAddr1 ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@billAddr2",    (object?)body.BillAddr2 ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@billCity",     (object?)body.BillCity ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@billState",    (object?)body.BillState ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@billZip",      (object?)body.BillZip ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@billCountry",  (object?)body.BillCountry ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@phone",        (object?)body.Phone ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@fax",          (object?)body.Fax ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@contactFirst", (object?)body.ContactFirst ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@contactLast",  (object?)body.ContactLast ?? DBNull.Value);
+                cmd.Parameters.AddWithValue("@isAcquisition", (body.IsAcquisitionSupplier ?? false) ? 1 : 0);
+                cmd.Parameters.AddWithValue("@userKey",      userKey);
+
+                newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
+            }
+
+            // Fan out the selected roles into tblSupplierRoles.
+            const string roleSql = """
+                INSERT INTO tblSupplierRoles
+                    (lSupplierKey, lSupplierRoleKey, Created_UserKey, Created_datetime)
+                VALUES (@supplierKey, @roleKey, @userKey, GETDATE())
+                """;
+            foreach (var roleKey in roleKeys)
+            {
+                await using var roleCmd = new SqlCommand(roleSql, conn, tx);
+                roleCmd.CommandTimeout = 30;
+                roleCmd.Parameters.AddWithValue("@supplierKey", newKey);
+                roleCmd.Parameters.AddWithValue("@roleKey",     roleKey);
+                roleCmd.Parameters.AddWithValue("@userKey",     userKey);
+                await roleCmd.ExecuteNonQueryAsync();
+            }
+
+            await tx.CommitAsync();
+            return CreatedAtAction(nameof(GetDetail), new { id = newKey }, new { supplierKey = newKey });
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
+    }
+
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetDetail(int id)
     {

@@ -71,3 +71,17 @@ export interface PatchScopeModelPayload {
 export const updateScopeModel = async (id: number, patch: PatchScopeModelPayload): Promise<void> => {
   await apiClient.patch(`/scope-models/${id}`, patch);
 };
+
+export interface CreateScopeModelPayload {
+  description: string;
+  type: string;              // F | R | I | C
+  scopeTypeCatKey: number;
+  manufacturerKey?: number | null;
+  scopeCategoryKey?: number | null;
+  itemCode?: string | null;
+}
+
+export const createScopeModel = async (payload: CreateScopeModelPayload): Promise<{ scopeTypeKey: number }> => {
+  const { data } = await apiClient.post<{ scopeTypeKey: number }>('/scope-models', payload);
+  return data;
+};
