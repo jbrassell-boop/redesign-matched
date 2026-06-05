@@ -458,52 +458,81 @@ public class InventoryController(IConfiguration config, ILotNumberService lotNum
         if (req.Quantity <= 0)
             return BadRequest(new { message = "Quantity must be greater than zero." });
 
+        // Ad-hoc (non-PO) stock receipt — a manual adjustment at the active banner
+        // location. Quantity is in base units (no PO-line / supplier-size pack
+        // factor here, so no pieces conversion).
+        var locationKey = this.GetActiveServiceLocation();
+        var userKey = this.GetCurrentUserKey();
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        // Insert a tblInventoryTran record (positive quantity = receipt)
+        // Ledger row, stamped with the location.
         const string tranSql = """
             INSERT INTO tblInventoryTran
-                (lInventorySizeKey, nTranQuantity, dtTranDate, sLotNumber, sBinNumber,
-                 sTranDescription, sPostedToCurrent, dtCreateDate)
+                (lInventorySizeKey, lRepairKey, nTranQuantity, dtTranDate, sLotNumber, sBinNumber,
+                 sTranDescription, sPostedToCurrent, lServiceLocationKey, lSessionID, dtCreateDate,
+                 Created_UserKey, Created_datetime)
             VALUES
-                (@sizeKey, @qty, GETDATE(), @lotNumber, @binNumber,
-                 @notes, 'Y', GETDATE());
+                (@sizeKey, 0, @qty, GETDATE(), @lotNumber, @binNumber,
+                 @notes, 'Y', @loc, 0, GETDATE(),
+                 @user, GETDATE());
             """;
 
-        // Update current level on tblInventorySize
-        const string updateSql = """
-            UPDATE tblInventorySize
-            SET nLevelCurrent = ISNULL(nLevelCurrent, 0) + @qty,
-                sBinNumber = CASE WHEN @binNumber IS NOT NULL THEN @binNumber ELSE sBinNumber END,
-                dtLastUpdate = GETDATE()
-            WHERE lInventorySizeKey = @sizeKey
+        // Bump on-hand at the active location on tblInventorySizeLocationInfo — the
+        // table the inventory screens actually read. (The legacy
+        // tblInventorySize.nLevelCurrent column no longer exists, so the old UPDATE
+        // here would throw "invalid column".) Same hardened upsert as receive-
+        // against-PO: match the (size, location) PK, revive a soft-deleted row,
+        // seed the NOT-NULL sStatus, key-range lock for concurrent first receipts.
+        const string upsertSql = """
+            SET NOCOUNT ON;
+            UPDATE tblInventorySizeLocationInfo WITH (UPDLOCK, HOLDLOCK)
+               SET nLevelCurrent = CASE WHEN Deleted_datetime IS NULL THEN ISNULL(nLevelCurrent, 0) + @qty ELSE @qty END,
+                   sBinNumber = CASE WHEN @binNumber IS NOT NULL THEN @binNumber ELSE sBinNumber END,
+                   sStatus = CASE WHEN Deleted_datetime IS NULL THEN sStatus ELSE 'Active' END,
+                   Deleted_datetime = NULL, Deleted_UserKey = NULL,
+                   Updated_UserKey = @user, Updated_datetime = GETDATE()
+             WHERE lInventorySizeKey = @sizeKey AND lServiceLocationKey = @loc;
+            IF @@ROWCOUNT = 0
+                INSERT INTO tblInventorySizeLocationInfo
+                    (lInventorySizeKey, lServiceLocationKey, sStatus, nLevelCurrent, nLevelMinimum, nLevelMaximum, sBinNumber, Created_UserKey, Created_datetime)
+                VALUES (@sizeKey, @loc, 'Active', @qty, 0, 0, @binNumber, @user, GETDATE());
+            SELECT ISNULL(nLevelCurrent, 0) FROM tblInventorySizeLocationInfo
+             WHERE lInventorySizeKey = @sizeKey AND lServiceLocationKey = @loc;
             """;
 
-        // Wrap the tran INSERT and level UPDATE atomically so a crash between
-        // the two statements cannot leave inventory counts out of sync
+        // Wrap the tran INSERT and the level upsert atomically.
         await using var transaction = (SqlTransaction)await conn.BeginTransactionAsync();
-
         try
         {
-            await using var tranCmd = new SqlCommand(tranSql, conn, transaction);
-            tranCmd.CommandTimeout = 30;
-            tranCmd.Parameters.AddWithValue("@sizeKey", req.InventorySizeKey);
-            tranCmd.Parameters.AddWithValue("@qty", req.Quantity);
-            tranCmd.Parameters.AddWithValue("@lotNumber", (object?)req.LotNumber ?? DBNull.Value);
-            tranCmd.Parameters.AddWithValue("@binNumber", (object?)req.BinNumber ?? DBNull.Value);
-            tranCmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? (object)"Stock Receipt");
-            await tranCmd.ExecuteNonQueryAsync();
+            await using (var tranCmd = new SqlCommand(tranSql, conn, transaction))
+            {
+                tranCmd.CommandTimeout = 30;
+                tranCmd.Parameters.AddWithValue("@sizeKey", req.InventorySizeKey);
+                tranCmd.Parameters.AddWithValue("@qty", req.Quantity);
+                tranCmd.Parameters.AddWithValue("@lotNumber", (object?)req.LotNumber ?? DBNull.Value);
+                tranCmd.Parameters.AddWithValue("@binNumber", (object?)req.BinNumber ?? DBNull.Value);
+                tranCmd.Parameters.AddWithValue("@notes", (object?)req.Notes ?? (object)"Stock Receipt");
+                tranCmd.Parameters.AddWithValue("@loc", locationKey);
+                tranCmd.Parameters.AddWithValue("@user", userKey);
+                await tranCmd.ExecuteNonQueryAsync();
+            }
 
-            await using var updateCmd = new SqlCommand(updateSql, conn, transaction);
-            updateCmd.CommandTimeout = 30;
-            updateCmd.Parameters.AddWithValue("@qty", req.Quantity);
-            updateCmd.Parameters.AddWithValue("@binNumber", (object?)req.BinNumber ?? DBNull.Value);
-            updateCmd.Parameters.AddWithValue("@sizeKey", req.InventorySizeKey);
-            await updateCmd.ExecuteNonQueryAsync();
+            int newLevel;
+            await using (var lvlCmd = new SqlCommand(upsertSql, conn, transaction))
+            {
+                lvlCmd.CommandTimeout = 30;
+                lvlCmd.Parameters.AddWithValue("@qty", req.Quantity);
+                lvlCmd.Parameters.AddWithValue("@binNumber", (object?)req.BinNumber ?? DBNull.Value);
+                lvlCmd.Parameters.AddWithValue("@sizeKey", req.InventorySizeKey);
+                lvlCmd.Parameters.AddWithValue("@loc", locationKey);
+                lvlCmd.Parameters.AddWithValue("@user", userKey);
+                newLevel = Convert.ToInt32(await lvlCmd.ExecuteScalarAsync());
+            }
 
             await transaction.CommitAsync();
-            return Ok(new { received = true });
+            return Ok(new { received = true, newLevel });
         }
         catch (SqlException ex)
         {
