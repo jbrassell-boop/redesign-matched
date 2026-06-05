@@ -94,26 +94,7 @@ export interface InventorySupplierItem {
   isActive: boolean;
 }
 
-// ── Purchase-order create + receive ──────────────────────────────────────────
-
-export interface CreatePurchaseOrderLine {
-  supplierSizesKey: number;
-  orderQuantity: number;
-  unitCost: number;
-}
-
-export interface CreatePurchaseOrderRequest {
-  serviceLocationKey: number;
-  supplierPOTypeKey: number;
-  dateOfPO?: string | null;
-  lines: CreatePurchaseOrderLine[];
-}
-
-export interface CreatePurchaseOrderResponse {
-  supplierPOKey: number;
-  supplierPONumber: string;
-  poTotal: number;
-}
+// ── Purchase-order receive ───────────────────────────────────────────────────
 
 export interface PoReceiptLine {
   supplierPOTranKey: number;

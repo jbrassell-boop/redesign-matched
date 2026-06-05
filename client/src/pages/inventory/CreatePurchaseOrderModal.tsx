@@ -3,7 +3,7 @@ import { Modal, Select, message } from 'antd';
 import { useServiceLocation } from '../../hooks/useServiceLocation';
 import { getSuppliers, getSupplierInventory } from '../../api/suppliers';
 import { getSupplierPoTypes, type LookupOption } from '../../api/lookups';
-import { createPurchaseOrder } from '../../api/inventory';
+import { createInventoryPurchaseOrder } from '../../api/suppliers';
 import type { SupplierListItem, SupplierInventoryItem } from '../suppliers/types';
 
 const lbl: React.CSSProperties = {
@@ -98,7 +98,7 @@ export const CreatePurchaseOrderModal = ({ open, onClose, onCreated }: Props) =>
     if (!canSubmit || supplierKey == null || poTypeKey == null) return;
     setSubmitting(true);
     try {
-      const res = await createPurchaseOrder(supplierKey, {
+      const res = await createInventoryPurchaseOrder(supplierKey, {
         serviceLocationKey: locationKey,
         supplierPOTypeKey: poTypeKey,
         lines: lines.map(l => ({

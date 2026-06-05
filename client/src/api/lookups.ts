@@ -53,11 +53,6 @@ export const getScopeTypes = async (): Promise<(LookupOption & { manufacturerKey
   return data;
 };
 
-export const getManufacturers = async (): Promise<LookupOption[]> => {
-  const { data } = await apiClient.get<LookupOption[]>('/lookups/manufacturers');
-  return data;
-};
-
 export const getSupplierPoTypes = async (): Promise<LookupOption[]> => {
   const { data } = await apiClient.get<LookupOption[]>('/lookups/supplier-po-types');
   return data;
