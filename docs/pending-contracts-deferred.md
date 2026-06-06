@@ -64,8 +64,14 @@ validation** (ported from `frmPendingContractConvert.btnSave_Click`):
    rows for the chosen invoice frequency.
 
 **How it was provisioned:** `server/migrations/002_pending_contract_convert.sql`
-scripts both procedures **verbatim** from production WinScopeNet
-(`10.0.0.15\Goldmine`) — the only change is `CREATE` → `CREATE OR ALTER`. Both
+scripts both procedures from production WinScopeNet (`10.0.0.15\Goldmine`).
+`contractBillingScheduleCreate` is **verbatim**; `pendingContractConvert` has
+**three documented cloud deviations** (commented inline): (a) source SELECTs filter
+`Deleted_datetime IS NULL` (cloud soft-deletes where legacy hard-deleted — keeps the
+result equivalent to legacy); (b) the no-active-scopes amount is ISNULL-guarded; and
+(c) `dblAmtInvoiced` is the **per-period** invoice amount (`total / #periods`; CPO or
+`'Once'` → one invoice for the full total), not legacy's `annual/12`, so the schedule
+built at convert is correct for every frequency. Both procs
 are pure single-DB DML (no linked servers, no `fnDatabaseKey`, no `THROW`), and a
 column-by-column manifest of everything they touch was diffed against the live
 cloud schema (all present; no unpopulated NOT-NULL/no-default columns) before
@@ -78,7 +84,11 @@ are load-bearing because the schedule proc branches on the literal strings
 Monthly / 12-month pending contract converted to a `tblContract` with 2 scopes +
 1 dept + 1 affiliate migrated, `dblAmtTotal`/`dblAmtInvoiced` computed correctly,
 **12 monthly schedule rows** (Jan–Dec 2026 @ $100), and the pending row flipped
-to `Converted`.
+to `Converted`. Further verified (all rolled back): soft-deleted scopes/depts/
+affiliates are excluded (a $9,999 deleted scope did not inflate the total),
+all-deleted-scope contracts convert to `$0` (not NULL), and the per-period amount
+is right for every frequency — Monthly/Quarterly/Annual/Once/CPO/24-month each
+produce a schedule that sums **exactly** to the contract total.
 
 **C# wiring** (`PendingContractsController.ConvertToContract`): the convert proc
 is called standalone (it owns its transaction); the schedule proc — which has no
