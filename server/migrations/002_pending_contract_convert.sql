@@ -56,6 +56,12 @@ GO
 --    Creates the tblContract row + migrates scopes/depts/affiliates and flips
 --    the pending row to 'Converted'. Self-manages its own transaction and
 --    returns (lContractKey, ErrMsg); a non-empty ErrMsg means it rolled back.
+--    CLOUD ADAPTATION (the only deviation from verbatim): each source SELECT
+--    filters `Deleted_datetime IS NULL`. Legacy HARD-deleted removed
+--    scopes/depts/affiliates, so they were already gone; the cloud SOFT-deletes
+--    them (PendingContractsController sets Deleted_datetime), so without this
+--    filter the proc would migrate — and bill — rows the user removed. The
+--    filter makes the cloud result EQUIVALENT to legacy.
 -- ===========================================================================
 CREATE OR ALTER PROCEDURE [dbo].[pendingContractConvert]
 	(
@@ -81,10 +87,14 @@ BEGIN
 
 	--Annual Amount
 	Declare @nAnnualAmount decimal(10,2)
-	Select @nAnnualAmount = SUM(nCost) From dbo.tblPendingContractScope Where lPendingContractKey = @plPendingContractKey
+	Select @nAnnualAmount = SUM(nCost) From dbo.tblPendingContractScope Where lPendingContractKey = @plPendingContractKey And Deleted_datetime IS NULL
 
 	Declare @nMonhtlyAmount decimal(10,2)
-	Set @nMonhtlyAmount = @nAnnualAmount / 12
+	-- ISNULL guard (parallels @nContractTotal below). With the Deleted_datetime
+	-- filter above, a pending contract whose scopes are all soft-deleted yields
+	-- SUM(nCost)=NULL; without this guard dblAmtInvoiced would be inserted NULL.
+	-- Zero active scopes => $0 (matches the @nContractTotal=0 the next block sets).
+	Set @nMonhtlyAmount = ISNULL(@nAnnualAmount,0) / 12
 
 	Declare @sInstallmentType nvarchar(50)
 	Select @sInstallmentType=sInstallmentType from dbo.tblContractInstallmentTypes Where lInstallmentTypeID = @plInstallmentTypeID
@@ -117,17 +127,17 @@ BEGIN
 			Insert Into dbo.tblContractDepartments ( lContractKey, lDepartmentKey, bCalcCostFromScopes, bNonBillable, dtContractDepartmentEffectiveDate, dtContractDepartmentEndDate )
 			Select @lContractKey, d.lDepartmentKey, 1, 0, @pdtDateEffective, @pdtDateTermination
 			From dbo.tblPendingContractDepartments d
-			Where d.lPendingContractKey = @plPendingContractKey
+			Where d.lPendingContractKey = @plPendingContractKey And d.Deleted_datetime IS NULL
 
 			Insert Into dbo.tblContractAffiliates ( lContractKey, lDepartmentKey, dtAffiliateStartDate, dtAffiliateEndDate )
 			Select @lContractKey, a.lDepartmentKey, @pdtDateEffective, @pdtDateTermination
 			From tblPendingContractAffiliates a
-			Where a.lPendingContractKey = @plPendingContractKey
+			Where a.lPendingContractKey = @plPendingContractKey And a.Deleted_datetime IS NULL
 
 			Insert Into dbo.tblContractScope ( lContractKey, lScopeKey, nCost, dtCreateDate, dtLastUpdate, dtScopeAdded, dtScopeRemoved, lCreateUser, lLastUpdateUser )
 			Select @lContractKey, s.lScopeKey, s.nCost, @dtNow, @dtNow, @pdtDateEffective, @pdtDateTermination, @plUserKey, @plUserKey
 			from dbo.tblPendingContractScope s
-			Where s.lPendingContractKey = @plPendingContractKey
+			Where s.lPendingContractKey = @plPendingContractKey And s.Deleted_datetime IS NULL
 
 			Update dbo.tblPendingContract Set sStatus = 'Converted', dtStatusDate = @dtNow Where lPendingContractKey=@plPendingContractKey
 		Commit Transaction
