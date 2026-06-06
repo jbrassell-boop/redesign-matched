@@ -1,5 +1,5 @@
 import apiClient from './client';
-import type { ContractListResponse, ContractDetail, ContractStats, ContractDepartment, ContractAmendment, ContractAffiliate } from '../pages/contracts/types';
+import type { ContractListResponse, ContractDetail, ContractStats, ContractDepartment, ContractAmendment, ContractAffiliate, ContractBillSchedule, ManualBillScheduleRow } from '../pages/contracts/types';
 
 export const getContracts = async (params: {
   search?: string;
@@ -98,4 +98,29 @@ export interface PatchContractPayload {
 
 export const updateContract = async (contractKey: number, patch: PatchContractPayload): Promise<void> => {
   await apiClient.patch(`/contracts/${contractKey}`, patch);
+};
+
+// ── Billing schedule (auto vs manual) ──
+export const getBillSchedule = async (contractKey: number): Promise<ContractBillSchedule> => {
+  const { data } = await apiClient.get<ContractBillSchedule>(`/contracts/${contractKey}/bill-schedule`);
+  return data;
+};
+
+// Rebuild from contract terms (AUTO). force=true is required to overwrite a manual
+// schedule (the backend returns 409 { requiresConfirm: true } otherwise).
+export const regenerateBillSchedule = async (contractKey: number, force = false): Promise<ContractBillSchedule> => {
+  const { data } = await apiClient.post<ContractBillSchedule>(
+    `/contracts/${contractKey}/bill-schedule/regenerate`, null,
+    { params: force ? { force: true } : undefined },
+  );
+  return data;
+};
+
+// Replace with a hand-entered schedule (MANUAL); sets bManualSchedule on the contract.
+export const setManualBillSchedule = async (
+  contractKey: number,
+  rows: ManualBillScheduleRow[],
+): Promise<ContractBillSchedule> => {
+  const { data } = await apiClient.put<ContractBillSchedule>(`/contracts/${contractKey}/bill-schedule`, { rows });
+  return data;
 };

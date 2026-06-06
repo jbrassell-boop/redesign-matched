@@ -8,6 +8,7 @@ import { Field, FormGrid, StatusBadge, DetailHeader, TabBar } from '../../compon
 import type { TabDef } from '../../components/shared';
 import { useAutosave } from '../../hooks/useAutosave';
 import { AutosaveIndicator } from '../../components/common/AutosaveIndicator';
+import { BillingScheduleTab } from './tabs/BillingScheduleTab';
 import './ContractDetailPane.css';
 
 const fmtDate = (d: string | null | undefined) => {
@@ -1025,6 +1026,7 @@ const TABS: TabDef[] = [
   { key: 'renewal',     label: 'Renewal' },
   { key: 'affiliates',  label: 'Affiliates' },
   { key: 'invoices',    label: 'Invoices' },
+  { key: 'schedule',    label: 'Billing Schedule' },
   { key: 'documents',   label: 'Documents' },
   { key: 'address',     label: 'Address' },
   { key: 'expense',     label: 'Expense Trending' },
@@ -1290,6 +1292,7 @@ export const ContractDetailPane = ({ detail, loading, stats }: ContractDetailPan
         {activeTab === 'renewal'     && <RenewalTab detail={d} />}
         {activeTab === 'affiliates'  && <AffiliatesTab contractKey={d.contractKey} />}
         {activeTab === 'invoices'    && <InvoicesTab contractKey={d.contractKey} detail={d} />}
+        {activeTab === 'schedule'    && <BillingScheduleTab contractKey={d.contractKey} />}
         {activeTab === 'documents'   && <DocumentsTab contractKey={d.contractKey} />}
         {activeTab === 'address'     && <AddressTab detail={d} />}
         {activeTab === 'expense'     && <ExpenseTrendingTab contractKey={d.contractKey} />}

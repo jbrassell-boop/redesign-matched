@@ -147,3 +147,24 @@ export interface ContractAffiliate {
   startDate: string | null;
   endDate: string | null;
 }
+
+export interface ContractBillScheduleRow {
+  scheduleKey: number;
+  billDate: string;
+  billDateEnd: string | null;
+  amount: number;
+}
+
+export interface ContractBillSchedule {
+  manual: boolean;
+  contractTotal: number;
+  scheduledTotal: number;
+  balanced: boolean;
+  rows: ContractBillScheduleRow[];
+}
+
+export interface ManualBillScheduleRow {
+  billDate: string;
+  billDateEnd?: string | null;
+  amount: number;
+}
