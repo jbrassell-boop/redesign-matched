@@ -1154,6 +1154,33 @@ public class PendingContractsController(IConfiguration config) : ControllerBase
                 };
                 schedCmd.Parameters.AddWithValue("@plContractKey", newContractKey);
                 await schedCmd.ExecuteNonQueryAsync();
+
+                // Last-installment reconciliation (standard billing/amortization practice):
+                // contractBillingScheduleCreate repeats the rounded per-period rate on every
+                // row, so when dblAmtTotal isn't evenly divisible the rows sum to a few cents
+                // off. Put the rounding remainder on the FINAL bill row so the schedule sums
+                // EXACTLY to dblAmtTotal. This is convert-scoped on purpose: here dblAmtInvoiced
+                // was derived from dblAmtTotal, so reconciling to it is correct — we deliberately
+                // do NOT do this inside the shared contractBillingScheduleCreate proc, where the
+                // per-period rate is user-authoritative and not necessarily total/periods.
+                await using (var reconcileCmd = new SqlCommand("""
+                    DECLARE @total decimal(18,2) = (SELECT dblAmtTotal FROM tblContract WHERE lContractKey = @ck);
+                    DECLARE @sum   decimal(18,2) = (SELECT SUM(nBillAmount) FROM tblContractBillSchedule WHERE lContractKey = @ck);
+                    IF @total IS NOT NULL AND @sum IS NOT NULL AND @total <> @sum
+                        UPDATE tblContractBillSchedule
+                        SET nBillAmount = ISNULL(nBillAmount, 0) + (@total - @sum)
+                        WHERE lContractInvoiceScheduleKey = (
+                            SELECT TOP 1 lContractInvoiceScheduleKey
+                            FROM tblContractBillSchedule
+                            WHERE lContractKey = @ck
+                            ORDER BY dtBillDate DESC, lContractInvoiceScheduleKey DESC);
+                    """, conn, schedTx))
+                {
+                    reconcileCmd.CommandTimeout = 30;
+                    reconcileCmd.Parameters.AddWithValue("@ck", newContractKey);
+                    await reconcileCmd.ExecuteNonQueryAsync();
+                }
+
                 await schedTx.CommitAsync();
             }
             catch

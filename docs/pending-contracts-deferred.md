@@ -71,7 +71,12 @@ scripts both procedures from production WinScopeNet (`10.0.0.15\Goldmine`).
 result equivalent to legacy); (b) the no-active-scopes amount is ISNULL-guarded; and
 (c) `dblAmtInvoiced` is the **per-period** invoice amount (`total / #periods`; CPO or
 `'Once'` → one invoice for the full total), not legacy's `annual/12`, so the schedule
-built at convert is correct for every frequency. Both procs
+built at convert is correct for every frequency. The divisor mirrors
+`contractBillingScheduleCreate`'s exact row-generation loop, and the convert flow then
+applies **last-installment reconciliation** (the rounding remainder is placed on the
+final bill row, in `PendingContractsController.ConvertToContract`) so the schedule sums
+**exactly** to the contract total even when it doesn't divide evenly — standard billing
+practice, scoped to convert so the shared schedule proc stays untouched. Both procs
 are pure single-DB DML (no linked servers, no `fnDatabaseKey`, no `THROW`), and a
 column-by-column manifest of everything they touch was diffed against the live
 cloud schema (all present; no unpopulated NOT-NULL/no-default columns) before

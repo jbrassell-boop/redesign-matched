@@ -144,13 +144,14 @@ BEGIN
 		End
 	End
 	If @nPeriods < 1 Set @nPeriods = 1
-	-- KNOWN LIMITATION (accepted for go-live): dblAmtInvoiced is a single stored rate
-	-- that contractBillingScheduleCreate repeats on every row, so when the total does
-	-- not divide evenly the schedule sum differs from dblAmtTotal by at most
-	-- ~$0.005 * @nPeriods (sub-dollar). This is inherent to the legacy fixed-rate
-	-- billing model; dblAmtTotal stays authoritative and the rate is finalized on the
-	-- contract form. Making the schedule sum EXACT would require last-installment
-	-- reconciliation inside the shared contractBillingScheduleCreate proc (deferred).
+	-- dblAmtInvoiced is the NOMINAL per-period rate (rounded to the cent). Because the
+	-- schedule repeats it on every row, a total that doesn't divide evenly would leave
+	-- the schedule a few cents off -- so the convert flow runs LAST-INSTALLMENT
+	-- RECONCILIATION after building the schedule (see
+	-- PendingContractsController.ConvertToContract): the rounding remainder is placed on
+	-- the FINAL bill row so the schedule sums EXACTLY to dblAmtTotal (standard billing
+	-- practice). The shared contractBillingScheduleCreate proc is left untouched -- its
+	-- per-period rate is user-authoritative for non-convert reschedules.
 	Declare @nPerInvoice decimal(10,2) = ISNULL(@nContractTotal, 0) / @nPeriods
 
 	Declare @ErrorMessage nvarchar(max) = ''
