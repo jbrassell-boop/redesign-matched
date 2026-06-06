@@ -1,3 +1,4 @@
+using System.Data;
 using System.Globalization;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,15 +14,16 @@ namespace TSI.Api.Controllers;
 /// tblPendingContractAgreementTemplates) separate from tblContract, then
 /// converted into a real tblContract once it has serials + terms.
 ///
-/// IMPORTANT — DB reality (verified 2026-06-05 against localhost WinscopeWeb):
-/// the 5 tables exist but NONE of the legacy pendingContract* stored procedures
-/// were migrated into the cloud DB. Rather than wrap procs that do not exist,
-/// this controller uses inline parameterized SQL against the tables directly —
-/// the established convention here (ContractsController, DepartmentsController).
-/// The one piece that genuinely cannot be reconstructed safely is the
-/// CONVERT engine (dbo.pendingContractConvert + dbo.contractBillingScheduleCreate),
-/// so POST /{key}/convert runs the full pre-flight validation and then returns
-/// 501 until those procs (or an equivalent) are provisioned. See
+/// DB reality (verified against localhost WinscopeWeb): the 5 tables exist but
+/// none of the legacy pendingContract* stored procedures shipped with the cloud
+/// DB, so the header/scope/dept/affiliate CRUD below uses inline parameterized
+/// SQL against the tables directly — the established convention here
+/// (ContractsController, DepartmentsController).
+/// The CONVERT engine is the exception: dbo.pendingContractConvert +
+/// dbo.contractBillingScheduleCreate are ported verbatim from production
+/// WinScopeNet by migration 002_pending_contract_convert.sql (which also seeds
+/// tblContractTypes/tblContractInstallmentTypes), so POST /{key}/convert runs
+/// the full pre-flight and then EXECs those two procs. See
 /// docs/pending-contracts-deferred.md.
 ///
 /// Audit columns (Created_*/Updated_*/Deleted_*) are populated from the JWT via
@@ -1088,23 +1090,93 @@ public class PendingContractsController(IConfiguration config) : ControllerBase
         if (totalScopes > 0 && modelOnly > 0)
             return BadRequest(new { message = $"{modelOnly} scope(s) have no serial number. Serial numbers are required before converting." });
 
-        // ---- Engine BLOCKED ----
-        // The legacy conversion is two stored procedures — dbo.pendingContractConvert
-        // (creates the tblContract row + migrates scopes/depts/affiliates) and
-        // dbo.contractBillingScheduleCreate (builds tblContractInstallment rows).
-        // Neither exists in the cloud WinscopeWeb DB (verified: 0 pendingContract*
-        // routines of any type, 2026-06-05), and reconstructing the convert SP
-        // body blind from a production system is unsafe. Returning 501 so the
-        // caller knows pre-flight passed but the engine is not provisioned.
-        // See docs/pending-contracts-deferred.md for the provisioning options.
-        return StatusCode(StatusCodes.Status501NotImplemented, new
+        // ---- Convert engine (provisioned by migration 002_pending_contract_convert.sql) ----
+        // Two legacy procs ported verbatim into WinscopeWeb:
+        //   dbo.pendingContractConvert        — creates the tblContract row, migrates
+        //       scopes/depts/affiliates, and flips the pending row to 'Converted'. It
+        //       self-manages its own transaction and returns (lContractKey, ErrMsg);
+        //       a non-empty ErrMsg means it caught an error and rolled back.
+        //   dbo.contractBillingScheduleCreate — builds tblContractBillSchedule rows.
+        var userKey = this.GetCurrentUserKey();
+
+        int newContractKey;
+        string convertError;
+        await using (var convertCmd = new SqlCommand("dbo.pendingContractConvert", conn)
         {
-            message = "Conversion engine not available in this environment. " +
-                      "All pre-flight checks passed, but dbo.pendingContractConvert / " +
-                      "dbo.contractBillingScheduleCreate are not provisioned in the cloud database. " +
-                      "See docs/pending-contracts-deferred.md.",
-            preflightPassed = true,
-            scopeCount = totalScopes
+            CommandType = CommandType.StoredProcedure,
+            CommandTimeout = 60
+        })
+        {
+            convertCmd.Parameters.AddWithValue("@plPendingContractKey", pendingKey);
+            convertCmd.Parameters.AddWithValue("@psContractName", contractName);
+            convertCmd.Parameters.AddWithValue("@pdtDateEffective", body.EffectiveDate.Date);
+            convertCmd.Parameters.AddWithValue("@pdtDateTermination", body.TerminationDate.Date);
+            convertCmd.Parameters.AddWithValue("@psContractNumber", poNumber);
+            convertCmd.Parameters.AddWithValue("@plInstallmentTypeID", body.InstallmentTypeId);
+            convertCmd.Parameters.AddWithValue("@plContractLength", body.ContractLength);
+            convertCmd.Parameters.AddWithValue("@plUserKey", userKey);
+
+            await using var cr = await convertCmd.ExecuteReaderAsync();
+            if (await cr.ReadAsync())
+            {
+                newContractKey = cr["lContractKey"] == DBNull.Value ? 0 : Convert.ToInt32(cr["lContractKey"]);
+                convertError = cr["ErrMsg"]?.ToString() ?? "";
+            }
+            else
+            {
+                newContractKey = 0;
+                convertError = "Conversion returned no result.";
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(convertError) || newContractKey <= 0)
+            return StatusCode(StatusCodes.Status500InternalServerError, new
+            {
+                message = string.IsNullOrWhiteSpace(convertError)
+                    ? "Conversion failed: the contract could not be created."
+                    : $"Conversion failed: {convertError}"
+            });
+
+        // The contract is committed by the proc above, so a billing-schedule
+        // failure is non-fatal and regenerable. The schedule proc has no internal
+        // transaction, so wrap it in one for clean all-or-nothing schedule rows.
+        var scheduleBuilt = true;
+        string? scheduleWarning = null;
+        try
+        {
+            await using var schedTx = (SqlTransaction)await conn.BeginTransactionAsync();
+            try
+            {
+                await using var schedCmd = new SqlCommand("dbo.contractBillingScheduleCreate", conn, schedTx)
+                {
+                    CommandType = CommandType.StoredProcedure,
+                    CommandTimeout = 60
+                };
+                schedCmd.Parameters.AddWithValue("@plContractKey", newContractKey);
+                await schedCmd.ExecuteNonQueryAsync();
+                await schedTx.CommitAsync();
+            }
+            catch
+            {
+                await schedTx.RollbackAsync();
+                throw;
+            }
+        }
+        catch (Exception ex)
+        {
+            scheduleBuilt = false;
+            scheduleWarning = ex.Message;
+        }
+
+        return Ok(new
+        {
+            contractKey = newContractKey,
+            scopeCount = totalScopes,
+            scheduleBuilt,
+            scheduleWarning,
+            message = scheduleBuilt
+                ? "Pending contract converted to contract."
+                : "Contract created, but the billing schedule could not be built and can be regenerated."
         });
     }
 

@@ -20,11 +20,10 @@ piece that is **blocked** in the cloud database.
 | `tblPendingContractDepartments` | ✅ (composite PK `lPendingContractKey,lDepartmentKey`) |
 | `tblPendingContractAffiliates` | ✅ (composite PK `lPendingContractKey,lDepartmentKey`) |
 | `tblPendingContractAgreementTemplates` | ✅ (empty — 0 rows) |
-| **Every `pendingContract*` stored procedure** | ❌ **0 of any type** |
-| `dbo.pendingContractConvert` | ❌ **absent** |
-| `dbo.contractBillingScheduleCreate` | ❌ **absent** |
-| `tblContractTypes` | ✅ but **empty** (0 rows) |
-| `tblContractInstallmentTypes` (invoice freq) | ✅ but **empty** (0 rows) |
+| `dbo.pendingContractConvert` | ✅ **provisioned by migration 002** (ported verbatim) |
+| `dbo.contractBillingScheduleCreate` | ✅ **provisioned by migration 002** (ported verbatim) |
+| `tblContractTypes` | ✅ **seeded by migration 002** (6 rows) |
+| `tblContractInstallmentTypes` (invoice freq) | ✅ **seeded by migration 002** (5 rows) |
 
 All five tables carry the cloud audit columns
 (`Created_UserKey/_datetime`, `Updated_*`, `Deleted_*`) and all five were
@@ -42,7 +41,7 @@ schema in a rolled-back transaction.
 
 ---
 
-## 🔴 BLOCKED — the CONVERT engine
+## ✅ RESOLVED — the CONVERT engine (migration 002, 2026-06-06)
 
 `POST /api/pending-contracts/{key}/convert` runs the **full pre-flight
 validation** (ported from `frmPendingContractConvert.btnSave_Click`):
@@ -55,39 +54,41 @@ validation** (ported from `frmPendingContractConvert.btnSave_Click`):
 - PO# non-empty and ≤ 20 chars,
 - **all scopes carry a serial** (`lScopeKey != 0`); zero-scope is a soft confirm.
 
-…and then returns **HTTP 501** because the two procedures that actually perform
-the conversion are not provisioned in the cloud DB:
+…and then **EXECs the two real procedures** (was HTTP 501):
 
 1. `dbo.pendingContractConvert` — inserts the `tblContract` row and migrates the
-   pending scopes / departments / affiliates onto it (returns `lContractKey` +
-   `ErrMsg`).
-2. `dbo.contractBillingScheduleCreate` — builds the `tblContractInstallment`
+   pending scopes / departments / affiliates onto it, flips the pending row to
+   `sStatus='Converted'`, returns `(lContractKey, ErrMsg)`. Self-manages its own
+   transaction (a non-empty `ErrMsg` means it caught an error and rolled back).
+2. `dbo.contractBillingScheduleCreate` — builds the `tblContractBillSchedule`
    rows for the chosen invoice frequency.
 
-The convert SP body is **not available to port** (it is not in this DB, and the
-legacy production body was not transcribed — blindly re-authoring a financial
-"create the real contract + billing schedule" procedure from memory is unsafe).
-The `tblContract` target columns DO all exist (`sContractName1`,
-`sContractNumber`, `dtDateEffective`, `dtDateTermination`,
-`lContractLengthInMonths`, `lContractTypeKey`, `lInstallmentTypeID tinyint`,
-`lSalesRepKey`, `lClientKey`, …), so the engine is reconstructable — it just
-must be done deliberately, not faked.
+**How it was provisioned:** `server/migrations/002_pending_contract_convert.sql`
+scripts both procedures **verbatim** from production WinScopeNet
+(`10.0.0.15\Goldmine`) — the only change is `CREATE` → `CREATE OR ALTER`. Both
+are pure single-DB DML (no linked servers, no `fnDatabaseKey`, no `THROW`), and a
+column-by-column manifest of everything they touch was diffed against the live
+cloud schema (all present; no unpopulated NOT-NULL/no-default columns) before
+porting. The migration also seeds `tblContractTypes` (6) +
+`tblContractInstallmentTypes` (5) with the exact legacy keys/text — the values
+are load-bearing because the schedule proc branches on the literal strings
+`'CPO'`, `'Once'`, `'Monthly'`, `'Quarterly'`, `'Annual'`.
 
-### To unblock convert (options, pick one)
-- **A. Port the SPs.** Obtain `dbo.pendingContractConvert` +
-  `dbo.contractBillingScheduleCreate` from the legacy WinScopeNet DB
-  (`sp_helptext`), review, and add them to the cloud DB via a migration. Then
-  swap the controller's 501 stub for a real SP call. Lowest risk to behavior.
-- **B. Re-implement inline.** Write the convert as a transaction in the
-  controller (insert `tblContract`, copy scopes → `tblContractScope`, depts →
-  `tblContractDepartments`, affiliates → `tblContractAffiliates`, mark the
-  pending row `sStatus='Converted'`, then build installments). Requires a
-  careful column-by-column spec of each target table + the billing-schedule
-  math; must be transaction-safe and idempotent.
+**Verified end-to-end (rolled back, no artifacts):** a staged Capitated-Service /
+Monthly / 12-month pending contract converted to a `tblContract` with 2 scopes +
+1 dept + 1 affiliate migrated, `dblAmtTotal`/`dblAmtInvoiced` computed correctly,
+**12 monthly schedule rows** (Jan–Dec 2026 @ $100), and the pending row flipped
+to `Converted`.
 
-Either way it needs `tblContractTypes` and `tblContractInstallmentTypes` to be
-**seeded** (both are currently empty), or the create modal / convert dialog
-dropdowns have nothing to show. See "Seed data" below.
+**C# wiring** (`PendingContractsController.ConvertToContract`): the convert proc
+is called standalone (it owns its transaction); the schedule proc — which has no
+internal transaction — is wrapped in its own `SqlTransaction` so its rows are
+all-or-nothing. A schedule failure is **non-fatal** (the contract is already
+committed): the endpoint returns 200 with `scheduleBuilt=false` and the schedule
+is regenerable.
+
+> **Deploy note:** migration 002 must be applied to each target WinscopeWeb DB
+> (it is idempotent). It is already applied to `localhost\WinscopeWeb`.
 
 ---
 
