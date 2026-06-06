@@ -135,6 +135,32 @@ public record ContractInvoice(
     string Status
 );
 
+// ── Billing schedule (auto vs manual) ──
+public record ContractBillScheduleRow(
+    int ScheduleKey,
+    DateTime BillDate,
+    DateTime? BillDateEnd,
+    decimal Amount
+);
+
+public record ContractBillSchedule(
+    bool Manual,
+    decimal ContractTotal,
+    decimal ScheduledTotal,
+    bool Balanced,
+    IReadOnlyList<ContractBillScheduleRow> Rows
+);
+
+public record ManualBillScheduleRow(
+    DateTime BillDate,
+    DateTime? BillDateEnd,
+    decimal Amount
+);
+
+public record ManualBillScheduleRequest(
+    IReadOnlyList<ManualBillScheduleRow> Rows
+);
+
 public record ContractDocument(
     int DocumentKey,
     string DocumentName,

@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -369,6 +370,176 @@ public class ContractsController(IConfiguration config) : ControllerBase
 
         var newKey = Convert.ToInt32(await cmd.ExecuteScalarAsync());
         return Ok(new { amendmentKey = newKey });
+    }
+
+    // ========================================================================
+    // BILLING SCHEDULE (auto vs manual)
+    // ========================================================================
+    // tblContractBillSchedule is either AUTO (generated from terms by
+    // contractBillingScheduleCreate, then reconciled to dblAmtTotal) or MANUAL
+    // (bManualSchedule = 1; rows hand-entered/overridden). Regenerating an AUTO
+    // schedule is safe; we guard so it never silently wipes a MANUAL one, and never
+    // auto-regenerates once invoices are finalized. Schedule rows use HARD delete
+    // (matches contractBillingScheduleCreate and keeps the reconcile SUM correct).
+
+    [HttpGet("{contractKey:int}/bill-schedule")]
+    public async Task<IActionResult> GetBillSchedule(int contractKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        var sched = await ReadScheduleAsync(conn, contractKey);
+        return sched is null ? NotFound(new { message = "Contract not found." }) : Ok(sched);
+    }
+
+    // Rebuild the schedule from the contract's terms (AUTO); flips bManualSchedule
+    // back to 0. Blocked once finalized invoices exist (the same condition the legacy
+    // proc uses to refuse a rebuild), surfaced as 409 rather than a silent no-op.
+    [HttpPost("{contractKey:int}/bill-schedule/regenerate")]
+    public async Task<IActionResult> RegenerateBillSchedule(int contractKey, [FromQuery] bool force = false)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        bool isManual;
+        await using (var chk = new SqlCommand("SELECT bManualSchedule FROM tblContract WHERE lContractKey = @k", conn))
+        {
+            chk.CommandTimeout = 30; chk.Parameters.AddWithValue("@k", contractKey);
+            var flag = await chk.ExecuteScalarAsync();
+            if (flag is null) return NotFound(new { message = "Contract not found." });
+            isManual = flag != DBNull.Value && Convert.ToBoolean(flag);
+        }
+        // Never silently clobber a hand-built schedule: regenerating a MANUAL one
+        // discards its rows and reverts it to auto, so require explicit confirmation
+        // (force=true). This is the core safety guarantee of the manual-override feature.
+        if (isManual && !force)
+            return Conflict(new
+            {
+                message = "This contract has a manual billing schedule. Regenerating discards the hand-entered rows and switches it back to auto. Re-send with force=true to confirm.",
+                requiresConfirm = true
+            });
+
+        await using (var inv = new SqlCommand(
+            "SELECT COUNT(*) FROM tblInvoice WHERE lContractKey = @k AND ISNULL(lRepairKey,0) = 0 AND bFinalized = 1", conn))
+        {
+            inv.CommandTimeout = 30; inv.Parameters.AddWithValue("@k", contractKey);
+            if (Convert.ToInt32(await inv.ExecuteScalarAsync()) > 0)
+                return Conflict(new { message = "This contract has finalized invoices; its billing schedule can no longer be auto-regenerated. Edit it manually instead." });
+        }
+
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            await using (var f = new SqlCommand("UPDATE tblContract SET bManualSchedule = 0, dtLastUpdate = GETDATE() WHERE lContractKey = @k", conn, tx))
+            { f.CommandTimeout = 30; f.Parameters.AddWithValue("@k", contractKey); await f.ExecuteNonQueryAsync(); }
+
+            // Rebuild rows from the contract's stored per-period rate + dates. This is the
+            // legacy proc; it also handles amendment periods. We deliberately do NOT run
+            // last-installment reconciliation here (unlike convert): an existing contract's
+            // dblAmtInvoiced may be a user-entered rate or carry amendment amounts, so forcing
+            // the sum onto the final row would distort the billing. Only convert-derived
+            // schedules are safe to reconcile; the GET response's Balanced flag reports whether
+            // this rebuilt schedule ties out to dblAmtTotal.
+            await using (var build = new SqlCommand("dbo.contractBillingScheduleCreate", conn, tx)
+            { CommandType = CommandType.StoredProcedure, CommandTimeout = 60 })
+            { build.Parameters.AddWithValue("@plContractKey", contractKey); await build.ExecuteNonQueryAsync(); }
+
+            await tx.CommitAsync();
+        }
+        catch { await tx.RollbackAsync(); throw; }
+
+        return Ok(await ReadScheduleAsync(conn, contractKey));
+    }
+
+    // Replace the schedule with a hand-entered set of rows (MANUAL override). Sets
+    // bManualSchedule = 1 so a later auto-regenerate won't clobber it. We do NOT
+    // reconcile a manual schedule to the total — the user owns the amounts; the
+    // response's Balanced flag tells the UI whether it ties out to dblAmtTotal.
+    [HttpPut("{contractKey:int}/bill-schedule")]
+    public async Task<IActionResult> SetManualBillSchedule(int contractKey, [FromBody] ManualBillScheduleRequest body)
+    {
+        if (body?.Rows is null || body.Rows.Count == 0)
+            return BadRequest(new { message = "Provide at least one billing row." });
+        foreach (var row in body.Rows)
+            if (row.Amount < 0) return BadRequest(new { message = "Bill amounts cannot be negative." });
+
+        var userKey = this.GetCurrentUserKey();
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using (var chk = new SqlCommand("SELECT COUNT(*) FROM tblContract WHERE lContractKey = @k", conn))
+        {
+            chk.CommandTimeout = 30; chk.Parameters.AddWithValue("@k", contractKey);
+            if (Convert.ToInt32(await chk.ExecuteScalarAsync()) == 0)
+                return NotFound(new { message = "Contract not found." });
+        }
+
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            await using (var f = new SqlCommand("UPDATE tblContract SET bManualSchedule = 1, dtLastUpdate = GETDATE() WHERE lContractKey = @k", conn, tx))
+            { f.CommandTimeout = 30; f.Parameters.AddWithValue("@k", contractKey); await f.ExecuteNonQueryAsync(); }
+
+            await using (var del = new SqlCommand("DELETE FROM tblContractBillSchedule WHERE lContractKey = @k", conn, tx))
+            { del.CommandTimeout = 30; del.Parameters.AddWithValue("@k", contractKey); await del.ExecuteNonQueryAsync(); }
+
+            foreach (var row in body.Rows)
+            {
+                await using var ins = new SqlCommand("""
+                    INSERT INTO tblContractBillSchedule
+                        (lContractKey, dtBillDate, dtBillDateEnd, nBillAmount, lUserKey, Created_UserKey, Created_datetime)
+                    VALUES (@k, @d, @de, @amt, @u, @u, GETDATE())
+                    """, conn, tx);
+                ins.CommandTimeout = 30;
+                ins.Parameters.AddWithValue("@k", contractKey);
+                ins.Parameters.AddWithValue("@d", row.BillDate.Date);
+                ins.Parameters.AddWithValue("@de", (object?)row.BillDateEnd?.Date ?? DBNull.Value);
+                ins.Parameters.AddWithValue("@amt", row.Amount);
+                ins.Parameters.AddWithValue("@u", userKey);
+                await ins.ExecuteNonQueryAsync();
+            }
+
+            await tx.CommitAsync();
+        }
+        catch { await tx.RollbackAsync(); throw; }
+
+        return Ok(await ReadScheduleAsync(conn, contractKey));
+    }
+
+    private static async Task<ContractBillSchedule?> ReadScheduleAsync(SqlConnection conn, int contractKey)
+    {
+        decimal contractTotal = 0; var manual = false; var found = false;
+        await using (var hdr = new SqlCommand(
+            "SELECT ISNULL(dblAmtTotal,0) AS total, ISNULL(bManualSchedule,0) AS manual FROM tblContract WHERE lContractKey = @k", conn))
+        {
+            hdr.CommandTimeout = 30; hdr.Parameters.AddWithValue("@k", contractKey);
+            await using var hr = await hdr.ExecuteReaderAsync();
+            if (await hr.ReadAsync()) { found = true; contractTotal = Convert.ToDecimal(hr["total"]); manual = Convert.ToBoolean(hr["manual"]); }
+        }
+        if (!found) return null;
+
+        var rows = new List<ContractBillScheduleRow>();
+        decimal scheduled = 0;
+        await using (var cmd = new SqlCommand("""
+            SELECT lContractInvoiceScheduleKey, dtBillDate, dtBillDateEnd, ISNULL(nBillAmount, 0) AS nBillAmount
+            FROM tblContractBillSchedule WHERE lContractKey = @k
+            ORDER BY dtBillDate, lContractInvoiceScheduleKey
+            """, conn))
+        {
+            cmd.CommandTimeout = 30; cmd.Parameters.AddWithValue("@k", contractKey);
+            await using var r = await cmd.ExecuteReaderAsync();
+            while (await r.ReadAsync())
+            {
+                var amt = Convert.ToDecimal(r["nBillAmount"]);
+                scheduled += amt;
+                rows.Add(new ContractBillScheduleRow(
+                    Convert.ToInt32(r["lContractInvoiceScheduleKey"]),
+                    Convert.ToDateTime(r["dtBillDate"]),
+                    r["dtBillDateEnd"] == DBNull.Value ? null : Convert.ToDateTime(r["dtBillDateEnd"]),
+                    amt));
+            }
+        }
+        return new ContractBillSchedule(manual, contractTotal, scheduled, Math.Abs(scheduled - contractTotal) < 0.005m, rows);
     }
 
     [HttpGet("{contractKey:int}/affiliates")]
