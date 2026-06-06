@@ -232,6 +232,37 @@ export const createDraftInvoice = async (repairKey: number) => {
   return data as { invoiceKey: number; invoiceNumber?: string };
 };
 
+// ── Finalize Invoice ──
+// Promotes the repair's draft invoice to finalized: enforces the finalize gates
+// (PO#, approved line items, tracking-if-required, outsource-if-outsourced) as
+// 400s server-side, inserts invoice detail rows, and stages the invoice to GP.
+// The inline GP push / Crystal print / Avalara tax are deferred server-side.
+//
+// Idempotent by default: a plain call against an already-finalized invoice is a
+// no-op (alreadyFinalized=true, nothing re-staged). To intentionally re-issue a
+// finalized invoice (void + re-stage, bump suffix) pass { reissue: true, reason }.
+export interface FinalizeInvoiceResult {
+  invoiceKey: number;
+  finalized: boolean;
+  reIssue: boolean;
+  suffix: number;
+  approvedTotal: number;
+  detailRows: number;
+  staged: boolean;
+  gpPushDeferred: boolean;
+  alreadyFinalized: boolean;
+}
+export const finalizeInvoice = async (
+  repairKey: number,
+  opts?: { reissue?: boolean; reason?: string },
+) => {
+  const { data } = await apiClient.post(
+    `/repairs/${repairKey}/finalize-invoice`,
+    opts ? { reissue: opts.reissue ?? false, reason: opts.reason ?? null } : undefined,
+  );
+  return data as FinalizeInvoiceResult;
+};
+
 // ── Create Repair ──
 export interface CreateRepairPayload {
   scopeKey?: number | null;

@@ -287,6 +287,37 @@ public record BulkApproveRequest(string? Approved);
 public record CreateUpdateSlipRequest(int? TechKey, int? Tech2Key, int? ReasonKey);
 public record UpdateTechsRequest(int TechKey, int? Tech2Key);
 
+// Body for POST /api/repairs/{repairKey}/finalize-invoice. Optional — a plain
+// POST with no body finalizes a draft, or is an idempotent no-op against an
+// already-finalized invoice. Set Reissue=true (with a Reason) to explicitly
+// void-and-re-stage an already-finalized invoice (bumps the suffix). Reason is
+// captured for the audit trail of why a finalized invoice was re-issued.
+public record FinalizeInvoiceRequest(
+    bool Reissue = false,
+    string? Reason = null
+);
+
+// Result of POST /api/repairs/{repairKey}/finalize-invoice.
+// ReIssue=true means an EXPLICIT re-issue of a previously-finalized invoice ran
+// (suffix bumped, prior un-drained staging row replaced). AlreadyFinalized=true
+// means the call was an idempotent no-op: the invoice was already finalized and
+// no re-issue was requested, so nothing was re-staged (DetailRows/ApprovedTotal
+// are 0 in that case — the caller should not treat them as the live figures).
+// Staged=true means a row was written to tblGP_InvoiceStaging for the on-prem
+// drain job. GpPushDeferred is always true — the inline PO→GP push, Crystal
+// print, and Avalara tax are deferred (see docs/finalize-gp-print-deferred.md).
+public record FinalizeInvoiceResponse(
+    int InvoiceKey,
+    bool Finalized,
+    bool ReIssue,
+    int Suffix,
+    decimal ApprovedTotal,
+    int DetailRows,
+    bool Staged,
+    bool GpPushDeferred,
+    bool AlreadyFinalized
+);
+
 public record QuickEditRepairRequest(
     int? StatusId,
     int? TechnicianKey,

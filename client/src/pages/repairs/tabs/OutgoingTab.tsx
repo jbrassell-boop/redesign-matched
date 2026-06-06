@@ -1,7 +1,19 @@
 import React from 'react';
 import { message, Modal } from 'antd';
+import axios from 'axios';
 import type { RepairFull, RepairLineItem } from '../types';
-import { createDraftInvoice } from '../../../api/repairs';
+import { createDraftInvoice, finalizeInvoice } from '../../../api/repairs';
+
+// Pull the server's specific gate message out of a 400 (e.g. "A purchase order
+// number is required…") so the user sees WHY finalize was rejected, not a
+// generic failure toast.
+const apiError = (e: unknown, fallback: string): string => {
+  if (axios.isAxiosError(e)) {
+    const d = e.response?.data as { error?: string } | undefined;
+    if (d?.error) return d.error;
+  }
+  return fallback;
+};
 
 // ── Extracted static styles ──
 const fLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '.03em', marginBottom: 2 };
@@ -167,7 +179,7 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
               </div>
             </div>
             <div style={invoiceBtnRowStyle}>
-              {[
+              {([
                 { label: 'Draft Invoice', onClick: async () => {
                   try {
                     const r = await createDraftInvoice(repair.repairKey);
@@ -175,6 +187,28 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
                     onRepairChanged?.();
                   } catch { message.error('Failed to create draft invoice'); }
                 } },
+                { label: 'Finalize Invoice', primary: true, onClick: () => Modal.confirm({
+                  title: 'Finalize Invoice',
+                  content: 'Finalizing locks this invoice, records its line-item detail, and stages it for GP. The repair needs a PO number and at least one approved line item. Continue?',
+                  okText: 'Finalize',
+                  onOk: async () => {
+                    try {
+                      const r = await finalizeInvoice(repair.repairKey);
+                      if (r.alreadyFinalized) {
+                        message.info('Invoice is already finalized — no changes made.');
+                      } else {
+                        message.success(
+                          r.staged
+                            ? `Invoice finalized${r.reIssue ? ` (re-issue -${r.suffix})` : ''} and staged for GP`
+                            : `Invoice finalized${r.reIssue ? ` (re-issue -${r.suffix})` : ''} (not staged — zero total)`,
+                        );
+                      }
+                      onRepairChanged?.();
+                    } catch (e) {
+                      message.error(apiError(e, 'Failed to finalize invoice'));
+                    }
+                  },
+                }) },
                 { label: 'Email Invoice', onClick: () => message.info('Invoice emailing requires SMTP configuration — contact IT') },
                 { label: 'Void Invoice',  onClick: () => Modal.confirm({
                   title: 'Void Invoice',
@@ -183,12 +217,16 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
                   okButtonProps: { danger: true },
                   onOk: () => message.info('Invoice void requires accounting approval'),
                 }), danger: true },
-              ].map(btn => (
+              ] as { label: string; onClick: () => void; danger?: boolean; primary?: boolean }[]).map(btn => (
                 <button key={btn.label}
                   onClick={btn.onClick}
                   style={{
                     ...invoiceBtnBaseStyle,
-                    background: btn.danger ? 'rgba(var(--danger-rgb),.7)' : 'rgba(255,255,255,.15)',
+                    background: btn.danger
+                      ? 'rgba(var(--danger-rgb),.7)'
+                      : btn.primary ? 'var(--card)' : 'rgba(255,255,255,.15)',
+                    color: btn.primary ? 'var(--primary)' : 'var(--card)',
+                    fontWeight: btn.primary ? 800 : 700,
                   }}
                 >
                   {btn.label}

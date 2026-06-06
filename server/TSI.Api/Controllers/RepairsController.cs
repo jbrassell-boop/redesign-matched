@@ -1573,6 +1573,478 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         }
     }
 
+    // ── Finalize Invoice ──
+    // POST /api/repairs/{repairKey}/finalize-invoice
+    //
+    // Ports the FINAL branch of legacy WSRepairOpen.subInvoice (~line 20328).
+    // The legacy WinForms flow has no separate "finalize" action: it computes
+    // bIsFinal up front and SILENTLY DOWNGRADES to a draft when a gate fails.
+    // For an API that is a bad contract — the caller can't tell "I made a draft
+    // because you forgot the PO" from "I finalized". So here the gates are HARD
+    // 400s (REJECT) instead of silent downgrade. The gate CONDITIONS mirror the
+    // legacy ones exactly:
+    //   • PO# required on the repair                     (legacy ~20436)
+    //   • ≥1 approved line item                           (legacy ~20384, repairGetApprovedCountAndCost)
+    //   • tracking# present IF tracking-required          (legacy ~20438-20452)
+    //   • outsource vendor + cost present IF outsourced   (legacy ~20489-20494)
+    // The 40-day rule and new-instrument-detail-without-tech gate are NOT ported
+    // here — they apply to the instrument (sRigidOrFlexible='I') path, and this
+    // controller only serves scope repairs (R/F/C). See deferred doc.
+    //
+    // On success it find-or-creates the repair's single tblInvoice row, flips
+    // bFinalized 0→1, stamps dates + suffix-on-reissue, inserts tblInvoiceDetl
+    // rows from the approved tblRepairItemTran lines (the draft path skips
+    // detail — finalize MUST add it), and stages the invoice to
+    // tblGP_InvoiceStaging (a faithful inline port of dbo.invoiceAfterInsertNew,
+    // which does NOT exist on the cloud DB — verified 2026-06-05). The on-prem
+    // 30-minute job drains staging into GP; the cloud only STAGES.
+    //
+    // DEFERRED (NOT done here — see docs/finalize-gp-print-deferred.md):
+    //   inline PO→GP push (legacy GPIntegratePO/LoadPOs), Crystal print, Avalara
+    //   tax. These need Steve + on-prem network + a service account + accounting
+    //   policy decisions and would be guesses if built blind.
+    [HttpPost("{repairKey:int}/finalize-invoice")]
+    public async Task<IActionResult> FinalizeInvoice(int repairKey, [FromBody] FinalizeInvoiceRequest? body = null)
+    {
+        var userKey = this.GetCurrentUserKey();
+        // Explicit re-issue is opt-in. A plain POST (body null / Reissue=false)
+        // against an already-finalized invoice is treated as an idempotent retry
+        // and returns the existing invoice WITHOUT re-staging. Only an explicit
+        // { reissue: true, reason } voids-and-re-stages (suffix bump).
+        var reissue = body?.Reissue == true;
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // ── Everything runs INSIDE one transaction, after acquiring locks ──
+        // The gates, the approved-total computation, the invoice flip, the
+        // detail insert, and the GP staging are all serialized against
+        // concurrent edits by locking tblRepair, the approved
+        // tblRepairItemTran set, and the tblInvoice row with UPDLOCK,HOLDLOCK.
+        // This closes the read-before-txn race: a concurrent line-item or
+        // repair edit can no longer slip between "gates passed" and "amount
+        // written" — the locks block it until this txn commits, and the total
+        // is computed from the SAME locked set the detail insert reads.
+        await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            // ── Gate reads on the LOCKED repair row ──
+            // UPDLOCK,HOLDLOCK on tblRepair holds the row + range for the txn so
+            // PO/tracking/outsource can't change underneath us. Confirms the
+            // repair exists AND is a scope repair (instrument repairs use a
+            // different approved-count/detail model and are rejected here).
+            const string repairSql = """
+                SELECT r.lRepairKey,
+                       ISNULL(r.sPurchaseOrder, '')            AS sPurchaseOrder,
+                       ISNULL(r.bOutsourced, 0)                AS bOutsourced,
+                       ISNULL(r.lVendorKey, 0)                 AS lVendorKey,
+                       ISNULL(r.dblOutSourceCost, 0)           AS dblOutSourceCost,
+                       ISNULL(r.sShipTrackingNumber, '')       AS sShipTrackingNumber,
+                       ISNULL(r.sShipTrackingNumberFedEx, '')  AS sShipTrackingNumberFedEx,
+                       ISNULL(r.bTrackingNumberRequired, 0)    AS bTrackingNumberRequired,
+                       ISNULL(st.sRigidOrFlexible, '')         AS sRigidOrFlexible
+                FROM tblRepair r WITH (UPDLOCK, HOLDLOCK)
+                LEFT JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+                LEFT JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+                WHERE r.lRepairKey = @repairKey
+                """;
+
+            bool outsourced; int vendorKey; decimal outsourceCost;
+            bool trackingRequired; string tracking, trackingFedEx, po, rigidOrFlex;
+            await using (var rc = new SqlCommand(repairSql, conn, txn))
+            {
+                rc.CommandTimeout = 30;
+                rc.Parameters.AddWithValue("@repairKey", repairKey);
+                await using var rr = await rc.ExecuteReaderAsync();
+                if (!await rr.ReadAsync())
+                {
+                    await txn.RollbackAsync();
+                    return NotFound(new { error = $"Repair {repairKey} not found." });
+                }
+
+                po            = rr["sPurchaseOrder"]?.ToString() ?? "";
+                outsourced    = Convert.ToBoolean(rr["bOutsourced"]);
+                vendorKey     = Convert.ToInt32(rr["lVendorKey"]);
+                outsourceCost = Convert.ToDecimal(rr["dblOutSourceCost"]);
+                tracking      = rr["sShipTrackingNumber"]?.ToString() ?? "";
+                trackingFedEx = rr["sShipTrackingNumberFedEx"]?.ToString() ?? "";
+                trackingRequired = Convert.ToBoolean(rr["bTrackingNumberRequired"]);
+                rigidOrFlex   = rr["sRigidOrFlexible"]?.ToString() ?? "";
+            }
+
+            if (rigidOrFlex.Equals("I", StringComparison.OrdinalIgnoreCase))
+            {
+                await txn.RollbackAsync();
+                return BadRequest(new { error = "Instrument repairs are not finalized through this endpoint. Use the instrument-invoice flow." });
+            }
+
+            // Gate 1: PO# required (legacy ~20436 — the core "is this final?" gate).
+            if (string.IsNullOrWhiteSpace(po))
+            {
+                await txn.RollbackAsync();
+                return BadRequest(new { error = "A purchase order number is required before this invoice can be finalized." });
+            }
+
+            // Gate 2: tracking# required IF the repair is flagged tracking-required
+            // (legacy ~20438). Either carrier's tracking number satisfies it.
+            if (trackingRequired && string.IsNullOrWhiteSpace(tracking) && string.IsNullOrWhiteSpace(trackingFedEx))
+            {
+                await txn.RollbackAsync();
+                return BadRequest(new { error = "A shipping tracking number is required (this repair is flagged tracking-required) before finalizing." });
+            }
+
+            // Gate 3: outsource vendor + cost required IF outsourced (legacy ~20489).
+            if (outsourced && (vendorKey <= 0 || outsourceCost <= 0))
+            {
+                await txn.RollbackAsync();
+                return BadRequest(new { error = "An outsource vendor and a non-zero outsource cost are required before an outsourced repair can be finalized." });
+            }
+
+            // Find the repair's existing invoice row (1:1). UPDLOCK/HOLDLOCK
+            // holds the gap+row lock for the duration so a racing draft/finalize
+            // can't slip a second row in.
+            int invoiceKey = 0; bool alreadyFinalized = false; int priorSuffix = 0;
+            await using (var chk = new SqlCommand("""
+                SELECT TOP 1 lInvoiceKey,
+                       ISNULL(bFinalized, 0) AS bFinalized,
+                       ISNULL(sTranNumberSuffix, 0) AS sTranNumberSuffix
+                FROM tblInvoice WITH (UPDLOCK, HOLDLOCK)
+                WHERE lRepairKey = @repairKey
+                ORDER BY lInvoiceKey DESC
+                """, conn, txn))
+            {
+                chk.CommandTimeout = 30;
+                chk.Parameters.AddWithValue("@repairKey", repairKey);
+                await using var cr = await chk.ExecuteReaderAsync();
+                if (await cr.ReadAsync())
+                {
+                    invoiceKey = Convert.ToInt32(cr["lInvoiceKey"]);
+                    alreadyFinalized = Convert.ToBoolean(cr["bFinalized"]);
+                    priorSuffix = Convert.ToInt32(cr["sTranNumberSuffix"]);
+                }
+            }
+
+            // ── Idempotency gate (fix: double-stage to GP) ──
+            // If the invoice is already finalized and the caller did NOT ask for
+            // an explicit re-issue, this is a retry / double-click. Return the
+            // existing invoice unchanged — do NOT bump the suffix, do NOT touch
+            // detail, and crucially do NOT re-stage (which would double-stage to
+            // GP once the on-prem job has drained the first row). Commit the
+            // (lock-only) txn and return.
+            if (invoiceKey != 0 && alreadyFinalized && !reissue)
+            {
+                await txn.CommitAsync();
+                return Ok(new FinalizeInvoiceResponse(
+                    InvoiceKey: invoiceKey,
+                    Finalized: true,
+                    ReIssue: false,
+                    Suffix: priorSuffix,
+                    ApprovedTotal: 0m,
+                    DetailRows: 0,
+                    Staged: false,
+                    GpPushDeferred: true,
+                    AlreadyFinalized: true));
+            }
+
+            // Re-issue semantics (legacy ~20552 + invoiceVoid + GetNextSuffix):
+            // an EXPLICIT re-issue of an already-final invoice voids the prior and
+            // bumps the suffix (-1, -2, …). We void in place (bIsVoid is cleared
+            // back to 0 on the fresh finalize) and increment the suffix on the
+            // same row rather than spawning a new row, keeping the cloud's strict
+            // 1:1 repair↔invoice invariant.
+            int newSuffix = alreadyFinalized ? priorSuffix + 1 : priorSuffix;
+
+            // Gate 4: ≥1 approved line item, computed from the LOCKED approved
+            // set (legacy ~20384, scope branch: COUNT + SUM(dblRepairPrice)
+            // WHERE sApproved='Y'). UPDLOCK,HOLDLOCK on this exact predicate is
+            // the same set the detail insert reads below, so the total written
+            // to the invoice and the detail rows can never diverge.
+            int approvedCount; decimal approvedTotal;
+            await using (var ac = new SqlCommand("""
+                SELECT COUNT(*) AS ApprovedCount,
+                       ISNULL(SUM(rit.dblRepairPrice), 0) AS ApprovedTotal
+                FROM tblRepairItemTran rit WITH (UPDLOCK, HOLDLOCK)
+                WHERE rit.lRepairKey = @repairKey AND rit.sApproved = 'Y'
+                """, conn, txn))
+            {
+                ac.CommandTimeout = 30;
+                ac.Parameters.AddWithValue("@repairKey", repairKey);
+                await using var ar = await ac.ExecuteReaderAsync();
+                await ar.ReadAsync();
+                approvedCount = Convert.ToInt32(ar["ApprovedCount"]);
+                approvedTotal = Convert.ToDecimal(ar["ApprovedTotal"]);
+            }
+
+            if (approvedCount == 0)
+            {
+                await txn.RollbackAsync();
+                return BadRequest(new { error = "No line items on this repair have been approved. An invoice cannot be finalized." });
+            }
+
+            if (invoiceKey == 0)
+            {
+                // No draft exists — create the row already-finalized. Mirrors the
+                // lean column set the draft endpoint writes (NOT the legacy
+                // 200-line address-snapshot invoiceInsert; that proc does not
+                // exist on the cloud DB and the cloud invoice model is lean).
+                // lSalesRepKey is populated from repair→dept→client so GP staging
+                // (and any future reader) sees a real rep, not 0.
+                int serviceLocationKey;
+                await using (var svcCmd = new SqlCommand(
+                    "SELECT ISNULL(d.lServiceLocationKey, 1) FROM tblRepair r JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey WHERE r.lRepairKey = @rk", conn, txn))
+                {
+                    svcCmd.Parameters.AddWithValue("@rk", repairKey);
+                    var svcObj = await svcCmd.ExecuteScalarAsync();
+                    serviceLocationKey = svcObj is null or DBNull ? 1 : Convert.ToInt32(svcObj);
+                }
+
+                var tranNumber = await invoiceNumbers.NextAsync('R', serviceLocationKey, conn, txn);
+
+                const string insertSql = """
+                    INSERT INTO tblInvoice (lRepairKey, lClientKey, lDepartmentKey, lScopeKey,
+                        lSalesRepKey, dtTranDate, dtDueDate, dblTranAmount, sPurchaseOrder, sTranNumber,
+                        sInvoiceStatus, bIsManual, bIsVoid, bFinalized,
+                        Created_UserKey, Created_datetime)
+                    OUTPUT INSERTED.lInvoiceKey
+                    SELECT r.lRepairKey, d.lClientKey, r.lDepartmentKey, r.lScopeKey,
+                        COALESCE(NULLIF(r.lSalesRepKey,0), NULLIF(d.lSalesRepKey,0), NULLIF(c.lSalesRepKey,0)),
+                        GETDATE(), GETDATE(), @amount, @po, @tranNumber,
+                        'Finalized', 0, 0, 1,
+                        @userKey, GETDATE()
+                    FROM tblRepair r
+                    JOIN tblDepartment d ON d.lDepartmentKey = r.lDepartmentKey
+                    LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+                    WHERE r.lRepairKey = @repairKey;
+                    """;
+                await using var insertCmd = new SqlCommand(insertSql, conn, txn);
+                insertCmd.CommandTimeout = 30;
+                insertCmd.Parameters.AddWithValue("@repairKey", repairKey);
+                insertCmd.Parameters.AddWithValue("@amount", approvedTotal);
+                insertCmd.Parameters.AddWithValue("@po", po);
+                insertCmd.Parameters.AddWithValue("@tranNumber", tranNumber);
+                insertCmd.Parameters.AddWithValue("@userKey", userKey > 0 ? userKey : DBNull.Value);
+                var ins = await insertCmd.ExecuteScalarAsync();
+                if (ins is null or DBNull)
+                {
+                    await txn.RollbackAsync();
+                    return NotFound(new { error = "Failed to create invoice — repair or department missing." });
+                }
+                invoiceKey = Convert.ToInt32(ins);
+            }
+            else
+            {
+                // Flip the existing (draft, or re-issued final) row to finalized.
+                // Stamps the approved total + PO + dates, advances the suffix on
+                // re-issue, clears any prior void/GP-process stamp so the fresh
+                // finalize re-stages cleanly, and backfills lSalesRepKey from
+                // repair→dept→client (it may have been 0 on the draft row).
+                const string flipSql = """
+                    UPDATE i
+                    SET bFinalized        = 1,
+                        bIsVoid           = 0,
+                        sInvoiceStatus    = 'Finalized',
+                        dblTranAmount     = @amount,
+                        sPurchaseOrder    = @po,
+                        lSalesRepKey      = COALESCE(NULLIF(i.lSalesRepKey,0), NULLIF(r.lSalesRepKey,0), NULLIF(d.lSalesRepKey,0), NULLIF(c.lSalesRepKey,0)),
+                        dtTranDate        = GETDATE(),
+                        dtDueDate         = ISNULL(i.dtDueDate, GETDATE()),
+                        sTranNumberSuffix = NULLIF(@suffix, 0),
+                        dtGPProcessDate   = NULL,
+                        Updated_UserKey   = @userKey,
+                        Updated_datetime  = GETDATE()
+                    FROM tblInvoice i
+                    JOIN tblRepair r ON r.lRepairKey = i.lRepairKey
+                    JOIN tblDepartment d ON d.lDepartmentKey = i.lDepartmentKey
+                    LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+                    WHERE i.lInvoiceKey = @invoiceKey
+                    """;
+                await using var flip = new SqlCommand(flipSql, conn, txn);
+                flip.CommandTimeout = 30;
+                flip.Parameters.AddWithValue("@amount", approvedTotal);
+                flip.Parameters.AddWithValue("@po", po);
+                flip.Parameters.AddWithValue("@suffix", newSuffix);
+                flip.Parameters.AddWithValue("@invoiceKey", invoiceKey);
+                flip.Parameters.AddWithValue("@userKey", userKey > 0 ? userKey : DBNull.Value);
+                await flip.ExecuteNonQueryAsync();
+            }
+
+            // ── Insert tblInvoiceDetl from the SAME locked approved set ──
+            // The draft path skips detail entirely; finalize MUST populate it.
+            // Mirrors legacy invoiceDetailInsert: one detail row per approved
+            // tblRepairItemTran, carrying the repair-item description, charged
+            // amount (dblRepairPrice) and base value (dblRepairPriceBase).
+            // Re-issue safety: clear any prior detail for this invoice first so
+            // a re-finalize doesn't double the lines.
+            await using (var delDetl = new SqlCommand(
+                "DELETE FROM tblInvoiceDetl WHERE lInvoiceKey = @invoiceKey", conn, txn))
+            {
+                delDetl.CommandTimeout = 30;
+                delDetl.Parameters.AddWithValue("@invoiceKey", invoiceKey);
+                await delDetl.ExecuteNonQueryAsync();
+            }
+
+            const string detlSql = """
+                INSERT INTO tblInvoiceDetl
+                    (lInvoiceKey, lRepairItemKey, lRepairItemTranKey, sItemDescription,
+                     dblItemAmount, dblItemValue, sProductID, mComments,
+                     dtCreateDate, lCreateUser, Created_UserKey, Created_datetime)
+                SELECT @invoiceKey, rit.lRepairItemKey, rit.lRepairItemTranKey,
+                       LEFT(ISNULL(ri.sItemDescription, ''), 200),
+                       ISNULL(rit.dblRepairPrice, 0),
+                       ISNULL(rit.dblRepairPriceBase, rit.dblRepairPrice),
+                       LEFT(ISNULL(rit.sProblemID, ''), 6),
+                       rit.sComments,
+                       GETDATE(), @userKey, @userKey, GETDATE()
+                FROM tblRepairItemTran rit
+                LEFT JOIN tblRepairItem ri ON ri.lRepairItemKey = rit.lRepairItemKey
+                WHERE rit.lRepairKey = @repairKey AND rit.sApproved = 'Y'
+                """;
+            int detailRows;
+            await using (var detl = new SqlCommand(detlSql, conn, txn))
+            {
+                detl.CommandTimeout = 30;
+                detl.Parameters.AddWithValue("@invoiceKey", invoiceKey);
+                detl.Parameters.AddWithValue("@repairKey", repairKey);
+                detl.Parameters.AddWithValue("@userKey", userKey > 0 ? userKey : DBNull.Value);
+                detailRows = await detl.ExecuteNonQueryAsync();
+            }
+
+            // Safety: the approved-count gate above passed under the same lock,
+            // so detailRows should equal approvedCount. If detail somehow wrote
+            // zero rows, refuse to finalize an empty invoice — roll back.
+            if (detailRows == 0)
+            {
+                await txn.RollbackAsync();
+                return BadRequest(new { error = "No invoice detail could be created from the approved line items. Finalize aborted." });
+            }
+
+            // Keep the repair header's billed amount + PO in sync with what was
+            // just finalized (legacy repairUpdateForNewInvoice stamps dtDateOut,
+            // dblAmtRepair, sPurchaseOrder). We touch only dblAmtRepair +
+            // dtDateOut here; PO already came FROM the repair.
+            await using (var rUpd = new SqlCommand("""
+                UPDATE tblRepair
+                SET dblAmtRepair = @amount,
+                    dtDateOut    = ISNULL(dtDateOut, GETDATE())
+                WHERE lRepairKey = @repairKey
+                """, conn, txn))
+            {
+                rUpd.CommandTimeout = 30;
+                rUpd.Parameters.AddWithValue("@amount", approvedTotal);
+                rUpd.Parameters.AddWithValue("@repairKey", repairKey);
+                await rUpd.ExecuteNonQueryAsync();
+            }
+
+            // ── Stage to GP (inline port of dbo.invoiceAfterInsertNew) ──
+            // The legacy proc does not exist on the cloud DB; the staging TABLE
+            // (tblGP_InvoiceStaging) DOES. We replicate the proc's logic in C#:
+            //   • Guard: only stage when bFinalized=1 AND TotalAmountDue>0.
+            //   • TotalAmountDue = tran + shipping + 3 jurisdiction tax amounts.
+            //   • sBatchNumber  = 'WS - ' + yyyymmdd  (deterministic).
+            //   • GPID_Department = tblDepartment.sGPID.
+            //   • GPID_SalesRep   = tblSalesRep.sGPID. The effective rep is
+            //     resolved by COALESCE over invoice→repair→dept→client (the
+            //     invoice's lSalesRepKey is now populated on create/flip, but the
+            //     COALESCE also self-heals legacy rows where it is 0). For a South
+            //     WO (sTranNumber starts 'S') we follow lSalesRepKeyLink to the
+            //     South rep's GPID first — the cloud signal is the WO prefix (the
+            //     legacy fnDatabaseKey()/lDatabaseKey routing does not exist on
+            //     the single cloud DB).
+            //   • Idempotency: only reached for a fresh finalize or an EXPLICIT
+            //     re-issue (a plain retry short-circuited above and never gets
+            //     here). We delete prior UNPROCESSED staging rows for the same
+            //     WO# (sTranNumberNoSuffix) so the re-issue replaces its own
+            //     un-drained attempt without disturbing rows the on-prem job has
+            //     already processed.
+            // NOTE: GPID_SalesRep is NOT NULL on the staging table. If no rep
+            // resolves we stage '' (empty), matching the legacy LEFT-JOIN-miss.
+            // GLAccount / TaxScheduleID / PaymentTerms are left NULL here — the
+            // legacy proc also leaves them for the drain job / GP defaults.
+            decimal totalAmountDue;
+            await using (var stage = new SqlCommand("""
+                DECLARE @batch nvarchar(15) = 'WS - ' + CONVERT(varchar(8), GETDATE(), 112);
+                DECLARE @tn nvarchar(50), @tnNoSuffix nvarchar(50),
+                        @total decimal(18,2), @tran decimal(18,2),
+                        @ship decimal(18,2), @tax decimal(18,2),
+                        @po2 nvarchar(50), @due date, @deptGpid nvarchar(15),
+                        @repGpid nvarchar(15), @effRep int;
+
+                SELECT @tnNoSuffix = i.sTranNumber,
+                       @tn = i.sTranNumber + CASE WHEN ISNULL(i.sTranNumberSuffix,0)=0 THEN ''
+                                                  ELSE '-' + CAST(i.sTranNumberSuffix AS varchar(10)) END,
+                       @tran = CAST(ISNULL(i.dblTranAmount,0) AS decimal(18,2)),
+                       @ship = CAST(ISNULL(i.dblShippingAmt,0) AS decimal(18,2)),
+                       @tax  = CAST(ISNULL(i.dblJuris1Amt,0)+ISNULL(i.dblJuris2Amt,0)+ISNULL(i.dblJuris3Amt,0) AS decimal(18,2)),
+                       @total = CAST(ISNULL(i.dblTranAmount,0)+ISNULL(i.dblShippingAmt,0)
+                                + ISNULL(i.dblJuris1Amt,0)+ISNULL(i.dblJuris2Amt,0)+ISNULL(i.dblJuris3Amt,0) AS decimal(18,2)),
+                       @po2 = i.sPurchaseOrder, @due = i.dtDueDate,
+                       @deptGpid = d.sGPID,
+                       @effRep = COALESCE(NULLIF(i.lSalesRepKey,0), NULLIF(r.lSalesRepKey,0),
+                                          NULLIF(d.lSalesRepKey,0), NULLIF(c.lSalesRepKey,0))
+                FROM tblInvoice i
+                JOIN tblDepartment d ON d.lDepartmentKey = i.lDepartmentKey
+                JOIN tblRepair r ON r.lRepairKey = i.lRepairKey
+                LEFT JOIN tblClient c ON c.lClientKey = d.lClientKey
+                WHERE i.lInvoiceKey = @invoiceKey;
+
+                -- South-link rep swap (WO prefix 'S'): prefer the South rep that
+                -- links back to the effective rep; otherwise the rep's own GPID.
+                SET @repGpid = CASE
+                    WHEN LEFT(@tn,1) = 'S'
+                      THEN ISNULL((SELECT TOP 1 link.sGPID FROM tblSalesRep link WHERE link.lSalesRepKeyLink = @effRep),
+                                  (SELECT TOP 1 srD.sGPID FROM tblSalesRep srD WHERE srD.lSalesRepKey = @effRep))
+                    ELSE (SELECT TOP 1 srD.sGPID FROM tblSalesRep srD WHERE srD.lSalesRepKey = @effRep) END;
+
+                -- Idempotency: clear our own un-drained prior attempts for this WO#.
+                DELETE FROM tblGP_InvoiceStaging
+                WHERE sTranNumberNoSuffix = @tnNoSuffix AND bProcessed = 0;
+
+                IF @total > 0
+                BEGIN
+                    INSERT INTO tblGP_InvoiceStaging
+                        (lInvoiceKey, sTranNumber, dtTranDate, sBatchNumber, GPID_Department,
+                         TotalAmountDue, dblTranAmount, dblShippingAmount, dblTaxAmount,
+                         GPID_SalesRep, sPurchaseOrder, dtDueDate, bProcessed,
+                         sTranNumberNoSuffix, dtPostedDate, lUserKey,
+                         Created_UserKey, Created_datetime)
+                    VALUES
+                        (@invoiceKey, @tn, CONVERT(date, GETDATE()), @batch, @deptGpid,
+                         @total, @tran, @ship, @tax,
+                         ISNULL(@repGpid, ''), @po2, @due, 0,
+                         @tnNoSuffix, CONVERT(date, GETDATE()), @userKey,
+                         @userKey, GETDATE());
+                END
+
+                SELECT @total AS TotalAmountDue;
+                """, conn, txn))
+            {
+                stage.CommandTimeout = 30;
+                stage.Parameters.AddWithValue("@invoiceKey", invoiceKey);
+                stage.Parameters.AddWithValue("@userKey", userKey > 0 ? userKey : DBNull.Value);
+                var totalObj = await stage.ExecuteScalarAsync();
+                totalAmountDue = totalObj is null or DBNull ? 0m : Convert.ToDecimal(totalObj);
+            }
+
+            await txn.CommitAsync();
+
+            return Ok(new FinalizeInvoiceResponse(
+                InvoiceKey: invoiceKey,
+                Finalized: true,
+                ReIssue: alreadyFinalized && reissue,
+                Suffix: newSuffix,
+                ApprovedTotal: approvedTotal,
+                DetailRows: detailRows,
+                Staged: totalAmountDue > 0,
+                GpPushDeferred: true,
+                AlreadyFinalized: false));
+        }
+        catch
+        {
+            await txn.RollbackAsync();
+            throw;
+        }
+    }
+
     // ── Repair Notes ──
     [HttpGet("{repairKey:int}/repair-notes")]
     public async Task<IActionResult> GetRepairNotes(int repairKey)
