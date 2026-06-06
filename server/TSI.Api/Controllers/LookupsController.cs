@@ -174,6 +174,52 @@ public class LookupsController(IConfiguration config) : ControllerBase
         return Ok(list);
     }
 
+    [HttpGet("contract-types")]
+    public async Task<IActionResult> GetContractTypes()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        const string sql = """
+            SELECT lContractTypeKey, ISNULL(sContractType,'') AS sContractType
+            FROM tblContractTypes
+            WHERE Deleted_datetime IS NULL
+            ORDER BY sContractType
+            """;
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var list = new List<object>();
+        while (await reader.ReadAsync())
+            list.Add(new {
+                key  = Convert.ToInt32(reader["lContractTypeKey"]),
+                name = reader["sContractType"].ToString()!
+            });
+        return Ok(list);
+    }
+
+    [HttpGet("invoice-frequencies")]
+    public async Task<IActionResult> GetInvoiceFrequencies()
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        const string sql = """
+            SELECT lInstallmentTypeID, ISNULL(sInstallmentType,'') AS sInstallmentType
+            FROM tblContractInstallmentTypes
+            WHERE Deleted_datetime IS NULL
+            ORDER BY lInstallmentTypeID
+            """;
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        await using var reader = await cmd.ExecuteReaderAsync();
+        var list = new List<object>();
+        while (await reader.ReadAsync())
+            list.Add(new {
+                key  = Convert.ToInt32(reader["lInstallmentTypeID"]),
+                name = reader["sInstallmentType"].ToString()!
+            });
+        return Ok(list);
+    }
+
     [HttpGet("manufacturers")]
     public async Task<IActionResult> GetManufacturers()
     {

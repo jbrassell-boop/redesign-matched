@@ -41,6 +41,7 @@ function withChunkReload<T extends ComponentType<unknown>>(
 const LoginPage = lazy(withChunkReload(() => import('./pages/login/LoginPage').then(m => ({ default: m.LoginPage }))));
 const ClientsPage = lazy(withChunkReload(() => import('./pages/clients/ClientsPage').then(m => ({ default: m.ClientsPage }))));
 const ContractsPage = lazy(withChunkReload(() => import('./pages/contracts/ContractsPage').then(m => ({ default: m.ContractsPage }))));
+const PendingContractsPage = lazy(withChunkReload(() => import('./pages/pending-contracts/PendingContractsPage').then(m => ({ default: m.PendingContractsPage }))));
 const DashboardPage = lazy(withChunkReload(() => import('./pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage }))));
 const DepartmentsPage = lazy(withChunkReload(() => import('./pages/departments/DepartmentsPage').then(m => ({ default: m.DepartmentsPage }))));
 const InventoryPage = lazy(withChunkReload(() => import('./pages/inventory/InventoryPage').then(m => ({ default: m.InventoryPage }))));
@@ -89,6 +90,7 @@ export const router = createBrowserRouter([
           { path: '/', element: <SuspenseWrapper><DashboardPage /></SuspenseWrapper> },
           { path: '/clients', element: <SuspenseWrapper><ClientsPage /></SuspenseWrapper> },
           { path: '/contracts', element: <SuspenseWrapper><ContractsPage /></SuspenseWrapper> },
+          { path: '/pending-contracts', element: <SuspenseWrapper><PendingContractsPage /></SuspenseWrapper> },
           { path: '/dashboard', element: <SuspenseWrapper><DashboardPage /></SuspenseWrapper> },
           { path: '/departments', element: <SuspenseWrapper><DepartmentsPage /></SuspenseWrapper> },
           { path: '/inventory', element: <SuspenseWrapper><InventoryPage /></SuspenseWrapper> },

@@ -26,6 +26,7 @@ export const navSections: NavSection[] = [
       { key: 'clients', label: 'Clients', path: '/clients' },
       { key: 'departments', label: 'Departments', path: '/departments' },
       { key: 'contracts', label: 'Contracts', path: '/contracts' },
+      { key: 'pending-contracts', label: 'Pending Contracts', path: '/pending-contracts' },
     ],
   },
   {
