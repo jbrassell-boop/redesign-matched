@@ -12,10 +12,17 @@
 --      schedule proc BRANCHES on the literal strings 'CPO', 'Once', 'Monthly',
 --      'Quarterly', 'Annual', so the keys AND text must match legacy exactly.
 --   2) Creating dbo.pendingContractConvert and dbo.contractBillingScheduleCreate
---      ported VERBATIM from production WinScopeNet (10.0.0.15\Goldmine) -- only
---      change is CREATE -> CREATE OR ALTER. Both are pure single-database DML
---      (no linked servers, no fnDatabaseKey, no THROW), and every table/column
---      they touch was verified present on WinscopeWeb (2026-06-06).
+--      ported from production WinScopeNet (10.0.0.15\Goldmine). Both are pure
+--      single-database DML (no linked servers, no fnDatabaseKey, no THROW), and
+--      every table/column they touch was verified present on WinscopeWeb.
+--      contractBillingScheduleCreate is VERBATIM. pendingContractConvert has THREE
+--      documented cloud deviations (each commented inline at its site):
+--        a) source SELECTs filter `Deleted_datetime IS NULL` (cloud soft-deletes
+--           where legacy hard-deleted -- keeps the result equivalent to legacy);
+--        b) the zero-active-scopes amount is ISNULL-guarded (avoid NULL dblAmtInvoiced);
+--        c) dblAmtInvoiced is the PER-PERIOD invoice amount (total / #periods), not
+--           legacy's annual/12 monthly estimate, so the schedule built at convert is
+--           correct for Quarterly/Annual/Once up front (approved 2026-06-06).
 --
 -- Idempotent: seeds only missing keys; procs use CREATE OR ALTER.
 -- Run once against WinscopeWeb. Safe to re-run.
@@ -89,15 +96,17 @@ BEGIN
 	Declare @nAnnualAmount decimal(10,2)
 	Select @nAnnualAmount = SUM(nCost) From dbo.tblPendingContractScope Where lPendingContractKey = @plPendingContractKey And Deleted_datetime IS NULL
 
-	Declare @nMonhtlyAmount decimal(10,2)
-	-- ISNULL guard (parallels @nContractTotal below). With the Deleted_datetime
-	-- filter above, a pending contract whose scopes are all soft-deleted yields
-	-- SUM(nCost)=NULL; without this guard dblAmtInvoiced would be inserted NULL.
-	-- Zero active scopes => $0 (matches the @nContractTotal=0 the next block sets).
-	Set @nMonhtlyAmount = ISNULL(@nAnnualAmount,0) / 12
-
+	-- Installment type (and contract type below) drive the billing-period count.
 	Declare @sInstallmentType nvarchar(50)
-	Select @sInstallmentType=sInstallmentType from dbo.tblContractInstallmentTypes Where lInstallmentTypeID = @plInstallmentTypeID
+	Select @sInstallmentType = sInstallmentType
+	from dbo.tblContractInstallmentTypes Where lInstallmentTypeID = @plInstallmentTypeID
+
+	-- Contract TYPE matters too: contractBillingScheduleCreate emits a SINGLE invoice
+	-- for a CPO contract (like the 'Once' frequency), so per-invoice = full total there.
+	Declare @sContractType nvarchar(50)
+	Select @sContractType = ct.sContractType
+	From dbo.tblPendingContract pc join dbo.tblContractTypes ct on (ct.lContractTypeKey = pc.lContractTypeKey)
+	Where pc.lPendingContractKey = @plPendingContractKey
 
 
 	Declare @nContractTotal decimal(10,2)
@@ -105,6 +114,44 @@ BEGIN
 		Set @nContractTotal = ISNULL(@nAnnualAmount,0)
 	else
 		Set @nContractTotal = ISNULL(@nAnnualAmount,0) * @plContractLength / 12
+
+	-- CLOUD ENHANCEMENT (deviates from the verbatim legacy proc; approved 2026-06-06):
+	-- dblAmtInvoiced is the PER-PERIOD invoice amount, not annual/12. Legacy convert
+	-- hardcoded annual/12 (a monthly estimate finalized later on the contract form);
+	-- the cloud auto-builds the billing schedule at convert, so the per-invoice amount
+	-- must be correct up front: dblAmtInvoiced = total / (number of schedule rows).
+	-- The divisor is counted with the EXACT logic contractBillingScheduleCreate uses
+	-- to emit rows -- NOT @plContractLength/installmentMonths, which disagrees when the
+	-- term isn't a clean multiple of the period (a 13-month quarterly = 5 invoices, not
+	-- 4) or for '18 Months' (the schedule's step CASE has no 18-month branch, so it
+	-- falls through to monthly). Mirror it exactly: CPO contract type or 'Once'
+	-- frequency => a single invoice for the whole total; otherwise step
+	-- dtEffective..dtTermination by the schedule's month step (Monthly=1, Quarterly=3,
+	-- Annual=12, anything else => 1) and count each '< termination' bill date. A
+	-- freshly-converted contract has no amendments, so the schedule's amendment loop
+	-- adds no extra rows here.
+	Declare @nPeriods int = 0
+	If @sContractType = 'CPO' Or @sInstallmentType = 'Once'
+		Set @nPeriods = 1
+	Else
+	Begin
+		Declare @nStepMonths int = CASE @sInstallmentType WHEN 'Monthly' THEN 1 WHEN 'Quarterly' THEN 3 WHEN 'Annual' THEN 12 ELSE 1 END
+		Declare @dtCursor date = @pdtDateEffective
+		While @dtCursor < @pdtDateTermination
+		Begin
+			Set @nPeriods = @nPeriods + 1
+			Set @dtCursor = DATEADD(month, @nStepMonths, @dtCursor)
+		End
+	End
+	If @nPeriods < 1 Set @nPeriods = 1
+	-- KNOWN LIMITATION (accepted for go-live): dblAmtInvoiced is a single stored rate
+	-- that contractBillingScheduleCreate repeats on every row, so when the total does
+	-- not divide evenly the schedule sum differs from dblAmtTotal by at most
+	-- ~$0.005 * @nPeriods (sub-dollar). This is inherent to the legacy fixed-rate
+	-- billing model; dblAmtTotal stays authoritative and the rate is finalized on the
+	-- contract form. Making the schedule sum EXACT would require last-installment
+	-- reconciliation inside the shared contractBillingScheduleCreate proc (deferred).
+	Declare @nPerInvoice decimal(10,2) = ISNULL(@nContractTotal, 0) / @nPeriods
 
 	Declare @ErrorMessage nvarchar(max) = ''
 	Declare @lContractKey int = 0
@@ -117,7 +164,7 @@ BEGIN
 				bCostsPerDepartment, lCreateUser, bManualSchedule )
 			Select @psContractName, pc.lClientKey, @pdtDateEffective, @pdtDateTermination, @lBillDay, @psContractNumber, @dtNow,
 				c.sClientName1, c.sClientName2, c.sBillAddr1, c.sBillAddr2, c.sBillCity, c.sBillState, c.sBillZip, c.sBillCountry,
-				pc.lContractTypeKey, c.lPaymentTermsKey, pc.lSalesRepKey, c.lSalesTaxKey, @plInstallmentTypeID, @nContractTotal, @nMonhtlyAmount, @plContractLength,
+				pc.lContractTypeKey, c.lPaymentTermsKey, pc.lSalesRepKey, c.lSalesTaxKey, @plInstallmentTypeID, @nContractTotal, @nPerInvoice, @plContractLength,
 				0 As bCostsPerDepartment, @plUserKey, 0 As bManualSchedule
 			From dbo.tblPendingContract pc join dbo.tblClient c on (pc.lClientKey = c.lClientKey)
 			Where pc.lPendingContractKey = @plPendingContractKey
