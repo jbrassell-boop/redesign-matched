@@ -239,7 +239,7 @@ public class QualityController(IConfiguration config) : ControllerBase
             object? existing;
             await using (var find = new SqlCommand("""
                 SELECT TOP 1 lRepairInspectionKey
-                FROM tblRepairInspection
+                FROM tblRepairInspection WITH (UPDLOCK, HOLDLOCK)
                 WHERE lRepairKey = @rk AND lRepairInspectionType = @type AND Deleted_datetime IS NULL
                 ORDER BY lRepairInspectionKey DESC
                 """, conn, tx))
@@ -258,6 +258,7 @@ public class QualityController(IConfiguration config) : ControllerBase
                     SET bHotColdLeakTestPass = @leak,
                         bAutoclaveTestPass   = @auto,
                         lInspectorKey        = ISNULL(@inspector, lInspectorKey),
+                        lUserKey             = @user,
                         Updated_UserKey      = @user,
                         Updated_datetime     = GETDATE()
                     WHERE lRepairInspectionKey = @key
