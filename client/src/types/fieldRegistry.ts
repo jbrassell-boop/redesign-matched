@@ -1,6 +1,21 @@
 // client/src/types/fieldRegistry.ts
+import { getToken } from '../api/client';
 
 export const FIELD_VERIFIER_API = `${import.meta.env.VITE_API_BASE_URL ?? '/api'}/field-verifier`;
+
+// The field-verifier API now requires an Admin JWT (FieldVerifierController). These
+// callers use native fetch (not the Axios apiClient that auto-attaches the token), so
+// wrap fetch to attach the Authorization header.
+export function fvFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const token = getToken();
+  return fetch(url, {
+    ...init,
+    headers: {
+      ...(init.headers ?? {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  });
+}
 
 export interface FieldEntry {
   id: string;

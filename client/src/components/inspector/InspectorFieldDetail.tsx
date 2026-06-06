@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Button, Spin, Tag } from 'antd';
 import { TableOutlined, ArrowLeftOutlined } from '@ant-design/icons';
-import { FIELD_VERIFIER_API, type FieldEntry } from '../../types/fieldRegistry';
+import { FIELD_VERIFIER_API, fvFetch, type FieldEntry } from '../../types/fieldRegistry';
 
 interface Props {
   field: FieldEntry;
@@ -23,7 +23,7 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
   const fetchLiveValue = useCallback(async () => {
     setLoadingValue(true);
     try {
-      const res = await fetch(`${FIELD_VERIFIER_API}/live-value`, {
+      const res = await fvFetch(`${FIELD_VERIFIER_API}/live-value`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sqlQuery: field.sqlQuery }),
@@ -53,7 +53,7 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
     setLoadingPreview(true);
     setShowPreview(true);
     try {
-      const res = await fetch(`${FIELD_VERIFIER_API}/preview-rows`, {
+      const res = await fvFetch(`${FIELD_VERIFIER_API}/preview-rows`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sqlQuery: field.sqlQuery }),
@@ -199,8 +199,6 @@ export function InspectorFieldDetail({ field, screenFile, onBack }: Props) {
       {/* Deep link to full verifier */}
       <a
         href={deepLink}
-        target="_blank"
-        rel="noreferrer"
         style={{ fontSize: 11, color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: 4 }}
       >
         Open in Field Verifier ↗

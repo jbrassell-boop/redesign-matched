@@ -1,14 +1,20 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Hosting;
 using System.Text.Json;
 using TSI.Api.Models;
 
 namespace TSI.Api.Controllers;
 
+// SECURITY: this is a developer field-registry diagnostic tool. It used to be
+// [AllowAnonymous] AND execute caller-supplied SQL (live-value / preview-rows) —
+// i.e. unauthenticated arbitrary SQL against the live DB. Now Admin-only, and the
+// raw-SQL endpoints are additionally gated to the Development environment so they
+// can never run arbitrary SQL in production even for an authenticated admin.
 [ApiController]
 [Route("api/field-verifier")]
-[AllowAnonymous]
+[Authorize(Roles = "Admin")]
 public class FieldVerifierController(IConfiguration config, IWebHostEnvironment env) : ControllerBase
 {
     private static readonly JsonSerializerOptions JsonOpts = new()
@@ -60,6 +66,7 @@ public class FieldVerifierController(IConfiguration config, IWebHostEnvironment 
     [HttpPost("live-value")]
     public async Task<IActionResult> GetLiveValue([FromBody] LiveValueRequest request)
     {
+        if (!env.IsDevelopment()) return NotFound(); // raw caller SQL — Development only
         if (string.IsNullOrWhiteSpace(request.SqlQuery))
             return Ok(new LiveValueResponse("", "No SQL query provided"));
 
@@ -306,6 +313,7 @@ public class FieldVerifierController(IConfiguration config, IWebHostEnvironment 
     [HttpPost("build-join")]
     public async Task<IActionResult> BuildJoin([FromBody] BuildJoinRequest request)
     {
+        if (!env.IsDevelopment()) return NotFound(); // builds + executes generated SQL — Development only
         var apiKey = config["Anthropic:ApiKey"]
             ?? Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
 
@@ -462,6 +470,7 @@ public class FieldVerifierController(IConfiguration config, IWebHostEnvironment 
     [HttpPost("preview-rows")]
     public async Task<IActionResult> GetPreviewRows([FromBody] LiveValueRequest request)
     {
+        if (!env.IsDevelopment()) return NotFound(); // raw caller SQL — Development only
         if (string.IsNullOrWhiteSpace(request.SqlQuery))
             return Ok(new PreviewRowsResponse([], [], "No SQL query provided"));
 

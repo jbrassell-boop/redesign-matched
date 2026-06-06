@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Progress, Tabs, Tag } from 'antd';
 import { VerifierCard } from './VerifierCard';
 import { DeveloperView } from './DeveloperView';
-import { FIELD_VERIFIER_API, type FieldEntry, type ScreenRegistry } from '../../types/fieldRegistry';
+import { FIELD_VERIFIER_API, fvFetch, type FieldEntry, type ScreenRegistry } from '../../types/fieldRegistry';
 
 export type { FieldEntry, ScreenRegistry };
 
@@ -33,15 +33,20 @@ export function FieldVerifierPage() {
   const [activeScreen, setActiveScreen] = useState<string>('Dashboard');
   const [activeFieldIndex, setActiveFieldIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    fetch(`${FIELD_VERIFIER_API}/registry`)
-      .then(r => r.json())
-      .then((data: ScreenRegistry[]) => {
-        setScreens(data);
-        setLoading(false);
-      });
+    fvFetch(`${FIELD_VERIFIER_API}/registry`)
+      .then(r => {
+        if (!r.ok) throw new Error(r.status === 401 || r.status === 403
+          ? 'Admin access is required to view the Field Verifier.'
+          : `Failed to load field registry (${r.status}).`);
+        return r.json();
+      })
+      .then((data: ScreenRegistry[]) => setScreens(data))
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : 'Could not load field registry.'))
+      .finally(() => setLoading(false));
   }, []);
 
   // Navigate to screen + field from deep-link params (?screen=repairs&field=rep_status)
@@ -86,6 +91,7 @@ export function FieldVerifierPage() {
   }
 
   if (loading) return <div style={{ padding: 32 }}>Loading field registry...</div>;
+  if (error) return <div style={{ padding: 32, color: 'var(--danger)' }}>{error}</div>;
 
   return (
     <div style={{ display: 'flex', height: '100vh', fontFamily: 'Inter, sans-serif', background: 'var(--neutral-100)' }}>

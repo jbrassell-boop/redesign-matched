@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Button, Input, Spin, Tag, message } from 'antd';
 import { CheckOutlined, CloseOutlined, EditOutlined, LeftOutlined, RightOutlined, TableOutlined, SearchOutlined, LinkOutlined } from '@ant-design/icons';
-import { FIELD_VERIFIER_API, type FieldEntry } from '../../types/fieldRegistry';
+import { FIELD_VERIFIER_API, fvFetch, type FieldEntry } from '../../types/fieldRegistry';
 import './VerifierCard.css';
 
 interface Props {
@@ -71,7 +71,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setLiveValue('');
     setLiveError('');
     try {
-      const res = await fetch(`${FIELD_VERIFIER_API}/live-value`, {
+      const res = await fvFetch(`${FIELD_VERIFIER_API}/live-value`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sqlQuery: sql }),
@@ -95,7 +95,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setShowPreview(true);
     try {
       // Run the actual sqlQuery — it already targets the exact column(s) for this field
-      const res = await fetch(`${FIELD_VERIFIER_API}/preview-rows`, {
+      const res = await fvFetch(`${FIELD_VERIFIER_API}/preview-rows`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sqlQuery: field.sqlQuery }),
@@ -118,7 +118,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setLoadingCols(true);
     setColResults([]);
     try {
-      const res = await fetch(`${FIELD_VERIFIER_API}/ai-search-columns`, {
+      const res = await fvFetch(`${FIELD_VERIFIER_API}/ai-search-columns`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: colSearch, table: editSqlTable || null }),
@@ -149,7 +149,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     setJoinError('');
     setShowJoin(true);
     try {
-      const res = await fetch(`${FIELD_VERIFIER_API}/build-join`, {
+      const res = await fvFetch(`${FIELD_VERIFIER_API}/build-join`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -177,7 +177,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
     message.success('SQL updated — live value refreshed');
   }
 
-  async function updateField(patch: Partial<FieldEntry>) {
+  async function updateField(patch: Partial<FieldEntry>): Promise<boolean> {
     const updated = { ...field, ...patch };
     const body = {
       screenFile,
@@ -190,22 +190,26 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
       notes: updated.notes,
       verifiedBy: 'Joe',
     };
-    await fetch(`${FIELD_VERIFIER_API}/field`, {
+    const res = await fvFetch(`${FIELD_VERIFIER_API}/field`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
     });
+    if (!res.ok) {
+      message.error(res.status === 401 || res.status === 403 ? 'Admin access required to save.' : `Save failed (${res.status}).`);
+      return false;
+    }
     onUpdate({ ...updated, verifiedAt: new Date().toISOString(), verifiedBy: 'Joe' });
+    return true;
   }
 
   async function handleConfirm() {
-    await updateField({ status: 'confirmed' });
-    message.success('Confirmed!');
+    if (await updateField({ status: 'confirmed' })) message.success('Confirmed!');
   }
 
   async function handleFlag() {
     if (!showFlagInput) { setShowFlagInput(true); return; }
-    await updateField({ status: 'flagged', notes: flagNote });
+    if (!(await updateField({ status: 'flagged', notes: flagNote }))) return;
     setShowFlagInput(false);
     message.warning('Flagged');
   }
@@ -218,7 +222,7 @@ export function VerifierCard({ screenFile, field, fieldIndex, totalFields, onUpd
       responseProperty: editResponseProperty,
       notes: editNotes,
     };
-    await updateField(patch);
+    if (!(await updateField(patch))) return;
     setEditing(false);
     if (editSqlQuery) fetchLiveValue(editSqlQuery);
     message.success('Saved');

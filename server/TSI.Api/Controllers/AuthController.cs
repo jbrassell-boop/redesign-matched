@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
+using Microsoft.Extensions.Logging;
 using TSI.Api.Models;
 using TSI.Api.Services;
 
@@ -7,7 +8,7 @@ namespace TSI.Api.Controllers;
 
 [ApiController]
 [Route("api/auth")]
-public class AuthController(IConfiguration config, JwtService jwtService) : ControllerBase
+public class AuthController(IConfiguration config, JwtService jwtService, ILogger<AuthController> logger) : ControllerBase
 {
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
@@ -62,9 +63,10 @@ public class AuthController(IConfiguration config, JwtService jwtService) : Cont
             valid = storedPassword == request.Password;
             if (valid)
             {
-                // Auto-upgrade: store a hash so next login uses BCrypt
-                // NOTE: skipped — sUserPassword column too narrow for 60-char BCrypt hash
-                // TODO: ALTER COLUMN sUserPassword to nvarchar(128) then re-enable
+                // Auto-upgrade legacy plaintext to a BCrypt hash so the next login verifies
+                // against the hash (sUserPassword is nvarchar(128) — wide enough for the
+                // 60-char BCrypt hash). Best-effort: a failed upgrade must NOT fail an
+                // otherwise-valid login, but it is logged (no longer silently swallowed).
                 try
                 {
                     var hash = BCrypt.Net.BCrypt.HashPassword(request.Password);
@@ -76,7 +78,10 @@ public class AuthController(IConfiguration config, JwtService jwtService) : Cont
                     updateCmd.CommandTimeout = 10;
                     await updateCmd.ExecuteNonQueryAsync();
                 }
-                catch { /* column too narrow — skip upgrade silently */ }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Plaintext-to-BCrypt password upgrade failed for user {User}", request.Username);
+                }
             }
         }
 

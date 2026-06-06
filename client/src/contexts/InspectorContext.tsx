@@ -1,7 +1,7 @@
 // client/src/contexts/InspectorContext.tsx
 import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FIELD_VERIFIER_API, ROUTE_TO_SCREEN, type ScreenRegistry } from '../types/fieldRegistry';
+import { FIELD_VERIFIER_API, fvFetch, ROUTE_TO_SCREEN, type ScreenRegistry } from '../types/fieldRegistry';
 
 interface InspectorContextValue {
   enabled: boolean;
@@ -44,7 +44,7 @@ export function InspectorProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError('');
       try {
-        const res = await fetch(`${FIELD_VERIFIER_API}/registry`);
+        const res = await fvFetch(`${FIELD_VERIFIER_API}/registry`);
         if (!res.ok) throw new Error(`Registry fetch failed: ${res.status}`);
         const data: ScreenRegistry[] = await res.json();
         setRegistry(data);
