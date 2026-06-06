@@ -32,6 +32,19 @@ public record QualityInspectionListResponse(
     int TotalCount
 );
 
+// Record (upsert) the Post-Repair (final QC) inspection result for a repair.
+public record RecordFinalInspectionRequest(
+    int RepairKey,
+    bool HotColdLeakPass,
+    bool AutoclavePass,
+    int? InspectorKey
+);
+
+public record RecordFinalInspectionResponse(
+    int InspectionKey,
+    string Result
+);
+
 public record QualityStats(
     int TotalInspections,
     int PassCount,

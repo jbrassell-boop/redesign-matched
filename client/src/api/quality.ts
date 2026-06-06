@@ -45,3 +45,28 @@ export const getQualityRework = async (params: {
   const { data } = await apiClient.get<ReworkListResponse>('/quality/rework', { params });
   return data;
 };
+
+export interface RecordFinalInspectionBody {
+  hotColdLeakPass: boolean;
+  autoclavePass: boolean;
+  inspectorKey?: number;
+}
+
+export interface RecordFinalInspectionResult {
+  inspectionKey: number;
+  result: 'Pass' | 'Fail';
+}
+
+// Record (upsert) the Post-Repair (final QC) inspection result for a repair.
+// POST /api/quality/inspections — upserts the repair's lRepairInspectionType=2 row
+// (bHotColdLeakTestPass + bAutoclaveTestPass). Result is Pass only when both pass.
+export const recordFinalInspection = async (
+  repairKey: number,
+  body: RecordFinalInspectionBody,
+): Promise<RecordFinalInspectionResult> => {
+  const { data } = await apiClient.post<RecordFinalInspectionResult>(
+    '/quality/inspections',
+    { repairKey, ...body },
+  );
+  return data;
+};

@@ -197,6 +197,106 @@ public class QualityController(IConfiguration config) : ControllerBase
         ));
     }
 
+    // Record (upsert) the Post-Repair (final QC) inspection result for a repair.
+    // The rest of QualityController is read-only; this is the one write path that lets a
+    // final inspector record the hot/cold-leak + autoclave pass/fail. tblRepairInspection
+    // holds one row per (repair, inspection type) — lRepairInspectionType 1 = D&I Intake,
+    // 2 = Post-Repair (final QC). We upsert the type-2 row; the recorded bits drive the
+    // derived Pass/Fail used across the Quality screens and dashboards.
+    [HttpPost("inspections")]
+    public async Task<IActionResult> RecordFinalInspection([FromBody] RecordFinalInspectionRequest body)
+    {
+        if (body.RepairKey <= 0)
+            return BadRequest(new { message = "A repair is required." });
+
+        var userKey = this.GetCurrentUserKey();
+        var locationKey = this.GetActiveServiceLocation();
+        // lInspectorKey is a TECHNICIAN/inspector key, NOT a user key — only set it when the
+        // caller supplies one; never default it to the audit user key (that would record the
+        // wrong inspector or break the FK). The acting user is captured in lUserKey/Updated_UserKey.
+        object inspectorParam = body.InspectorKey is > 0 ? body.InspectorKey.Value : DBNull.Value;
+        const int postRepairType = 2; // lRepairInspectionType: 2 = Post-Repair (final QC)
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        // Scope to the caller's active service location (writes follow the banner, like the
+        // Quality read paths) so a repair key from another location cannot be written here.
+        await using (var chk = new SqlCommand(
+            "SELECT COUNT(*) FROM tblRepair WHERE lRepairKey = @rk AND lServiceLocationKey = @loc AND Deleted_datetime IS NULL", conn))
+        {
+            chk.CommandTimeout = 30;
+            chk.Parameters.AddWithValue("@rk", body.RepairKey);
+            chk.Parameters.AddWithValue("@loc", locationKey);
+            if (Convert.ToInt32(await chk.ExecuteScalarAsync()) == 0)
+                return NotFound(new { message = "Repair not found in the active service location." });
+        }
+
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        int inspectionKey;
+        try
+        {
+            object? existing;
+            await using (var find = new SqlCommand("""
+                SELECT TOP 1 lRepairInspectionKey
+                FROM tblRepairInspection
+                WHERE lRepairKey = @rk AND lRepairInspectionType = @type AND Deleted_datetime IS NULL
+                ORDER BY lRepairInspectionKey DESC
+                """, conn, tx))
+            {
+                find.CommandTimeout = 30;
+                find.Parameters.AddWithValue("@rk", body.RepairKey);
+                find.Parameters.AddWithValue("@type", postRepairType);
+                existing = await find.ExecuteScalarAsync();
+            }
+
+            if (existing is not null && existing != DBNull.Value)
+            {
+                inspectionKey = Convert.ToInt32(existing);
+                await using var upd = new SqlCommand("""
+                    UPDATE tblRepairInspection
+                    SET bHotColdLeakTestPass = @leak,
+                        bAutoclaveTestPass   = @auto,
+                        lInspectorKey        = ISNULL(@inspector, lInspectorKey),
+                        Updated_UserKey      = @user,
+                        Updated_datetime     = GETDATE()
+                    WHERE lRepairInspectionKey = @key
+                    """, conn, tx);
+                upd.CommandTimeout = 30;
+                upd.Parameters.AddWithValue("@leak", body.HotColdLeakPass);
+                upd.Parameters.AddWithValue("@auto", body.AutoclavePass);
+                upd.Parameters.AddWithValue("@inspector", inspectorParam);
+                upd.Parameters.AddWithValue("@user", userKey);
+                upd.Parameters.AddWithValue("@key", inspectionKey);
+                await upd.ExecuteNonQueryAsync();
+            }
+            else
+            {
+                await using var ins = new SqlCommand("""
+                    INSERT INTO tblRepairInspection
+                        (lRepairKey, lRepairInspectionType, bHotColdLeakTestPass, bAutoclaveTestPass,
+                         lInspectorKey, lUserKey, Created_UserKey, Created_datetime)
+                    OUTPUT INSERTED.lRepairInspectionKey
+                    VALUES (@rk, @type, @leak, @auto, @inspector, @user, @user, GETDATE())
+                    """, conn, tx);
+                ins.CommandTimeout = 30;
+                ins.Parameters.AddWithValue("@rk", body.RepairKey);
+                ins.Parameters.AddWithValue("@type", postRepairType);
+                ins.Parameters.AddWithValue("@leak", body.HotColdLeakPass);
+                ins.Parameters.AddWithValue("@auto", body.AutoclavePass);
+                ins.Parameters.AddWithValue("@inspector", inspectorParam);
+                ins.Parameters.AddWithValue("@user", userKey);
+                inspectionKey = Convert.ToInt32(await ins.ExecuteScalarAsync());
+            }
+
+            await tx.CommitAsync();
+        }
+        catch { await tx.RollbackAsync(); throw; }
+
+        var result = body.HotColdLeakPass && body.AutoclavePass ? "Pass" : "Fail";
+        return Ok(new RecordFinalInspectionResponse(inspectionKey, result));
+    }
+
     [HttpGet("stats")]
     public async Task<IActionResult> GetStats()
     {

@@ -15,6 +15,7 @@ const EXPORT_COLS = [
 import { StatusBadge } from '../../components/shared/StatusBadge';
 import { TabBar } from '../../components/shared/TabBar';
 import type { TabDef } from '../../components/shared/TabBar';
+import { RecordFinalQcModal } from '../repairs/forms/RecordFinalQcModal';
 
 // ── Stat Strip ─────────────────────────────────────────────────────────────────
 
@@ -232,6 +233,10 @@ export const QualityPage = () => {
   // CAPA modal
   const [capaModalOpen, setCapaModalOpen] = useState(false);
   const [capaForm] = Form.useForm();
+
+  // Record Final QC modal — records/updates the Post-Repair leak + autoclave result for
+  // a repair (the bits that drive this page's Pass/Fail). Open when a repairKey is set.
+  const [qcRepairKey, setQcRepairKey] = useState<number | null>(null);
 
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -535,11 +540,13 @@ export const QualityPage = () => {
                   inspections.map((item, idx) => (
                     <tr
                       key={item.inspectionKey}
+                      onClick={() => setQcRepairKey(item.repairKey)}
+                      title="Record / update final QC result"
                       style={{
                         background: idx % 2 === 1 ? 'var(--row-alt)' : undefined,
                         cursor: 'pointer',
                       }}
-                      className="hover-row-light" 
+                      className="hover-row-light"
                     >
                       <td style={tdCellStyle}>
                         <span style={woLinkStyle}>
@@ -948,6 +955,17 @@ export const QualityPage = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      {/* Record Final QC modal — opens when a QC inspection row is clicked */}
+      <RecordFinalQcModal
+        repairKey={qcRepairKey ?? 0}
+        open={qcRepairKey !== null}
+        onClose={() => setQcRepairKey(null)}
+        onSaved={() => {
+          loadInspections({ search, dateFrom, dateTo, resultFilter, page, pageSize: PAGE_SIZE }, () => false);
+          getQualityStats().then(setStats).catch(() => { /* stat refresh best-effort */ });
+        }}
+      />
 
       {activeTab === 'Reports' && (
         <div style={tabFlexColumnStyle}>
