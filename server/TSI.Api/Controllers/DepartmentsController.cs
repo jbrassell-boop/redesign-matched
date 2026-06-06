@@ -569,9 +569,9 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         const string sql = """
-            SELECT sg.llSubGroupKey, sg.sSubGroup
+            SELECT sg.lSubGroupKey, sg.sSubGroup
             FROM tblDepartmentSubGroups dsg
-                INNER JOIN tblSubGroups sg ON sg.llSubGroupKey = dsg.lSubGroupKey
+                INNER JOIN tblSubGroups sg ON sg.lSubGroupKey = dsg.lSubGroupKey
             WHERE dsg.lDepartmentKey = @deptKey
             ORDER BY sg.sSubGroup
             """;
@@ -585,7 +585,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         while (await reader.ReadAsync())
         {
             subGroups.Add(new DepartmentSubGroup(
-                SubGroupKey: Convert.ToInt32(reader["llSubGroupKey"]),
+                SubGroupKey: Convert.ToInt32(reader["lSubGroupKey"]),
                 Name: reader["sSubGroup"]?.ToString() ?? ""
             ));
         }
@@ -824,9 +824,9 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         await conn.OpenAsync();
 
         const string sql = """
-            SELECT sg.llSubGroupKey, sg.sSubGroup
+            SELECT sg.lSubGroupKey, sg.sSubGroup
             FROM tblSubGroups sg
-            WHERE sg.llSubGroupKey NOT IN (
+            WHERE sg.lSubGroupKey NOT IN (
                 SELECT lSubGroupKey FROM tblDepartmentSubGroups WHERE lDepartmentKey = @deptKey
             )
             ORDER BY sg.sSubGroup
@@ -841,7 +841,7 @@ public class DepartmentsController(IConfiguration config) : ControllerBase
         while (await reader.ReadAsync())
         {
             subGroups.Add(new DepartmentSubGroup(
-                SubGroupKey: Convert.ToInt32(reader["llSubGroupKey"]),
+                SubGroupKey: Convert.ToInt32(reader["lSubGroupKey"]),
                 Name: reader["sSubGroup"]?.ToString() ?? ""
             ));
         }

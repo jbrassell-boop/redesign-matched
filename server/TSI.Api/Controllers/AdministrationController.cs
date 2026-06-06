@@ -121,10 +121,18 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // WinscopeWeb schema: tblDeliveryMethod has sDeliveryDesc (not sDeliveryMethod),
+        // dblAmtShipping (float, not mCost), sDefaultYN ('Y'/'N', not bDefault bit), and
+        // no bActive column — derive IsActive from soft-delete (Deleted_datetime).
         await using var cmd = new SqlCommand(@"
-            SELECT lDeliveryMethodKey, sDeliveryMethod, mCost, bDefault, bActive
+            SELECT lDeliveryMethodKey,
+                   sDeliveryDesc AS sDeliveryMethod,
+                   dblAmtShipping AS mCost,
+                   CASE WHEN sDefaultYN = 'Y' THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS bDefault,
+                   CASE WHEN Deleted_datetime IS NULL THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS bActive
             FROM tblDeliveryMethod
-            ORDER BY sDeliveryMethod", conn);
+            WHERE Deleted_datetime IS NULL
+            ORDER BY sDeliveryDesc", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -150,11 +158,19 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // WinscopeWeb schema: tblPaymentTerms uses sTermsDesc (not sPaymentTerms),
+        // sGPID (not sGPPaymentTerms), nIncrementDays (not lDueDays), sDefaultYN ('Y'/'N',
+        // not bDefault bit). No sDueDateMode column — surface NULL for DueDateMode.
         await using var cmd = new SqlCommand(@"
-            SELECT lPaymentTermsKey, sPaymentTerms, sGPPaymentTerms, lDueDays,
-                   sDueDateMode, bDefault
+            SELECT lPaymentTermsKey,
+                   sTermsDesc AS sPaymentTerms,
+                   sGPID AS sGPPaymentTerms,
+                   nIncrementDays AS lDueDays,
+                   CAST(NULL AS nvarchar(50)) AS sDueDateMode,
+                   CASE WHEN sDefaultYN = 'Y' THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS bDefault
             FROM tblPaymentTerms
-            ORDER BY sPaymentTerms", conn);
+            WHERE Deleted_datetime IS NULL
+            ORDER BY sTermsDesc", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -185,8 +201,11 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         if (!string.IsNullOrWhiteSpace(type))
             where = "WHERE sInstrumentType = @type";
 
+        // WinscopeWeb schema: tblScopeTypeCategories has no sSize column — surface NULL
+        // for Size. lScopeTypeCategoryKey/sScopeTypeCategory/sInstrumentType/bActive are real.
         await using var cmd = new SqlCommand($@"
-            SELECT lScopeTypeCategoryKey, sScopeTypeCategory, sInstrumentType, sSize, bActive
+            SELECT lScopeTypeCategoryKey, sScopeTypeCategory, sInstrumentType,
+                   CAST(NULL AS nvarchar(50)) AS sSize, bActive
             FROM tblScopeTypeCategories
             {where}
             ORDER BY sScopeTypeCategory", conn);
@@ -221,13 +240,23 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         if (active.HasValue)
             where = $"WHERE d.bActive = @active";
 
+        // WinscopeWeb schema: tblDistributor uses sDistName1 (not sDistributor); contact is
+        // split sContactFirst/sContactLast (no sContact); phone is sDistPhoneNumber (not
+        // sPhone); city/state are the mailing fields sMailCity/sMailState (no sCity/sState).
+        // Company name comes from tblCompany.sCompanyName1 (not sCompany). bActive is real.
         await using var cmd = new SqlCommand($@"
-            SELECT d.lDistributorKey, d.sDistributor, d.sContact, d.sPhone,
-                   c.sCompany, d.sCity, d.sState, d.bActive
+            SELECT d.lDistributorKey,
+                   d.sDistName1 AS sDistributor,
+                   LTRIM(RTRIM(ISNULL(d.sContactFirst, '') + ' ' + ISNULL(d.sContactLast, ''))) AS sContact,
+                   d.sDistPhoneNumber AS sPhone,
+                   c.sCompanyName1 AS sCompany,
+                   d.sMailCity AS sCity,
+                   d.sMailState AS sState,
+                   d.bActive
             FROM tblDistributor d
             LEFT JOIN tblCompany c ON d.lCompanyKey = c.lCompanyKey
             {where}
-            ORDER BY d.sDistributor", conn);
+            ORDER BY d.sDistName1", conn);
         cmd.CommandTimeout = 30;
         if (active.HasValue)
             cmd.Parameters.AddWithValue("@active", active.Value);
@@ -258,12 +287,21 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // WinscopeWeb schema: tblCompany uses sCompanyName1 (not sCompany), sCoAbbrev (not
+        // sAbbreviation), sCompanyPhoneNumber (not sPhone), sCompanyCity/sCompanyState (not
+        // sCity/sState), and sPeachTreeSubsidiaryID (not sPeachTreeCompanyID).
         await using var cmd = new SqlCommand(@"
-            SELECT c.lCompanyKey, c.sCompany, c.sAbbreviation, c.sPhone, c.sCity, c.sState,
-                   c.sPeachTreeCompanyID,
+            SELECT c.lCompanyKey,
+                   c.sCompanyName1 AS sCompany,
+                   c.sCoAbbrev AS sAbbreviation,
+                   c.sCompanyPhoneNumber AS sPhone,
+                   c.sCompanyCity AS sCity,
+                   c.sCompanyState AS sState,
+                   c.sPeachTreeSubsidiaryID AS sPeachTreeCompanyID,
                    (SELECT COUNT(*) FROM tblDistributor d WHERE d.lCompanyKey = c.lCompanyKey) AS DistributorCount
             FROM tblCompany c
-            ORDER BY c.sCompany", conn);
+            WHERE c.Deleted_datetime IS NULL
+            ORDER BY c.sCompanyName1", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -468,10 +506,18 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // WinscopeWeb schema: tblHolidays has only lHolidayKey + dtHoliday (a date). There
+        // is no sHolidayName, bRecurring, or bActive column. Surface '' for name, false for
+        // IsRecurring, and derive IsActive from soft-delete (Deleted_datetime).
         await using var cmd = new SqlCommand(@"
-            SELECT lHolidayKey, sHolidayName, dtHolidayDate, bRecurring, bActive
+            SELECT lHolidayKey,
+                   CAST('' AS nvarchar(100)) AS sHolidayName,
+                   dtHoliday AS dtHolidayDate,
+                   CAST(0 AS bit) AS bRecurring,
+                   CASE WHEN Deleted_datetime IS NULL THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END AS bActive
             FROM tblHolidays
-            ORDER BY dtHolidayDate", conn);
+            WHERE Deleted_datetime IS NULL
+            ORDER BY dtHoliday", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -499,10 +545,20 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // WinscopeWeb schema: tblSalesTax uses sState (not sStateCode), sSalesTaxName (not
+        // sStateName), and stores tax as up to three jurisdiction rates dblJuris1/2/3Pct
+        // (no single dblTaxRate) — sum them for the effective Rate. bActive serves as
+        // IsTaxable (no bTaxable column). There is no dtEffectiveDate — surface NULL.
         await using var cmd = new SqlCommand(@"
-            SELECT lSalesTaxKey, sStateCode, sStateName, dblTaxRate, dtEffectiveDate, bTaxable
+            SELECT lSalesTaxKey,
+                   sState AS sStateCode,
+                   sSalesTaxName AS sStateName,
+                   (ISNULL(dblJuris1Pct, 0) + ISNULL(dblJuris2Pct, 0) + ISNULL(dblJuris3Pct, 0)) AS dblTaxRate,
+                   CAST(NULL AS datetime) AS dtEffectiveDate,
+                   bActive AS bTaxable
             FROM tblSalesTax
-            ORDER BY sStateName", conn);
+            WHERE Deleted_datetime IS NULL
+            ORDER BY sSalesTaxName", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -671,10 +727,17 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // WinscopeWeb: the vwSysCodesCreditLimit view does not exist. It was defined in the
+        // legacy DB as tblSystemCodesHdr INNER JOIN tblSystemCodes filtered to
+        // sGroupName = 'CreditLimit'. Inline that join against the base tables (both exist
+        // on WinscopeWeb). NOTE: tblSystemCodes is currently empty on WinscopeWeb, so this
+        // returns [] until system-code data is loaded — needs Joe decision on seeding.
         await using var cmd = new SqlCommand(@"
-            SELECT lSystemCodesKey, sItemText
-            FROM vwSysCodesCreditLimit
-            ORDER BY nOrdinal, sItemText", conn);
+            SELECT SC.lSystemCodesKey, SC.sItemText
+            FROM tblSystemCodesHdr SH
+            INNER JOIN tblSystemCodes SC ON SC.lSystemCodesHdrKey = SH.lSystemCodesHdrKey
+            WHERE SH.sGroupName = 'CreditLimit'
+            ORDER BY SC.nOrdinal, SC.sItemText", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -700,11 +763,19 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // WinscopeWeb: the vwSysCodesReportingGroup view does not exist. Legacy definition
+        // was tblSystemCodesHdr INNER JOIN tblSystemCodes filtered to
+        // sGroupName = 'ReportingGroup'. Inline it against the base tables. NOTE:
+        // tblSystemCodes is empty on WinscopeWeb, so this returns [] until seeded — needs
+        // Joe decision. (There is also a real tblReportingGroups table, but it is empty and
+        // has a different shape; the System Codes path matches the original contract.)
         await using var cmd = new SqlCommand(@"
-            SELECT lSystemCodesKey, sItemText,
-                   CASE WHEN cItemChar = 'A' THEN 1 ELSE 0 END AS IsActive
-            FROM vwSysCodesReportingGroup
-            ORDER BY nOrdinal, sItemText", conn);
+            SELECT SC.lSystemCodesKey, SC.sItemText,
+                   CASE WHEN SC.cItemChar = 'A' THEN 1 ELSE 0 END AS IsActive
+            FROM tblSystemCodesHdr SH
+            INNER JOIN tblSystemCodes SC ON SC.lSystemCodesHdrKey = SH.lSystemCodesHdrKey
+            WHERE SH.sGroupName = 'ReportingGroup'
+            ORDER BY SC.nOrdinal, SC.sItemText", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -728,11 +799,17 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // WinscopeWeb: the vwSysCodesStdDeptName view does not exist. Legacy definition was
+        // tblSystemCodesHdr INNER JOIN tblSystemCodes filtered to sGroupName = 'StdDeptName'.
+        // Inline it against the base tables. NOTE: tblSystemCodes is empty on WinscopeWeb,
+        // so this returns [] until seeded — needs Joe decision.
         await using var cmd = new SqlCommand(@"
-            SELECT lSystemCodesKey, sItemText,
-                   CASE WHEN cItemChar = 'A' THEN 1 ELSE 0 END AS IsActive
-            FROM vwSysCodesStdDeptName
-            ORDER BY nOrdinal, sItemText", conn);
+            SELECT SC.lSystemCodesKey, SC.sItemText,
+                   CASE WHEN SC.cItemChar = 'A' THEN 1 ELSE 0 END AS IsActive
+            FROM tblSystemCodesHdr SH
+            INNER JOIN tblSystemCodes SC ON SC.lSystemCodesHdrKey = SH.lSystemCodesHdrKey
+            WHERE SH.sGroupName = 'StdDeptName'
+            ORDER BY SC.nOrdinal, SC.sItemText", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -756,11 +833,17 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // WinscopeWeb: the vwSysCodesDeptProfClean view does not exist. Legacy definition was
+        // tblSystemCodesHdr INNER JOIN tblSystemCodes filtered to sGroupName = 'DeptProfClean'.
+        // Inline it against the base tables. NOTE: tblSystemCodes is empty on WinscopeWeb,
+        // so this returns [] until seeded — needs Joe decision.
         await using var cmd = new SqlCommand(@"
-            SELECT lSystemCodesKey, sItemText,
-                   CASE WHEN cItemChar = 'A' THEN 1 ELSE 0 END AS IsActive
-            FROM vwSysCodesDeptProfClean
-            ORDER BY nOrdinal, sItemText", conn);
+            SELECT SC.lSystemCodesKey, SC.sItemText,
+                   CASE WHEN SC.cItemChar = 'A' THEN 1 ELSE 0 END AS IsActive
+            FROM tblSystemCodesHdr SH
+            INNER JOIN tblSystemCodes SC ON SC.lSystemCodesHdrKey = SH.lSystemCodesHdrKey
+            WHERE SH.sGroupName = 'DeptProfClean'
+            ORDER BY SC.nOrdinal, SC.sItemText", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -784,10 +867,13 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // WinscopeWeb schema: tblCountries column is sCountry (not Country). lSortOrder is real.
+        // CountryKey is synthesized via ROW_NUMBER (table has no natural key column).
         await using var cmd = new SqlCommand(@"
-            SELECT ROW_NUMBER() OVER (ORDER BY lSortOrder, Country) AS RowNum, Country
+            SELECT ROW_NUMBER() OVER (ORDER BY lSortOrder, sCountry) AS RowNum, sCountry AS Country
             FROM tblCountries
-            ORDER BY lSortOrder, Country", conn);
+            WHERE Deleted_datetime IS NULL
+            ORDER BY lSortOrder, sCountry", conn);
         cmd.CommandTimeout = 30;
 
         await using var reader = await cmd.ExecuteReaderAsync();
@@ -843,17 +929,22 @@ public class AdministrationController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // WinscopeWeb schema: tblSalesRepLink does NOT have lDepartmentKey (it only carries
+        // lSalesRepLinkKey + lSalesRepKey), so the original join through it is impossible.
+        // The real rep->department assignment lives on tblDepartment.lSalesRepKey. Query
+        // departments directly for the rep. tblClient name column is sClientName1 (not
+        // sClientName); department address uses sShip* fields (no sCity/sState/sZip).
         await using var cmd = new SqlCommand(@"
             SELECT d.lDepartmentKey,
-                   c.sClientName, d.sDepartmentName,
-                   d.sCity, d.sState, d.sZip,
-                   sr.sRepFirst + ' ' + sr.sRepLast AS CurrentRep
-            FROM tblSalesRepLink srl
-            INNER JOIN tblDepartment d ON srl.lDepartmentKey = d.lDepartmentKey
+                   c.sClientName1 AS sClientName, d.sDepartmentName,
+                   d.sShipCity AS sCity, d.sShipState AS sState, d.sShipZip AS sZip,
+                   LTRIM(RTRIM(ISNULL(sr.sRepFirst, '') + ' ' + ISNULL(sr.sRepLast, ''))) AS CurrentRep
+            FROM tblDepartment d
             INNER JOIN tblClient c ON d.lClientKey = c.lClientKey
-            INNER JOIN tblSalesRep sr ON srl.lSalesRepKey = sr.lSalesRepKey
-            WHERE srl.lSalesRepKey = @salesRepKey
-            ORDER BY c.sClientName, d.sDepartmentName", conn);
+            LEFT JOIN tblSalesRep sr ON d.lSalesRepKey = sr.lSalesRepKey
+            WHERE d.lSalesRepKey = @salesRepKey
+              AND d.Deleted_datetime IS NULL
+            ORDER BY c.sClientName1, d.sDepartmentName", conn);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@salesRepKey", salesRepKey);
 

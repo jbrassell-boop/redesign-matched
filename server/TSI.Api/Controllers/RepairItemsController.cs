@@ -126,7 +126,7 @@ public class RepairItemsController(IConfiguration config) : ControllerBase
                    ri.sRigidOrFlexible, ri.sPartOrLabor, ISNULL(ri.bActive, 0) AS bActive,
                    ri.nTurnAroundTime, ri.dblAvgCostMaterial, ri.dblAvgCostLabor,
                    ri.tMinutesTech1, ri.tMinutesTech2, ri.tMinutesTech3,
-                   ri.tMinutesTech1SmallDimater, ri.tMinutesTech2SmallDimater, ri.tMinutesTech3SmallDimater,
+                   ri.tMinutesTech1SmallDiameter, ri.tMinutesTech2SmallDiameter, ri.tMinutesTech3SmallDiameter,
                    ISNULL(ri.bOkayToSkip, 0) AS bOkayToSkip,
                    ISNULL(ri.bIsAdjustment, 0) AS bIsAdjustment,
                    ISNULL(ri.bSkipPickList, 0) AS bSkipPickList,
@@ -161,9 +161,9 @@ public class RepairItemsController(IConfiguration config) : ControllerBase
             MinutesTech1: reader["tMinutesTech1"] == DBNull.Value ? null : Convert.ToInt32(reader["tMinutesTech1"]),
             MinutesTech2: reader["tMinutesTech2"] == DBNull.Value ? null : Convert.ToInt32(reader["tMinutesTech2"]),
             MinutesTech3: reader["tMinutesTech3"] == DBNull.Value ? null : Convert.ToInt32(reader["tMinutesTech3"]),
-            MinutesTech1SmallDiameter: reader["tMinutesTech1SmallDimater"] == DBNull.Value ? null : Convert.ToInt32(reader["tMinutesTech1SmallDimater"]),
-            MinutesTech2SmallDiameter: reader["tMinutesTech2SmallDimater"] == DBNull.Value ? null : Convert.ToInt32(reader["tMinutesTech2SmallDimater"]),
-            MinutesTech3SmallDiameter: reader["tMinutesTech3SmallDimater"] == DBNull.Value ? null : Convert.ToInt32(reader["tMinutesTech3SmallDimater"]),
+            MinutesTech1SmallDiameter: reader["tMinutesTech1SmallDiameter"] == DBNull.Value ? null : Convert.ToInt32(reader["tMinutesTech1SmallDiameter"]),
+            MinutesTech2SmallDiameter: reader["tMinutesTech2SmallDiameter"] == DBNull.Value ? null : Convert.ToInt32(reader["tMinutesTech2SmallDiameter"]),
+            MinutesTech3SmallDiameter: reader["tMinutesTech3SmallDiameter"] == DBNull.Value ? null : Convert.ToInt32(reader["tMinutesTech3SmallDiameter"]),
             OkayToSkip: Convert.ToBoolean(reader["bOkayToSkip"]),
             IsAdjustment: Convert.ToBoolean(reader["bIsAdjustment"]),
             SkipPickList: Convert.ToBoolean(reader["bSkipPickList"]),
@@ -231,9 +231,9 @@ public class RepairItemsController(IConfiguration config) : ControllerBase
         if (update.MinutesTech1 != null) { sets.Add("tMinutesTech1 = @t1"); cmd.Parameters.AddWithValue("@t1", update.MinutesTech1); }
         if (update.MinutesTech2 != null) { sets.Add("tMinutesTech2 = @t2"); cmd.Parameters.AddWithValue("@t2", update.MinutesTech2); }
         if (update.MinutesTech3 != null) { sets.Add("tMinutesTech3 = @t3"); cmd.Parameters.AddWithValue("@t3", update.MinutesTech3); }
-        if (update.MinutesTech1SmallDiameter != null) { sets.Add("tMinutesTech1SmallDimater = @t1sd"); cmd.Parameters.AddWithValue("@t1sd", update.MinutesTech1SmallDiameter); }
-        if (update.MinutesTech2SmallDiameter != null) { sets.Add("tMinutesTech2SmallDimater = @t2sd"); cmd.Parameters.AddWithValue("@t2sd", update.MinutesTech2SmallDiameter); }
-        if (update.MinutesTech3SmallDiameter != null) { sets.Add("tMinutesTech3SmallDimater = @t3sd"); cmd.Parameters.AddWithValue("@t3sd", update.MinutesTech3SmallDiameter); }
+        if (update.MinutesTech1SmallDiameter != null) { sets.Add("tMinutesTech1SmallDiameter = @t1sd"); cmd.Parameters.AddWithValue("@t1sd", update.MinutesTech1SmallDiameter); }
+        if (update.MinutesTech2SmallDiameter != null) { sets.Add("tMinutesTech2SmallDiameter = @t2sd"); cmd.Parameters.AddWithValue("@t2sd", update.MinutesTech2SmallDiameter); }
+        if (update.MinutesTech3SmallDiameter != null) { sets.Add("tMinutesTech3SmallDiameter = @t3sd"); cmd.Parameters.AddWithValue("@t3sd", update.MinutesTech3SmallDiameter); }
         if (update.OkayToSkip != null) { sets.Add("bOkayToSkip = @okayToSkip"); cmd.Parameters.AddWithValue("@okayToSkip", update.OkayToSkip); }
         if (update.IsAdjustment != null) { sets.Add("bIsAdjustment = @isAdjustment"); cmd.Parameters.AddWithValue("@isAdjustment", update.IsAdjustment); }
         if (update.SkipPickList != null) { sets.Add("bSkipPickList = @skipPickList"); cmd.Parameters.AddWithValue("@skipPickList", update.SkipPickList); }

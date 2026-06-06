@@ -168,21 +168,63 @@ public class FinancialController(IConfiguration config) : ControllerBase
             WHERE i.lInvoiceKey = @id
             """;
 
-        await using var cmd = new SqlCommand(sql, conn);
-        cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@id", id);
-        await using var reader = await cmd.ExecuteReaderAsync();
+        // Read the header row fully into locals, then CLOSE the reader before
+        // opening any further command on this connection. Previously the method
+        // left the line-item reader open (await using) and then opened a THIRD
+        // reader to re-read the header — two open readers on one connection throws
+        // "There is already an open DataReader associated with this Connection".
+        // Capturing the header here removes both the second open reader and the
+        // redundant re-query. JSON shape is unchanged.
+        InvoiceDetail header;
+        int agingDays;
+        await using (var cmd = new SqlCommand(sql, conn))
+        {
+            cmd.CommandTimeout = 30;
+            cmd.Parameters.AddWithValue("@id", id);
+            await using var reader = await cmd.ExecuteReaderAsync();
 
-        if (!await reader.ReadAsync())
-            return NotFound(new { message = "Invoice not found." });
+            if (!await reader.ReadAsync())
+                return NotFound(new { message = "Invoice not found." });
 
-        var dueDate = reader["dtDueDate"] as DateTime?;
-        var tranDate = reader["dtTranDate"] as DateTime?;
-        var agingDays = CalcAgingDays(dueDate, tranDate);
+            var dueDate = reader["dtDueDate"] as DateTime?;
+            var tranDate = reader["dtTranDate"] as DateTime?;
+            agingDays = CalcAgingDays(dueDate, tranDate);
 
-        await reader.CloseAsync();
+            header = new InvoiceDetail(
+                InvoiceKey: Convert.ToInt32(reader["lInvoiceKey"]),
+                RepairKey: reader["lRepairKey"] as int?,
+                ClientKey: reader["lClientKey"] as int?,
+                DepartmentKey: reader["lDepartmentKey"] as int?,
+                InvoiceNumber: reader["sTranNumber"]?.ToString() ?? "",
+                ClientName: reader["sBillName1"]?.ToString() ?? "",
+                BillName: (reader["sBillName1"]?.ToString() ?? "") + (string.IsNullOrWhiteSpace(reader["sBillName2"]?.ToString()) ? "" : " " + reader["sBillName2"]),
+                BillAddress: reader["sBillAddr1"]?.ToString() ?? "",
+                BillCity: reader["sBillCity"]?.ToString() ?? "",
+                BillState: reader["sBillState"]?.ToString() ?? "",
+                BillZip: reader["sBillZip"]?.ToString() ?? "",
+                ShipName: reader["sShipName1"]?.ToString() ?? "",
+                ShipAddress: reader["sShipAddr1"]?.ToString() ?? "",
+                ShipCity: reader["sShipCity"]?.ToString() ?? "",
+                ShipState: reader["sShipState"]?.ToString() ?? "",
+                ShipZip: reader["sShipZip"]?.ToString() ?? "",
+                Amount: Convert.ToDouble(reader["dblTranAmount"]),
+                ShippingAmount: Convert.ToDouble(reader["dblShippingAmt"]),
+                TaxAmount: Convert.ToDouble(reader["dblTaxAmount"]),
+                PaymentTerms: reader["sTermsDesc"]?.ToString() ?? "",
+                DeliveryMethod: reader["sDeliveryDesc"]?.ToString() ?? "",
+                PurchaseOrder: reader["sPurchaseOrder"]?.ToString() ?? "",
+                ScopeType: reader["sScopeTypeDesc"]?.ToString() ?? "",
+                SerialNumber: reader["sSerialNumber"]?.ToString() ?? "",
+                SalesRep: reader["SalesRep"]?.ToString()?.Trim() ?? "",
+                IssuedDate: (reader["dtTranDate"] as DateTime?)?.ToString("yyyy-MM-dd"),
+                DueDate: (reader["dtDueDate"] as DateTime?)?.ToString("yyyy-MM-dd"),
+                AgingDays: agingDays,
+                Status: DeriveStatus(false, false, agingDays),
+                LineItems: new List<InvoiceLineItem>()
+            );
+        }
 
-        // Load line items
+        // Load line items now that the header reader is closed/disposed.
         const string detailSql = """
             SELECT d.lInvoiceDetlKey, d.sItemDescription,
                    ISNULL(d.dblItemAmount, 0) AS dblItemAmount,
@@ -193,61 +235,25 @@ public class FinancialController(IConfiguration config) : ControllerBase
             ORDER BY d.lInvoiceDetlKey
             """;
 
-        await using var detailCmd = new SqlCommand(detailSql, conn);
-        detailCmd.CommandTimeout = 30;
-        detailCmd.Parameters.AddWithValue("@id", id);
-        await using var detailReader = await detailCmd.ExecuteReaderAsync();
         var lineItems = new List<InvoiceLineItem>();
-        while (await detailReader.ReadAsync())
+        await using (var detailCmd = new SqlCommand(detailSql, conn))
         {
-            lineItems.Add(new InvoiceLineItem(
-                DetailKey: Convert.ToInt32(detailReader["lInvoiceDetlKey"]),
-                Description: detailReader["sItemDescription"]?.ToString() ?? "",
-                Amount: Convert.ToDouble(detailReader["dblItemAmount"]),
-                Value: Convert.ToDouble(detailReader["dblItemValue"]),
-                Comments: detailReader["mComments"]?.ToString()
-            ));
+            detailCmd.CommandTimeout = 30;
+            detailCmd.Parameters.AddWithValue("@id", id);
+            await using var detailReader = await detailCmd.ExecuteReaderAsync();
+            while (await detailReader.ReadAsync())
+            {
+                lineItems.Add(new InvoiceLineItem(
+                    DetailKey: Convert.ToInt32(detailReader["lInvoiceDetlKey"]),
+                    Description: detailReader["sItemDescription"]?.ToString() ?? "",
+                    Amount: Convert.ToDouble(detailReader["dblItemAmount"]),
+                    Value: Convert.ToDouble(detailReader["dblItemValue"]),
+                    Comments: detailReader["mComments"]?.ToString()
+                ));
+            }
         }
 
-        // Re-read header for detail construction
-        await using var cmd2 = new SqlCommand(sql, conn);
-        cmd2.CommandTimeout = 30;
-        cmd2.Parameters.AddWithValue("@id", id);
-        await using var r = await cmd2.ExecuteReaderAsync();
-        await r.ReadAsync();
-
-        return Ok(new InvoiceDetail(
-            InvoiceKey: Convert.ToInt32(r["lInvoiceKey"]),
-            RepairKey: r["lRepairKey"] as int?,
-            ClientKey: r["lClientKey"] as int?,
-            DepartmentKey: r["lDepartmentKey"] as int?,
-            InvoiceNumber: r["sTranNumber"]?.ToString() ?? "",
-            ClientName: r["sBillName1"]?.ToString() ?? "",
-            BillName: (r["sBillName1"]?.ToString() ?? "") + (string.IsNullOrWhiteSpace(r["sBillName2"]?.ToString()) ? "" : " " + r["sBillName2"]),
-            BillAddress: r["sBillAddr1"]?.ToString() ?? "",
-            BillCity: r["sBillCity"]?.ToString() ?? "",
-            BillState: r["sBillState"]?.ToString() ?? "",
-            BillZip: r["sBillZip"]?.ToString() ?? "",
-            ShipName: r["sShipName1"]?.ToString() ?? "",
-            ShipAddress: r["sShipAddr1"]?.ToString() ?? "",
-            ShipCity: r["sShipCity"]?.ToString() ?? "",
-            ShipState: r["sShipState"]?.ToString() ?? "",
-            ShipZip: r["sShipZip"]?.ToString() ?? "",
-            Amount: Convert.ToDouble(r["dblTranAmount"]),
-            ShippingAmount: Convert.ToDouble(r["dblShippingAmt"]),
-            TaxAmount: Convert.ToDouble(r["dblTaxAmount"]),
-            PaymentTerms: r["sTermsDesc"]?.ToString() ?? "",
-            DeliveryMethod: r["sDeliveryDesc"]?.ToString() ?? "",
-            PurchaseOrder: r["sPurchaseOrder"]?.ToString() ?? "",
-            ScopeType: r["sScopeTypeDesc"]?.ToString() ?? "",
-            SerialNumber: r["sSerialNumber"]?.ToString() ?? "",
-            SalesRep: r["SalesRep"]?.ToString()?.Trim() ?? "",
-            IssuedDate: (r["dtTranDate"] as DateTime?)?.ToString("yyyy-MM-dd"),
-            DueDate: (r["dtDueDate"] as DateTime?)?.ToString("yyyy-MM-dd"),
-            AgingDays: agingDays,
-            Status: DeriveStatus(false, false, agingDays),
-            LineItems: lineItems
-        ));
+        return Ok(header with { LineItems = lineItems });
     }
 
     [HttpGet("payments")]
@@ -359,19 +365,26 @@ public class FinancialController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // tblGP_InvoiceStaging is the GP invoice-integration staging table, not a
+        // double-entry GL ledger: it has no debit/credit columns. Real columns are
+        // docDescription (not sDescription), dtTranDate (not dTranDate), and a single
+        // dblTranAmount (the invoiced/receivable amount) — there is no
+        // dblDebitAmount/dblCreditAmount. We surface each staged invoice as a debit
+        // (a receivable owed to TSI) so the DebitAmount/CreditAmount/Balance JSON
+        // shape is preserved: amount -> DebitAmount and Balance, CreditAmount = 0.
         const string sql = """
             SELECT
                 GLAccount,
                 sBatchNumber,
-                ISNULL(sDescription, '') AS sDescription,
-                dTranDate,
-                ISNULL(TRY_CAST(dblDebitAmount  AS FLOAT), 0) AS dblDebitAmount,
-                ISNULL(TRY_CAST(dblCreditAmount AS FLOAT), 0) AS dblCreditAmount,
-                ISNULL(TRY_CAST(dblDebitAmount  AS FLOAT), 0)
-                    - ISNULL(TRY_CAST(dblCreditAmount AS FLOAT), 0) AS dblBalance
+                ISNULL(docDescription, '') AS sDescription,
+                dtTranDate,
+                ISNULL(TRY_CAST(dblTranAmount AS FLOAT), 0) AS dblDebitAmount,
+                CAST(0 AS FLOAT) AS dblCreditAmount,
+                ISNULL(TRY_CAST(dblTranAmount AS FLOAT), 0) AS dblBalance
             FROM tblGP_InvoiceStaging
             WHERE GLAccount IS NOT NULL AND GLAccount <> ''
-            ORDER BY GLAccount, dTranDate DESC
+              AND Deleted_datetime IS NULL
+            ORDER BY GLAccount, dtTranDate DESC
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
@@ -381,7 +394,7 @@ public class FinancialController(IConfiguration config) : ControllerBase
         var items = new List<GLAccountItem>();
         while (await reader.ReadAsync())
         {
-            DateTime? tranDate = reader["dTranDate"] as DateTime?;
+            DateTime? tranDate = reader["dtTranDate"] as DateTime?;
             items.Add(new GLAccountItem(
                 AccountNumber: reader["GLAccount"]?.ToString() ?? "",
                 BatchNumber: reader["sBatchNumber"]?.ToString() ?? "",

@@ -177,13 +177,18 @@ public class AcquisitionsController(IConfiguration config, IPONumberService poNu
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // Every SUM(...) is wrapped in ISNULL(..., 0): SUM over an empty result set
+        // (no acquisition scopes) returns NULL, and the C# reads below call
+        // Convert.ToInt32/ToDecimal which throw "Object cannot be cast from DBNull
+        // to other types" on a NULL. ISNULL keeps the aggregates returning 0 so the
+        // endpoint reports empty rather than 500ing.
         var sql = """
             SELECT
                 COUNT(*) AS Total,
-                SUM(CASE WHEN s.sScopeIsDead IS NULL OR s.sScopeIsDead <> 'Y' THEN 1 ELSE 0 END) AS InHouse,
-                SUM(CASE WHEN s.sScopeIsDead = 'Y' THEN 1 ELSE 0 END) AS Sold,
-                SUM(CASE WHEN s.sScopeIsDead IS NULL OR s.sScopeIsDead <> 'Y' THEN ISNULL(pt.nScopeCost, 0) ELSE 0 END) AS InHouseValue,
-                SUM(CASE WHEN s.sScopeIsDead = 'Y' THEN ISNULL(pt.nScopeCost, 0) ELSE 0 END) AS SoldRevenue
+                ISNULL(SUM(CASE WHEN s.sScopeIsDead IS NULL OR s.sScopeIsDead <> 'Y' THEN 1 ELSE 0 END), 0) AS InHouse,
+                ISNULL(SUM(CASE WHEN s.sScopeIsDead = 'Y' THEN 1 ELSE 0 END), 0) AS Sold,
+                ISNULL(SUM(CASE WHEN s.sScopeIsDead IS NULL OR s.sScopeIsDead <> 'Y' THEN ISNULL(pt.nScopeCost, 0) ELSE 0 END), 0) AS InHouseValue,
+                ISNULL(SUM(CASE WHEN s.sScopeIsDead = 'Y' THEN ISNULL(pt.nScopeCost, 0) ELSE 0 END), 0) AS SoldRevenue
             FROM tblScope s
             INNER JOIN tblAcquisitionSupplierPOTran pt ON pt.lAcquisitionSupplierPOTranKey = s.lAcquisitionSupplierPOTranKey
             """;

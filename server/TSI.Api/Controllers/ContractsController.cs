@@ -163,7 +163,7 @@ public class ContractsController(IConfiguration config) : ControllerBase
                 ISNULL(c.sContractCity, '') AS sContractCity,
                 ISNULL(c.sContractState, '') AS sContractState,
                 ISNULL(c.sContractZip, '') AS sContractZip,
-                ISNULL(c.sContractPhoneVoice, '') AS sContractPhoneVoice,
+                ISNULL(c.sContractPhoneNumber, '') AS sContractPhoneVoice,
                 ISNULL(c.sBillEmail, '') AS sBillEmail,
                 ISNULL(CAST(c.mComments AS nvarchar(max)), '') AS mComments,
                 ISNULL(c.nCountFlexible, 0) AS nCountFlexible,

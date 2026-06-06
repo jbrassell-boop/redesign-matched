@@ -575,17 +575,11 @@ public class ProductSalesController(
                 unitCost = Convert.ToDecimal(priceObj);
         }
 
-        if (unitCost == 0)
-        {
-            // Fall back to tblInventorySize.dblUnitCost
-            await using var fallbackCmd = new SqlCommand(
-                "SELECT ISNULL(dblUnitCost, 0) FROM tblInventorySize WHERE lInventorySizeKey = @sizeKey", conn);
-            fallbackCmd.CommandTimeout = 30;
-            fallbackCmd.Parameters.AddWithValue("@sizeKey", body.InventorySizeKey);
-            var fbObj = await fallbackCmd.ExecuteScalarAsync();
-            if (fbObj != null && fbObj != DBNull.Value)
-                unitCost = Convert.ToDecimal(fbObj);
-        }
+        // No tblInventorySize base-cost fallback: that table's dblUnitCost column was
+        // dropped in the size refactor (querying it 500'd this POST). GET
+        // /api/inventory/{id}/sizes likewise shows 0 without a pricing list, so unit cost
+        // comes from the order's pricing list only and stays 0 when there is none —
+        // keeping the displayed price and the added price consistent.
 
         var totalCost = unitCost * body.Quantity;
 
@@ -1067,13 +1061,13 @@ public class ProductSalesController(
                 SELECT isz.lInventorySizeKey,
                        ISNULL(isz.sSizeDescription, '') AS sSizeDescription,
                        isz.sSizeDescription2, isz.sSizeDescription3,
-                       isz.sStatus,
-                       ISNULL(pld.nUnitCost, ISNULL(isz.dblUnitCost, 0)) AS UnitCost
+                       'Active' AS sStatus,
+                       ISNULL(pld.nUnitCost, 0) AS UnitCost
                 FROM tblInventorySize isz
                 LEFT JOIN tblInventoryPricingListDetails pld
                     ON pld.lInventorySizeKey = isz.lInventorySizeKey
                     AND pld.lInventoryPricingListKey = @plKey
-                WHERE isz.lInventoryKey = @invKey AND ISNULL(isz.bActive, 0) = 1
+                WHERE isz.lInventoryKey = @invKey AND isz.Deleted_datetime IS NULL
                 ORDER BY isz.sSizeDescription
                 """;
         }
@@ -1083,10 +1077,10 @@ public class ProductSalesController(
                 SELECT isz.lInventorySizeKey,
                        ISNULL(isz.sSizeDescription, '') AS sSizeDescription,
                        isz.sSizeDescription2, isz.sSizeDescription3,
-                       isz.sStatus,
-                       ISNULL(isz.dblUnitCost, 0) AS UnitCost
+                       'Active' AS sStatus,
+                       0 AS UnitCost
                 FROM tblInventorySize isz
-                WHERE isz.lInventoryKey = @invKey AND ISNULL(isz.bActive, 0) = 1
+                WHERE isz.lInventoryKey = @invKey AND isz.Deleted_datetime IS NULL
                 ORDER BY isz.sSizeDescription
                 """;
         }

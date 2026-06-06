@@ -286,7 +286,6 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
                    ISNULL(ri.dblHoursTech1, 0) AS dblHoursTech1,
                    ISNULL(ri.dblHoursTech2, 0) AS dblHoursTech2,
                    ISNULL(ri.dblHoursTech3, 0) AS dblHoursTech3,
-                   ISNULL(ri.sMajorRepair, 'N') AS sMajorRepair,
                    ri.sTSICode, ri.sDiameterType, ri.nUnitCost
             FROM tblRepairItem ri
             WHERE ri.lRepairItemKey = @id
@@ -316,7 +315,12 @@ public class InstrumentsController(IConfiguration config) : ControllerBase
             HoursTech1: Convert.ToDouble(reader["dblHoursTech1"]),
             HoursTech2: Convert.ToDouble(reader["dblHoursTech2"]),
             HoursTech3: Convert.ToDouble(reader["dblHoursTech3"]),
-            IsMajorRepair: reader["sMajorRepair"]?.ToString() == "Y",
+            // No boolean "major repair" flag exists on tblRepairItem in WinscopeWeb.
+            // The legacy sMajorRepair column held a repair-level key (joined to
+            // tblRepairLevels, which is currently unpopulated), and the old "== Y"
+            // comparison never resolved true. Default to false until a real source
+            // (e.g. lRepairLevelKey semantics) is defined.
+            IsMajorRepair: false,
             TSICode: reader["sTSICode"]?.ToString(),
             DiameterType: reader["sDiameterType"]?.ToString(),
             UnitCost: reader["nUnitCost"] as decimal?
