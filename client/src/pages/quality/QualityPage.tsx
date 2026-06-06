@@ -963,7 +963,7 @@ export const QualityPage = () => {
         onClose={() => setQcRepairKey(null)}
         onSaved={() => {
           loadInspections({ search, dateFrom, dateTo, resultFilter, page, pageSize: PAGE_SIZE }, () => false);
-          getQualityStats().then(setStats).catch(() => { /* stat refresh best-effort */ });
+          getQualityStats().then(setStats).catch(() => message.error('Failed to refresh quality stats'));
         }}
       />
 

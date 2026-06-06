@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { Modal, Segmented, message } from 'antd';
 import { recordFinalInspection } from '../../../api/quality';
 
@@ -19,6 +19,13 @@ export const RecordFinalQcModal = ({ repairKey, open, onClose, onSaved }: Props)
   const [leak, setLeak] = useState<PF>('Pass');
   const [autoclave, setAutoclave] = useState<PF>('Pass');
   const [saving, setSaving] = useState(false);
+
+  // The modal instance is reused across repairs (destroyOnClose only unmounts children),
+  // so reset to defaults whenever it opens or the target repair changes — otherwise the
+  // previous repair's Pass/Fail choices would carry over and could be saved by mistake.
+  useEffect(() => {
+    if (open) { setLeak('Pass'); setAutoclave('Pass'); }
+  }, [open, repairKey]);
 
   const save = async () => {
     setSaving(true);
