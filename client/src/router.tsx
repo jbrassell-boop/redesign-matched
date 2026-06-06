@@ -1,8 +1,9 @@
 import { lazy, Suspense, type ComponentType } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { Spin } from 'antd';
 import { AppShell } from './components/shell/AppShell';
 import { RouteGuard } from './components/common/RouteGuard';
+import { useAuth } from './hooks/useAuth';
 
 // Stale-chunk recovery: when a new deploy lands while a user has the app
 // open, dynamic-import chunks 404 because their content hash changed. The
@@ -72,6 +73,14 @@ const SuspenseWrapper = ({ children }: { children: React.ReactNode }) => (
   </Suspense>
 );
 
+// Admin-only route guard: non-admins are redirected to the dashboard. Backstops
+// the sidebar hide + the API's [Authorize(Roles="Admin")] so a direct URL can't
+// even render the page shell.
+const AdminOnly = ({ children }: { children: React.ReactNode }) => {
+  const { role } = useAuth();
+  return role === 'Admin' ? <>{children}</> : <Navigate to="/dashboard" replace />;
+};
+
 export const router = createBrowserRouter([
   {
     path: '/login',
@@ -109,7 +118,7 @@ export const router = createBrowserRouter([
           { path: '/reports', element: <SuspenseWrapper><ReportsPage /></SuspenseWrapper> },
           { path: '/workspace', element: <SuspenseWrapper><WorkspacePage /></SuspenseWrapper> },
           { path: '/administration', element: <SuspenseWrapper><AdministrationPage /></SuspenseWrapper> },
-          { path: '/development-list', element: <SuspenseWrapper><DevelopmentListPage /></SuspenseWrapper> },
+          { path: '/development-list', element: <SuspenseWrapper><AdminOnly><DevelopmentListPage /></AdminOnly></SuspenseWrapper> },
           { path: '/endocarts', element: <SuspenseWrapper><EndoCartsPage /></SuspenseWrapper> },
           { path: '/receiving', element: <SuspenseWrapper><ReceivingPage /></SuspenseWrapper> },
           { path: '/repair-items', element: <SuspenseWrapper><RepairItemsPage /></SuspenseWrapper> },

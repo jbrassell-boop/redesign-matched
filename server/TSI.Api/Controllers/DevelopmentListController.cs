@@ -7,7 +7,7 @@ namespace TSI.Api.Controllers;
 
 [ApiController]
 [Route("api/development-list")]
-[Authorize]
+[Authorize(Roles = "Admin")]
 public class DevelopmentListController(IConfiguration config) : ControllerBase
 {
     private SqlConnection CreateConnection() =>
