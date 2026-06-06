@@ -453,7 +453,7 @@ const PostRepairModal = ({ data, saving, onChange, onSave, onClose }: ModalProps
             <div className="insp-section-head" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span>Pass / Fail Verification</span>
               <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <span className={failCount > 0 ? 'insp-pf-count-fail' : 'insp-pf-count-pass'}>
+                <span className={failCount > 0 ? 'insp-pf-count-fail' : 'insp-pf-count-pass'} title="P = Pass / F = Fail">
                   {passCount}P / {failCount}F
                 </span>
                 <button onClick={markAllPass} className="insp-mark-all-btn">

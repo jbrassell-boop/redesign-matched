@@ -231,7 +231,7 @@ const ScopesTab = ({ pendingKey, onScopeCountsChange }: ScopesTabProps) => {
                     const isModelOnly = s.scopeKey === 0;
                     return (
                       <tr key={s.pendingContractScopeKey} style={isModelOnly ? { background: 'rgba(var(--danger-rgb), 0.04)' } : undefined}>
-                        <td style={{ ...tdStyle, fontWeight: 600, color: isModelOnly ? 'var(--danger)' : 'var(--primary)' }}>
+                        <td style={{ ...tdStyle, fontWeight: 600, color: isModelOnly ? 'var(--danger)' : 'var(--text)' }}>
                           {isModelOnly ? (
                             <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
                               <input
@@ -361,7 +361,7 @@ const DepartmentsTab = ({ pendingKey }: { pendingKey: number }) => {
                 <tbody>
                   {depts.map(d => (
                     <tr key={d.departmentKey}>
-                      <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--primary)' }}>{d.departmentName || '—'}</td>
+                      <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--text)' }}>{d.departmentName || '—'}</td>
                       <td style={tdStyle}>{d.clientName || '—'}</td>
                       <td style={{ ...tdStyle, textAlign: 'right' }}>
                         <Popconfirm title="Remove this department?" onConfirm={() => handleRemove(d.departmentKey)} okText="Remove" cancelText="Cancel">
@@ -449,7 +449,7 @@ const AffiliatesTab = ({ pendingKey }: { pendingKey: number }) => {
               available.length === 0 ? <div style={emptyStateStyle}>No affiliate departments available.</div> : (
                 <>
                   <select value={selected ?? ''} onChange={e => setSelected(Number(e.target.value) || null)} style={{ width: '100%', height: 30, fontSize: 12, border: '1px solid var(--neutral-200)', borderRadius: 4, padding: '0 8px', marginBottom: 8 }}>
-                    <option value="">— select department —</option>
+                    <option value="">— select affiliated facility —</option>
                     {available.map(d => <option key={d.departmentKey} value={d.departmentKey}>{d.clientName} — {d.departmentName}</option>)}
                   </select>
                   <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
@@ -474,7 +474,7 @@ const AffiliatesTab = ({ pendingKey }: { pendingKey: number }) => {
                 <tbody>
                   {affs.map(a => (
                     <tr key={a.departmentKey}>
-                      <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--primary)' }}>{a.departmentName || '—'}</td>
+                      <td style={{ ...tdStyle, fontWeight: 600, color: 'var(--text)' }}>{a.departmentName || '—'}</td>
                       <td style={tdStyle}>{a.clientName || '—'}</td>
                       <td style={{ ...tdStyle, textAlign: 'right' }}>
                         <Popconfirm title="Remove this affiliate?" onConfirm={() => handleRemove(a.departmentKey)} okText="Remove" cancelText="Cancel">
@@ -622,7 +622,7 @@ export const PendingContractDetailPane = ({ detail, loading, onConvert, onDelete
               </button>
             )}
             {isAdmin && (
-              <Popconfirm title="Delete this pending contract? This cannot be undone from the UI." onConfirm={handleDelete} okText="Delete" cancelText="Cancel" okButtonProps={{ danger: true }}>
+              <Popconfirm title="Delete this pending contract? This cannot be undone." onConfirm={handleDelete} okText="Delete" cancelText="Cancel" okButtonProps={{ danger: true }}>
                 <button style={{ ...actionBtnStyle, color: 'var(--danger)', borderColor: 'rgba(var(--danger-rgb), 0.3)' }}>
                   Delete
                 </button>

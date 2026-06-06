@@ -240,7 +240,7 @@ export const LoanersPage = () => {
 
           {/* Agreement */}
           <td>
-            {item.agreement && item.agreement !== 'None' ? (
+            {item.agreement && item.agreement !== 'None' && item.agreement !== '.' ? (
               <span className={`loaners-agreement-badge ${
                 item.agreement === 'Signed'
                   ? 'loaners-agreement-badge--signed'

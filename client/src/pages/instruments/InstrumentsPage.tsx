@@ -29,7 +29,6 @@ const fmt$ = (v: number) =>
 
 const TABS: TabDef[] = [
   { key: 'repairs', label: 'Instrument Repairs' },
-  { key: 'quotes', label: 'Instrument Quotes' },
   { key: 'catalog', label: 'Instrument Catalog' },
 ];
 

@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { navSections } from './navItems';
+import { useAuth } from '../../hooks/useAuth';
 
 interface SidebarProps {
   collapsed: boolean;
@@ -237,6 +238,8 @@ const NavItemButton = ({ label, icon, isActive, collapsed, onClick }: NavItemBut
 export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { role } = useAuth();
+  const isAdmin = role === 'Admin';
 
   return (
     <nav aria-label="Main navigation" style={{
@@ -360,7 +363,7 @@ export const Sidebar = ({ collapsed, onCollapse }: SidebarProps) => {
               </div>
             )}
 
-            {section.items.map((item) => {
+            {section.items.filter((item) => !item.adminOnly || isAdmin).map((item) => {
               const isActive =
                 location.pathname === item.path ||
                 location.pathname.startsWith(item.path + '/');

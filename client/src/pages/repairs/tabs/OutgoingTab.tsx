@@ -216,10 +216,11 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
                   okText: 'Request Void',
                   okButtonProps: { danger: true },
                   onOk: () => message.info('Invoice void requires accounting approval'),
-                }), danger: true },
-              ] as { label: string; onClick: () => void; danger?: boolean; primary?: boolean }[]).map(btn => (
+                }), danger: true, disabled: !(repair.latestInvoiceNumber || repair.invoiceNumber) },
+              ] as { label: string; onClick: () => void; danger?: boolean; primary?: boolean; disabled?: boolean }[]).map(btn => (
                 <button key={btn.label}
                   onClick={btn.onClick}
+                  disabled={btn.disabled}
                   style={{
                     ...invoiceBtnBaseStyle,
                     background: btn.danger
@@ -227,6 +228,8 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
                       : btn.primary ? 'var(--card)' : 'rgba(255,255,255,.15)',
                     color: btn.primary ? 'var(--primary)' : 'var(--card)',
                     fontWeight: btn.primary ? 800 : 700,
+                    opacity: btn.disabled ? 0.45 : 1,
+                    cursor: btn.disabled ? 'not-allowed' : 'pointer',
                   }}
                 >
                   {btn.label}

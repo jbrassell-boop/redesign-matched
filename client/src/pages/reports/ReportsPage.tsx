@@ -17,7 +17,14 @@ const ReportCard = ({ report, favorited, onToggleFav, paramOpen, onToggleParams,
   return (
     <div className="rpt-card">
       <div className="rpt-card-top">
-        <span className="rpt-card-name">{report.name}</span>
+        <span
+          className="rpt-card-name"
+          onClick={onToggleParams}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggleParams(); } }}
+          style={{ cursor: 'pointer' }}
+        >{report.name}</span>
         {report.extractOnly && (
           <span className="rpt-card-badge">EXTRACT</span>
         )}

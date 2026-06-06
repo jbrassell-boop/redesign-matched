@@ -32,7 +32,7 @@ export const DevNotice = ({ title, requirement, sql, children }: DevNoticeProps)
     toast.innerHTML = `
       <div class="dev-notice-toast__header">
         <span class="dev-notice-toast__icon">&#9888;</span>
-        <strong>Dev Required: ${title}</strong>
+        <strong>Coming soon: ${title}</strong>
         <button class="dev-notice-toast__close" onclick="this.parentElement.parentElement.remove()">&times;</button>
       </div>
       <div class="dev-notice-toast__body">${requirement}</div>

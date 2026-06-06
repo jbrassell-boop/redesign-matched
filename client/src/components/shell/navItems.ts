@@ -2,6 +2,7 @@ export interface NavItem {
   key: string;
   label: string;
   path: string;
+  adminOnly?: boolean;
 }
 
 export interface NavSection {
@@ -62,7 +63,7 @@ export const navSections: NavSection[] = [
       { key: 'financial', label: 'Financial', path: '/financial' },
       { key: 'reports', label: 'Reports/Extracts', path: '/reports' },
       { key: 'administration', label: 'Administration', path: '/administration' },
-      { key: 'development-list', label: 'Development List', path: '/development-list' },
+      { key: 'development-list', label: 'Development List', path: '/development-list', adminOnly: true },
     ],
   },
 ];

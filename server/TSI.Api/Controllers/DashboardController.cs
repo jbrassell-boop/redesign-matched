@@ -901,7 +901,12 @@ public class DashboardController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        var where = new List<string> { "ISNULL(r.sRepairClosed, 'N') != 'Y'", "r.lServiceLocationKey = @locationKey", KpiRepairScopeWhere };
+        // Tech Bench = ACTIVE bench work. Besides open + this-location, bound the age:
+        // dtDateIn goes back to 1994 and ~199k repairs are >2yr old, many never formally
+        // closed. Without this bound those ancient never-closed artifacts dominate the
+        // TAT-desc ordering (the 3,100+ day rows). 730 days keeps genuinely-aged work
+        // visible while dropping abandoned/data-error rows. (Tune if needed.)
+        var where = new List<string> { "ISNULL(r.sRepairClosed, 'N') != 'Y'", "r.lServiceLocationKey = @locationKey", "DATEDIFF(day, r.dtDateIn, GETDATE()) <= 730", KpiRepairScopeWhere };
         if (!string.IsNullOrWhiteSpace(search))
             where.Add("""
                 (r.sWorkOrderNumber LIKE @search
@@ -978,9 +983,9 @@ public class DashboardController(IConfiguration config) : ControllerBase
         // Stats — see COALESCE + KpiRepairScopeWhere notes above
         var tbStatsSql = $"""
             SELECT
-                SUM(CASE WHEN r.lTechnicianKey IS NOT NULL AND ISNULL(r.sRepairClosed, 'N') != 'Y' THEN 1 ELSE 0 END) AS Assigned,
-                SUM(CASE WHEN rs.sRepairStatus = 'In Repair' THEN 1 ELSE 0 END) AS InRepair,
-                SUM(CASE WHEN rs.sRepairStatus IN ('On Hold','Parts Hold','Approval Hold') THEN 1 ELSE 0 END) AS OnHold,
+                SUM(CASE WHEN r.lTechnicianKey IS NOT NULL AND ISNULL(r.sRepairClosed, 'N') != 'Y' AND DATEDIFF(day, r.dtDateIn, GETDATE()) <= 730 THEN 1 ELSE 0 END) AS Assigned,
+                SUM(CASE WHEN rs.sRepairStatus = 'In Repair' AND DATEDIFF(day, r.dtDateIn, GETDATE()) <= 730 THEN 1 ELSE 0 END) AS InRepair,
+                SUM(CASE WHEN rs.sRepairStatus IN ('On Hold','Parts Hold','Approval Hold') AND DATEDIFF(day, r.dtDateIn, GETDATE()) <= 730 THEN 1 ELSE 0 END) AS OnHold,
                 SUM(CASE WHEN rs.sRepairStatus IN ('Complete','Shipped') AND CAST(COALESCE(r.dtShipDate, r.dtDateOut) AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END) AS CompletedToday
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID

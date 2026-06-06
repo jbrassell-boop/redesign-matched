@@ -7,15 +7,17 @@ import { StatusBadge } from '../../../components/shared';
 import type { DashboardRepair } from '../../dashboard/types';
 
 const NEXT_ACTION: Record<string, string> = {
-  'Received': 'Print D&I',
-  'D&I': 'Build estimate',
-  'Pending QC': 'Build estimate',
-  'Pending Approval': 'Follow up',
-  'Approved': 'Assign tech',
-  'In Repair': 'Awaiting completion',
-  'QC Complete': 'Ship',
-  'Pending Ship': 'Ship',
-  'Shipped': 'Invoice',
+  'Waiting on Inspection': 'Perform D&I',
+  'Additional Evaluation Time Needed': 'Re-evaluate',
+  'Waiting for Approved': 'Follow up on approval',
+  'In Repair Process - Major Repair': 'Complete repair',
+  'In Repair Process - Mid Level Repair': 'Complete repair',
+  'In Repair Process - Minor Repair': 'Complete repair',
+  'Semi Rigid Repair': 'Complete repair',
+  'Special Rigid - under 4mm': 'Complete repair',
+  'In the Drying Room': 'Awaiting dry-out',
+  'Outsourced': 'Track with vendor',
+  'Scheduled to Ship': 'Ship',
 };
 
 export const MyRepairQueue = () => {
@@ -96,7 +98,7 @@ export const MyRepairQueue = () => {
                   <StatusBadge status={`${r.daysIn}d`} variant={r.daysIn > 14 ? 'red' : r.daysIn > 10 ? 'amber' : 'blue'} />
                 </td>
                 <td style={tdStyle}><StatusBadge status={r.status} /></td>
-                <td style={{ ...tdStyle, fontSize: 11, color: 'var(--muted)' }}>{NEXT_ACTION[r.status] ?? ''}</td>
+                <td style={{ ...tdStyle, fontSize: 11, color: 'var(--muted)' }}>{NEXT_ACTION[(r.status || '').trim()] ?? '—'}</td>
               </tr>
             ))}
           </tbody>

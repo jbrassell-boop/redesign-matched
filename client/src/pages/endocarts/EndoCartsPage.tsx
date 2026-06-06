@@ -508,7 +508,7 @@ export const EndoCartsPage = () => {
             <table className="ec-table-fixed">
               <thead>
                 <tr>
-                  <th className="ec-th" style={{ width: 100 }}>Part #</th>
+                  <th className="ec-th" style={{ width: 130 }}>Part #</th>
                   <th className="ec-th">Description</th>
                   <th className="ec-th" style={{ width: 90 }}>Category</th>
                   <th className="ec-th" style={{ width: 90, textAlign: 'right' }}>Unit Cost</th>
@@ -520,7 +520,7 @@ export const EndoCartsPage = () => {
                 {filteredCatalog.map((p, idx) => (
                   <tr key={p.partNum} style={{ background: idx % 2 === 1 ? 'var(--row-alt)' : 'var(--card)' }}>
                     <td className="ec-td ec-td--navy-bold">{p.partNum}</td>
-                    <td className="ec-td">{p.desc}</td>
+                    <td className="ec-td">{(p.desc || '').replace(/^!+\s*/, '') || '(Unnamed)'}</td>
                     <td className="ec-td"><Badge text={p.category} style={CAT_BADGE[p.category]} /></td>
                     <td className="ec-td ec-td--right-600">{fmtMoney(p.unitCost)}</td>
                     <td className="ec-td ec-td--center" style={{ color: p.stock <= p.reorderPt ? 'var(--danger)' : undefined, fontWeight: p.stock <= p.reorderPt ? 700 : 400 }}>{p.stock}</td>

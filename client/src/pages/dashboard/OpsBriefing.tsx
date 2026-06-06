@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { message } from 'antd';
+import { message, Skeleton } from 'antd';
 import { useServiceLocation } from '../../hooks/useServiceLocation';
 import { getDashboardBriefing } from '../../api/dashboard';
 import apiClient from '../../api/client';
@@ -46,7 +46,6 @@ const smallLabelStyle: React.CSSProperties = { fontSize: 11, textTransform: 'upp
 const delayNumStyle: React.CSSProperties = { fontSize: 18, fontWeight: 900 };
 const delayLabelStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase' };
 const loadingContainerStyle: React.CSSProperties = { padding: 20, display: 'flex', flexDirection: 'column', gap: 12 };
-const loadingBlockStyle: React.CSSProperties = { height: 120, background: 'var(--neutral-100)', borderRadius: 6 };
 
 // ── Section Card ──
 const Section = ({ title, children, accent }: { title: string; children: React.ReactNode; accent?: string }) => (
@@ -120,9 +119,7 @@ export const OpsBriefing = ({ stats }: Props) => {
 
   if (loading) return (
     <div style={loadingContainerStyle}>
-      {[1, 2, 3].map(i => (
-        <div key={i} style={loadingBlockStyle} />
-      ))}
+      <Skeleton active paragraph={{ rows: 8 }} />
     </div>
   );
 

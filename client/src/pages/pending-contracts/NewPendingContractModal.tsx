@@ -36,7 +36,7 @@ const buildName = (clientName: string, typeName: string) => {
   const d = new Date();
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const dd = String(d.getDate()).padStart(2, '0');
-  return `Pending Contract: ${clientName} - ${typeName} ${mm}/${dd}/${d.getFullYear()}`;
+  return `Pending Contract: ${clientName.trim()} - ${typeName.trim()} ${mm}/${dd}/${d.getFullYear()}`;
 };
 
 export const NewPendingContractModal = ({ open, onClose, onCreated }: Props) => {
@@ -74,8 +74,13 @@ export const NewPendingContractModal = ({ open, onClose, onCreated }: Props) => 
   const handleClose = () => { reset(); onClose(); };
 
   const handleSubmit = async () => {
-    if (!clientKey) { message.error('Please select a client'); return; }
-    if (!typeKey) { message.error('Please select a contract type'); return; }
+    if (!clientKey || !typeKey) {
+      const missing: string[] = [];
+      if (!clientKey) missing.push('a client');
+      if (!typeKey) missing.push('a contract type');
+      message.error(`Please select ${missing.join(' and ')}.`);
+      return;
+    }
     setSubmitting(true);
     try {
       const payload = {

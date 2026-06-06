@@ -579,8 +579,8 @@ export const ScopeModelPage = () => {
                     <td className="sm-td">{item.manufacturer || '\u2014'}</td>
                     <td className="sm-td">{item.category || '\u2014'}</td>
                     <td className="sm-td"><StatusBadge status={item.active ? 'Active' : 'Inactive'} /></td>
-                    <td className="sm-td">{item.insertTubeLength || '\u2014'}</td>
-                    <td className="sm-td">{item.insertTubeDiameter || '\u2014'}</td>
+                    <td className="sm-td">{item.insertTubeLength && item.insertTubeLength !== '.' ? item.insertTubeLength :'\u2014'}</td>
+                    <td className="sm-td">{item.insertTubeDiameter && item.insertTubeDiameter !== '.' ? item.insertTubeDiameter :'\u2014'}</td>
                     <td className="sm-td">{item.fieldOfView || '\u2014'}</td>
                     <td className="sm-td">{item.directionOfView || '\u2014'}</td>
                   </tr>
