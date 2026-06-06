@@ -290,6 +290,11 @@ public class AcquisitionsController(IConfiguration config, IPONumberService poNu
             return BadRequest(new { message = "Request body is required." });
         if (body.ServiceLocationKey <= 0)
             return BadRequest(new { message = "ServiceLocationKey is required." });
+        // Security: a PO must be created/numbered for the caller's ACTIVE service location,
+        // not an arbitrary body value — otherwise any caller could create or number POs for
+        // another location. Mirrors the receive flow's GetActiveServiceLocation() scoping.
+        if (body.ServiceLocationKey != this.GetActiveServiceLocation())
+            return BadRequest(new { message = "ServiceLocationKey must match your active service location." });
         if (body.SupplierKey <= 0)
             return BadRequest(new { message = "SupplierKey is required." });
         if (body.Lines is null || body.Lines.Count == 0)

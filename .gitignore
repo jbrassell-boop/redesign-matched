@@ -25,3 +25,7 @@ client/.env.local
 # Local-only Claude state (per-machine)
 .claude/settings.local.json
 .superpowers/
+
+# Local-only review/build scratch (per-machine, never committed)
+.build-review/
+.tmpcast/

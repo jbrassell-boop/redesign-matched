@@ -358,10 +358,13 @@ public sealed class AcquisitionsControllerPoTests
         };
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "TestAuth"));
 
-        controller.ControllerContext = new ControllerContext
-        {
-            HttpContext = new DefaultHttpContext { User = principal },
-        };
+        var httpContext = new DefaultHttpContext { User = principal };
+        // PO-create is location-scoped: GetActiveServiceLocation() reads X-Service-Location
+        // and the endpoint requires it to match the request's ServiceLocationKey. The tests
+        // build the body with _serviceLocationKey, so set the banner header to match.
+        httpContext.Request.Headers["X-Service-Location"] =
+            _serviceLocationKey.ToString(CultureInfo.InvariantCulture);
+        controller.ControllerContext = new ControllerContext { HttpContext = httpContext };
         return controller;
     }
 

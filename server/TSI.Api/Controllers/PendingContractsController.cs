@@ -1047,6 +1047,18 @@ public class PendingContractsController(IConfiguration config) : ControllerBase
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        // P2a: the installment type must actually EXIST — the convert proc joins
+        // tblContractInstallmentTypes to derive the billing frequency / period count; an
+        // unknown ID yields a NULL frequency and a silently wrong or empty schedule.
+        await using (var instCheck = new SqlCommand(
+            "SELECT COUNT(*) FROM dbo.tblContractInstallmentTypes WHERE lInstallmentTypeID = @id", conn))
+        {
+            instCheck.CommandTimeout = 30;
+            instCheck.Parameters.AddWithValue("@id", body.InstallmentTypeId);
+            if (Convert.ToInt32(await instCheck.ExecuteScalarAsync()) == 0)
+                return BadRequest(new { message = "Invalid invoice frequency (installment type not found)." });
+        }
+
         // Pending contract must exist + be live (not Dead/converted).
         await using (var existsCmd = new SqlCommand(
             "SELECT ISNULL(sStatus,'Pending') FROM tblPendingContract WHERE lPendingContractKey = @key AND Deleted_datetime IS NULL", conn))
@@ -1071,11 +1083,12 @@ public class PendingContractsController(IConfiguration config) : ControllerBase
         }
 
         // ALL scopes must carry a serial (lScopeKey != 0) before converting.
-        int totalScopes, modelOnly;
+        int totalScopes, modelOnly, serializedMultiQty;
         await using (var scopeCmd = new SqlCommand("""
             SELECT
                 COUNT(*) AS Total,
-                SUM(CASE WHEN ISNULL(lScopeKey, 0) = 0 THEN 1 ELSE 0 END) AS ModelOnly
+                SUM(CASE WHEN ISNULL(lScopeKey, 0) = 0 THEN 1 ELSE 0 END) AS ModelOnly,
+                SUM(CASE WHEN ISNULL(lScopeKey, 0) <> 0 AND ISNULL(lQuantity, 1) > 1 THEN 1 ELSE 0 END) AS SerializedMultiQty
             FROM tblPendingContractScope
             WHERE lPendingContractKey = @key AND Deleted_datetime IS NULL
             """, conn))
@@ -1086,9 +1099,15 @@ public class PendingContractsController(IConfiguration config) : ControllerBase
             await sr.ReadAsync();
             totalScopes = Convert.ToInt32(sr["Total"]);
             modelOnly = sr["ModelOnly"] == DBNull.Value ? 0 : Convert.ToInt32(sr["ModelOnly"]);
+            serializedMultiQty = sr["SerializedMultiQty"] == DBNull.Value ? 0 : Convert.ToInt32(sr["SerializedMultiQty"]);
         }
         if (totalScopes > 0 && modelOnly > 0)
             return BadRequest(new { message = $"{modelOnly} scope(s) have no serial number. Serial numbers are required before converting." });
+        // P2b: a serialized row with quantity > 1 would bill the full quantity (nCost) while
+        // the convert proc inserts only ONE covered tblContractScope. Require one row per
+        // instrument (quantity 1) so the billed quantity matches the covered scope count.
+        if (serializedMultiQty > 0)
+            return BadRequest(new { message = $"{serializedMultiQty} scope(s) have a serial but a quantity greater than 1. Split each into one row per instrument (quantity 1) before converting." });
 
         // ---- Convert engine (provisioned by migration 002_pending_contract_convert.sql) ----
         // Two legacy procs ported verbatim into WinscopeWeb:

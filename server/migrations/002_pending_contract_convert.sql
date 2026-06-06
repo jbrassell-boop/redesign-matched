@@ -159,6 +159,23 @@ BEGIN
 
 	Begin Try
 		Begin Transaction
+			-- P1b race guard: atomically claim the pending row so two concurrent converts
+			-- can't both proceed. This UPDATE takes a row lock; a second converter then
+			-- finds the row is no longer 'Pending' (@@ROWCOUNT = 0) and bails, so one
+			-- pending contract can never create two real contracts.
+			-- NULL sStatus is treated as 'Pending' everywhere else (the API preflight uses
+			-- ISNULL(sStatus,'Pending')), so the claim must accept NULL too or legacy/live
+			-- NULL-status rows would pass preflight and then fail this guard.
+			Update dbo.tblPendingContract Set sStatus = 'Converting', dtStatusDate = @dtNow
+				Where lPendingContractKey = @plPendingContractKey And (sStatus IS NULL OR sStatus = 'Pending')
+			If @@ROWCOUNT = 0
+			Begin
+				Rollback Transaction
+				Select 0 As lContractKey,
+					'Pending contract is not in Pending status (already converted or being converted).' As ErrMsg
+				Return
+			End
+
 			Insert Into dbo.tblContract ( sContractName1, lClientKey, dtDateEffective, dtDateTermination, lBillDay, sContractNumber, dtCreateDate,
 				sContractBillName1, sContractBillName2, sContractAddr1, sContractAddr2, sContractCity, sContractState, sContractZip, sContractCountry,
 				lContractTypeKey, lPaymentTermsKey, lSalesRepKey, lSalesTaxKey, lInstallmentTypeID, dblAmtTotal, dblAmtInvoiced, lContractLengthInMonths,

@@ -161,15 +161,14 @@ export const CreateInventoryPoModal = ({ open, supplierKey, supplierName, onClos
     >
       <div style={sectionHead}>Header</div>
       <div style={grid3}>
-        <F label="Service Location *">
-          <select
-            value={serviceLocationKey}
-            onChange={e => setServiceLocationKey(Number(e.target.value))}
-            style={fieldStyle}
-            aria-label="Service location"
-          >
-            {locations.map(l => <option key={l.key} value={l.key}>{l.label}</option>)}
-          </select>
+        <F label="Service Location">
+          {/* The PO is created for your ACTIVE (banner) location; the backend now requires
+              body.ServiceLocationKey to match it, so this is read-only here — switch
+              locations via the top banner. */}
+          <div style={{ ...fieldStyle, display: 'flex', alignItems: 'center', color: 'var(--muted)' }}
+               aria-label="Service location (from banner)">
+            {locations.find(l => l.key === serviceLocationKey)?.label ?? `Location ${serviceLocationKey}`}
+          </div>
         </F>
         <F label="PO Type *">
           <select
