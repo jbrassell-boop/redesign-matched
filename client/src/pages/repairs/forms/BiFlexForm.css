@@ -5,6 +5,7 @@
 /* Layout — overlay + action bar */
 .bf-overlay       { position: fixed; inset: 0; z-index: 1100; background: var(--overlay-bg); display: flex; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; flex-direction: column; }
 .bf-action-bar    { position: fixed; top: 16px; right: 32px; display: flex; gap: 8px; z-index: 1200; }
+.bf-form-col      { display: flex; flex-direction: column; align-self: center; }
 .bf-btn-print     { height: 32px; padding: 0 16px; border: none; border-radius: 5px; background: var(--primary); color: #fff; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; }
 .bf-btn-close     { height: 32px; padding: 0 14px; border: 1px solid var(--print-border-lt); border-radius: 5px; background: var(--card); color: var(--print-footer); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; }
 

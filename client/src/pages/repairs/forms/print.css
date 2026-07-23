@@ -21,16 +21,22 @@
     width: 8.5in;
     padding: 0;
   }
-  /* Single-page forms keep their own padding */
-  .print-form:not(.flex-col) {
+  /* Single-page forms: the .print-form IS the printed sheet, so it carries the
+     0.4in page margin itself. Multi-page forms wrap several .print-page sheets;
+     that wrapper must add NO padding (each .print-page supplies its own margin)
+     and must lay out as a block so the sheets break cleanly onto separate pages.
+     Detecting the structure with :has(.print-page) keeps every current and future
+     form correct automatically — no per-form opt-in. (Previously this keyed off a
+     `.flex-col` class that no form ever set, so every multi-page wrapper was
+     wrongly given 0.4in padding and shifted right, clipping the right edge.) */
+  .print-form:not(:has(.print-page)) {
     padding: 0.4in;
   }
-  .no-print { display: none !important; }
-
-  /* Multi-page forms: each .print-page breaks to a new sheet */
-  .print-form.flex-col {
+  .print-form:has(.print-page) {
+    padding: 0;
     display: block !important;
   }
+  .no-print { display: none !important; }
   .print-page {
     page-break-after: always;
     break-after: page;

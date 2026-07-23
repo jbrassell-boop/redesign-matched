@@ -393,7 +393,14 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             <span style={{ color: 'var(--neutral-200)' }}>&middot;</span>
             <span style={{ fontWeight: 400 }}>{fullRepair.serial || '\u2014'}</span>
             <span style={{ color: 'var(--neutral-200)' }}>&middot;</span>
-            <span>TAT: <span style={{ fontWeight: 700, color: fullRepair.daysIn > 14 ? 'var(--danger)' : fullRepair.daysIn > 7 ? 'var(--amber)' : 'var(--muted)' }}>{fullRepair.daysIn}d</span></span>
+            {/* Lead Time runs from Date In (no approval); TAT only counts once approved — legacy WSRepairOpen semantics. */}
+            <span title="Business days since Date In">Lead: <span style={{ fontWeight: 700, color: (fullRepair.leadTimeDays ?? fullRepair.daysIn) > 14 ? 'var(--danger)' : (fullRepair.leadTimeDays ?? fullRepair.daysIn) > 7 ? 'var(--amber)' : 'var(--muted)' }}>{fullRepair.leadTimeDays ?? fullRepair.daysIn}d</span></span>
+            {fullRepair.tatDays != null && (
+              <>
+                <span style={{ color: 'var(--neutral-200)' }}>&middot;</span>
+                <span title="Business days since customer approval">TAT: <span style={{ fontWeight: 700, color: fullRepair.tatDays > 14 ? 'var(--danger)' : fullRepair.tatDays > 7 ? 'var(--amber)' : 'var(--muted)' }}>{fullRepair.tatDays}d</span></span>
+              </>
+            )}
             <button
               onClick={() => setHeaderExpanded(!headerExpanded)}
               style={{
@@ -407,7 +414,10 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
           </div>
           {headerExpanded && (
             <div style={{ marginTop: 6 }}>
-              <CommandStrip repair={fullRepair} />
+              <CommandStrip
+                repair={fullRepair}
+                onRefresh={() => { if (resolvedKey) getRepairFull(resolvedKey).then(setFullRepair).catch(() => {}); }}
+              />
               <ScopeGlance repair={fullRepair} flags={flags} />
             </div>
           )}

@@ -144,39 +144,39 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
           {/* Section 3 */}
           <SectionLabel>3. Functional Checks</SectionLabel>
 
-          {/* 3A */}
-          <SubBar>3A. Leak Test &amp; Fluid Invasion</SubBar>
-          <PfRow>Leak Test Performed → Result: <span className="difd-ul80" /> &nbsp;&nbsp; Leak Location: <span className="difd-ul80" /></PfRow>
-          <PfRow>Fluid Invasion Detected → Location: {['BS','CB','SC','LGC','Lenses','Other'].map(l => <Cbx key={l} label={l} />)}</PfRow>
-
-          {/* 3B */}
-          <SubBar>3B. Angulation System</SubBar>
+          {/* 3A (was 3B) */}
+          <SubBar>3A. Angulation System</SubBar>
           <PfRow>Angulation Specs U: <span className="difd-ul40" /> D: <span className="difd-ul40" /> R: <span className="difd-ul40" /> L: <span className="difd-ul40" /> <span className="difd-ang-note">(Factory: U180/D180/R160/L160)</span></PfRow>
           <PfRow>Angulation System {['Play','Stiff/Grinding','Broken Cable','Slip Stopper','Orientation Off','Broken Bracket'].map(d => <Cbx key={d} label={d} />)}</PfRow>
           <PfRow>Angulation Knobs {['Moving Together','Not Locking'].map(d => <Cbx key={d} label={d} />)} Leaking — Location: <span className="difd-ul60" /></PfRow>
           <PfRow>Angulation Lock {['Too Tight','Too Loose','Brake Not Functioning','Missing'].map(d => <Cbx key={d} label={d} />)}</PfRow>
 
-          {/* 3C */}
-          <SubBar>3C. Image &amp; Light Transmission</SubBar>
+          {/* 3B (was 3C) */}
+          <SubBar>3B. Image &amp; Light Transmission</SubBar>
           <PfRow>Video Image {['No Image','Static','Lens Separation','Imperfection'].map(d => <Cbx key={d} label={d} />)} Error Code Notes: <span className="difd-ul80" /></PfRow>
           <PfRow>Light Bundle {['Slip from Tip'].map(d => <Cbx key={d} label={d} />)} Broken Fibers → % Broken: <span className="difd-ul60" /></PfRow>
           <PfRow>Video Features {['Data','WB','NBI','Dual Focus'].map(d => <Cbx key={d} label={d} />)} Orientation Uses: <span className="difd-ul60" /> &nbsp; Time: <span className="difd-ul60" /></PfRow>
           <PfRow>Control Switches {['Misaligned','Rubber Cut'].map(d => <Cbx key={d} label={d} />)} Inoperative — Switch #: <span className="difd-ul60" /></PfRow>
 
-          {/* 3D */}
-          <SubBar>3D. Channel Function</SubBar>
+          {/* 3C (was 3D) */}
+          <SubBar>3C. Channel Function</SubBar>
           <PfRow>Suction Channel {['Blocked','Leaking','Impeded'].map(d => <Cbx key={d} label={d} />)}</PfRow>
           <PfRow>Forcep/Biopsy Channel {['Blocked','Leaking','Port Seal Damaged'].map(d => <Cbx key={d} label={d} />)} Impeded — Level: <span className="difd-ul60" /></PfRow>
           <PfRow>Auxiliary Water Channel {['Blocked','Leaking','Loose','Weak'].map(d => <Cbx key={d} label={d} />)}</PfRow>
           <PfRow>A/W System Channel {['Kinked','Clogged','Leaking','Nozzle Clogged'].map(d => <Cbx key={d} label={d} />)}</PfRow>
 
-          {/* 3E */}
-          <SubBar>3E. Electrical &amp; Connector Integrity</SubBar>
+          {/* 3D (was 3E) */}
+          <SubBar>3D. Electrical &amp; Connector Integrity</SubBar>
           <PfRow>
             <strong>Light Guide Connector (LGC)</strong>{' '}
             {['Alignment Pin Missing/Leaking','Prong Loose','Lens (Dirty or Broken)','ETO Valve','Bottle','Connector Loose','Cracked','Leaking'].map(d => <Cbx key={d} label={d} />)}
           </PfRow>
           <PfRow>Electrical Pins/Contacts {['Dirty','Corroded','Bent Pins'].map(d => <Cbx key={d} label={d} />)}</PfRow>
+
+          {/* 3E (was 3F) */}
+          <SubBar>3E. Control Body</SubBar>
+          <PfRow>Control Body Housing {['Leaking','Cracked','Loose Mount'].map(d => <Cbx key={d} label={d} />)}</PfRow>
+          <PfRow>Elevator Function {['Wire Broken','Needs Adjustment','Channel Leaking','Port Leaking'].map(d => <Cbx key={d} label={d} />)}</PfRow>
 
           <FormFooter formRef="OM05-1" />
         </div>
@@ -191,31 +191,31 @@ export const DiFlexibleDiagnosticForm = ({ repair, onClose }: Props) => {
             <div className="difd-p2-wo">WO# {wo}</div>
           </div>
 
-          {/* 3F */}
-          <SubBar>3F. Control Body</SubBar>
-          <PfRow>Control Body Housing {['Leaking','Cracked','Loose Mount'].map(d => <Cbx key={d} label={d} />)}</PfRow>
-          <PfRow>Elevator Function {['Wire Broken','Needs Adjustment','Channel Leaking','Port Leaking'].map(d => <Cbx key={d} label={d} />)}</PfRow>
-
-          {/* 3G */}
-          <SubBar>3G. Insertion Tube</SubBar>
+          {/* 3F (was 3G) */}
+          <SubBar>3F. Insertion Tube</SubBar>
           <PfRow>Surface {['Dented','Buckled','Cut','Peeling','Cut Back Too Far'].map(d => <Cbx key={d} label={d} />)} Discolored — Location: <span className="difd-ul80" /></PfRow>
           <PfRow>Tensioner {['Leaking','Nonfunctional','Needs Adjustment','Knob Damage'].map(d => <Cbx key={d} label={d} />)}</PfRow>
           <PfRow>Flexibility {['Stiff','Over-flexible','Snaking'].map(d => <Cbx key={d} label={d} />)}</PfRow>
           <PfRow>Boot (CB) {['Torn','Loose','Trim Ring'].map(d => <Cbx key={d} label={d} />)}</PfRow>
 
-          {/* 3H */}
-          <SubBar>3H. Distal Tip &amp; Adhesive Surfaces</SubBar>
+          {/* 3G (was 3H) */}
+          <SubBar>3G. Distal Tip &amp; Adhesive Surfaces</SubBar>
           <PfRow>C-Cover {['Cracked','Loose','RTV Missing','Poor Condition'].map(d => <Cbx key={d} label={d} />)}</PfRow>
           <PfRow>BR Adhesive {['Flaking','Missing','Aged','Oversized'].map(d => <Cbx key={d} label={d} />)} → Measured Size: <span className="difd-ul60" /> &nbsp; Max: 12.82mm</PfRow>
           <PfRow>Bending Rubber {['Aging','Loose','Cut/Hole'].map(d => <Cbx key={d} label={d} />)}</PfRow>
           <PfRow>Bending Section Mesh {['Poor Condition'].map(d => <Cbx key={d} label={d} />)}</PfRow>
           <PfRow>Lenses {['Cracked','Chipped','Dirty','Glue Missing'].map(d => <Cbx key={d} label={d} />)} Missing Lens — Specify: <span className="difd-ul80" /></PfRow>
 
-          {/* 3I */}
-          <SubBar>3I. Universal Cord &amp; Boots</SubBar>
+          {/* 3H (was 3I) */}
+          <SubBar>3H. Universal Cord &amp; Boots</SubBar>
           <PfRow>Cord {['Dented','Buckled','Cut','Peeling'].map(d => <Cbx key={d} label={d} />)}</PfRow>
           <PfRow>Boot (CB) {['Torn','Loose','Cracked'].map(d => <Cbx key={d} label={d} />)}</PfRow>
           <PfRow>Boot (LGC) {['Torn','Loose','Cracked'].map(d => <Cbx key={d} label={d} />)}</PfRow>
+
+          {/* 3I (was 3A) — Leak Test moved to end of Functional Checks */}
+          <SubBar>3I. Leak Test &amp; Fluid Invasion</SubBar>
+          <PfRow>Leak Test Performed → Result: <span className="difd-ul80" /> &nbsp;&nbsp; Leak Location: <span className="difd-ul80" /></PfRow>
+          <PfRow>Fluid Invasion Detected → Location: {['BS','CB','SC','LGC','Lenses','Other'].map(l => <Cbx key={l} label={l} />)}</PfRow>
 
           {/* Section 4 */}
           <SectionLabel>4. Detailed Inspection</SectionLabel>

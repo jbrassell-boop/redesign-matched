@@ -85,8 +85,9 @@ export const BiFlexForm = ({ repair, onClose }: Props) => (
       <button onClick={onClose} className="bf-btn-close">Close</button>
     </div>
 
+    <div className="print-form bf-form-col">
     {/* PAGE 1 — Items Found / Approved + Comments */}
-    <div className="print-form bf-page">
+    <div className="print-page bf-page">
       <FormHeader subtitle="" />
 
       <Bar>Scope Information</Bar>
@@ -164,7 +165,7 @@ export const BiFlexForm = ({ repair, onClose }: Props) => (
     </div>
 
     {/* PAGE 2 — Items Approved and Repaired */}
-    <div className="print-form bf-page">
+    <div className="print-page bf-page">
       <FormHeader subtitle="Items Approved & Repaired" />
 
       <div className="bf-grid-3mini">
@@ -220,7 +221,7 @@ export const BiFlexForm = ({ repair, onClose }: Props) => (
     </div>
 
     {/* PAGE 3 — Final Inspection */}
-    <div className="print-form bf-page">
+    <div className="print-page bf-page">
       <FormHeader subtitle="Final Inspection" />
 
       <div className="bf-grid-3mini">
@@ -312,6 +313,7 @@ export const BiFlexForm = ({ repair, onClose }: Props) => (
       </div>
 
       <Footer page="OM07-3 | Page 3" />
+    </div>
     </div>
   </div>
 );

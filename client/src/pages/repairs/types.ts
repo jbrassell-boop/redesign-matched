@@ -88,10 +88,16 @@ export interface RepairFull {
   daysIn: number;
   // Command strip fields
   rackPosition?: string;
-  repairLevel?: string;
-  leadTime?: string;
-  turnAroundTime?: string;
   purchaseOrder?: string;
+  // Repair level is derived server-side from the highest item level on the
+  // quote (legacy repairGetLevel) — null until line items exist.
+  repairLevel?: string;
+  levelDeliveryDays?: number | null;
+  levelDueDate?: string;
+  // Lead Time = weekdays since Date In (no approval needed).
+  // TAT = weekdays since approval received; null until approved.
+  leadTimeDays?: number | null;
+  tatDays?: number | null;
   // Scope glance computed
   withinFortyDay?: boolean;
   daysLastIn?: number | null;

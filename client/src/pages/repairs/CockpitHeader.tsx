@@ -14,7 +14,11 @@ interface CockpitHeaderProps {
 export const CockpitHeader = ({
   repair, onNextStage, onChangeStatus, onPrint, nextStageName, hasNextStage,
 }: CockpitHeaderProps) => {
-  const tatColor = repair.daysIn > 14 ? 'var(--danger)' : repair.daysIn > 7 ? 'var(--amber)' : 'var(--muted)';
+  // Lead Time runs from Date In (no approval); TAT only counts once the
+  // customer approval is received — legacy WSRepairOpen semantics.
+  const leadDays = repair.leadTimeDays ?? repair.daysIn;
+  const leadColor = leadDays > 14 ? 'var(--danger)' : leadDays > 7 ? 'var(--amber)' : 'var(--muted)';
+  const tatColor = (repair.tatDays ?? 0) > 14 ? 'var(--danger)' : (repair.tatDays ?? 0) > 7 ? 'var(--amber)' : 'var(--muted)';
 
   return (
     <div className="cockpit-header">
@@ -33,9 +37,14 @@ export const CockpitHeader = ({
       </span>
 
       <span className="cockpit-header__sep" />
-      <span className="cockpit-header__tat" style={{ color: tatColor }}>
-        TAT: {repair.daysIn}d
+      <span className="cockpit-header__tat" style={{ color: leadColor }} title="Business days since Date In">
+        Lead: {leadDays}d
       </span>
+      {repair.tatDays != null && (
+        <span className="cockpit-header__tat" style={{ color: tatColor }} title="Business days since customer approval">
+          TAT: {repair.tatDays}d
+        </span>
+      )}
 
       <div className="cockpit-header__actions">
         {hasNextStage && (

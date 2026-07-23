@@ -7,7 +7,9 @@
 Full-stack rewrite of TSI WinScope from vanilla HTML/JS into:
 - **Frontend**: React 19 + TypeScript + Ant Design 5 (Vite)
 - **Backend**: ASP.NET Core 8 Web API (C#, raw SqlClient — no EF Core)
-- **Database**: Azure SQL — `tsi-sql-jb2026.database.windows.net` / WinscopeNet
+- **Database**: Azure SQL — `tsi-sql-rm-8067.database.windows.net` / DB `WinscopeWeb` (resource group `tsi-redesign`). Corrected 2026-07-21 — this used to say `tsi-sql-jb2026`/`WinscopeNet`, which was wrong and doesn't resolve anywhere; that stale name was the root cause of a lost afternoon chasing a "network block" that didn't exist. Verify against `az sql server list` if this ever looks wrong again, don't just trust this line blindly either.
+- **Local dev** does not hit Azure — `appsettings.Development.json` points at `Server=localhost;Database=WinscopeWeb;Trusted_Connection=True`, a local SQL Server instance.
+- **Cross-session notes**: check `.claude/HANDOFF.md` if it exists (gitignored, per-machine) — it carries current in-flight status/decisions across sessions so you're not starting cold.
 - **Visual reference**: `C:/Projects/tsi-redesign` — the old HTML pages are the design spec
 
 The goal is for every screen in redesign-matched to visually match its counterpart in tsi-redesign while running on the new stack.

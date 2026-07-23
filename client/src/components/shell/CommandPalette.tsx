@@ -97,8 +97,14 @@ export const CommandPalette = () => {
         setOpen(false);
       }
     };
+    // Lets the topbar search box (and anything else) open the palette.
+    const openHandler = () => setOpen(true);
     document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
+    window.addEventListener('tsi:open-palette', openHandler);
+    return () => {
+      document.removeEventListener('keydown', handler);
+      window.removeEventListener('tsi:open-palette', openHandler);
+    };
   }, [open]);
 
   /* ── Focus input on open ─────────────────────────────────────────── */
@@ -144,8 +150,10 @@ export const CommandPalette = () => {
         const data = await globalSearch(query);
 
         if (data.repairs.length) {
+          // Deep-link straight into the cockpit — landing on the list and
+          // re-finding the WO defeats the point of searching for it.
           g.push({ label: 'Repairs', items: data.repairs.map((r: SearchResult) => ({
-            type: 'repair' as ResultType, title: r.title, subtitle: r.subtitle, path: '/repairs', key: r.key,
+            type: 'repair' as ResultType, title: r.title, subtitle: r.subtitle, path: `/repairs/${r.key}`, key: r.key,
           }))});
         }
         if (data.clients.length) {

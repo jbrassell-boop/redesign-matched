@@ -158,7 +158,19 @@ public record RepairFull(
     // NULL when no invoice exists yet.
     int? LatestInvoiceKey = null,
     string? LatestInvoiceStatus = null,
-    string? LatestInvoiceNumber = null
+    string? LatestInvoiceNumber = null,
+    // Cockpit command-strip metrics (legacy WSRepairOpen parity):
+    // RepairLevel = tblRepairLevels name for MAX(item level) across the WO's
+    // line items (legacy dbo.repairGetLevel) — NULL until quote items exist.
+    string? RepairLevel = null,
+    int? LevelDeliveryDays = null,
+    // Promised completion: dtDateIn + LevelDeliveryDays business days
+    // (dbo.fnDateAddBusinessDays — weekend/holiday aware).
+    string? LevelDueDate = null,
+    // LeadTimeDays = weekdays dtDateIn → dtDateOut|today. No approval needed.
+    // TatDays = weekdays dtAprRecvd → dtDateOut|today; NULL until approved.
+    int? LeadTimeDays = null,
+    int? TatDays = null
 );
 
 public record RepairInspections(

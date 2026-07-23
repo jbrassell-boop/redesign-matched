@@ -99,6 +99,33 @@ export const Topbar = ({ sidebarCollapsed }: TopbarProps) => {
 
         {/* Right: controls */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--topbar-text)', fontSize: 12 }}>
+          {/* Global search — opens the command palette (also on Ctrl+K) */}
+          <button
+            onClick={() => window.dispatchEvent(new Event('tsi:open-palette'))}
+            aria-label="Search work orders, serials, clients (Ctrl+K)"
+            title="Search work orders, serials, clients (Ctrl+K)"
+            style={{
+              height: 30, padding: '0 10px', borderRadius: 6,
+              border: '1px solid var(--topbar-ctrl-border)',
+              background: 'var(--topbar-ctrl-bg)', color: 'var(--card)',
+              fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 8, minWidth: 200,
+              marginRight: 6,
+            }}
+          >
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ width: 12, height: 12, flexShrink: 0 }}>
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <span style={{ opacity: 0.75 }}>Search WOs, serials…</span>
+            <span style={{
+              marginLeft: 'auto', fontSize: 10, fontWeight: 600,
+              border: '1px solid var(--topbar-ctrl-border)', borderRadius: 3,
+              padding: '1px 5px', opacity: 0.75,
+            }}>
+              Ctrl+K
+            </span>
+          </button>
+
           {/* Work Orders dropdown */}
           <div ref={menuRef} style={{ position: 'relative', marginRight: 12 }}>
             <button

@@ -145,6 +145,15 @@ export const patchRepairHeader = async (repairKey: number, patch: RepairHeaderPa
   await apiClient.patch(`/repairs/${repairKey}/header`, patch);
 };
 
+// Mirrors legacy rackPositionValidate: returns the WO number of the OPEN
+// repair currently holding this rack position, or null when it's free.
+export const checkRackPosition = async (repairKey: number, position: string): Promise<string | null> => {
+  const { data } = await apiClient.get<{ inUseBy: string | null }>(`/repairs/${repairKey}/rack-check`, {
+    params: { position },
+  });
+  return data.inUseBy;
+};
+
 // ── Fast Entry ──
 export const getRepairItemCatalog = async (repairKey: number): Promise<RepairCatalogItem[]> => {
   const { data } = await apiClient.get<RepairCatalogItem[]>('/repairs/items', {

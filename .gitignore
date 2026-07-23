@@ -29,3 +29,6 @@ client/.env.local
 # Local-only review/build scratch (per-machine, never committed)
 .build-review/
 .tmpcast/
+
+# Cross-session handoff notes (internal, never shipped to the public repo)
+.claude/HANDOFF.md

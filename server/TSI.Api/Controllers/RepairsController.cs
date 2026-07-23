@@ -256,6 +256,16 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                    ISNULL(pt.sTermsDesc, '') AS sPaymentTerms,
                    ISNULL(rr.sRepairReason, '') AS sRepairReason,
                    DATEDIFF(day, r.dtDateIn, GETDATE()) AS DaysIn,
+                   -- Command-strip metrics (legacy WSRepairOpen parity):
+                   -- Lead Time runs from date-in with no approval dependency;
+                   -- TAT starts only when the customer approval is received.
+                   dbo.fn_DateDiffWeekDays(r.dtDateIn, ISNULL(r.dtDateOut, GETDATE())) AS LeadTimeDays,
+                   CASE WHEN r.dtAprRecvd IS NOT NULL
+                        THEN dbo.fn_DateDiffWeekDays(r.dtAprRecvd, ISNULL(r.dtDateOut, GETDATE())) END AS TatDays,
+                   lvl.sRepairLevel,
+                   lvl.lDeliveryFromDateInDays AS LevelDeliveryDays,
+                   CASE WHEN r.dtDateIn IS NOT NULL AND lvl.lDeliveryFromDateInDays IS NOT NULL
+                        THEN dbo.fnDateAddBusinessDays(CONVERT(date, r.dtDateIn), lvl.lDeliveryFromDateInDays) END AS LevelDueDate,
                    -- Extended 4-tab fields
                    r.sRackPosition,
                    r.dtReqSent,
@@ -306,6 +316,13 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             LEFT JOIN tblRepairReasons rr ON rr.lRepairReasonKey = r.lRepairReasonKey
             LEFT JOIN tblDistributor dist ON dist.lDistributorKey = r.lDistributorKey
             LEFT JOIN tblPackageTypes pkg ON pkg.lPackageTypeKey = r.lPackageTypeKey
+            -- Repair level = highest item level on the WO (legacy dbo.repairGetLevel,
+            -- where tblRepairItem.sMajorRepair doubled as the level key).
+            LEFT JOIN tblRepairLevels lvl ON lvl.lRepairLevelKey = (
+                SELECT MAX(ri2.lRepairLevelKey)
+                FROM tblRepairItemTran rit2
+                JOIN tblRepairItem ri2 ON ri2.lRepairItemKey = rit2.lRepairItemKey
+                WHERE rit2.lRepairKey = r.lRepairKey)
             WHERE r.lRepairKey = @repairKey
             """;
 
@@ -418,7 +435,12 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             PackageType: ReadStr("sPackageType"),
             LatestInvoiceKey: reader["latestInvoiceKey"] == DBNull.Value ? null : Convert.ToInt32(reader["latestInvoiceKey"]),
             LatestInvoiceStatus: ReadStr("latestInvoiceStatus"),
-            LatestInvoiceNumber: ReadStr("latestInvoiceNumber")
+            LatestInvoiceNumber: ReadStr("latestInvoiceNumber"),
+            RepairLevel: ReadStr("sRepairLevel"),
+            LevelDeliveryDays: reader["LevelDeliveryDays"] == DBNull.Value ? null : Convert.ToInt32(reader["LevelDeliveryDays"]),
+            LevelDueDate: ReadDate("LevelDueDate")?.ToString("MM/dd/yyyy"),
+            LeadTimeDays: reader["LeadTimeDays"] == DBNull.Value ? null : Convert.ToInt32(reader["LeadTimeDays"]),
+            TatDays: reader["TatDays"] == DBNull.Value ? null : Convert.ToInt32(reader["TatDays"])
         ));
     }
 
@@ -434,6 +456,45 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         cmd.Parameters.AddWithValue("@id", repairKey);
         var rows = await cmd.ExecuteNonQueryAsync();
         return rows > 0 ? NoContent() : NotFound();
+    }
+
+    // Mirrors legacy dbo.rackPositionValidate: a rack slot may be held by at
+    // most one OPEN repair at a time. Returns the conflicting WO number, or
+    // null when the position is free. (Legacy also checked the other-region
+    // server for S-prefix WOs; this build runs against a single database.)
+    //
+    // Scoped to the active service location so this pre-check agrees with what
+    // the PATCH invariant actually enforces (which only blocks a same-location
+    // holder). Without this filter the pre-check false-flags a slot that is
+    // free at this location just because a DIFFERENT location holds the same
+    // rack string — a rack is a physical shelf, unique per warehouse.
+    [HttpGet("{repairKey:int}/rack-check")]
+    public async Task<IActionResult> CheckRackPosition(int repairKey, [FromQuery] string? position)
+    {
+        var pos = position?.Trim();
+        if (string.IsNullOrEmpty(pos) || pos.Equals("N/A", StringComparison.OrdinalIgnoreCase))
+            return Ok(new { inUseBy = (string?)null });
+
+        var locationKey = this.GetActiveServiceLocation();
+
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand("""
+            SELECT TOP 1 r.sWorkOrderNumber
+            FROM tblRepair r
+            WHERE r.lRepairKey <> @id
+              AND ISNULL(r.sRepairClosed, 'N') <> 'Y'
+              AND ISNULL(r.sRackPosition, '') = @pos
+              AND r.sRackPosition <> 'N/A'
+              AND ISNULL(r.lServiceLocationKey, 0) = @loc
+            ORDER BY r.lRepairKey DESC
+            """, conn);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@id", repairKey);
+        cmd.Parameters.AddWithValue("@pos", pos);
+        cmd.Parameters.AddWithValue("@loc", locationKey);
+        var wo = await cmd.ExecuteScalarAsync();
+        return Ok(new { inUseBy = wo == null || wo == DBNull.Value ? null : wo.ToString() });
     }
 
     [HttpPatch("{repairKey:int}/header")]
@@ -458,7 +519,6 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                 lSalesRepKey              = COALESCE(@salesRepKey, lSalesRepKey),
                 lPricingCategoryKey       = COALESCE(@pricingCategoryKey, lPricingCategoryKey),
                 lPaymentTermsKey          = COALESCE(@paymentTermsKey, lPaymentTermsKey),
-                dblDiscountPct            = COALESCE(@discountPct, dblDiscountPct),
                 sPS3                      = COALESCE(@psLevel, sPS3),
                 lDistributorKey           = COALESCE(@distributorKey, lDistributorKey),
                 dblShippingClientIn       = COALESCE(@shippingCostIn, dblShippingClientIn),
@@ -475,6 +535,17 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                 sBillState                = COALESCE(@billState, sBillState),
                 sBillZip                  = COALESCE(@billZip, sBillZip)
             WHERE lRepairKey = @id
+              -- Server-side rack invariant (legacy rackPositionValidate): refuse
+              -- to take a rack slot another OPEN repair at the same service
+              -- location already holds. UPDLOCK+HOLDLOCK serializes concurrent
+              -- rack writes so both can't pass the NOT EXISTS simultaneously.
+              AND (@rack IS NULL OR @rack = N'N/A' OR NOT EXISTS (
+                    SELECT 1 FROM tblRepair r2 WITH (UPDLOCK, HOLDLOCK)
+                    WHERE r2.lRepairKey <> tblRepair.lRepairKey
+                      AND ISNULL(r2.sRepairClosed, 'N') <> 'Y'
+                      AND ISNULL(r2.sRackPosition, '') = @rack
+                      AND r2.sRackPosition <> 'N/A'
+                      AND ISNULL(r2.lServiceLocationKey, 0) = ISNULL(tblRepair.lServiceLocationKey, 0)))
             """, conn);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", repairKey);
@@ -495,7 +566,6 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         cmd.Parameters.AddWithValue("@salesRepKey", (object?)body.SalesRepKey ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@pricingCategoryKey", (object?)body.PricingCategoryKey ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@paymentTermsKey", (object?)body.PaymentTermsKey ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@discountPct", (object?)body.DiscountPct ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@psLevel", (object?)body.PsLevel ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@distributorKey", (object?)body.DistributorKey ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@shippingCostIn", (object?)body.ShippingCostIn ?? DBNull.Value);
@@ -511,7 +581,60 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         cmd.Parameters.AddWithValue("@billCity", (object?)body.BillCity ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@billState", (object?)body.BillState ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@billZip", (object?)body.BillZip ?? DBNull.Value);
-        await cmd.ExecuteNonQueryAsync();
+        var rows = await cmd.ExecuteNonQueryAsync();
+        if (rows == 0)
+        {
+            // The only guard predicate is the rack invariant — name the WO
+            // holding the slot so the caller can act on it.
+            var rackPos = body.RackLocation?.Trim();
+            if (!string.IsNullOrEmpty(rackPos) && !rackPos.Equals("N/A", StringComparison.OrdinalIgnoreCase))
+            {
+                await using var rackCmd = new SqlCommand("""
+                    SELECT TOP 1 r2.sWorkOrderNumber
+                    FROM tblRepair r2
+                    WHERE r2.lRepairKey <> @id
+                      AND ISNULL(r2.sRepairClosed, 'N') <> 'Y'
+                      AND ISNULL(r2.sRackPosition, '') = @pos
+                      AND r2.sRackPosition <> 'N/A'
+                      AND EXISTS (SELECT 1 FROM tblRepair r
+                                  WHERE r.lRepairKey = @id
+                                    AND ISNULL(r.lServiceLocationKey, 0) = ISNULL(r2.lServiceLocationKey, 0))
+                    ORDER BY r2.lRepairKey DESC
+                    """, conn);
+                rackCmd.CommandTimeout = 30;
+                rackCmd.Parameters.AddWithValue("@id", repairKey);
+                rackCmd.Parameters.AddWithValue("@pos", body.RackLocation!);
+                var holder = await rackCmd.ExecuteScalarAsync();
+                if (holder != null && holder != DBNull.Value)
+                    return Conflict(new { message = $"Rack position is in use by W.O. #{holder}." });
+            }
+            return NotFound();
+        }
+
+        // dblDiscountPct lives on tblClient (legacy and converted schema both —
+        // there is no repair-level discount column). The cockpit reads it via
+        // the department→client join, so the edit lands there: client-wide.
+        //
+        // WARNING — this write is CLIENT-WIDE by design: it changes the discount
+        // for EVERY department and repair under this client's account, not just
+        // this WO. That is correct: the read path (the c.dblDiscountPct the
+        // cockpit displays) comes from tblClient too, so write and read stay
+        // symmetric. Do NOT "fix" this to a per-repair UPDATE on tblRepair —
+        // tblRepair has no discount column and the value would silently vanish.
+        if (body.DiscountPct.HasValue)
+        {
+            await using var discCmd = new SqlCommand("""
+                UPDATE c SET c.dblDiscountPct = @discountPct
+                FROM tblClient c
+                JOIN tblDepartment d ON d.lClientKey = c.lClientKey
+                JOIN tblRepair r ON r.lDepartmentKey = d.lDepartmentKey
+                WHERE r.lRepairKey = @id
+                """, conn);
+            discCmd.CommandTimeout = 30;
+            discCmd.Parameters.AddWithValue("@id", repairKey);
+            discCmd.Parameters.AddWithValue("@discountPct", body.DiscountPct.Value);
+            await discCmd.ExecuteNonQueryAsync();
+        }
         return NoContent();
     }
 
