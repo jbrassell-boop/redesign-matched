@@ -1,5 +1,10 @@
 interface Props {
   currentStatus: string;
+  /** tblRepair.sRepairClosed = 'Y'. Closing a WO does NOT change its
+   *  lRepairStatusID, so a closed repair keeps whatever status name it had
+   *  ("Scheduled to Ship", "QC", …) and would otherwise never reach the final
+   *  pill. Treat closed as terminal regardless of the status text. */
+  isClosed?: boolean;
 }
 
 const STAGES = [
@@ -21,8 +26,8 @@ const getStageIndex = (status: string): number => {
   return -1;
 };
 
-export const WorkflowPipeline = ({ currentStatus }: Props) => {
-  const activeIdx = getStageIndex(currentStatus);
+export const WorkflowPipeline = ({ currentStatus, isClosed = false }: Props) => {
+  const activeIdx = isClosed ? STAGES.length - 1 : getStageIndex(currentStatus);
 
   return (
     <div style={{

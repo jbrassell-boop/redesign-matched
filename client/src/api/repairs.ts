@@ -321,8 +321,14 @@ export interface TechnicianOption {
   techName: string;
 }
 
-export const getRepairTechnicians = async (): Promise<TechnicianOption[]> => {
-  const { data } = await apiClient.get<TechnicianOption[]>('/repairs/technicians');
+// Pass repairKey to get the legacy-filtered picker for that repair (outsource
+// vendors for an outsourced WO, scope-type-qualified techs otherwise, plus the
+// repair's currently-assigned techs). Without it the list is every active
+// technician, which is what the non-repair-scoped callers still want.
+export const getRepairTechnicians = async (repairKey?: number): Promise<TechnicianOption[]> => {
+  const { data } = await apiClient.get<TechnicianOption[]>('/repairs/technicians', {
+    params: repairKey ? { repairKey } : undefined,
+  });
   return data;
 };
 
@@ -332,10 +338,40 @@ export const bulkApproveLineItems = async (repairKey: number, approved: string):
 };
 
 // ── Update Techs ──
+// Legacy frmRepairOpen_UpdateTech parity: ONE slot per call. tech1=true writes
+// the primary technician, tech1=false the secondary; the other slot is left
+// alone. The chosen technician is also pushed onto the repair's line items —
+// all of them when allRepairItems is true, otherwise only the lines that have
+// no tech yet.
+export interface UpdateTechsResult {
+  techKey: number;
+  tech1: boolean;
+  allRepairItems: boolean;
+  headerUpdated: number;
+  lineItemsUpdated: number;
+}
+
 export const updateRepairTechs = async (
   repairKey: number,
   techKey: number,
-  tech2Key: number | null,
-): Promise<void> => {
-  await apiClient.patch(`/repairs/${repairKey}/techs`, { techKey, tech2Key });
+  opts?: { tech1?: boolean; allRepairItems?: boolean },
+): Promise<UpdateTechsResult> => {
+  const { data } = await apiClient.patch<UpdateTechsResult>(`/repairs/${repairKey}/techs`, {
+    techKey,
+    tech1: opts?.tech1 ?? true,
+    allRepairItems: opts?.allRepairItems ?? true,
+  });
+  return data;
+};
+
+// ── Close / Reopen ──
+// Closing sets tblRepair.sRepairClosed = 'Y', which makes the repair read-only
+// across every mutation endpoint. Reopen clears it, and is rejected server-side
+// while a finalized invoice exists (void the invoice first).
+export const closeRepair = async (repairKey: number): Promise<void> => {
+  await apiClient.post(`/repairs/${repairKey}/close`);
+};
+
+export const reopenRepair = async (repairKey: number): Promise<void> => {
+  await apiClient.post(`/repairs/${repairKey}/reopen`);
 };

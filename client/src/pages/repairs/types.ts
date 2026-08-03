@@ -103,7 +103,7 @@ export interface RepairFull {
   daysLastIn?: number | null;
   capFfs?: string;
   // Techs
-  tech?: string; techKey?: number; tech2?: string; inspector?: string;
+  tech?: string; techKey?: number; tech2?: string; tech2Key?: number | null; inspector?: string;
   // Order
   approvalName?: string; salesRep?: string; reportingGroup?: string;
   approvalSentDate?: string;
@@ -156,6 +156,12 @@ export interface RepairFull {
   pricingCategoryKey?: number | null;
   paymentTermsKey?: number | null;
   distributorKey?: number | null;
+  // Edit lock (legacy WSRepairOpen). repairClosed is tblRepair.sRepairClosed
+  // = 'Y'; isReadOnly is the effective lock — closed OR invoice finalized. The
+  // cockpit disables the mutating actions off isReadOnly so a locked repair
+  // shows as a state instead of failing with a 409 toast.
+  repairClosed?: boolean;
+  isReadOnly?: boolean;
 }
 
 export interface RepairInspections {

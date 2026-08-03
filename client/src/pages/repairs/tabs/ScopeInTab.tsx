@@ -6,6 +6,7 @@ import { getSalesReps, getPricingCategories, getPaymentTerms } from '../../../ap
 import { patchRepairHeader, type RepairHeaderPatch } from '../../../api/repairs';
 import { useAutosave } from '../../../hooks/useAutosave';
 import { AutosaveIndicator } from '../../../components/common/AutosaveIndicator';
+import { InspectionLauncher } from './InspectionsTab';
 
 interface ScopeInTabProps {
   repair: RepairFull;
@@ -233,6 +234,17 @@ export const ScopeInTab = ({ repair }: ScopeInTabProps) => {
             <F label="Bill to Customer / Distro" value={repair.billTo} />
             <DF label="Payment Terms" value={paymentTermsKey} options={payTerms} onChange={onDropdown('paymentTermsKey', setPaymentTermsKey)} />
           </div>
+        </Section>
+      </div>
+
+      {/* FULL WIDTH — the incoming D&I happens at scope-in, so its launcher lives here */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <Section title="Inspection">
+          <InspectionLauncher
+            repairKey={repair.repairKey}
+            mode="intake"
+            rigidOrFlexible={repair.rigidOrFlexible}
+          />
         </Section>
       </div>
     </div>

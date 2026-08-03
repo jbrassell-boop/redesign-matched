@@ -92,16 +92,18 @@ const BASE_TABS: TabDef[] = [
 
 // styles moved to RepairDetailPane.css
 
+// Ordered as the scope's physical journey: flow (in → worked → out), then the
+// money it generates, then the record it leaves behind. The two inspection
+// launchers live inside Scope In / Outgoing rather than on a tab of their own.
 const COCKPIT_TABS = [
-  { key: 'scope-in', label: 'Scope In', group: 'intake' },
-  { key: 'details',  label: 'Details',  group: 'intake' },
-  { key: 'outgoing', label: 'Outgoing', group: 'process' },
-  { key: 'expense',  label: 'Expense',  group: 'process' },
-  { key: 'inspections', label: 'Inspections', group: 'process' },
-  { key: 'financials', label: 'Financials', group: 'review' },
-  { key: 'scopehistory', label: 'History', group: 'review' },
-  { key: 'statuslog', label: 'Status Log', group: 'review' },
-  { key: 'comments',  label: 'Notes',      group: 'review' },
+  { key: 'scope-in',     label: 'Scope In',   group: 'flow' },
+  { key: 'details',      label: 'Details',    group: 'flow' },
+  { key: 'outgoing',     label: 'Outgoing',   group: 'flow' },
+  { key: 'expense',      label: 'Expense',    group: 'money' },
+  { key: 'financials',   label: 'Financials', group: 'money' },
+  { key: 'scopehistory', label: 'History',    group: 'record' },
+  { key: 'statuslog',    label: 'Status Log', group: 'record' },
+  { key: 'comments',     label: 'Notes',      group: 'record' },
 ] as const;
 
 // `types` uses single-char scope discriminators ('R' = Rigid, 'F' = Flexible,
@@ -349,6 +351,16 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
     });
   }, [statuses, handleSetStatus]);
 
+  // Cockpit refresh after a tab writes something. Re-fetches the repair AND the
+  // line items: Update Techs pushes the technician onto tblRepairItemTran, and
+  // Close/Reopen flips the read-only state the tabs render off — refreshing only
+  // one of the two leaves half the screen stale.
+  const refreshCockpit = useCallback(() => {
+    if (!resolvedKey) return;
+    getRepairFull(resolvedKey).then(setFullRepair).catch(() => { message.error('Failed to reload repair'); });
+    getRepairLineItems(resolvedKey).then(setLineItems).catch(() => { message.error('Failed to reload repair line items'); });
+  }, [resolvedKey]);
+
   const handleNoteSave = useCallback(async (notes: string) => {
     try {
       await updateRepairNotes(rk, notes);
@@ -359,6 +371,11 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
       throw new Error('save failed');
     }
   }, [rk, onNoteSaved]);
+
+  // `activeTab` is shared by both render modes and still carries legacy-only keys
+  // ('workflow', 'inspections'). The cockpit has no tab for those, so it renders
+  // off this derived value and falls back to Details instead of an empty pane.
+  const cockpitTab = COCKPIT_TABS.some(t => t.key === activeTab) ? activeTab : 'details';
 
   const nextStage = STATUS_NEXT_MAP[currentStatusId] ?? null;
   const hasNext = nextStage !== null;
@@ -375,7 +392,7 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
 
     return (
       <div className="rdp-cockpit-container">
-        <WorkflowPipeline currentStatus={fullRepair.status} />
+        <WorkflowPipeline currentStatus={fullRepair.status} isClosed={fullRepair.repairClosed} />
 
         {/* Condensed header: summary line + collapsible details */}
         <div style={{ background: 'var(--card)', borderBottom: '1px solid var(--border)', padding: '5px 14px', flexShrink: 0 }}>
@@ -388,6 +405,19 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
             <span>{fullRepair.dept}</span>
             <span style={{ color: 'var(--neutral-200)' }}>&middot;</span>
             <span>WO# {fullRepair.wo}</span>
+            {/* Closed is a STATE, not a lock (legacy's checkbox blocks nothing).
+                Shown here so it reads as closed on every tab; the repair stays
+                editable. The read-only lock is the finalized invoice. */}
+            {fullRepair.repairClosed && (
+              <span style={{
+                background: 'var(--neutral-100, var(--bg))', color: 'var(--muted)',
+                border: '1px solid var(--neutral-200)', borderRadius: 10,
+                padding: '1px 8px', fontSize: 10, fontWeight: 700,
+                textTransform: 'uppercase', letterSpacing: '.04em',
+              }}>
+                Closed
+              </span>
+            )}
             <span style={{ color: 'var(--neutral-200)' }}>&middot;</span>
             <span style={{ fontWeight: 400 }}>{fullRepair.scopeType}</span>
             <span style={{ color: 'var(--neutral-200)' }}>&middot;</span>
@@ -525,14 +555,14 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
               <div
                 role="tab"
                 tabIndex={0}
-                aria-selected={activeTab === t.key}
+                aria-selected={cockpitTab === t.key}
                 onClick={() => setActiveTab(t.key)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setActiveTab(t.key); } }}
                 style={{
                   padding: '10px 16px',
                   fontSize: 13, fontWeight: 600,
-                  color: activeTab === t.key ? 'var(--primary)' : 'var(--muted)',
-                  borderBottom: activeTab === t.key ? '2px solid var(--primary)' : '2px solid transparent',
+                  color: cockpitTab === t.key ? 'var(--primary)' : 'var(--muted)',
+                  borderBottom: cockpitTab === t.key ? '2px solid var(--primary)' : '2px solid transparent',
                   marginBottom: -2,
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
@@ -546,15 +576,14 @@ export const RepairDetailPane = ({ detail, loading, onNoteSaved, onStatusChanged
 
         {/* Tab content */}
         <div style={{ flex: 1, overflow: 'auto' }}>
-          {activeTab === 'scope-in'    && <ScopeInTab repair={fullRepair} />}
-          {activeTab === 'details'     && <DetailsTab repair={fullRepair} flags={flags} />}
-          {activeTab === 'outgoing'    && <OutgoingTab repair={fullRepair} items={lineItems} onRepairChanged={() => resolvedKey && getRepairFull(resolvedKey).then(setFullRepair).catch(() => message.error('Failed to reload repair'))} />}
-          {activeTab === 'expense'     && <ExpenseTab repairKey={fullRepair.repairKey} />}
-          {activeTab === 'inspections' && <InspectionsTab repairKey={fullRepair.repairKey} rigidOrFlexible={fullRepair.rigidOrFlexible} />}
-          {activeTab === 'financials'  && <FinancialsTab repairKey={fullRepair.repairKey} />}
-          {activeTab === 'scopehistory' && <ScopeHistoryTab repairKey={fullRepair.repairKey} currentRepairKey={fullRepair.repairKey} />}
-          {activeTab === 'statuslog'   && <StatusHistoryTab repairKey={fullRepair.repairKey} />}
-          {activeTab === 'comments'    && <NotesTab repairKey={fullRepair.repairKey} />}
+          {cockpitTab === 'scope-in'    && <ScopeInTab repair={fullRepair} />}
+          {cockpitTab === 'details'     && <DetailsTab repair={fullRepair} flags={flags} onRepairChanged={refreshCockpit} />}
+          {cockpitTab === 'outgoing'    && <OutgoingTab repair={fullRepair} items={lineItems} onRepairChanged={refreshCockpit} />}
+          {cockpitTab === 'expense'     && <ExpenseTab repairKey={fullRepair.repairKey} />}
+          {cockpitTab === 'financials'  && <FinancialsTab repairKey={fullRepair.repairKey} />}
+          {cockpitTab === 'scopehistory' && <ScopeHistoryTab repairKey={fullRepair.repairKey} currentRepairKey={fullRepair.repairKey} />}
+          {cockpitTab === 'statuslog'   && <StatusHistoryTab repairKey={fullRepair.repairKey} />}
+          {cockpitTab === 'comments'    && <NotesTab repairKey={fullRepair.repairKey} />}
         </div>
       </div>
     );

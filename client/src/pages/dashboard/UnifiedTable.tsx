@@ -106,7 +106,9 @@ export const UnifiedTable = ({
         const repairKey = record?.repairKey;
         if (!repairKey) return;
         try {
-          const techs = await getRepairTechnicians();
+          // Repair-scoped so the quick-assign picker offers the same
+          // qualification-filtered list as the cockpit's Update Techs modal.
+          const techs = await getRepairTechnicians(repairKey);
           setTechList(techs);
           setSelectedTech(0);
           setTechRecord(record);
@@ -229,7 +231,10 @@ export const UnifiedTable = ({
         onOk={async () => {
           if (!techRecord?.repairKey || !selectedTech) return;
           try {
-            await updateRepairTechs(techRecord.repairKey, selectedTech, null);
+            // Primary slot only; the secondary is left untouched. Line items
+            // that already have a tech keep it — quick-assign is a header
+            // action, not a bulk re-assignment of finished work.
+            await updateRepairTechs(techRecord.repairKey, selectedTech, { tech1: true, allRepairItems: false });
             message.success('Technician assigned');
             setTechModalOpen(false);
           } catch {

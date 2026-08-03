@@ -533,21 +533,32 @@ const SelectorCard = ({ title, subtitle, badge, badgeColor, onClick, icon }: Sel
   </button>
 );
 
-// ── Main Tab ──────────────────────────────────────────────────────────────────
+// ── Card icons ────────────────────────────────────────────────────────────────
 
-interface InspectionsTabProps {
-  repairKey: number;
-  /** Scope-type discriminator from tblScopeType.sRigidOrFlexible: 'R', 'F', 'C'.
-   *  Drives which D&I form (OM05-1 / OM05-2 / OM05-3) the cockpit references. */
-  rigidOrFlexible?: string;
-}
+const INTAKE_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={20} height={20}>
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  </svg>
+);
 
-export const InspectionsTab = ({ repairKey, rigidOrFlexible }: InspectionsTabProps) => {
+const POST_ICON = (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={20} height={20}>
+    <polyline points="9 11 12 14 22 4" />
+    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+  </svg>
+);
+
+// ── Shared record state ───────────────────────────────────────────────────────
+
+/** One RepairInspections record shared by the D&I and Post-Repair modals.
+ *  Both the standalone tab and the embedded launchers run off this. */
+function useInspectionRecord(repairKey: number) {
   const [data, setData] = useState<RepairInspections | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [diOpen, setDiOpen] = useState(false);
-  const [postOpen, setPostOpen] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -575,13 +586,112 @@ export const InspectionsTab = ({ repairKey, rigidOrFlexible }: InspectionsTabPro
     }
   }, [data, repairKey]);
 
+  return { data, loading, saving, patch, saveAndClose };
+}
+
+/** "Recorded" once any D&I field has been touched. */
+const intakeBadge = (data: RepairInspections) => {
+  const done = !!(data.scopeRepairable || data.scopeUsable || data.angInUp || data.diInsComments);
+  return { badge: done ? 'Recorded' : 'Not started', badgeColor: done ? 'var(--success)' : undefined };
+};
+
+/** Post-repair badge is the running P/F tally across every verification key. */
+const postBadge = (data: RepairInspections) => {
+  const passCount = ALL_PF_KEYS.filter(k => data[k] === 'P').length;
+  const failCount = ALL_PF_KEYS.filter(k => data[k] === 'F').length;
+  const done = passCount + failCount > 0;
+  return {
+    badge: done ? `${passCount}P / ${failCount}F` : 'Not started',
+    badgeColor: done ? (failCount > 0 ? 'var(--danger)' : 'var(--success)') : undefined,
+  };
+};
+
+// ── Embedded launcher ─────────────────────────────────────────────────────────
+
+interface InspectionLauncherProps {
+  repairKey: number;
+  /** 'intake' = incoming D&I (OM05-x); 'post' = outgoing post-repair QC. */
+  mode: 'intake' | 'post';
+  /** Scope-type discriminator from tblScopeType.sRigidOrFlexible: 'R', 'F', 'C'.
+   *  Drives which D&I form (OM05-1 / OM05-2 / OM05-3) the intake card references. */
+  rigidOrFlexible?: string;
+}
+
+/** A single inspection card + its modal, for embedding inside the workflow-stage
+ *  tab where that inspection actually happens (Scope In / Outgoing). */
+export const InspectionLauncher = ({ repairKey, mode, rigidOrFlexible }: InspectionLauncherProps) => {
+  const { data, loading, saving, patch, saveAndClose } = useInspectionRecord(repairKey);
+  const [open, setOpen] = useState(false);
+
+  if (loading) return <div className="insp-launcher-state">Loading inspection…</div>;
+  if (!data) return <div className="insp-launcher-state">No inspection data</div>;
+
+  const form = diFormFor(rigidOrFlexible);
+  const card = mode === 'intake'
+    ? {
+      title: 'Incoming Inspection (D&I)',
+      subtitle: `${form.ref} — ${form.title}`,
+      icon: INTAKE_ICON,
+      ...intakeBadge(data),
+    }
+    : {
+      title: 'Outgoing Inspection (Post-Repair)',
+      subtitle: 'Outgoing angulation, pass/fail verification',
+      icon: POST_ICON,
+      ...postBadge(data),
+    };
+
+  return (
+    <>
+      <div className="insp-launcher-row">
+        <SelectorCard {...card} onClick={() => setOpen(true)} />
+      </div>
+
+      {open && mode === 'intake' && (
+        <DiModal
+          data={data}
+          saving={saving}
+          rigidOrFlexible={rigidOrFlexible}
+          onChange={patch}
+          onSave={() => saveAndClose(() => setOpen(false))}
+          onClose={() => setOpen(false)}
+        />
+      )}
+
+      {open && mode === 'post' && (
+        <PostRepairModal
+          data={data}
+          saving={saving}
+          onChange={patch}
+          onSave={() => saveAndClose(() => setOpen(false))}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
+  );
+};
+
+// ── Main Tab ──────────────────────────────────────────────────────────────────
+
+interface InspectionsTabProps {
+  repairKey: number;
+  /** Scope-type discriminator from tblScopeType.sRigidOrFlexible: 'R', 'F', 'C'.
+   *  Drives which D&I form (OM05-1 / OM05-2 / OM05-3) the tab references. */
+  rigidOrFlexible?: string;
+}
+
+/** Both-inspections selector. Still used by the legacy split-pane detail view;
+ *  the cockpit embeds InspectionLauncher in Scope In / Outgoing instead. */
+export const InspectionsTab = ({ repairKey, rigidOrFlexible }: InspectionsTabProps) => {
+  const { data, loading, saving, patch, saveAndClose } = useInspectionRecord(repairKey);
+  const [diOpen, setDiOpen] = useState(false);
+  const [postOpen, setPostOpen] = useState(false);
+
   if (loading) return <div className="insp-loading">Loading inspections...</div>;
   if (!data) return <div className="insp-loading">No inspection data</div>;
 
-  const diDone = !!(data.scopeRepairable || data.scopeUsable || data.angInUp || data.diInsComments);
-  const pfPassCount = ALL_PF_KEYS.filter(k => data[k] === 'P').length;
-  const pfFailCount = ALL_PF_KEYS.filter(k => data[k] === 'F').length;
-  const postDone = pfPassCount + pfFailCount > 0;
+  const di = intakeBadge(data);
+  const post = postBadge(data);
 
   return (
     <>
@@ -593,30 +703,18 @@ export const InspectionsTab = ({ repairKey, rigidOrFlexible }: InspectionsTabPro
           <SelectorCard
             title="D&I Intake"
             subtitle={`${diFormFor(rigidOrFlexible).ref} — ${diFormFor(rigidOrFlexible).title}`}
-            badge={diDone ? 'Recorded' : 'Not started'}
-            badgeColor={diDone ? 'var(--success)' : undefined}
+            badge={di.badge}
+            badgeColor={di.badgeColor}
             onClick={() => setDiOpen(true)}
-            icon={
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={20} height={20}>
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
-            }
+            icon={INTAKE_ICON}
           />
           <SelectorCard
             title="Post-Repair"
             subtitle="Outgoing angulation, pass/fail verification"
-            badge={postDone ? `${pfPassCount}P / ${pfFailCount}F` : 'Not started'}
-            badgeColor={postDone ? (pfFailCount > 0 ? 'var(--danger)' : 'var(--success)') : undefined}
+            badge={post.badge}
+            badgeColor={post.badgeColor}
             onClick={() => setPostOpen(true)}
-            icon={
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} width={20} height={20}>
-                <polyline points="9 11 12 14 22 4" />
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-              </svg>
-            }
+            icon={POST_ICON}
           />
         </div>
       </div>

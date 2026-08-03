@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using TSI.Api.Models;
@@ -13,6 +13,56 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
 {
     private SqlConnection CreateConnection() =>
         new(config.GetConnectionString("DefaultConnection")!);
+
+    /// <summary>
+    /// Shared read-only guard for the repair MUTATION endpoints, adapted from the
+    /// cloud repo's <c>CheckRepairEditableAsync</c>. A repair whose invoice is
+    /// FINALIZED is read-only: the invoice snapshot is settled and further
+    /// line/approval/tech edits would silently drive the billed figures out of
+    /// sync with the record that was already issued.
+    ///
+    /// Unlike cloud, being CLOSED does not lock — see <see cref="RepairLock"/>
+    /// for why (legacy's closed checkbox blocks nothing, and 99.5% of repairs
+    /// carry the flag).
+    ///
+    /// Returns a 404 when the repair is missing, a 409 when it is locked, or
+    /// null when the caller may proceed.
+    ///
+    /// The caller's transaction is REQUIRED and the ordering is deliberate: the
+    /// guard read takes UPDLOCK, HOLDLOCK on the repair row and holds it to the
+    /// end of that transaction, so the finalized/closed check and the mutation
+    /// that follows commit as ONE unit. Without it a concurrent finalize could
+    /// slip between the check and the write.
+    /// </summary>
+    private async Task<IActionResult?> CheckRepairEditableAsync(SqlConnection conn, int repairKey, SqlTransaction tx)
+    {
+        await using var cmd = new SqlCommand("""
+            SELECT CAST(CASE WHEN EXISTS (SELECT 1 FROM tblInvoice i
+                                          WHERE i.lRepairKey = r.lRepairKey
+                                            AND i.bFinalized = 1)
+                        THEN 1 ELSE 0 END AS bit) AS Finalized
+            FROM tblRepair r WITH (UPDLOCK, HOLDLOCK)
+            WHERE r.lRepairKey = @repairKey
+            """, conn, tx);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        await using var reader = await cmd.ExecuteReaderAsync();
+        if (!await reader.ReadAsync())
+            return NotFound(new { message = $"Repair {repairKey} not found." });
+        if (RepairLock.IsReadOnly(Convert.ToBoolean(reader["Finalized"])))
+            return Conflict(new { message = "This repair's invoice is finalized and cannot be edited." });
+        return null;
+    }
+
+    /// <summary>Does this repair exist at all? Used to tell a 404 from a 409.</summary>
+    private static async Task<bool> RepairExistsAsync(SqlConnection conn, int repairKey)
+    {
+        await using var cmd = new SqlCommand(
+            "SELECT 1 FROM tblRepair WHERE lRepairKey = @repairKey", conn);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        return await cmd.ExecuteScalarAsync() != null;
+    }
 
     [HttpGet]
     public async Task<IActionResult> GetRepairs(
@@ -236,6 +286,11 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                    -- Workflow flags
                    ISNULL(r.bOutsourced, 0) AS bOutsourced,
                    ISNULL(r.bFirstRepair, 0) AS bFirstRepair,
+                   -- Closed flag: DISPLAY ONLY (legacy's checkbox locks nothing).
+                   -- The edit lock is the finalized invoice below, read from the
+                   -- SAME tblInvoice row the invoice card reports on, so the
+                   -- banner the user sees and the server-side gate agree.
+                   ISNULL(r.sRepairClosed, 'N') AS sRepairClosed,
                    r.sReworkReqd, r.sDisplayCustomerComplaint,
                    -- Joined names
                    ISNULL(rs.sRepairStatus, '') AS sRepairStatus,
@@ -297,7 +352,18 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                    -- sTranNumber is populated at creation, not deferred to finalization.
                    inv.lInvoiceKey AS latestInvoiceKey,
                    CASE WHEN ISNULL(inv.bFinalized, 0) = 1 THEN 'Finalized' ELSE 'Draft' END AS latestInvoiceStatus,
-                   inv.sTranNumber AS latestInvoiceNumber
+                   inv.sTranNumber AS latestInvoiceNumber,
+                   -- EXISTS over ALL of this repair's invoice rows, matching
+                   -- CheckRepairEditableAsync's predicate character for
+                   -- character. Reading ISNULL(inv.bFinalized,0) off the joined
+                   -- row instead would disagree with the server gate on the 38
+                   -- repairs that carry more than one invoice row (4 of them
+                   -- mixing finalized with draft) — the banner would say
+                   -- editable while every write 409'd.
+                   CAST(CASE WHEN EXISTS (SELECT 1 FROM tblInvoice i2
+                                          WHERE i2.lRepairKey = r.lRepairKey
+                                            AND i2.bFinalized = 1)
+                        THEN 1 ELSE 0 END AS bit) AS bInvoiceFinalized
             FROM tblRepair r
             LEFT JOIN tblRepairStatuses rs ON rs.lRepairStatusID = r.lRepairStatusID
             LEFT JOIN tblInvoice inv ON inv.lRepairKey = r.lRepairKey
@@ -363,6 +429,7 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             Tech: ReadStr("sTechName"),
             TechKey: reader["lTechnicianKey"] == DBNull.Value ? null : Convert.ToInt32(reader["lTechnicianKey"]),
             Tech2: ReadStr("sTech2Name"),
+            Tech2Key: reader["lTechnician2Key"] == DBNull.Value ? null : Convert.ToInt32(reader["lTechnician2Key"]),
             Inspector: ReadStr("sInspectorName"),
             ApprovalName: ReadStr("sApprName"),
             SalesRep: ReadStr("sSalesRepName"),
@@ -440,7 +507,11 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             LevelDeliveryDays: reader["LevelDeliveryDays"] == DBNull.Value ? null : Convert.ToInt32(reader["LevelDeliveryDays"]),
             LevelDueDate: ReadDate("LevelDueDate")?.ToString("MM/dd/yyyy"),
             LeadTimeDays: reader["LeadTimeDays"] == DBNull.Value ? null : Convert.ToInt32(reader["LeadTimeDays"]),
-            TatDays: reader["TatDays"] == DBNull.Value ? null : Convert.ToInt32(reader["TatDays"])
+            TatDays: reader["TatDays"] == DBNull.Value ? null : Convert.ToInt32(reader["TatDays"]),
+            // RepairClosed is display-only — it does NOT feed IsReadOnly.
+            RepairClosed: string.Equals(ReadStr("sRepairClosed")?.Trim(), "Y", StringComparison.OrdinalIgnoreCase),
+            IsReadOnly: RepairLock.IsReadOnly(
+                reader["bInvoiceFinalized"] != DBNull.Value && Convert.ToBoolean(reader["bInvoiceFinalized"]))
         ));
     }
 
@@ -449,13 +520,38 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
     {
         await using var conn = CreateConnection();
         await conn.OpenAsync();
-        await using var cmd = new SqlCommand(
-            "UPDATE tblRepair SET sPurchaseOrder = @po WHERE lRepairKey = @id", conn);
-        cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@po", (object?)po ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("@id", repairKey);
-        var rows = await cmd.ExecuteNonQueryAsync();
-        return rows > 0 ? NoContent() : NotFound();
+
+        // The PO is part of the settled invoice snapshot, so a finalized/closed
+        // repair is read-only here. Guard + write share one transaction so the
+        // guard's UPDLOCK is still held when the UPDATE lands.
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            if (await CheckRepairEditableAsync(conn, repairKey, tx) is { } locked)
+            {
+                await tx.RollbackAsync();
+                return locked;
+            }
+
+            await using var cmd = new SqlCommand(
+                "UPDATE tblRepair SET sPurchaseOrder = @po WHERE lRepairKey = @id", conn, tx);
+            cmd.CommandTimeout = 30;
+            cmd.Parameters.AddWithValue("@po", (object?)po ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("@id", repairKey);
+            var rows = await cmd.ExecuteNonQueryAsync();
+            if (rows == 0)
+            {
+                await tx.RollbackAsync();
+                return NotFound();
+            }
+            await tx.CommitAsync();
+            return NoContent();
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
 
     // Mirrors legacy dbo.rackPositionValidate: a rack slot may be held by at
@@ -502,6 +598,16 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
     {
         await using var conn = CreateConnection();
         await conn.OpenAsync();
+
+        // Guard + the whole header edit run in ONE transaction: the guard takes
+        // the repair row's UPDLOCK and holds it to commit, so a concurrent
+        // invoice finalize serializes on the repair row instead of finalizing
+        // between the editable check and the write. `await using` means every
+        // early return below rolls back — only the success path commits.
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        if (await CheckRepairEditableAsync(conn, repairKey, tx) is { } locked)
+            return locked;
+
         await using var cmd = new SqlCommand("""
             UPDATE tblRepair SET
                 bHotList                  = COALESCE(@isUrgent, bHotList),
@@ -546,7 +652,7 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                       AND ISNULL(r2.sRackPosition, '') = @rack
                       AND r2.sRackPosition <> 'N/A'
                       AND ISNULL(r2.lServiceLocationKey, 0) = ISNULL(tblRepair.lServiceLocationKey, 0)))
-            """, conn);
+            """, conn, tx);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@id", repairKey);
         cmd.Parameters.AddWithValue("@isUrgent", body.IsUrgent.HasValue ? (object)body.IsUrgent.Value : DBNull.Value);
@@ -600,7 +706,7 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                                   WHERE r.lRepairKey = @id
                                     AND ISNULL(r.lServiceLocationKey, 0) = ISNULL(r2.lServiceLocationKey, 0))
                     ORDER BY r2.lRepairKey DESC
-                    """, conn);
+                    """, conn, tx);
                 rackCmd.CommandTimeout = 30;
                 rackCmd.Parameters.AddWithValue("@id", repairKey);
                 rackCmd.Parameters.AddWithValue("@pos", body.RackLocation!);
@@ -629,12 +735,13 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                 JOIN tblDepartment d ON d.lClientKey = c.lClientKey
                 JOIN tblRepair r ON r.lDepartmentKey = d.lDepartmentKey
                 WHERE r.lRepairKey = @id
-                """, conn);
+                """, conn, tx);
             discCmd.CommandTimeout = 30;
             discCmd.Parameters.AddWithValue("@id", repairKey);
             discCmd.Parameters.AddWithValue("@discountPct", body.DiscountPct.Value);
             await discCmd.ExecuteNonQueryAsync();
         }
+        await tx.CommitAsync();
         return NoContent();
     }
 
@@ -750,20 +857,104 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
 
     // ── Status Workflow ──
 
-    /// <summary>GET /api/repairs/technicians — list of active technicians</summary>
+    /// <summary>
+    /// GET /api/repairs/technicians — technician picker options.
+    ///
+    /// With ?repairKey= the list is QUALIFICATION-FILTERED for that repair, the
+    /// way legacy's dbo.techsGet / dbo.techsGetNew filters it for
+    /// frmRepairOpen_UpdateTech (docs/smoke-test-findings-2026-05-19.md Bug 3 —
+    /// the unfiltered list mixed internal techs, outsource vendors and junk
+    /// rows like 000/AED/AES together):
+    ///   * outsourced repair  -> outsource vendors only (tblJobTypes 6)
+    ///   * in-house repair    -> techs holding a tblTechnicianInstrumentTypes
+    ///     row for the scope's sRigidOrFlexible; for FLEXIBLE scopes the row's
+    ///     bFlexLargeDiameter must also match the scope type category's
+    ///     bLargeDiameter flag
+    ///   * a blank scope-type R/F disables the qualification filter, exactly as
+    ///     legacy's IsNull(@psRigidOrFlexible,'')='' bypasses the join
+    ///   * the repair's currently-assigned header techs are ALWAYS unioned back
+    ///     in, qualified or not, so an existing assignment never renders as an
+    ///     unknown key (legacy re-inserts them the same way)
+    /// Without repairKey the behaviour is unchanged (all active technicians);
+    /// jobTypeKey narrows that path to a single legacy job type.
+    ///
+    /// The logic is inlined rather than calling dbo.techsGetNew because the
+    /// paired write-side proc (dbo.repairUpdateTech) does not exist on this
+    /// database at all — see UpdateTechs — and this controller otherwise calls
+    /// no stored procedures.
+    /// </summary>
     [HttpGet("technicians")]
-    public async Task<IActionResult> GetTechnicians()
+    public async Task<IActionResult> GetTechnicians(
+        [FromQuery] int? repairKey = null,
+        [FromQuery] int? jobTypeKey = null)
     {
         await using var conn = CreateConnection();
         await conn.OpenAsync();
-        const string sql = """
-            SELECT lTechnicianKey, sTechName
-            FROM tblTechnicians
-            WHERE ISNULL(bIsActive, 1) = 1
-            ORDER BY sTechName
-            """;
+
+        string sql;
+        if (repairKey is > 0)
+        {
+            sql = """
+                DECLARE @rf nvarchar(1) = NULL, @largeDia bit = 0, @outsourced bit = 0,
+                        @tech1 int = 0, @tech2 int = 0, @found bit = 0;
+                -- bOutsourced OR an assigned vendor: legacy passes the form an
+                -- explicit outsourced flag, cloud derives it from lVendorKey.
+                -- This repo carries both columns, so honour either.
+                SELECT @found      = 1,
+                       @rf         = st.sRigidOrFlexible,
+                       @largeDia   = CASE WHEN ISNULL(sc.bLargeDiameter, 0) = 1 THEN 1 ELSE 0 END,
+                       @outsourced = CASE WHEN ISNULL(r.bOutsourced, 0) = 1
+                                            OR ISNULL(r.lVendorKey, 0) > 0 THEN 1 ELSE 0 END,
+                       @tech1      = ISNULL(r.lTechnicianKey, 0),
+                       @tech2      = ISNULL(r.lTechnician2Key, 0)
+                FROM tblRepair r
+                JOIN tblScope s ON s.lScopeKey = r.lScopeKey
+                JOIN tblScopeType st ON st.lScopeTypeKey = s.lScopeTypeKey
+                LEFT JOIN tblScopeTypeCategories sc ON sc.lScopeTypeCategoryKey = st.lScopeTypeCatKey
+                WHERE r.lRepairKey = @repairKey;
+
+                IF @found = 0
+                    SELECT CAST(NULL AS int) AS lTechnicianKey, CAST(NULL AS nvarchar(100)) AS sTechName WHERE 1 = 0;
+                ELSE
+                    SELECT t.lTechnicianKey, ISNULL(t.sTechName, '') AS sTechName
+                    FROM tblTechnicians t
+                    WHERE ISNULL(t.bIsActive, 1) = 1
+                      AND (
+                            (@outsourced = 1 AND t.lJobTypeKey = 6)
+                         OR (@outsourced = 0 AND (
+                                ISNULL(@rf, '') = ''
+                             OR EXISTS (SELECT 1 FROM tblTechnicianInstrumentTypes it
+                                        WHERE it.lTechnicianKey = t.lTechnicianKey
+                                          AND it.sRigidOrFlexible = @rf
+                                          -- Strict, as legacy compares
+                                          -- (bFlexLargeDiameter = @bLargeDiameter):
+                                          -- a NULL diameter row qualifies for
+                                          -- NEITHER flexible class.
+                                          AND (@rf <> 'F' OR it.bFlexLargeDiameter = @largeDia))))
+                      )
+                    UNION
+                    -- Currently-assigned header techs, qualified or not.
+                    SELECT t.lTechnicianKey, ISNULL(t.sTechName, '') AS sTechName
+                    FROM tblTechnicians t
+                    WHERE t.lTechnicianKey IN (@tech1, @tech2) AND t.lTechnicianKey > 0
+                    ORDER BY sTechName;
+                """;
+        }
+        else
+        {
+            sql = """
+                SELECT lTechnicianKey, ISNULL(sTechName, '') AS sTechName
+                FROM tblTechnicians
+                WHERE ISNULL(bIsActive, 1) = 1
+                  AND (@jobTypeKey IS NULL OR lJobTypeKey = @jobTypeKey)
+                ORDER BY sTechName
+                """;
+        }
+
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
+        if (repairKey is > 0) cmd.Parameters.AddWithValue("@repairKey", repairKey.Value);
+        else cmd.Parameters.AddWithValue("@jobTypeKey", (object?)jobTypeKey ?? DBNull.Value);
         await using var reader = await cmd.ExecuteReaderAsync();
         var techs = new List<TechnicianOption>();
         while (await reader.ReadAsync())
@@ -1166,7 +1357,13 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             SELECT SCOPE_IDENTITY();
             """;
 
-        await using var cmd = new SqlCommand(sql, conn);
+        // Guard + insert in ONE transaction — a finalized/closed repair's quote
+        // is settled and must not take new lines.
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        if (await CheckRepairEditableAsync(conn, repairKey, tx) is { } locked)
+            return locked;
+
+        await using var cmd = new SqlCommand(sql, conn, tx);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         cmd.Parameters.AddWithValue("@itemKey", (object?)itemKey ?? DBNull.Value);
@@ -1179,6 +1376,7 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         cmd.Parameters.AddWithValue("@techKey", body.TechKey.HasValue ? (object)body.TechKey.Value : DBNull.Value);
 
         var newKey = await cmd.ExecuteScalarAsync();
+        await tx.CommitAsync();
         return Ok(new { tranKey = Convert.ToInt32(newKey) });
     }
 
@@ -1200,7 +1398,11 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             WHERE lRepairItemTranKey = @tranKey AND lRepairKey = @repairKey
             """;
 
-        await using var cmd = new SqlCommand(sql, conn);
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        if (await CheckRepairEditableAsync(conn, repairKey, tx) is { } locked)
+            return locked;
+
+        await using var cmd = new SqlCommand(sql, conn, tx);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@tranKey", tranKey);
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
@@ -1212,7 +1414,9 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         cmd.Parameters.AddWithValue("@comments", (object?)body.Comments ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@techKey", body.TechKey.HasValue ? (object)body.TechKey.Value : DBNull.Value);
         var rows = await cmd.ExecuteNonQueryAsync();
-        return rows > 0 ? NoContent() : NotFound();
+        if (rows == 0) return NotFound();
+        await tx.CommitAsync();
+        return NoContent();
     }
 
     [HttpDelete("{repairKey:int}/lineitems/{tranKey:int}")]
@@ -1221,13 +1425,19 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        if (await CheckRepairEditableAsync(conn, repairKey, tx) is { } locked)
+            return locked;
+
         await using var cmd = new SqlCommand(
-            "DELETE FROM tblRepairItemTran WHERE lRepairItemTranKey = @tranKey AND lRepairKey = @repairKey", conn);
+            "DELETE FROM tblRepairItemTran WHERE lRepairItemTranKey = @tranKey AND lRepairKey = @repairKey", conn, tx);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@tranKey", tranKey);
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         var rows = await cmd.ExecuteNonQueryAsync();
-        return rows > 0 ? NoContent() : NotFound();
+        if (rows == 0) return NotFound();
+        await tx.CommitAsync();
+        return NoContent();
     }
 
     [HttpPatch("{repairKey:int}/lineitems/{tranKey:int}/causecomments")]
@@ -1244,14 +1454,20 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             WHERE lRepairItemTranKey = @tranKey AND lRepairKey = @repairKey
             """;
 
-        await using var cmd = new SqlCommand(sql, conn);
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        if (await CheckRepairEditableAsync(conn, repairKey, tx) is { } locked)
+            return locked;
+
+        await using var cmd = new SqlCommand(sql, conn, tx);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@cause", (object?)body.Cause ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@comments", (object?)body.Comments ?? DBNull.Value);
         cmd.Parameters.AddWithValue("@tranKey", tranKey);
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         var patchRows = await cmd.ExecuteNonQueryAsync();
-        return patchRows > 0 ? NoContent() : NotFound();
+        if (patchRows == 0) return NotFound();
+        await tx.CommitAsync();
+        return NoContent();
     }
 
     // ── Amendment Lookups ──
@@ -1347,6 +1563,14 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         await using var tx = conn.BeginTransaction();
         try
         {
+            // 0. Editable guard — takes the repair row's UPDLOCK and holds it for
+            //    the amendment writes below.
+            if (await CheckRepairEditableAsync(conn, repairKey, tx) is { } locked)
+            {
+                await tx.RollbackAsync();
+                return locked;
+            }
+
             // 1. Update the line item if new values provided
             if (body.NewFixType != null || body.NewAmount.HasValue)
             {
@@ -1420,36 +1644,111 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        if (await CheckRepairEditableAsync(conn, repairKey, tx) is { } locked)
+            return locked;
+
         const string sql = "UPDATE tblRepairItemTran SET sApproved = @approved WHERE lRepairKey = @repairKey";
-        await using var cmd = new SqlCommand(sql, conn);
+        await using var cmd = new SqlCommand(sql, conn, tx);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@approved", body.Approved ?? "Y");
         cmd.Parameters.AddWithValue("@repairKey", repairKey);
         var rows = await cmd.ExecuteNonQueryAsync();
+        await tx.CommitAsync();
         return Ok(new { updated = rows });
     }
 
     // ── Update Techs ──
+
+    /// <summary>
+    /// PATCH /api/repairs/{repairKey}/techs — legacy frmRepairOpen_UpdateTech /
+    /// dbo.repairUpdateTech(plRepairKey, pbTech1, pbAllRepairItems,
+    /// plTechnicianKey) parity.
+    ///
+    /// ONE header slot per call — Tech1 writes lTechnicianKey, otherwise
+    /// lTechnician2Key — and the OTHER slot is left untouched. (The previous
+    /// shape took both keys and wrote both every time, so the modal's default
+    /// null secondary silently erased an existing Tech 2.)
+    ///
+    /// The same technician is then pushed onto the repair's line items:
+    /// every tblRepairItemTran row when AllRepairItems is set, otherwise only
+    /// the rows that carry no technician yet ("Repair Items without Tech").
+    /// tblRepairItemTran has a single lTechnicianKey column, so the line push is
+    /// the same regardless of which header slot was chosen.
+    ///
+    /// dbo.repairUpdateTech does not exist on this database, so the two writes
+    /// are inline SQL in ONE transaction: the header and the lines must agree or
+    /// neither lands.
+    /// </summary>
     [HttpPatch("{repairKey:int}/techs")]
     public async Task<IActionResult> UpdateTechs(int repairKey, [FromBody] UpdateTechsRequest body)
     {
+        if (body.TechKey <= 0)
+            return BadRequest(new { message = "A technician must be selected." });
+
         await using var conn = CreateConnection();
         await conn.OpenAsync();
 
-        const string sql = """
-            UPDATE tblRepair SET
-                lTechnicianKey  = @techKey,
-                lTechnician2Key = @tech2Key
-            WHERE lRepairKey = @repairKey
-            """;
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            if (await CheckRepairEditableAsync(conn, repairKey, tx) is { } locked)
+            {
+                await tx.RollbackAsync();
+                return locked;
+            }
 
-        await using var cmd = new SqlCommand(sql, conn);
-        cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@repairKey", repairKey);
-        cmd.Parameters.AddWithValue("@techKey", body.TechKey);
-        cmd.Parameters.AddWithValue("@tech2Key", body.Tech2Key.HasValue ? (object)body.Tech2Key.Value : DBNull.Value);
-        var rows = await cmd.ExecuteNonQueryAsync();
-        return rows > 0 ? NoContent() : NotFound();
+            const string headerSql = """
+                UPDATE tblRepair SET
+                    lTechnicianKey  = CASE WHEN @tech1 = 1 THEN @techKey ELSE lTechnicianKey  END,
+                    lTechnician2Key = CASE WHEN @tech1 = 1 THEN lTechnician2Key ELSE @techKey END
+                WHERE lRepairKey = @repairKey
+                """;
+            int headerRows;
+            await using (var headerCmd = new SqlCommand(headerSql, conn, tx))
+            {
+                headerCmd.CommandTimeout = 30;
+                headerCmd.Parameters.AddWithValue("@repairKey", repairKey);
+                headerCmd.Parameters.AddWithValue("@techKey", body.TechKey);
+                headerCmd.Parameters.AddWithValue("@tech1", body.Tech1 ? 1 : 0);
+                headerRows = await headerCmd.ExecuteNonQueryAsync();
+            }
+
+            if (headerRows == 0)
+            {
+                await tx.RollbackAsync();
+                return NotFound(new { message = $"Repair {repairKey} not found." });
+            }
+
+            const string itemSql = """
+                UPDATE tblRepairItemTran SET
+                    lTechnicianKey = @techKey
+                WHERE lRepairKey = @repairKey
+                  AND (@allItems = 1 OR ISNULL(lTechnicianKey, 0) = 0)
+                """;
+            int itemRows;
+            await using (var itemCmd = new SqlCommand(itemSql, conn, tx))
+            {
+                itemCmd.CommandTimeout = 30;
+                itemCmd.Parameters.AddWithValue("@repairKey", repairKey);
+                itemCmd.Parameters.AddWithValue("@techKey", body.TechKey);
+                itemCmd.Parameters.AddWithValue("@allItems", body.AllRepairItems ? 1 : 0);
+                itemRows = await itemCmd.ExecuteNonQueryAsync();
+            }
+
+            await tx.CommitAsync();
+            return Ok(new UpdateTechsResponse(
+                TechKey: body.TechKey,
+                Tech1: body.Tech1,
+                AllRepairItems: body.AllRepairItems,
+                HeaderUpdated: headerRows,
+                LineItemsUpdated: itemRows));
+        }
+        catch
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
 
     // ── Update Slips ──
@@ -1622,20 +1921,77 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         await using var txn = (SqlTransaction)await conn.BeginTransactionAsync();
         try
         {
+            // The finalized flag is read in the SAME locked statement as the key,
+            // so the check costs no extra round trip and cannot race a concurrent
+            // finalize between two reads.
+            //
+            // AGGREGATED, not "first row": the 1:1 comment above is the intent,
+            // not the data — 37 real repairs carry more than one tblInvoice row
+            // and 3 of those mix finalized with draft. (Excludes the lRepairKey=0
+            // orphan/manual bucket, which this route cannot reach.) Reading a
+            // single arbitrary row
+            // would make the guard depend on which one SQL Server handed back.
+            // MAX(bFinalized) fails CLOSED: if ANY invoice on this repair is
+            // finalized, the refresh is refused. The aggregate also forces every
+            // matching row to be scanned, so UPDLOCK, HOLDLOCK covers the whole
+            // set rather than one row. Returns exactly one row always — a NULL
+            // key means no invoice exists yet.
+            // RowCount is carried out of the same aggregate so a repair with
+            // several invoice rows can be REFUSED rather than silently resolved.
+            // Picking one of them by MIN/MAX would be a tie-break, and a
+            // tie-break that decides which money row gets rewritten is not an
+            // answer — it just makes the wrong choice quietly. FinalizeInvoice
+            // independently picks the NEWEST row (TOP 1 ... ORDER BY lInvoiceKey
+            // DESC), so any rule chosen here would also disagree with it.
             const string checkSql = """
-                SELECT lInvoiceKey
+                SELECT MIN(lInvoiceKey) AS lInvoiceKey,
+                       CAST(MAX(CAST(ISNULL(bFinalized, 0) AS int)) AS bit) AS bFinalized,
+                       COUNT(*) AS InvoiceRowCount
                 FROM tblInvoice WITH (UPDLOCK, HOLDLOCK)
                 WHERE lRepairKey = @repairKey
                 """;
 
-            await using var checkCmd = new SqlCommand(checkSql, conn, txn);
-            checkCmd.CommandTimeout = 30;
-            checkCmd.Parameters.AddWithValue("@repairKey", repairKey);
-            var existing = await checkCmd.ExecuteScalarAsync();
-
-            if (existing is not null and not DBNull)
+            int? existingKey = null;
+            var existingFinalized = false;
+            var existingRowCount = 0;
+            await using (var checkCmd = new SqlCommand(checkSql, conn, txn))
             {
-                var existingKey = Convert.ToInt32(existing);
+                checkCmd.CommandTimeout = 30;
+                checkCmd.Parameters.AddWithValue("@repairKey", repairKey);
+                await using var checkReader = await checkCmd.ExecuteReaderAsync();
+                if (await checkReader.ReadAsync() && checkReader["lInvoiceKey"] != DBNull.Value)
+                {
+                    existingKey = Convert.ToInt32(checkReader["lInvoiceKey"]);
+                    existingFinalized = Convert.ToBoolean(checkReader["bFinalized"]);
+                    existingRowCount = Convert.ToInt32(checkReader["InvoiceRowCount"]);
+                }
+            }
+
+            if (existingKey is { } existingKeyValue)
+            {
+                if (existingRowCount > 1)
+                {
+                    await txn.RollbackAsync();
+                    return Conflict(new { message = $"This repair has {existingRowCount} invoice rows, so there is no single draft to refresh. The duplicates must be resolved before a draft invoice can be updated." });
+                }
+
+                // A FINALIZED invoice is settled: re-stamping dtTranDate to today
+                // and re-deriving dblTranAmount from tblRepair.dblAmtRepair would
+                // move a posted invoice's date, replace its total with a figure
+                // not recomputed from the approved lines, leave tblInvoiceDetl
+                // disagreeing with its own header, and never clear
+                // dtGPProcessDate — so GP would keep the old figure while
+                // WinScope showed a new one. That is the stranded-GP-balance
+                // failure arriving through the draft door. Re-issuing a finalized
+                // invoice is FinalizeInvoice's job (Reissue + Reason), which
+                // voids in place, bumps the suffix and rebuilds detail.
+                if (existingFinalized)
+                {
+                    await txn.RollbackAsync();
+                    return Conflict(new { message = "This repair's invoice is already finalized. Re-issuing requires the finalize re-issue flow." });
+                }
+
+                // NOT finalized — the draft refresh path, unchanged.
                 const string updateSql = """
                     UPDATE tblInvoice
                     SET dtTranDate = GETDATE(),
@@ -1645,11 +2001,11 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                 await using var updateCmd = new SqlCommand(updateSql, conn, txn);
                 updateCmd.CommandTimeout = 30;
                 updateCmd.Parameters.AddWithValue("@repairKey", repairKey);
-                updateCmd.Parameters.AddWithValue("@existingKey", existingKey);
+                updateCmd.Parameters.AddWithValue("@existingKey", existingKeyValue);
                 await updateCmd.ExecuteNonQueryAsync();
 
                 await txn.CommitAsync();
-                return Ok(new { invoiceKey = existingKey });
+                return Ok(new { invoiceKey = existingKeyValue });
             }
 
             // Resolve service location for invoice number generation
@@ -2164,6 +2520,100 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
         catch
         {
             await txn.RollbackAsync();
+            throw;
+        }
+    }
+
+    // ── Close / Reopen ──
+
+    /// <summary>
+    /// POST /api/repairs/{repairKey}/close — close the WO: sRepairClosed = 'Y',
+    /// and backfill dtDateOut. Adapted from the cloud repo's CloseRepair.
+    ///
+    /// Closing is a STATE, not a lock — it engages no read-only behaviour, exactly
+    /// as legacy's "Closed Repair" checkbox engages none (see RepairLock). This
+    /// endpoint exists because redesign-matched previously had no way to set the
+    /// flag at all, which is the actual parity gap.
+    ///
+    /// Deliberately permissive about invoicing/QC state — warranty and no-charge
+    /// repairs close without invoices — and deliberately NOT fired automatically
+    /// on finalize: legacy keeps closing a separate operator decision.
+    /// </summary>
+    [HttpPost("{repairKey:int}/close")]
+    public async Task<IActionResult> CloseRepair(int repairKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        const string sql = """
+            UPDATE tblRepair SET
+                sRepairClosed = 'Y',
+                dtDateOut     = COALESCE(dtDateOut, GETDATE())
+            WHERE lRepairKey = @repairKey
+              AND UPPER(LTRIM(RTRIM(ISNULL(sRepairClosed, 'N')))) <> 'Y'
+            """;
+        await using var cmd = new SqlCommand(sql, conn);
+        cmd.CommandTimeout = 30;
+        cmd.Parameters.AddWithValue("@repairKey", repairKey);
+        var rows = await cmd.ExecuteNonQueryAsync();
+        if (rows > 0) return Ok(new { repairKey, closed = true });
+
+        return await RepairExistsAsync(conn, repairKey)
+            ? Conflict(new { message = "This repair is already closed." })
+            : NotFound(new { message = $"Repair {repairKey} not found." });
+    }
+
+    /// <summary>
+    /// POST /api/repairs/{repairKey}/reopen — clear the closed flag (mistakes
+    /// happen). dtDateOut is kept: it is history.
+    ///
+    /// Blocked while a live FINALIZED invoice exists, so that "closed" and
+    /// "invoiced" cannot disagree in the record: void the invoice first. Note
+    /// this is a bookkeeping consistency rule, not an edit lock — a closed
+    /// repair is editable either way.
+    ///
+    /// UPDLOCK, HOLDLOCK on the repair row AND on the invoice range inside the
+    /// transaction is deliberate (cloud's ordering): it serializes reopen
+    /// against a concurrent invoice finalize rather than letting the two
+    /// interleave into an open-but-invoiced repair.
+    /// </summary>
+    [HttpPost("{repairKey:int}/reopen")]
+    public async Task<IActionResult> ReopenRepair(int repairKey)
+    {
+        await using var conn = CreateConnection();
+        await conn.OpenAsync();
+
+        await using var tx = (SqlTransaction)await conn.BeginTransactionAsync();
+        try
+        {
+            const string sql = """
+                UPDATE r SET
+                    sRepairClosed = 'N'
+                FROM tblRepair r WITH (UPDLOCK, HOLDLOCK)
+                WHERE r.lRepairKey = @repairKey
+                  AND UPPER(LTRIM(RTRIM(ISNULL(r.sRepairClosed, 'N')))) = 'Y'
+                  AND NOT EXISTS (SELECT 1 FROM tblInvoice i WITH (UPDLOCK, HOLDLOCK)
+                                  WHERE i.lRepairKey = r.lRepairKey
+                                    AND i.bFinalized = 1)
+                """;
+            int rows;
+            await using (var cmd = new SqlCommand(sql, conn, tx))
+            {
+                cmd.CommandTimeout = 30;
+                cmd.Parameters.AddWithValue("@repairKey", repairKey);
+                rows = await cmd.ExecuteNonQueryAsync();
+            }
+            await tx.CommitAsync();
+
+            if (rows > 0) return Ok(new { repairKey, reopened = true });
+
+            return await RepairExistsAsync(conn, repairKey)
+                ? Conflict(new { message = "This repair cannot be reopened — it is not closed, or it has a finalized invoice (void the invoice first)." })
+                : NotFound(new { message = $"Repair {repairKey} not found." });
+        }
+        catch
+        {
+            await tx.RollbackAsync();
             throw;
         }
     }

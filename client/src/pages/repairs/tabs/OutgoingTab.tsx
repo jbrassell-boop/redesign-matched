@@ -2,15 +2,17 @@ import React from 'react';
 import { message, Modal } from 'antd';
 import axios from 'axios';
 import type { RepairFull, RepairLineItem } from '../types';
-import { createDraftInvoice, finalizeInvoice } from '../../../api/repairs';
+import { createDraftInvoice, finalizeInvoice, closeRepair, reopenRepair } from '../../../api/repairs';
+import { InspectionLauncher } from './InspectionsTab';
 
-// Pull the server's specific gate message out of a 400 (e.g. "A purchase order
-// number is required…") so the user sees WHY finalize was rejected, not a
-// generic failure toast.
+// Pull the server's specific gate message out of a 400/409 (e.g. "A purchase
+// order number is required…", "…it has a finalized invoice") so the user sees
+// WHY the action was rejected, not a generic failure toast.
 const apiError = (e: unknown, fallback: string): string => {
   if (axios.isAxiosError(e)) {
-    const d = e.response?.data as { error?: string } | undefined;
+    const d = e.response?.data as { error?: string; message?: string } | undefined;
     if (d?.error) return d.error;
+    if (d?.message) return d.message;
   }
   return fallback;
 };
@@ -48,6 +50,12 @@ const tdAmountBaseStyle: React.CSSProperties = { padding: '5px 8px', borderBotto
 const totalsBarStyle: React.CSSProperties = { background: 'var(--navy)', color: 'var(--card)', padding: '7px 10px', display: 'flex', justifyContent: 'flex-end', gap: 20, alignItems: 'center' };
 const totalLabelStyle: React.CSSProperties = { fontSize: 11, opacity: .7 };
 const totalValueStyle: React.CSSProperties = { fontSize: 13, fontWeight: 900 };
+const closeRowStyle: React.CSSProperties = { display: 'flex', gap: 8, alignItems: 'center', marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,.2)' };
+const closeStateStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, opacity: .75, textTransform: 'uppercase', letterSpacing: '.04em', marginRight: 'auto' };
+const closeBtnStyle: React.CSSProperties = { padding: '4px 10px', fontSize: 11, fontWeight: 800, background: 'var(--card)', color: 'var(--primary)', border: '1px solid rgba(255,255,255,.3)', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' };
+// Reopen reverses a completed action, so it reads as secondary — outlined and
+// low-emphasis against the navy card rather than a second primary button.
+const reopenBtnStyle: React.CSSProperties = { padding: '4px 10px', fontSize: 11, fontWeight: 600, background: 'transparent', color: 'var(--card)', border: '1px solid rgba(255,255,255,.45)', borderRadius: 4, cursor: 'pointer', fontFamily: 'inherit' };
 
 interface OutgoingTabProps {
   repair: RepairFull;
@@ -105,8 +113,52 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
   const customerTotal = items.filter(i => i.fixType?.toUpperCase() !== 'W').reduce((s, i) => s + (i.amount ?? 0), 0);
   const fmt = (n: number) => `$${n.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
 
+  // Closed is a STATE, not a lock — legacy's checkbox blocks nothing, so a
+  // closed repair stays fully editable here too. Only a FINALIZED invoice makes
+  // the repair read-only. Closing is a separate operator decision from
+  // finalizing (legacy keeps them apart), so nothing here auto-closes.
+  const isClosed = repair.repairClosed ?? false;
+  const readOnly = repair.isReadOnly ?? false;
+
+  const handleClose = () => Modal.confirm({
+    title: 'Close Repair',
+    content: 'Closing marks this work order complete. It stays editable — closing records a state, it does not lock the repair. Continue?',
+    okText: 'Close Repair',
+    onOk: async () => {
+      try {
+        await closeRepair(repair.repairKey);
+        message.success('Repair closed');
+        onRepairChanged?.();
+      } catch (e) {
+        message.error(apiError(e, 'Failed to close repair'));
+      }
+    },
+  });
+
+  const handleReopen = () => Modal.confirm({
+    title: 'Reopen Repair',
+    content: 'Reopening clears the closed flag on this work order. It is blocked while a finalized invoice exists — void the invoice first. Continue?',
+    okText: 'Reopen',
+    onOk: async () => {
+      try {
+        await reopenRepair(repair.repairKey);
+        message.success('Repair reopened');
+        onRepairChanged?.();
+      } catch (e) {
+        message.error(apiError(e, 'Failed to reopen repair'));
+      }
+    },
+  });
+
   return (
     <div style={outgoingGridStyle}>
+      {/* FULL WIDTH — post-repair QC is the gate before this scope ships */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <Section title="Inspection">
+          <InspectionLauncher repairKey={repair.repairKey} mode="post" />
+        </Section>
+      </div>
+
       {/* LEFT */}
       <div>
         <Section title="Outbound Shipping">
@@ -180,7 +232,14 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
             </div>
             <div style={invoiceBtnRowStyle}>
               {([
-                { label: 'Draft Invoice', onClick: async () => {
+                // Blocked once the invoice is FINALIZED (server 409s): refreshing
+                // a posted invoice's date/amount is an accounting fault. Note
+                // this keys on readOnly (finalized), NOT on closed — closing
+                // locks nothing. Finalize Invoice stays enabled: it owns the
+                // deliberate re-issue path and handles alreadyFinalized itself.
+                { label: 'Draft Invoice', disabled: readOnly,
+                  disabledReason: 'This invoice is finalized — re-issue it from Finalize Invoice instead.',
+                  onClick: async () => {
                   try {
                     const r = await createDraftInvoice(repair.repairKey);
                     message.success(`Draft invoice ${r.invoiceNumber || r.invoiceKey} created`);
@@ -217,10 +276,11 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
                   okButtonProps: { danger: true },
                   onOk: () => message.info('Invoice void requires accounting approval'),
                 }), danger: true, disabled: !(repair.latestInvoiceNumber || repair.invoiceNumber) },
-              ] as { label: string; onClick: () => void; danger?: boolean; primary?: boolean; disabled?: boolean }[]).map(btn => (
+              ] as { label: string; onClick: () => void; danger?: boolean; primary?: boolean; disabled?: boolean; disabledReason?: string }[]).map(btn => (
                 <button key={btn.label}
                   onClick={btn.onClick}
                   disabled={btn.disabled}
+                  title={btn.disabled ? btn.disabledReason : undefined}
                   style={{
                     ...invoiceBtnBaseStyle,
                     background: btn.danger
@@ -235,6 +295,21 @@ export const OutgoingTab = ({ repair, items, onRepairChanged }: OutgoingTabProps
                   {btn.label}
                 </button>
               ))}
+            </div>
+
+            {/* Close / Reopen — closing follows finalizing, so it lives with the
+                invoice actions. Never automatic: the operator decides. The two
+                states are independent: closed is a label, finalized is the lock. */}
+            <div style={closeRowStyle}>
+              <span style={closeStateStyle}>
+                {isClosed ? 'Closed' : 'Open'}
+                {readOnly && ' · invoice finalized — read only'}
+              </span>
+              {isClosed ? (
+                <button onClick={handleReopen} style={reopenBtnStyle}>Reopen Repair</button>
+              ) : (
+                <button onClick={handleClose} style={closeBtnStyle}>Close Repair</button>
+              )}
             </div>
           </div>
 

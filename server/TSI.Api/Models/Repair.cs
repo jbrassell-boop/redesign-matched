@@ -104,8 +104,9 @@ public record RepairFull(
     // Dates
     string DateIn, string? DateApproved, string? EstDelivery, string? ShipDate, string? DateOut,
     int DaysIn,
-    // People
-    string? Tech, int? TechKey, string? Tech2, string? Inspector,
+    // People. Tech2Key is carried alongside the name so the Update Techs modal
+    // can preload the CURRENT occupant of the secondary slot by key.
+    string? Tech, int? TechKey, string? Tech2, int? Tech2Key, string? Inspector,
     string? ApprovalName, string? SalesRep,
     // Financial
     decimal? AmountApproved, string? InvoiceNumber, string? PurchaseOrder,
@@ -170,7 +171,13 @@ public record RepairFull(
     // LeadTimeDays = weekdays dtDateIn → dtDateOut|today. No approval needed.
     // TatDays = weekdays dtAprRecvd → dtDateOut|today; NULL until approved.
     int? LeadTimeDays = null,
-    int? TatDays = null
+    int? TatDays = null,
+    // Edit lock (legacy WSRepairOpen / cloud RepairLock). RepairClosed is the
+    // raw tblRepair.sRepairClosed = 'Y' state; IsReadOnly is the effective lock
+    // — closed OR the repair's invoice is finalized. The cockpit disables the
+    // mutating actions off IsReadOnly so the user sees a state instead of a 409.
+    bool RepairClosed = false,
+    bool IsReadOnly = false
 );
 
 public record RepairInspections(
@@ -297,7 +304,29 @@ public record TechnicianOption(
 public record AddNoteRequest(string? Note);
 public record BulkApproveRequest(string? Approved);
 public record CreateUpdateSlipRequest(int? TechKey, int? Tech2Key, int? ReasonKey);
-public record UpdateTechsRequest(int TechKey, int? Tech2Key);
+
+// Body for PATCH /api/repairs/{repairKey}/techs — legacy
+// frmRepairOpen_UpdateTech / dbo.repairUpdateTech parity. ONE slot is written
+// per call: Tech1=true targets tblRepair.lTechnicianKey, Tech1=false targets
+// lTechnician2Key; the other slot is left alone. The same technician is then
+// pushed onto the repair's tblRepairItemTran rows — all of them when
+// AllRepairItems is true, otherwise only the lines that have no tech yet
+// (legacy's "Repair Items without Tech").
+public record UpdateTechsRequest(
+    int TechKey,
+    bool Tech1 = true,
+    bool AllRepairItems = true
+);
+
+// Result of PATCH /api/repairs/{repairKey}/techs. HeaderUpdated is 0 or 1;
+// LineItemsUpdated is how many tblRepairItemTran rows took the technician.
+public record UpdateTechsResponse(
+    int TechKey,
+    bool Tech1,
+    bool AllRepairItems,
+    int HeaderUpdated,
+    int LineItemsUpdated
+);
 
 // Body for POST /api/repairs/{repairKey}/finalize-invoice. Optional — a plain
 // POST with no body finalizes a draft, or is an idempotent no-op against an

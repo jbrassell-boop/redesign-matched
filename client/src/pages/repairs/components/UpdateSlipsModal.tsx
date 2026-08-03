@@ -25,8 +25,10 @@ export const UpdateSlipsModal = ({ open, onClose, repair, slips, onSlipCreated }
   useEffect(() => {
     if (!open) return;
     getUpdateSlipReasons().then(setReasons).catch(() => { message.error('Failed to load update slip reasons'); });
-    getRepairTechnicians().then(setTechs).catch(() => { message.error('Failed to load technicians'); });
-  }, [open]);
+    // Repair-scoped: an update slip names the techs who worked THIS repair, so
+    // the picker is the same qualification-filtered list as Update Techs.
+    getRepairTechnicians(repair.repairKey).then(setTechs).catch(() => { message.error('Failed to load technicians'); });
+  }, [open, repair.repairKey]);
 
   const handleCreate = async () => {
     if (!reasonKey) { message.warning('Select a reason'); return; }

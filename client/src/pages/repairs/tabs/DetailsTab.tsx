@@ -16,6 +16,10 @@ import { InventoryPicklistModal } from '../components/InventoryPicklistModal';
 interface DetailsTabProps {
   repair: RepairFull;
   flags: ClientFlag[];
+  /** Optional refresh callback. Fired after a write that changes the repair
+   *  header (Update Techs) so the cockpit can re-fetch the repair AND the line
+   *  items — the tech push lands on both. */
+  onRepairChanged?: () => void;
 }
 
 const fieldStyle: React.CSSProperties = {
@@ -85,12 +89,20 @@ const dtTechModalTitleStyle: React.CSSProperties = { fontSize: 14, fontWeight: 7
 const dtTechModalBodyStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 12, padding: '8px 0' };
 const dtTechFieldLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 600, color: 'var(--navy)', marginBottom: 4 };
 const dtTechSelectStyle: React.CSSProperties = { width: '100%', height: 32, border: '1px solid var(--border)', borderRadius: 4, fontSize: 12, padding: '0 8px' };
+const dtTechHintStyle: React.CSSProperties = { fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 };
+const dtReadOnlyBannerStyle: React.CSSProperties = {
+  background: 'var(--info-section-bg)', border: '1px solid var(--info-section-border)',
+  borderLeft: '4px solid var(--primary)', borderRadius: '0 6px 6px 0',
+  padding: '7px 12px', display: 'flex', gap: 10, alignItems: 'center',
+};
+const dtReadOnlyLabelStyle: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase', letterSpacing: '.05em', flexShrink: 0 };
+const dtReadOnlyTextStyle: React.CSSProperties = { fontSize: 11, color: 'var(--label)' };
 const dtTechBtnRowStyle: React.CSSProperties = { display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 4 };
 const dtCancelBtnStyle: React.CSSProperties = { padding: '5px 14px', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--card)', cursor: 'pointer', fontSize: 12 };
 const dtSaveBtnStyle: React.CSSProperties = { padding: '5px 14px', borderRadius: 4, border: 'none', background: 'var(--primary)', color: 'var(--card)', cursor: 'pointer', fontSize: 12, fontWeight: 700 };
 const dtOutsourceGridStyle: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px 10px' };
 
-export const DetailsTab = memo(({ repair, flags }: DetailsTabProps) => {
+export const DetailsTab = memo(({ repair, flags, onRepairChanged }: DetailsTabProps) => {
   const [items, setItems] = useState<RepairLineItem[]>([]);
   const [amendOpen, setAmendOpen] = useState(false);
   const [amendTranKey, setAmendTranKey] = useState<number | undefined>(undefined);
@@ -101,12 +113,28 @@ export const DetailsTab = memo(({ repair, flags }: DetailsTabProps) => {
   const [defectsData, setDefectsData] = useState<{ itemKey: number; item: string; comment: string }[]>([]);
   const [invModalOpen, setInvModalOpen] = useState(false);
   const [invData, setInvData] = useState<{ key: number; inventoryItem: string; size: string; repairItem: string }[]>([]);
-  // Update Techs modal
+  // Update Techs modal — legacy frmRepairOpen_UpdateTech: pick a SLOT (Tech 1 /
+  // Tech 2), pick a SCOPE for the line-item push, pick the technician, confirm.
   const [techModalOpen, setTechModalOpen] = useState(false);
   const [techList, setTechList] = useState<TechnicianOption[]>([]);
+  const [techSlot, setTechSlot] = useState<1 | 2>(1);
+  const [techScopeAll, setTechScopeAll] = useState(true);
   const [selectedTech, setSelectedTech] = useState<number>(repair.techKey ?? 0);
-  const [selectedTech2, setSelectedTech2] = useState<number | null>(null);
   const [techSaving, setTechSaving] = useState(false);
+
+  // A FINALIZED invoice makes the repair read-only server-side. Being closed
+  // does NOT — legacy's closed checkbox locks nothing (see RepairLock.cs), and
+  // 99.5% of repairs carry the flag. Surface the lock and disable the writes so
+  // the user sees a state, not a 409 toast.
+  const readOnly = repair.isReadOnly ?? false;
+
+  // Preload the CURRENT occupant of the selected slot. Only one slot is written
+  // per save now, so the old "always null the secondary" default (which erased
+  // an existing Tech 2 on every save) has no equivalent here.
+  const slotCurrentKey = useCallback(
+    (slot: 1 | 2) => (slot === 1 ? repair.techKey ?? 0 : repair.tech2Key ?? 0),
+    [repair.techKey, repair.tech2Key],
+  );
 
   // ── Complaint section: editable state ──
   const [repairReasons, setRepairReasons] = useState<LookupOption[]>([]);
@@ -140,61 +168,83 @@ export const DetailsTab = memo(({ repair, flags }: DetailsTabProps) => {
   };
 
   const actionButtons = useMemo(() => [
-    { label: 'Consumption',     style: { background: 'var(--primary)', color: 'var(--card)' } as React.CSSProperties, action: async () => {
+    { label: 'Consumption',     mutates: true, style: { background: 'var(--primary)', color: 'var(--card)' } as React.CSSProperties, action: async () => {
       try { await bulkApproveLineItems(repair.repairKey, 'Y'); loadItems(); message.success('All items approved (consumption)'); }
       catch { message.error('Failed to approve items'); }
     } },
-    { label: 'Unapproved',      style: { background: 'var(--card)', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: async () => {
+    { label: 'Unapproved',      mutates: true, style: { background: 'var(--card)', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: async () => {
       try { await bulkApproveLineItems(repair.repairKey, ''); loadItems(); message.success('All items unapproved'); }
       catch { message.error('Failed to unapprove items'); }
     } },
-    { label: 'Approved',        style: { background: 'var(--success)', color: 'var(--card)' }, action: async () => {
+    { label: 'Approved',        mutates: true, style: { background: 'var(--success)', color: 'var(--card)' }, action: async () => {
       try { await bulkApproveLineItems(repair.repairKey, 'Y'); loadItems(); message.success('All items approved'); }
       catch { message.error('Failed to approve items'); }
     } },
-    { label: 'Update Slips',    style: { background: 'var(--card)', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: () => {
+    { label: 'Update Slips',    mutates: false, style: { background: 'var(--card)', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: () => {
       getUpdateSlips(repair.repairKey).then(setSlipsData).catch(() => message.error('Failed to load update slips'));
       setSlipsModalOpen(true);
     } },
-    { label: 'Amend Repair',    style: { background: 'var(--amber)', color: 'var(--text-near-black)' }, action: () => {
+    { label: 'Amend Repair',    mutates: true, style: { background: 'var(--amber)', color: 'var(--text-near-black)' }, action: () => {
       handleOpenAmendments();
     } },
-    { label: 'Defect Tracking', style: { background: 'var(--card)', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: () => {
+    { label: 'Defect Tracking', mutates: false, style: { background: 'var(--card)', color: 'var(--primary)', border: '1px solid var(--primary)' }, action: () => {
       getDefectTracking(repair.repairKey).then(setDefectsData).catch(() => message.error('Failed to load defect tracking'));
       setDefectsModalOpen(true);
     } },
-    { label: 'Update Techs',    style: { background: 'var(--neutral-50, var(--bg))', color: 'var(--navy)', border: '1px solid var(--border)' }, action: () => {
-      getRepairTechnicians().then(setTechList).catch(() => message.error('Failed to load technicians'));
+    { label: 'Update Techs',    mutates: true, style: { background: 'var(--neutral-50, var(--bg))', color: 'var(--navy)', border: '1px solid var(--border)' }, action: () => {
+      // Repair-scoped list: outsource vendors for an outsourced WO, otherwise
+      // techs qualified for this scope type (legacy techsGet filtering).
+      getRepairTechnicians(repair.repairKey).then(setTechList).catch(() => message.error('Failed to load technicians'));
+      setTechSlot(1);
+      setTechScopeAll(true);
       setSelectedTech(repair.techKey ?? 0);
-      setSelectedTech2(null);
       setTechModalOpen(true);
     } },
-    { label: 'Inventory',       style: { background: 'var(--neutral-50, var(--bg))', color: 'var(--navy)', border: '1px solid var(--border)' } as React.CSSProperties, action: () => {
+    { label: 'Inventory',       mutates: false, style: { background: 'var(--neutral-50, var(--bg))', color: 'var(--navy)', border: '1px solid var(--border)' } as React.CSSProperties, action: () => {
       getRepairInventoryUsage(repair.repairKey).then(setInvData).catch(() => message.error('Failed to load inventory'));
       setInvModalOpen(true);
     } },
-  ], [repair.repairKey, loadItems]);
+  ], [repair.repairKey, repair.techKey, loadItems]);
 
   return (
     <div style={detailsContainerStyle}>
+
+      {/* Read-only banner — an invoice-finalized repair is locked server-side,
+          so say so instead of letting the writes 409. Closed repairs are NOT
+          locked and get no banner. */}
+      {readOnly && (
+        <div style={dtReadOnlyBannerStyle}>
+          <div style={dtReadOnlyLabelStyle}>Read Only</div>
+          <div style={dtReadOnlyTextStyle}>
+            This repair’s invoice is finalized. Void the invoice to make changes.
+          </div>
+        </div>
+      )}
 
       {/* Action bar */}
       <div style={dtActionBarStyle}>
         <span style={dtActionsLabelStyle}>
           Actions
         </span>
-        {actionButtons.map(btn => (
-          <button
-            key={btn.label}
-            onClick={() => (btn as any).action ? (btn as any).action() : message.warning('Action not configured')}
-            style={{
-              ...dtActionBtnBaseStyle,
-              ...btn.style,
-            }}
-          >
-            {btn.label}
-          </button>
-        ))}
+        {actionButtons.map(btn => {
+          const disabled = readOnly && btn.mutates === true;
+          return (
+            <button
+              key={btn.label}
+              disabled={disabled}
+              title={disabled ? 'This repair is read-only — its invoice is finalized.' : undefined}
+              onClick={() => (btn as any).action ? (btn as any).action() : message.warning('Action not configured')}
+              style={{
+                ...dtActionBtnBaseStyle,
+                ...btn.style,
+                opacity: disabled ? 0.45 : 1,
+                cursor: disabled ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {btn.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Customer Complaint — editable */}
@@ -330,8 +380,38 @@ export const DetailsTab = memo(({ repair, flags }: DetailsTabProps) => {
       >
         <div style={dtTechModalBodyStyle}>
           <div>
-            <div style={dtTechFieldLabelStyle}>Primary Technician *</div>
+            <div style={dtTechFieldLabelStyle}>Tech 1 or 2</div>
             <select
+              aria-label="Technician slot"
+              style={dtTechSelectStyle}
+              value={techSlot}
+              onChange={e => {
+                const slot = Number(e.target.value) === 2 ? 2 : 1;
+                setTechSlot(slot);
+                // Preload whoever currently holds the newly-selected slot.
+                setSelectedTech(slotCurrentKey(slot));
+              }}
+            >
+              <option value={1}>Tech 1</option>
+              <option value={2}>Tech 2</option>
+            </select>
+          </div>
+          <div>
+            <div style={dtTechFieldLabelStyle}>Repair Items</div>
+            <select
+              aria-label="Repair items scope"
+              style={dtTechSelectStyle}
+              value={techScopeAll ? 'all' : 'unteched'}
+              onChange={e => setTechScopeAll(e.target.value === 'all')}
+            >
+              <option value="all">All Repair Items</option>
+              <option value="unteched">Repair Items without Tech</option>
+            </select>
+          </div>
+          <div>
+            <div style={dtTechFieldLabelStyle}>Technician *</div>
+            <select
+              aria-label="Technician"
               style={dtTechSelectStyle}
               value={selectedTech}
               onChange={e => setSelectedTech(Number(e.target.value))}
@@ -340,16 +420,10 @@ export const DetailsTab = memo(({ repair, flags }: DetailsTabProps) => {
               {techList.map(t => <option key={t.techKey} value={t.techKey}>{t.techName}</option>)}
             </select>
           </div>
-          <div>
-            <div style={dtTechFieldLabelStyle}>Secondary Technician</div>
-            <select
-              style={dtTechSelectStyle}
-              value={selectedTech2 ?? ''}
-              onChange={e => setSelectedTech2(e.target.value ? Number(e.target.value) : null)}
-            >
-              <option value="">None</option>
-              {techList.map(t => <option key={t.techKey} value={t.techKey}>{t.techName}</option>)}
-            </select>
+          <div style={dtTechHintStyle}>
+            Sets {techSlot === 1 ? 'Tech 1' : 'Tech 2'} on this work order and assigns the
+            technician to {techScopeAll ? 'all repair items' : 'repair items that have no tech yet'}.
+            The other tech slot is left unchanged.
           </div>
           <div style={dtTechBtnRowStyle}>
             <button onClick={() => setTechModalOpen(false)}
@@ -358,18 +432,34 @@ export const DetailsTab = memo(({ repair, flags }: DetailsTabProps) => {
             </button>
             <button
               disabled={techSaving || !selectedTech}
-              onClick={async () => {
+              onClick={() => {
                 if (!selectedTech) return;
-                setTechSaving(true);
-                try {
-                  await updateRepairTechs(repair.repairKey, selectedTech, selectedTech2);
-                  message.success('Technicians updated');
-                  setTechModalOpen(false);
-                } catch {
-                  message.error('Failed to update technicians');
-                } finally {
-                  setTechSaving(false);
-                }
+                const techName = techList.find(t => t.techKey === selectedTech)?.techName ?? '';
+                Modal.confirm({
+                  title: 'Confirm Update',
+                  content: `Are you sure you want to update the technicians? ${techName || 'The selected technician'} will be set as ${techSlot === 1 ? 'Tech 1' : 'Tech 2'} and applied to ${techScopeAll ? 'all repair items' : 'repair items without a tech'}.`,
+                  okText: 'Update',
+                  onOk: async () => {
+                    setTechSaving(true);
+                    try {
+                      const r = await updateRepairTechs(repair.repairKey, selectedTech, {
+                        tech1: techSlot === 1,
+                        allRepairItems: techScopeAll,
+                      });
+                      message.success(`Technicians updated — ${r.lineItemsUpdated} repair item${r.lineItemsUpdated === 1 ? '' : 's'} assigned`);
+                      setTechModalOpen(false);
+                      // Refresh the line items this tab owns AND ask the cockpit
+                      // to re-fetch the repair, so the header techs and the TECH
+                      // column both stop showing stale data.
+                      loadItems();
+                      onRepairChanged?.();
+                    } catch {
+                      message.error('Failed to update technicians');
+                    } finally {
+                      setTechSaving(false);
+                    }
+                  },
+                });
               }}
               style={dtSaveBtnStyle}>
               {techSaving ? 'Saving…' : 'Save'}
