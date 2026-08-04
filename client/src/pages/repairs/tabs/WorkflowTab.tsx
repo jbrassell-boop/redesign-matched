@@ -3,6 +3,7 @@ import { Table, Spin } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { getRepairLineItems } from '../../../api/repairs';
 import type { RepairLineItem } from '../types';
+import { formatTechCell } from '../techDisplay';
 
 const APPROVED_STYLES: Record<string, { bg: string; color: string }> = {
   Y: { bg: 'rgba(var(--success-rgb), 0.1)', color: 'var(--success)' },
@@ -22,9 +23,9 @@ const COLUMNS: ColumnsType<RepairLineItem> = [
   { title: 'Amount', dataIndex: 'amount', key: 'amount', width: 85, align: 'right', render: (v: number) => `$${v.toFixed(2)}` },
   // Primary / secondary in one cell, same as RepairItemsTable — a Tech 2 save
   // writes the line's second slot and must be visible on THIS surface too.
-  // Identical pairs collapse to one name (61% of secondary-carrying lines).
+  // Shares formatTechCell with the grid so the collapse rule can't drift.
   { title: 'Tech', dataIndex: 'tech', key: 'tech', width: 96,
-    render: (v: string, r: RepairLineItem) => `${v || '—'}${r.tech2 && r.tech2 !== v ? ` / ${r.tech2}` : ''}` },
+    render: (v: string, r: RepairLineItem) => formatTechCell(v, r.tech2) },
   { title: 'Comments', dataIndex: 'comments', key: 'comments' },
 ];
 
