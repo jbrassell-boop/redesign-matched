@@ -478,9 +478,12 @@ const RepairItemRow = ({ item, fmt, onDelete, onOpenAmendments, onPatchCause, on
         )}
       </td>
       {/* Primary / secondary tech share one cell — a Tech 2 save writes the
-          line's second slot, and without this it looked like nothing saved. */}
+          line's second slot, and without this it looked like nothing saved.
+          Same person in both slots collapses to one name: 27,423 of the 45,003
+          secondary-carrying lines (61%, migration data) are identical pairs,
+          and doubling the name on all of them reads as a rendering bug. */}
       <td className="rit-td">
-        {item.tech || '—'}{item.tech2 ? ` / ${item.tech2}` : ''}
+        {item.tech || '—'}{item.tech2 && item.tech2 !== item.tech ? ` / ${item.tech2}` : ''}
       </td>
       {/* Comment — click to edit inline */}
       <td className={`rit-td ${item.comments ? 'rit-comment-cell--set' : 'rit-comment-cell--empty'}`}>
