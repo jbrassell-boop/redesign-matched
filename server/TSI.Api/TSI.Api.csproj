@@ -7,6 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- AuthController.LoginSql is asserted on directly by the drift guard in
+         AuthControllerLoginTests, so a rename breaks the build instead of quietly
+         disarming the guard. -->
+    <InternalsVisibleTo Include="TSI.Api.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Update="Registry\**\*.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

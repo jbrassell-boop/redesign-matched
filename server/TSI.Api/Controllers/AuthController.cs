@@ -26,6 +26,43 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
     private static readonly string DummyPasswordHash =
         PasswordHasher.HashPassword(new object(), "timing-equalization-only-never-a-credential");
 
+    // UserName and Email hold the same string for every current account, but accepting
+    // either keeps login working if that ever diverges.
+    //
+    // Admin comes from Identity roles ONLY: an AspNetUserRoles row joining to the
+    // AspNetRoles row whose NormalizedName is exactly 'ADMIN'. Those rows are seeded
+    // deliberately on live (decided 2026-08-04) — administrators are granted, never
+    // inferred.
+    //
+    // This query deliberately reads a narrower set of columns than the local practice
+    // database offers, because the two schemas have drifted. Neither
+    // AspNetUsers.MustResetPassword nor tblUsers.bSuperAdmin exists on live Azure,
+    // though both exist on localhost. An earlier revision of this fix read both, and
+    // would have thrown "Invalid column name" on live — the same 500 for every user
+    // that this controller was rewritten to fix, reintroduced by trusting a practice
+    // schema. There is no super-admin concept live and no password-reset flow in this
+    // app, so both were removed outright rather than guarded. Login may reference only
+    // AspNetUsers(Id, UserName, Email, PasswordHash, IsActive, LastLoginDate),
+    // AspNetUserRoles(UserId, RoleId) and AspNetRoles(Id, NormalizedName);
+    // AuthControllerLoginTests pins that.
+    //
+    // The role name is matched EXACTLY, against NormalizedName. This is an auth gate,
+    // so a substring test is too loose: any future role merely containing "admin" —
+    // "NonAdmin", "BillingAdminAssistant" — would silently grant full access. The live
+    // role row is Name 'Admin' / NormalizedName 'ADMIN', and Cloud assigns from a fixed
+    // set ("Admin", "Internal", "Portal"), so nothing is lost.
+    internal static readonly string LoginSql = """
+        SELECT u.Id, u.UserName, u.PasswordHash,
+               CAST(CASE WHEN EXISTS (
+                   SELECT 1 FROM AspNetUserRoles ur
+                   JOIN AspNetRoles r ON r.Id = ur.RoleId
+                   WHERE ur.UserId = u.Id AND r.NormalizedName = N'ADMIN'
+               ) THEN 1 ELSE 0 END AS bit) AS bIsAdmin
+        FROM AspNetUsers u
+        WHERE (LOWER(u.UserName) = LOWER(@username) OR LOWER(u.Email) = LOWER(@username))
+          AND u.IsActive = 1
+        """;
+
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -37,44 +74,13 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
         await using var conn = new SqlConnection(connectionString);
         await conn.OpenAsync();
 
-        // UserName and Email hold the same string for every current account, but accepting
-        // either keeps login working if that ever diverges.
-        //
-        // Admin comes from two sources, and it needs both. Converted users have no
-        // AspNetUserRoles rows at all — exactly one account in this database holds one —
-        // so Identity roles alone would hand every real administrator a "User" token and
-        // lock them out of every [Authorize(Roles="Admin")] controller. tblUsers.bSuperAdmin
-        // is the operative admin flag for those users, and AspNetUsers.Id IS lUserKey, so
-        // the profile row joins straight on. WinScope Cloud's own AuthController bridges
-        // the same gap the same way (IsLegacySuperAdminAsync). The soft-delete filter
-        // rides on the JOIN so a deleted profile row elevates nobody.
-        //
-        // The role name is matched EXACTLY, against NormalizedName. This is an auth gate,
-        // so a substring test is too loose: any future role merely containing "admin" —
-        // "NonAdmin", "BillingAdminAssistant" — would silently grant full access. The one
-        // role row in this database is Name 'Admin' / NormalizedName 'ADMIN', and Cloud
-        // assigns from a fixed set ("Admin", "Internal", "Portal"), so nothing is lost.
-        const string sql = """
-            SELECT u.Id, u.UserName, u.PasswordHash, u.MustResetPassword,
-                   CAST(CASE WHEN EXISTS (
-                       SELECT 1 FROM AspNetUserRoles ur
-                       JOIN AspNetRoles r ON r.Id = ur.RoleId
-                       WHERE ur.UserId = u.Id AND r.NormalizedName = N'ADMIN'
-                   ) OR ISNULL(t.bSuperAdmin, 0) = 1 THEN 1 ELSE 0 END AS bit) AS bIsAdmin
-            FROM AspNetUsers u
-            LEFT JOIN tblUsers t ON t.lUserKey = u.Id AND t.Deleted_datetime IS NULL
-            WHERE (LOWER(u.UserName) = LOWER(@username) OR LOWER(u.Email) = LOWER(@username))
-              AND u.IsActive = 1
-            """;
-
-        await using var cmd = new SqlCommand(sql, conn);
+        await using var cmd = new SqlCommand(LoginSql, conn);
         cmd.CommandTimeout = 30;
         cmd.Parameters.AddWithValue("@username", request.Username.Trim());
 
         int userKey;
         string userName;
         string storedHash;
-        bool mustResetPassword;
         string role;
 
         await using (var reader = await cmd.ExecuteReaderAsync())
@@ -91,8 +97,6 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
             userKey = Convert.ToInt32(reader["Id"]);
             userName = reader["UserName"]?.ToString() ?? request.Username;
             storedHash = reader["PasswordHash"]?.ToString() ?? "";
-            mustResetPassword = reader["MustResetPassword"] != DBNull.Value
-                             && Convert.ToBoolean(reader["MustResetPassword"]);
             role = reader["bIsAdmin"] != DBNull.Value && Convert.ToBoolean(reader["bIsAdmin"])
                 ? "Admin" : "User";
         } // reader disposed here — connection is free for the UPDATE below
@@ -115,13 +119,6 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
         // Lockout counters (AccessFailedCount / LockoutEnd) are deliberately not enforced
         // here: this app has no unlock or reset flow, so a lockout it applied would strand
         // the user until Cloud cleared it. Deferred, not overlooked.
-
-        if (mustResetPassword)
-            return StatusCode(StatusCodes.Status403Forbidden, new
-            {
-                message = "This account must set a new password before signing in. Reset it from " +
-                          "the WinScope Cloud login page, or contact an administrator."
-            });
 
         // Best-effort: a failed stamp must NOT fail an otherwise-valid login, but it is
         // logged rather than silently swallowed.

@@ -67,11 +67,10 @@ public sealed class AuthControllerLoginTests
             Assert.Equal(user.UserName, body.Username);
             Assert.True(body.ExpiresAt > DateTime.UtcNow);
 
-            // This fixture has no tblUsers profile row and no AspNetUserRoles row, so it
-            // must come back as a plain user. Pinning the exact value (rather than merely
-            // "not empty") is what stops the bSuperAdmin elevation in
-            // <see cref="Login_UserFlaggedSuperAdminInTblUsers_GetsAdminRole"/> from
-            // leaking Admin onto accounts that were never granted it.
+            // This fixture holds no AspNetUserRoles row, so it must come back as a plain
+            // user. Pinning the exact value (rather than merely "not empty") is what stops
+            // the elevation in <see cref="Login_UserHoldingTheRealAdminRole_GetsAdminRole"/>
+            // from leaking Admin onto accounts that were never granted it.
             Assert.Equal("User", body.Role);
 
             // user_key is what GetCurrentUserKey() reads for the audit columns, so a
@@ -127,26 +126,6 @@ public sealed class AuthControllerLoginTests
         }
     }
 
-    // ─── Test D — forced password reset ──────────────────────────────────────
-
-    [Fact]
-    public async Task Login_MustResetPasswordUser_Returns403AndNoToken()
-    {
-        var user = await CreateUserFixtureAsync(mustResetPassword: true);
-        try
-        {
-            var result = await CreateController().Login(new LoginRequest(user.Email, user.Password));
-
-            var objectResult = Assert.IsType<ObjectResult>(result);
-            Assert.Equal(StatusCodes.Status403Forbidden, objectResult.StatusCode);
-            Assert.IsNotType<LoginResponse>(objectResult.Value);
-        }
-        finally
-        {
-            await DeleteUserAsync(user.Id);
-        }
-    }
-
     // ─── Test E — username and email are both accepted ───────────────────────
 
     [Fact]
@@ -171,56 +150,6 @@ public sealed class AuthControllerLoginTests
         }
         finally
         {
-            await DeleteUserAsync(user.Id);
-        }
-    }
-
-    // ─── Test F — legacy super-admin elevation ───────────────────────────────
-
-    [Fact]
-    public async Task Login_UserFlaggedSuperAdminInTblUsers_GetsAdminRole()
-    {
-        // Only one account in this database holds an AspNetUserRoles row, so Identity
-        // roles alone would hand every real administrator a "User" token and lock them
-        // out of every [Authorize(Roles="Admin")] controller. tblUsers.bSuperAdmin is
-        // the operative flag for converted users.
-        var user = await CreateUserFixtureAsync();
-        try
-        {
-            await InsertLegacyProfileAsync(user.Id, isSuperAdmin: true);
-
-            var result = await CreateController().Login(new LoginRequest(user.Email, user.Password));
-
-            var ok = Assert.IsType<OkObjectResult>(result);
-            var body = Assert.IsType<LoginResponse>(ok.Value);
-            Assert.Equal("Admin", body.Role);
-        }
-        finally
-        {
-            await DeleteLegacyProfileAsync(user.Id);
-            await DeleteUserAsync(user.Id);
-        }
-    }
-
-    // ─── Test G — the elevation respects the soft delete ─────────────────────
-
-    [Fact]
-    public async Task Login_SuperAdminOnASoftDeletedTblUsersRow_DoesNotGetAdminRole()
-    {
-        var user = await CreateUserFixtureAsync();
-        try
-        {
-            await InsertLegacyProfileAsync(user.Id, isSuperAdmin: true, isDeleted: true);
-
-            var result = await CreateController().Login(new LoginRequest(user.Email, user.Password));
-
-            var ok = Assert.IsType<OkObjectResult>(result);
-            var body = Assert.IsType<LoginResponse>(ok.Value);
-            Assert.Equal("User", body.Role);
-        }
-        finally
-        {
-            await DeleteLegacyProfileAsync(user.Id);
             await DeleteUserAsync(user.Id);
         }
     }
@@ -260,10 +189,11 @@ public sealed class AuthControllerLoginTests
     [Fact]
     public async Task Login_UserHoldingTheRealAdminRole_GetsAdminRole()
     {
-        // The counterpart to test H. Tightening the predicate to an exact NormalizedName
-        // could just as easily have matched NOTHING — every other test here would still
-        // pass, and the one account that depends on an Identity role row would have lost
-        // its access silently. RoleNameIndex is unique on NormalizedName so a second
+        // The counterpart to test H, and the only test that covers the admin path at all
+        // now that an Identity role row is the sole source of it. Tightening the predicate
+        // to an exact NormalizedName could just as easily have matched NOTHING — every
+        // other test here would still pass, and every administrator would have lost access
+        // silently. RoleNameIndex is unique on NormalizedName so a second
         // 'Admin' role cannot be inserted; this assigns the fixture user to the real role
         // instead and removes only that assignment afterwards. The role row is not touched.
         var user = await CreateUserFixtureAsync();
@@ -283,6 +213,21 @@ public sealed class AuthControllerLoginTests
             await DeleteRoleAssignmentAsync(user.Id, adminRoleId);
             await DeleteUserAsync(user.Id);
         }
+    }
+
+    // ─── Test J — the live schema is narrower than localhost ─────────────────
+
+    [Fact]
+    public void LoginSql_TouchesNoColumnMissingFromTheLiveDatabase()
+    {
+        // The practice database this suite runs against has drifted from the live Azure
+        // one: AspNetUsers.MustResetPassword and tblUsers.bSuperAdmin exist here and do
+        // NOT exist there. Every other test in this file would stay green while login
+        // returned "Invalid column name" on live — the exact 500 this branch was opened
+        // to fix. This asserts on the production query text because that is the only
+        // thing localhost cannot vouch for.
+        foreach (var forbidden in new[] { "bSuperAdmin", "MustResetPassword", "tblUsers" })
+            Assert.DoesNotContain(forbidden, AuthController.LoginSql, StringComparison.OrdinalIgnoreCase);
     }
 
     // ─── Fixtures ────────────────────────────────────────────────────────────
@@ -309,8 +254,7 @@ public sealed class AuthControllerLoginTests
     /// real format (AQAAAA…) round-trips rather than asserting on a hand-rolled scheme.
     /// Every non-nullable column not listed here carries a database default.
     /// </summary>
-    private static async Task<UserFixture> CreateUserFixtureAsync(
-        bool isActive = true, bool mustResetPassword = false)
+    private static async Task<UserFixture> CreateUserFixtureAsync(bool isActive = true)
     {
         var tag = "zzt-" + Guid.NewGuid().ToString("N")[..8];
         var userName = tag + "-user";
@@ -323,18 +267,17 @@ public sealed class AuthControllerLoginTests
         await using var cmd = new SqlCommand("""
             INSERT INTO dbo.AspNetUsers (UserName, NormalizedUserName, Email, NormalizedEmail,
                 EmailConfirmed, PasswordHash, SecurityStamp, ConcurrencyStamp,
-                FirstName, LastName, IsActive, IsPortalUser, CreatedDate, MustResetPassword)
+                FirstName, LastName, IsActive, IsPortalUser, CreatedDate)
             OUTPUT INSERTED.Id
             VALUES (@userName, UPPER(@userName), @email, UPPER(@email),
                 1, @hash, @stamp, @stamp,
-                'Fixture', 'User', @isActive, 0, GETUTCDATE(), @mustReset);
+                'Fixture', 'User', @isActive, 0, GETUTCDATE());
             """, conn);
         cmd.Parameters.AddWithValue("@userName", userName);
         cmd.Parameters.AddWithValue("@email", email);
         cmd.Parameters.AddWithValue("@hash", hash);
         cmd.Parameters.AddWithValue("@stamp", Guid.NewGuid().ToString("N"));
         cmd.Parameters.AddWithValue("@isActive", isActive);
-        cmd.Parameters.AddWithValue("@mustReset", mustResetPassword);
 
         var raw = await cmd.ExecuteScalarAsync();
         if (raw is null || raw == DBNull.Value)
@@ -407,59 +350,6 @@ public sealed class AuthControllerLoginTests
         await using var cmd = new SqlCommand(
             "DELETE FROM dbo.AspNetRoles WHERE Id = @roleId AND Name LIKE 'zzt-%'", conn);
         cmd.Parameters.AddWithValue("@roleId", roleId);
-        await cmd.ExecuteNonQueryAsync();
-    }
-
-    /// <summary>
-    /// Gives a fixture account the legacy tblUsers profile row that carries bSuperAdmin.
-    /// lUserKey is an identity column, so writing the row at a chosen key needs
-    /// IDENTITY_INSERT. The key is the fixture's own AspNetUsers.Id, which sits above
-    /// every real lUserKey; the existence check below refuses to proceed anyway if a
-    /// real profile row is already sitting there, so this can never overwrite one.
-    /// Only lUserKey and bSuperAdmin are NOT NULL on this table.
-    /// </summary>
-    private static async Task InsertLegacyProfileAsync(int userKey, bool isSuperAdmin, bool isDeleted = false)
-    {
-        await using var conn = new SqlConnection(ConnectionString);
-        await conn.OpenAsync();
-
-        await using (var check = new SqlCommand(
-            "SELECT COUNT(*) FROM dbo.tblUsers WHERE lUserKey = @key", conn))
-        {
-            check.Parameters.AddWithValue("@key", userKey);
-            if (Convert.ToInt32(await check.ExecuteScalarAsync(), CultureInfo.InvariantCulture) != 0)
-                throw new InvalidOperationException(
-                    $"Test setup: dbo.tblUsers already holds a row at lUserKey {userKey}. " +
-                    "Refusing to touch it — re-run to take a fresh identity value.");
-        }
-
-        await using var cmd = new SqlCommand("""
-            SET IDENTITY_INSERT dbo.tblUsers ON;
-            INSERT INTO dbo.tblUsers (lUserKey, sUserFullName, sEmailAddress, bActive,
-                bSuperAdmin, Deleted_datetime)
-            VALUES (@key, 'ZZT Fixture User', @email, 1, @super, @deleted);
-            SET IDENTITY_INSERT dbo.tblUsers OFF;
-            """, conn);
-        cmd.Parameters.AddWithValue("@key", userKey);
-        cmd.Parameters.AddWithValue("@email", $"zzt-{userKey}@test.local");
-        cmd.Parameters.AddWithValue("@super", isSuperAdmin);
-        cmd.Parameters.AddWithValue("@deleted", isDeleted ? DateTime.UtcNow : (object)DBNull.Value);
-        await cmd.ExecuteNonQueryAsync();
-    }
-
-    /// <summary>
-    /// Deletes the fixture's tblUsers row by its exact key. Nothing references tblUsers
-    /// by foreign key (verified via sys.foreign_keys), so the bare delete is enough.
-    /// </summary>
-    private static async Task DeleteLegacyProfileAsync(int userKey)
-    {
-        if (userKey <= 0) return;
-
-        await using var conn = new SqlConnection(ConnectionString);
-        await conn.OpenAsync();
-        await using var cmd = new SqlCommand(
-            "DELETE FROM dbo.tblUsers WHERE lUserKey = @key AND sUserFullName = 'ZZT Fixture User'", conn);
-        cmd.Parameters.AddWithValue("@key", userKey);
         await cmd.ExecuteNonQueryAsync();
     }
 
