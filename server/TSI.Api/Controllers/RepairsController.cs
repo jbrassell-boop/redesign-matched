@@ -1670,11 +1670,18 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
     /// shape took both keys and wrote both every time, so the modal's default
     /// null secondary silently erased an existing Tech 2.)
     ///
-    /// The same technician is then pushed onto the repair's line items:
-    /// every tblRepairItemTran row when AllRepairItems is set, otherwise only
-    /// the rows that carry no technician yet ("Repair Items without Tech").
-    /// tblRepairItemTran has a single lTechnicianKey column, so the line push is
-    /// the same regardless of which header slot was chosen.
+    /// The same technician is then pushed onto the repair's line items, and the
+    /// push is SLOT-SYMMETRIC: tblRepairItemTran carries BOTH lTechnicianKey and
+    /// lTechnician2Key, so Tech1 writes the line's primary column and Tech2 the
+    /// line's secondary — never the other. The scope follows the same slot: every
+    /// tblRepairItemTran row when AllRepairItems is set, otherwise only the rows
+    /// whose CHOSEN slot is still empty ("Repair Items without Tech").
+    /// (dbo.repairUpdateTech's body was read off prod North on 2026-08-04 and is
+    /// exactly this: pbTech1=1 → SET lTechnicianKey WHERE @all=1 OR
+    /// ISNULL(lTechnicianKey,0)=0; pbTech1=0 → the same over lTechnician2Key. An
+    /// earlier version of this comment claimed the line table had a single tech
+    /// column, and the code written from that premise stamped a Tech 2 save into
+    /// every line's PRIMARY column.)
     ///
     /// dbo.repairUpdateTech does not exist on this database, so the two writes
     /// are inline SQL in ONE transaction: the header and the lines must agree or
@@ -1722,9 +1729,12 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
 
             const string itemSql = """
                 UPDATE tblRepairItemTran SET
-                    lTechnicianKey = @techKey
+                    lTechnicianKey  = CASE WHEN @tech1 = 1 THEN @techKey ELSE lTechnicianKey  END,
+                    lTechnician2Key = CASE WHEN @tech1 = 1 THEN lTechnician2Key ELSE @techKey END
                 WHERE lRepairKey = @repairKey
-                  AND (@allItems = 1 OR ISNULL(lTechnicianKey, 0) = 0)
+                  AND (@allItems = 1
+                       OR (@tech1 = 1 AND ISNULL(lTechnicianKey, 0) = 0)
+                       OR (@tech1 = 0 AND ISNULL(lTechnician2Key, 0) = 0))
                 """;
             int itemRows;
             await using (var itemCmd = new SqlCommand(itemSql, conn, tx))
@@ -1732,6 +1742,7 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                 itemCmd.CommandTimeout = 30;
                 itemCmd.Parameters.AddWithValue("@repairKey", repairKey);
                 itemCmd.Parameters.AddWithValue("@techKey", body.TechKey);
+                itemCmd.Parameters.AddWithValue("@tech1", body.Tech1 ? 1 : 0);
                 itemCmd.Parameters.AddWithValue("@allItems", body.AllRepairItems ? 1 : 0);
                 itemRows = await itemCmd.ExecuteNonQueryAsync();
             }

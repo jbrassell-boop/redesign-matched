@@ -309,9 +309,10 @@ public record CreateUpdateSlipRequest(int? TechKey, int? Tech2Key, int? ReasonKe
 // frmRepairOpen_UpdateTech / dbo.repairUpdateTech parity. ONE slot is written
 // per call: Tech1=true targets tblRepair.lTechnicianKey, Tech1=false targets
 // lTechnician2Key; the other slot is left alone. The same technician is then
-// pushed onto the repair's tblRepairItemTran rows — all of them when
-// AllRepairItems is true, otherwise only the lines that have no tech yet
-// (legacy's "Repair Items without Tech").
+// pushed onto the repair's tblRepairItemTran rows in the MATCHING slot
+// (lTechnicianKey for Tech1, lTechnician2Key otherwise) — all of them when
+// AllRepairItems is true, otherwise only the lines whose chosen slot is still
+// empty (legacy's "Repair Items without Tech").
 public record UpdateTechsRequest(
     int TechKey,
     bool Tech1 = true,
