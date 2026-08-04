@@ -48,9 +48,12 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
     //
     // The role name is matched EXACTLY, against NormalizedName. This is an auth gate,
     // so a substring test is too loose: any future role merely containing "admin" —
-    // "NonAdmin", "BillingAdminAssistant" — would silently grant full access. The live
-    // role row is Name 'Admin' / NormalizedName 'ADMIN', and Cloud assigns from a fixed
-    // set ("Admin", "Internal", "Portal"), so nothing is lost.
+    // "NonAdmin", "BillingAdminAssistant" — would silently grant full access. Live
+    // AspNetRoles is EMPTY until the 2026-08-04 seed creates exactly Name 'Admin' /
+    // NormalizedName 'ADMIN' (localhost already has that row); Cloud assigns from a
+    // fixed set ("Admin", "Internal", "Portal"), so an exact match loses nothing —
+    // but if the seed ever lands a differently-normalized name, every admin silently
+    // degrades to "User". Verify the seeded row with one SELECT before shipping.
     internal static readonly string LoginSql = """
         SELECT u.Id, u.UserName, u.PasswordHash,
                CAST(CASE WHEN EXISTS (
