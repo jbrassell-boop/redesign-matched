@@ -1941,8 +1941,8 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             // Picking one of them by MIN/MAX would be a tie-break, and a
             // tie-break that decides which money row gets rewritten is not an
             // answer — it just makes the wrong choice quietly. FinalizeInvoice
-            // independently picks the NEWEST row (TOP 1 ... ORDER BY lInvoiceKey
-            // DESC), so any rule chosen here would also disagree with it.
+            // now reads the same aggregate and refuses on the same rule, so the
+            // two endpoints agree on what a multi-row repair means.
             const string checkSql = """
                 SELECT MIN(lInvoiceKey) AS lInvoiceKey,
                        CAST(MAX(CAST(ISNULL(bFinalized, 0) AS int)) AS bit) AS bFinalized,
@@ -2070,7 +2070,11 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
     // here — they apply to the instrument (sRigidOrFlexible='I') path, and this
     // controller only serves scope repairs (R/F/C). See deferred doc.
     //
-    // On success it find-or-creates the repair's single tblInvoice row, flips
+    // A repair carrying SEVERAL tblInvoice rows is refused with a 409 — there is
+    // no single invoice to finalize and no honest way to pick one (see the
+    // ambiguity gate below).
+    //
+    // Otherwise it find-or-creates the repair's one tblInvoice row, flips
     // bFinalized 0→1, stamps dates + suffix-on-reissue, inserts tblInvoiceDetl
     // rows from the approved tblRepairItemTran lines (the draft path skips
     // detail — finalize MUST add it), and stages the invoice to
@@ -2179,28 +2183,59 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                 return BadRequest(new { error = "An outsource vendor and a non-zero outsource cost are required before an outsourced repair can be finalized." });
             }
 
-            // Find the repair's existing invoice row (1:1). UPDLOCK/HOLDLOCK
-            // holds the gap+row lock for the duration so a racing draft/finalize
-            // can't slip a second row in.
-            int invoiceKey = 0; bool alreadyFinalized = false; int priorSuffix = 0;
+            // Find the repair's invoice rows. AGGREGATED, not "first row": repair↔
+            // invoice is NOT 1:1 in the data — 37 real repairs carry more than one
+            // tblInvoice row and 3 of those mix finalized with draft. Reading a
+            // single arbitrary row made the finalized check depend on which one SQL
+            // Server handed back: this used to take TOP 1 ... ORDER BY lInvoiceKey
+            // DESC, so a repair whose OLDER invoice was already finalized and whose
+            // NEWER row was a draft reported "not finalized", sailed past the
+            // idempotency gate below, and BILLED THE REPAIR A SECOND TIME (a second
+            // finalized invoice plus a second tblGP_InvoiceStaging row).
+            // Same aggregate rule as CreateDraftInvoice (:1946):
+            //   • MAX(bFinalized) fails CLOSED — ANY finalized row means finalized.
+            //   • RowCount is carried out of the same aggregate so a repair with
+            //     several invoice rows is REFUSED rather than silently resolved.
+            //   • MIN(lInvoiceKey) / MAX(suffix) are exact when the count is 1,
+            //     which is the ONLY case that reads them — they are not tie-breaks.
+            // The aggregate forces every matching row to be scanned, so UPDLOCK,
+            // HOLDLOCK covers the whole set plus its gap for the transaction and a
+            // racing draft/finalize can't slip another row in. Exactly one row comes
+            // back always — a NULL key means no invoice exists yet.
+            int invoiceKey = 0; bool alreadyFinalized = false; int priorSuffix = 0; int invoiceRowCount = 0;
             await using (var chk = new SqlCommand("""
-                SELECT TOP 1 lInvoiceKey,
-                       ISNULL(bFinalized, 0) AS bFinalized,
-                       ISNULL(sTranNumberSuffix, 0) AS sTranNumberSuffix
+                SELECT MIN(lInvoiceKey) AS lInvoiceKey,
+                       CAST(MAX(CAST(ISNULL(bFinalized, 0) AS int)) AS bit) AS bFinalized,
+                       MAX(ISNULL(sTranNumberSuffix, 0)) AS sTranNumberSuffix,
+                       COUNT(*) AS InvoiceRowCount
                 FROM tblInvoice WITH (UPDLOCK, HOLDLOCK)
                 WHERE lRepairKey = @repairKey
-                ORDER BY lInvoiceKey DESC
                 """, conn, txn))
             {
                 chk.CommandTimeout = 30;
                 chk.Parameters.AddWithValue("@repairKey", repairKey);
                 await using var cr = await chk.ExecuteReaderAsync();
-                if (await cr.ReadAsync())
+                if (await cr.ReadAsync() && cr["lInvoiceKey"] != DBNull.Value)
                 {
                     invoiceKey = Convert.ToInt32(cr["lInvoiceKey"]);
                     alreadyFinalized = Convert.ToBoolean(cr["bFinalized"]);
                     priorSuffix = Convert.ToInt32(cr["sTranNumberSuffix"]);
+                    invoiceRowCount = Convert.ToInt32(cr["InvoiceRowCount"]);
                 }
+            }
+
+            // ── Ambiguity gate — runs BEFORE every other invoice-state branch ──
+            // Several invoice rows means there is no single invoice to finalize.
+            // A re-issue is refused for the same reason rather than resolved: it
+            // needs ONE unambiguous invoice identity (whose key, whose sTranNumber,
+            // whose suffix), and with several rows any pick is a tie-break that
+            // decides which money row gets rewritten — which is not an answer, it
+            // just makes the wrong choice quietly. The duplicates get resolved
+            // first; only then can this repair be finalized or re-issued.
+            if (invoiceRowCount > 1)
+            {
+                await txn.RollbackAsync();
+                return Conflict(new { message = $"This repair has {invoiceRowCount} invoice rows, so there is no single invoice to finalize. The duplicates must be resolved before this repair can be finalized or re-issued." });
             }
 
             // ── Idempotency gate (fix: double-stage to GP) ──
@@ -2229,8 +2264,9 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             // an EXPLICIT re-issue of an already-final invoice voids the prior and
             // bumps the suffix (-1, -2, …). We void in place (bIsVoid is cleared
             // back to 0 on the fresh finalize) and increment the suffix on the
-            // same row rather than spawning a new row, keeping the cloud's strict
-            // 1:1 repair↔invoice invariant.
+            // same row rather than spawning a new row, so a re-issue never adds to
+            // the repair's invoice row count. Only reachable on a single-row repair
+            // — the ambiguity gate above already refused the multi-row case.
             int newSuffix = alreadyFinalized ? priorSuffix + 1 : priorSuffix;
 
             // Gate 4: ≥1 approved line item, computed from the LOCKED approved
