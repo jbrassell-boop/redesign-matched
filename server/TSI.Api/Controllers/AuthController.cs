@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,13 @@ namespace TSI.Api.Controllers;
 [Route("api/auth")]
 public class AuthController(IConfiguration config, JwtService jwtService, ILogger<AuthController> logger) : ControllerBase
 {
+    // Credentials live in AspNetUsers, not tblUsers. The cloud-schema tblUsers has no
+    // sUserName/sUserPassword columns at all — it is a profile table keyed by lUserKey,
+    // and AspNetUsers.Id carries that same key. Passwords are ASP.NET Identity v3
+    // hashes ("AQAAAA…") written by WinScope Cloud, which owns that store: this app only
+    // ever verifies against them, and never rehashes or rewrites one.
+    private static readonly PasswordHasher<object> PasswordHasher = new();
+
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -21,79 +29,90 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
         await using var conn = new SqlConnection(connectionString);
         await conn.OpenAsync();
 
+        // UserName and Email hold the same string for every current account, but accepting
+        // either keeps login working if that ever diverges. Admin comes from
+        // AspNetUserRoles/AspNetRoles — the only role source this schema has.
         const string sql = """
-            SELECT sUserName, sUserPassword, sUserFullName, sEmailAddress,
-                   sSupervisor, sISOManager, sISOQAReviewer, lUserKey
-            FROM tblUsers
-            WHERE LOWER(sUserName) = LOWER(@username)
-              AND bActive = 1
+            SELECT u.Id, u.UserName, u.PasswordHash, u.MustResetPassword,
+                   CAST(CASE WHEN EXISTS (
+                       SELECT 1 FROM AspNetUserRoles ur
+                       JOIN AspNetRoles r ON r.Id = ur.RoleId
+                       WHERE ur.UserId = u.Id AND UPPER(r.Name) LIKE '%ADMIN%'
+                   ) THEN 1 ELSE 0 END AS bit) AS bIsAdmin
+            FROM AspNetUsers u
+            WHERE (LOWER(u.UserName) = LOWER(@username) OR LOWER(u.Email) = LOWER(@username))
+              AND u.IsActive = 1
             """;
 
         await using var cmd = new SqlCommand(sql, conn);
         cmd.CommandTimeout = 30;
-        cmd.Parameters.AddWithValue("@username", request.Username);
+        cmd.Parameters.AddWithValue("@username", request.Username.Trim());
 
-        string storedPassword;
-        string role;
         int userKey;
+        string userName;
+        string storedHash;
+        bool mustResetPassword;
+        string role;
 
         await using (var reader = await cmd.ExecuteReaderAsync())
         {
+            // No row covers both "no such account" and "deactivated account". Neither is
+            // distinguishable from the bad-password 401 below, so login never reveals
+            // whether an account exists.
             if (!await reader.ReadAsync())
                 return Unauthorized(new { message = "Invalid credentials." });
 
-            storedPassword = reader["sUserPassword"]?.ToString() ?? "";
-            userKey = reader["lUserKey"] == DBNull.Value ? 0 : Convert.ToInt32(reader["lUserKey"]);
-            var isSupervisor = reader["sSupervisor"]?.ToString()?.Trim();
-            var isIsoManager = reader["sISOManager"]?.ToString()?.Trim();
-            role = (isSupervisor == "1" || isSupervisor?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true
-                 || isIsoManager == "1" || isIsoManager?.Equals("Y", StringComparison.OrdinalIgnoreCase) == true)
+            userKey = Convert.ToInt32(reader["Id"]);
+            userName = reader["UserName"]?.ToString() ?? request.Username;
+            storedHash = reader["PasswordHash"]?.ToString() ?? "";
+            mustResetPassword = reader["MustResetPassword"] != DBNull.Value
+                             && Convert.ToBoolean(reader["MustResetPassword"]);
+            role = reader["bIsAdmin"] != DBNull.Value && Convert.ToBoolean(reader["bIsAdmin"])
                 ? "Admin" : "User";
         } // reader disposed here — connection is free for the UPDATE below
 
-        bool valid;
-        if (storedPassword.StartsWith("$2"))
-        {
-            // Already a BCrypt hash — verify normally
-            valid = BCrypt.Net.BCrypt.Verify(request.Password, storedPassword);
-        }
-        else
-        {
-            // Plaintext legacy password — fall back to direct comparison
-            valid = storedPassword == request.Password;
-            if (valid)
-            {
-                // Auto-upgrade legacy plaintext to a BCrypt hash so the next login verifies
-                // against the hash (sUserPassword is nvarchar(128) — wide enough for the
-                // 60-char BCrypt hash). Best-effort: a failed upgrade must NOT fail an
-                // otherwise-valid login, but it is logged (no longer silently swallowed).
-                try
-                {
-                    var hash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-                    await using var updateCmd = new SqlCommand(
-                        "UPDATE tblUsers SET sUserPassword = @hash WHERE LOWER(sUserName) = LOWER(@user)",
-                        conn);
-                    updateCmd.Parameters.AddWithValue("@hash", hash);
-                    updateCmd.Parameters.AddWithValue("@user", request.Username);
-                    updateCmd.CommandTimeout = 10;
-                    await updateCmd.ExecuteNonQueryAsync();
-                }
-                catch (Exception ex)
-                {
-                    logger.LogWarning(ex, "Plaintext-to-BCrypt password upgrade failed for user {User}", request.Username);
-                }
-            }
-        }
-
-        if (!valid)
+        if (string.IsNullOrEmpty(storedHash))
             return Unauthorized(new { message = "Invalid credentials." });
 
-        var token = jwtService.GenerateToken(request.Username, role, userKey);
+        // SuccessRehashNeeded means the password is correct but the hash uses an older
+        // Identity format. That is still a successful verification; rewriting the stored
+        // hash is WinScope Cloud's call, not ours.
+        var verification = PasswordHasher.VerifyHashedPassword(new object(), storedHash, request.Password);
+        if (verification == PasswordVerificationResult.Failed)
+            return Unauthorized(new { message = "Invalid credentials." });
+
+        // Lockout counters (AccessFailedCount / LockoutEnd) are deliberately not enforced
+        // here: this app has no unlock or reset flow, so a lockout it applied would strand
+        // the user until Cloud cleared it. Deferred, not overlooked.
+
+        if (mustResetPassword)
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                message = "This account must set a new password before signing in. Reset it from " +
+                          "the WinScope Cloud login page, or contact an administrator."
+            });
+
+        // Best-effort: a failed stamp must NOT fail an otherwise-valid login, but it is
+        // logged rather than silently swallowed.
+        try
+        {
+            await using var updateCmd = new SqlCommand(
+                "UPDATE AspNetUsers SET LastLoginDate = GETUTCDATE() WHERE Id = @id", conn);
+            updateCmd.Parameters.AddWithValue("@id", userKey);
+            updateCmd.CommandTimeout = 10;
+            await updateCmd.ExecuteNonQueryAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "LastLoginDate stamp failed for user {UserKey}", userKey);
+        }
+
+        var token = jwtService.GenerateToken(userName, role, userKey);
         var expiryHours = int.Parse(config["JWT:ExpiryHours"] ?? "8");
 
         return Ok(new LoginResponse(
             Token: token,
-            Username: request.Username,
+            Username: userName,
             Role: role,
             ExpiresAt: DateTime.UtcNow.AddHours(expiryHours)
         ));
