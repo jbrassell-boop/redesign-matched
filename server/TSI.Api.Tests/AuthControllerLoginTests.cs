@@ -65,8 +65,14 @@ public sealed class AuthControllerLoginTests
             Assert.False(string.IsNullOrWhiteSpace(body.Token),
                 "A successful login must return a signed JWT.");
             Assert.Equal(user.UserName, body.Username);
-            Assert.False(string.IsNullOrWhiteSpace(body.Role));
             Assert.True(body.ExpiresAt > DateTime.UtcNow);
+
+            // This fixture has no tblUsers profile row and no AspNetUserRoles row, so it
+            // must come back as a plain user. Pinning the exact value (rather than merely
+            // "not empty") is what stops the bSuperAdmin elevation in
+            // <see cref="Login_UserFlaggedSuperAdminInTblUsers_GetsAdminRole"/> from
+            // leaking Admin onto accounts that were never granted it.
+            Assert.Equal("User", body.Role);
 
             // user_key is what GetCurrentUserKey() reads for the audit columns, so a
             // token that carries the wrong integer would mis-attribute every later write.
@@ -169,6 +175,56 @@ public sealed class AuthControllerLoginTests
         }
     }
 
+    // ─── Test F — legacy super-admin elevation ───────────────────────────────
+
+    [Fact]
+    public async Task Login_UserFlaggedSuperAdminInTblUsers_GetsAdminRole()
+    {
+        // Only one account in this database holds an AspNetUserRoles row, so Identity
+        // roles alone would hand every real administrator a "User" token and lock them
+        // out of every [Authorize(Roles="Admin")] controller. tblUsers.bSuperAdmin is
+        // the operative flag for converted users.
+        var user = await CreateUserFixtureAsync();
+        try
+        {
+            await InsertLegacyProfileAsync(user.Id, isSuperAdmin: true);
+
+            var result = await CreateController().Login(new LoginRequest(user.Email, user.Password));
+
+            var ok = Assert.IsType<OkObjectResult>(result);
+            var body = Assert.IsType<LoginResponse>(ok.Value);
+            Assert.Equal("Admin", body.Role);
+        }
+        finally
+        {
+            await DeleteLegacyProfileAsync(user.Id);
+            await DeleteUserAsync(user.Id);
+        }
+    }
+
+    // ─── Test G — the elevation respects the soft delete ─────────────────────
+
+    [Fact]
+    public async Task Login_SuperAdminOnASoftDeletedTblUsersRow_DoesNotGetAdminRole()
+    {
+        var user = await CreateUserFixtureAsync();
+        try
+        {
+            await InsertLegacyProfileAsync(user.Id, isSuperAdmin: true, isDeleted: true);
+
+            var result = await CreateController().Login(new LoginRequest(user.Email, user.Password));
+
+            var ok = Assert.IsType<OkObjectResult>(result);
+            var body = Assert.IsType<LoginResponse>(ok.Value);
+            Assert.Equal("User", body.Role);
+        }
+        finally
+        {
+            await DeleteLegacyProfileAsync(user.Id);
+            await DeleteUserAsync(user.Id);
+        }
+    }
+
     // ─── Fixtures ────────────────────────────────────────────────────────────
 
     private sealed record UserFixture(int Id, string UserName, string Email, string Password);
@@ -211,6 +267,59 @@ public sealed class AuthControllerLoginTests
             throw new InvalidOperationException("Test setup: could not insert an AspNetUsers fixture row.");
 
         return new UserFixture(Convert.ToInt32(raw, CultureInfo.InvariantCulture), userName, email, password);
+    }
+
+    /// <summary>
+    /// Gives a fixture account the legacy tblUsers profile row that carries bSuperAdmin.
+    /// lUserKey is an identity column, so writing the row at a chosen key needs
+    /// IDENTITY_INSERT. The key is the fixture's own AspNetUsers.Id, which sits above
+    /// every real lUserKey; the existence check below refuses to proceed anyway if a
+    /// real profile row is already sitting there, so this can never overwrite one.
+    /// Only lUserKey and bSuperAdmin are NOT NULL on this table.
+    /// </summary>
+    private static async Task InsertLegacyProfileAsync(int userKey, bool isSuperAdmin, bool isDeleted = false)
+    {
+        await using var conn = new SqlConnection(ConnectionString);
+        await conn.OpenAsync();
+
+        await using (var check = new SqlCommand(
+            "SELECT COUNT(*) FROM dbo.tblUsers WHERE lUserKey = @key", conn))
+        {
+            check.Parameters.AddWithValue("@key", userKey);
+            if (Convert.ToInt32(await check.ExecuteScalarAsync(), CultureInfo.InvariantCulture) != 0)
+                throw new InvalidOperationException(
+                    $"Test setup: dbo.tblUsers already holds a row at lUserKey {userKey}. " +
+                    "Refusing to touch it — re-run to take a fresh identity value.");
+        }
+
+        await using var cmd = new SqlCommand("""
+            SET IDENTITY_INSERT dbo.tblUsers ON;
+            INSERT INTO dbo.tblUsers (lUserKey, sUserFullName, sEmailAddress, bActive,
+                bSuperAdmin, Deleted_datetime)
+            VALUES (@key, 'ZZT Fixture User', @email, 1, @super, @deleted);
+            SET IDENTITY_INSERT dbo.tblUsers OFF;
+            """, conn);
+        cmd.Parameters.AddWithValue("@key", userKey);
+        cmd.Parameters.AddWithValue("@email", $"zzt-{userKey}@test.local");
+        cmd.Parameters.AddWithValue("@super", isSuperAdmin);
+        cmd.Parameters.AddWithValue("@deleted", isDeleted ? DateTime.UtcNow : (object)DBNull.Value);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>
+    /// Deletes the fixture's tblUsers row by its exact key. Nothing references tblUsers
+    /// by foreign key (verified via sys.foreign_keys), so the bare delete is enough.
+    /// </summary>
+    private static async Task DeleteLegacyProfileAsync(int userKey)
+    {
+        if (userKey <= 0) return;
+
+        await using var conn = new SqlConnection(ConnectionString);
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand(
+            "DELETE FROM dbo.tblUsers WHERE lUserKey = @key AND sUserFullName = 'ZZT Fixture User'", conn);
+        cmd.Parameters.AddWithValue("@key", userKey);
+        await cmd.ExecuteNonQueryAsync();
     }
 
     /// <summary>Deletes exactly the fixture row, by its captured identity value.</summary>

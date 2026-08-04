@@ -30,16 +30,25 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
         await conn.OpenAsync();
 
         // UserName and Email hold the same string for every current account, but accepting
-        // either keeps login working if that ever diverges. Admin comes from
-        // AspNetUserRoles/AspNetRoles — the only role source this schema has.
+        // either keeps login working if that ever diverges.
+        //
+        // Admin comes from two sources, and it needs both. Converted users have no
+        // AspNetUserRoles rows at all — exactly one account in this database holds one —
+        // so Identity roles alone would hand every real administrator a "User" token and
+        // lock them out of every [Authorize(Roles="Admin")] controller. tblUsers.bSuperAdmin
+        // is the operative admin flag for those users, and AspNetUsers.Id IS lUserKey, so
+        // the profile row joins straight on. WinScope Cloud's own AuthController bridges
+        // the same gap the same way (IsLegacySuperAdminAsync). The soft-delete filter
+        // rides on the JOIN so a deleted profile row elevates nobody.
         const string sql = """
             SELECT u.Id, u.UserName, u.PasswordHash, u.MustResetPassword,
                    CAST(CASE WHEN EXISTS (
                        SELECT 1 FROM AspNetUserRoles ur
                        JOIN AspNetRoles r ON r.Id = ur.RoleId
                        WHERE ur.UserId = u.Id AND UPPER(r.Name) LIKE '%ADMIN%'
-                   ) THEN 1 ELSE 0 END AS bit) AS bIsAdmin
+                   ) OR ISNULL(t.bSuperAdmin, 0) = 1 THEN 1 ELSE 0 END AS bit) AS bIsAdmin
             FROM AspNetUsers u
+            LEFT JOIN tblUsers t ON t.lUserKey = u.Id AND t.Deleted_datetime IS NULL
             WHERE (LOWER(u.UserName) = LOWER(@username) OR LOWER(u.Email) = LOWER(@username))
               AND u.IsActive = 1
             """;
