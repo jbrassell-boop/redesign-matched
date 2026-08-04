@@ -225,9 +225,83 @@ public sealed class AuthControllerLoginTests
         }
     }
 
+    // ─── Test H — a non-admin role must not elevate ──────────────────────────
+
+    [Fact]
+    public async Task Login_UserHoldingARoleWhoseNameMerelyContainsAdmin_DoesNotGetAdminRole()
+    {
+        // "NonAdmin" contains "Admin" as a substring, so a LIKE '%ADMIN%' predicate
+        // hands this account the Admin role. Role names are an auth gate, so the match
+        // has to be exact — the live role is Name 'Admin' / NormalizedName 'ADMIN', and
+        // WinScope Cloud assigns from a fixed set ("Admin", "Internal", "Portal").
+        var user = await CreateUserFixtureAsync();
+        var roleId = 0;
+        try
+        {
+            roleId = await InsertRoleAsync("zzt-NonAdmin-" + Guid.NewGuid().ToString("N")[..8]);
+            await AssignRoleAsync(user.Id, roleId);
+
+            var result = await CreateController().Login(new LoginRequest(user.Email, user.Password));
+
+            var ok = Assert.IsType<OkObjectResult>(result);
+            var body = Assert.IsType<LoginResponse>(ok.Value);
+            Assert.Equal("User", body.Role);
+        }
+        finally
+        {
+            await DeleteRoleAssignmentAsync(user.Id, roleId);
+            await DeleteRoleAsync(roleId);
+            await DeleteUserAsync(user.Id);
+        }
+    }
+
+    // ─── Test I — the exact match still matches the real role ────────────────
+
+    [Fact]
+    public async Task Login_UserHoldingTheRealAdminRole_GetsAdminRole()
+    {
+        // The counterpart to test H. Tightening the predicate to an exact NormalizedName
+        // could just as easily have matched NOTHING — every other test here would still
+        // pass, and the one account that depends on an Identity role row would have lost
+        // its access silently. RoleNameIndex is unique on NormalizedName so a second
+        // 'Admin' role cannot be inserted; this assigns the fixture user to the real role
+        // instead and removes only that assignment afterwards. The role row is not touched.
+        var user = await CreateUserFixtureAsync();
+        var adminRoleId = await GetAdminRoleIdAsync();
+        try
+        {
+            await AssignRoleAsync(user.Id, adminRoleId);
+
+            var result = await CreateController().Login(new LoginRequest(user.Email, user.Password));
+
+            var ok = Assert.IsType<OkObjectResult>(result);
+            var body = Assert.IsType<LoginResponse>(ok.Value);
+            Assert.Equal("Admin", body.Role);
+        }
+        finally
+        {
+            await DeleteRoleAssignmentAsync(user.Id, adminRoleId);
+            await DeleteUserAsync(user.Id);
+        }
+    }
+
     // ─── Fixtures ────────────────────────────────────────────────────────────
 
     private sealed record UserFixture(int Id, string UserName, string Email, string Password);
+
+    private static async Task<int> GetAdminRoleIdAsync()
+    {
+        await using var conn = new SqlConnection(ConnectionString);
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand(
+            "SELECT Id FROM dbo.AspNetRoles WHERE NormalizedName = N'ADMIN'", conn);
+        var raw = await cmd.ExecuteScalarAsync();
+        if (raw is null || raw == DBNull.Value)
+            throw new InvalidOperationException(
+                "Test setup: no AspNetRoles row with NormalizedName 'ADMIN'. That role is what " +
+                "every Identity-assigned administrator depends on — investigate before re-running.");
+        return Convert.ToInt32(raw, CultureInfo.InvariantCulture);
+    }
 
     /// <summary>
     /// Inserts one scoped AspNetUsers row whose PasswordHash is produced by the same
@@ -267,6 +341,73 @@ public sealed class AuthControllerLoginTests
             throw new InvalidOperationException("Test setup: could not insert an AspNetUsers fixture row.");
 
         return new UserFixture(Convert.ToInt32(raw, CultureInfo.InvariantCulture), userName, email, password);
+    }
+
+    /// <summary>
+    /// Inserts a scoped AspNetRoles row. Id is an identity column here (unlike
+    /// tblUsers.lUserKey) so the key is simply captured, no IDENTITY_INSERT needed;
+    /// only Id is NOT NULL on this table.
+    /// </summary>
+    private static async Task<int> InsertRoleAsync(string name)
+    {
+        await using var conn = new SqlConnection(ConnectionString);
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand("""
+            INSERT INTO dbo.AspNetRoles (Name, NormalizedName, ConcurrencyStamp)
+            OUTPUT INSERTED.Id
+            VALUES (@name, UPPER(@name), @stamp);
+            """, conn);
+        cmd.Parameters.AddWithValue("@name", name);
+        cmd.Parameters.AddWithValue("@stamp", Guid.NewGuid().ToString("N"));
+
+        var raw = await cmd.ExecuteScalarAsync();
+        if (raw is null || raw == DBNull.Value)
+            throw new InvalidOperationException("Test setup: could not insert an AspNetRoles fixture row.");
+        return Convert.ToInt32(raw, CultureInfo.InvariantCulture);
+    }
+
+    private static async Task AssignRoleAsync(int userId, int roleId)
+    {
+        await using var conn = new SqlConnection(ConnectionString);
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand(
+            "INSERT INTO dbo.AspNetUserRoles (UserId, RoleId) VALUES (@userId, @roleId)", conn);
+        cmd.Parameters.AddWithValue("@userId", userId);
+        cmd.Parameters.AddWithValue("@roleId", roleId);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    private static async Task DeleteRoleAssignmentAsync(int userId, int roleId)
+    {
+        // Guard on the user key ONLY. The real Admin role's Id is 0, so a "roleId <= 0"
+        // guard here silently skipped the delete and leaked an assignment row on every
+        // run of the test that assigns it.
+        if (userId <= 0) return;
+
+        await using var conn = new SqlConnection(ConnectionString);
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand(
+            "DELETE FROM dbo.AspNetUserRoles WHERE UserId = @userId AND RoleId = @roleId", conn);
+        cmd.Parameters.AddWithValue("@userId", userId);
+        cmd.Parameters.AddWithValue("@roleId", roleId);
+        await cmd.ExecuteNonQueryAsync();
+    }
+
+    /// <summary>
+    /// Deletes the fixture role by its captured key. The zzt- name guard means that even
+    /// a wrong key cannot take out the real 'Admin' row, which is the only production
+    /// role and the one every administrator's access depends on.
+    /// </summary>
+    private static async Task DeleteRoleAsync(int roleId)
+    {
+        if (roleId <= 0) return;
+
+        await using var conn = new SqlConnection(ConnectionString);
+        await conn.OpenAsync();
+        await using var cmd = new SqlCommand(
+            "DELETE FROM dbo.AspNetRoles WHERE Id = @roleId AND Name LIKE 'zzt-%'", conn);
+        cmd.Parameters.AddWithValue("@roleId", roleId);
+        await cmd.ExecuteNonQueryAsync();
     }
 
     /// <summary>

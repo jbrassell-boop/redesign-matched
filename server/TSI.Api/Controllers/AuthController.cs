@@ -18,6 +18,14 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
     // ever verifies against them, and never rehashes or rewrites one.
     private static readonly PasswordHasher<object> PasswordHasher = new();
 
+    // Verifying a password costs thousands of PBKDF2 iterations; returning 401 without
+    // doing it is measurably faster. That difference is enough to probe which usernames
+    // exist, which would undo the deliberately identical 401 messages below. The
+    // account-missing and no-hash paths verify against this throwaway hash first and
+    // discard the answer, so every rejection costs about the same. Computed once.
+    private static readonly string DummyPasswordHash =
+        PasswordHasher.HashPassword(new object(), "timing-equalization-only-never-a-credential");
+
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -40,12 +48,18 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
         // the profile row joins straight on. WinScope Cloud's own AuthController bridges
         // the same gap the same way (IsLegacySuperAdminAsync). The soft-delete filter
         // rides on the JOIN so a deleted profile row elevates nobody.
+        //
+        // The role name is matched EXACTLY, against NormalizedName. This is an auth gate,
+        // so a substring test is too loose: any future role merely containing "admin" —
+        // "NonAdmin", "BillingAdminAssistant" — would silently grant full access. The one
+        // role row in this database is Name 'Admin' / NormalizedName 'ADMIN', and Cloud
+        // assigns from a fixed set ("Admin", "Internal", "Portal"), so nothing is lost.
         const string sql = """
             SELECT u.Id, u.UserName, u.PasswordHash, u.MustResetPassword,
                    CAST(CASE WHEN EXISTS (
                        SELECT 1 FROM AspNetUserRoles ur
                        JOIN AspNetRoles r ON r.Id = ur.RoleId
-                       WHERE ur.UserId = u.Id AND UPPER(r.Name) LIKE '%ADMIN%'
+                       WHERE ur.UserId = u.Id AND r.NormalizedName = N'ADMIN'
                    ) OR ISNULL(t.bSuperAdmin, 0) = 1 THEN 1 ELSE 0 END AS bit) AS bIsAdmin
             FROM AspNetUsers u
             LEFT JOIN tblUsers t ON t.lUserKey = u.Id AND t.Deleted_datetime IS NULL
@@ -67,9 +81,12 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
         {
             // No row covers both "no such account" and "deactivated account". Neither is
             // distinguishable from the bad-password 401 below, so login never reveals
-            // whether an account exists.
+            // whether an account exists — in the response or in how long it took.
             if (!await reader.ReadAsync())
+            {
+                _ = PasswordHasher.VerifyHashedPassword(new object(), DummyPasswordHash, request.Password);
                 return Unauthorized(new { message = "Invalid credentials." });
+            }
 
             userKey = Convert.ToInt32(reader["Id"]);
             userName = reader["UserName"]?.ToString() ?? request.Username;
@@ -80,8 +97,13 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
                 ? "Admin" : "User";
         } // reader disposed here — connection is free for the UPDATE below
 
+        // An account with no stored hash cannot authenticate. Same equalization as above:
+        // skipping the work here would make hash-less accounts identifiable by response time.
         if (string.IsNullOrEmpty(storedHash))
+        {
+            _ = PasswordHasher.VerifyHashedPassword(new object(), DummyPasswordHash, request.Password);
             return Unauthorized(new { message = "Invalid credentials." });
+        }
 
         // SuccessRehashNeeded means the password is correct but the hash uses an older
         // Identity format. That is still a successful verification; rewriting the stored
