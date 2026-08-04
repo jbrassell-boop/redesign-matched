@@ -298,7 +298,7 @@ export const RepairItemsTable = ({
               <th className="rit-th" style={{ minWidth: 70, textAlign: 'center' }}>Fix Type</th>
               <th className="rit-th" style={{ minWidth: 80, textAlign: 'center' }} title="Approval Status (Y=Yes, N=No, P=Pending)">Approval</th>
               <th className="rit-th" style={{ minWidth: 80, textAlign: 'right' }}>Amount</th>
-              <th className="rit-th" style={{ minWidth: 54 }}>Tech</th>
+              <th className="rit-th" style={{ minWidth: 96 }} title="Primary / secondary technician">Tech</th>
               <th className="rit-th" style={{ minWidth: 160 }}>Comments</th>
               <th className="rit-th" style={{ width: 32 }}></th>
             </tr>
@@ -477,7 +477,11 @@ const RepairItemRow = ({ item, fmt, onDelete, onOpenAmendments, onPatchCause, on
           </div>
         )}
       </td>
-      <td className="rit-td">{item.tech || '—'}</td>
+      {/* Primary / secondary tech share one cell — a Tech 2 save writes the
+          line's second slot, and without this it looked like nothing saved. */}
+      <td className="rit-td">
+        {item.tech || '—'}{item.tech2 ? ` / ${item.tech2}` : ''}
+      </td>
       {/* Comment — click to edit inline */}
       <td className={`rit-td ${item.comments ? 'rit-comment-cell--set' : 'rit-comment-cell--empty'}`}>
         {editingComment ? (

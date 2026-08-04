@@ -57,7 +57,10 @@ public record RepairLineItem(
     string FixType,
     decimal Amount,
     decimal BaseAmount,
+    // Both tech slots: tblRepairItemTran carries lTechnicianKey and lTechnician2Key,
+    // and a Tech 2 save writes the second one — so the grid has to read both.
     string Tech,
+    string Tech2,
     string Comments,
     int AmendmentCount
 );

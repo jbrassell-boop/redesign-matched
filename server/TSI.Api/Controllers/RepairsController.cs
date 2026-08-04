@@ -762,6 +762,7 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                    ISNULL(rit.dblRepairPrice, 0) AS dblRepairPrice,
                    ISNULL(rit.dblRepairPriceBase, 0) AS dblRepairPriceBase,
                    ISNULL(t.sTechName,'') AS sTechName,
+                   ISNULL(t2.sTechName,'') AS sTech2Name,
                    ISNULL(rit.sComments,'') AS sComments,
                    -- AmendmentCount is per-repair (not per-line-item) by design:
                    -- tblAmendRepairComments has no lRepairItemTranKey column.
@@ -770,6 +771,10 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
             FROM tblRepairItemTran rit
             LEFT JOIN tblRepairItem ri ON ri.lRepairItemKey = rit.lRepairItemKey
             LEFT JOIN tblTechnicians t ON t.lTechnicianKey = rit.lTechnicianKey
+            -- lTechnician2Key is DEFAULT ((0)), so "unassigned" arrives as 0 as often
+            -- as NULL. NULLIF keeps a 0 key from ever matching a technician row should
+            -- one with key 0 exist.
+            LEFT JOIN tblTechnicians t2 ON t2.lTechnicianKey = NULLIF(rit.lTechnician2Key, 0)
             WHERE rit.lRepairKey = @repairKey
             ORDER BY rit.lRepairItemTranKey
             """;
@@ -791,6 +796,7 @@ public class RepairsController(IConfiguration config, IInvoiceNumberService invo
                 Amount: reader["dblRepairPrice"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["dblRepairPrice"]),
                 BaseAmount: reader["dblRepairPriceBase"] == DBNull.Value ? 0 : Convert.ToDecimal(reader["dblRepairPriceBase"]),
                 Tech: reader["sTechName"]?.ToString() ?? "",
+                Tech2: reader["sTech2Name"]?.ToString() ?? "",
                 Comments: reader["sComments"]?.ToString() ?? "",
                 AmendmentCount: Convert.ToInt32(reader["AmendmentCount"])
             ));

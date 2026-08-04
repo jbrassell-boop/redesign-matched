@@ -62,6 +62,7 @@ export interface RepairLineItem {
   baseAmount: number;
   amendmentCount: number;
   tech: string;
+  tech2: string;
   comments: string;
 }
 
