@@ -20,7 +20,10 @@ const COLUMNS: ColumnsType<RepairLineItem> = [
   { title: 'Cause', dataIndex: 'cause', key: 'cause', width: 68, align: 'center' },
   { title: 'Fix Type', dataIndex: 'fixType', key: 'fixType', width: 68, align: 'center' },
   { title: 'Amount', dataIndex: 'amount', key: 'amount', width: 85, align: 'right', render: (v: number) => `$${v.toFixed(2)}` },
-  { title: 'Tech', dataIndex: 'tech', key: 'tech', width: 80 },
+  // Primary / secondary in one cell, same as RepairItemsTable — a Tech 2 save
+  // writes the line's second slot and must be visible on THIS surface too.
+  { title: 'Tech', dataIndex: 'tech', key: 'tech', width: 96,
+    render: (v: string, r: RepairLineItem) => `${v || '—'}${r.tech2 ? ` / ${r.tech2}` : ''}` },
   { title: 'Comments', dataIndex: 'comments', key: 'comments' },
 ];
 
