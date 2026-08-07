@@ -20,12 +20,24 @@ export function useAutosave<T>(
   const pendingRef = useRef<Partial<T>>({});
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const fadingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Re-entrancy guard: true while a saveFn call is in flight. Prevents two
+  // concurrent saveFn calls, which can complete out of order and lose an edit.
+  const savingRef = useRef(false);
   // Indirection so a finished save can reschedule itself without a circular ref.
   const saveRef = useRef<(data: Partial<T>) => void>(() => {});
 
   const save = useCallback(
     async (data: Partial<T>) => {
       if (Object.keys(data).length === 0) return;
+      // Serialize saves: if one is already in flight, don't start a second.
+      // Defer these edits by rescheduling the debounce timer; they flush once
+      // the in-flight save (and its own completion-handler reschedule) settles.
+      if (savingRef.current) {
+        if (timerRef.current) clearTimeout(timerRef.current);
+        timerRef.current = setTimeout(() => saveRef.current(pendingRef.current), delay);
+        return;
+      }
+      savingRef.current = true;
       setStatus('saving');
       try {
         await saveFn(data);
@@ -51,6 +63,9 @@ export function useAutosave<T>(
         }
       } catch {
         setStatus('error');
+      } finally {
+        // Clear the guard on both success and error so the next save can run.
+        savingRef.current = false;
       }
     },
     [saveFn, delay],
