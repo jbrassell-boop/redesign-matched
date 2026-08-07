@@ -102,6 +102,22 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
             storedHash = reader["PasswordHash"]?.ToString() ?? "";
             role = reader["bIsAdmin"] != DBNull.Value && Convert.ToBoolean(reader["bIsAdmin"])
                 ? "Admin" : "User";
+
+            // Fail closed on ambiguity. LoginSql matches UserName OR Email, and scrubbed
+            // data can break Email uniqueness so that one active account matches by
+            // UserName while a DIFFERENT active account matches by Email. SQL Server may
+            // return either row first, so trusting this single row could reject a valid
+            // user or, worse, mint a token for the unintended identity. A second matching
+            // row means we authenticate no one — same 401, and the same timing
+            // equalization as the no-account path above.
+            if (await reader.ReadAsync())
+            {
+                _ = PasswordHasher.VerifyHashedPassword(new object(), DummyPasswordHash, request.Password);
+                logger.LogWarning(
+                    "Ambiguous login identifier {Identifier} matched multiple active accounts; failing closed",
+                    request.Username);
+                return Unauthorized(new { message = "Invalid credentials." });
+            }
         } // reader disposed here — connection is free for the UPDATE below
 
         // An account with no stored hash cannot authenticate. Same equalization as above:
@@ -115,7 +131,30 @@ public class AuthController(IConfiguration config, JwtService jwtService, ILogge
         // SuccessRehashNeeded means the password is correct but the hash uses an older
         // Identity format. That is still a successful verification; rewriting the stored
         // hash is WinScope Cloud's call, not ours.
-        var verification = PasswordHasher.VerifyHashedPassword(new object(), storedHash, request.Password);
+        //
+        // A non-empty hash that is not a valid Identity hash makes VerifyHashedPassword
+        // THROW (base64-decoding the stored hash is its first step) rather than return
+        // Failed. Live has scrubbed accounts holding garbage in PasswordHash, so an
+        // unguarded verify 500s exactly those logins — the failure this branch exists to
+        // remove; the empty-hash case is guarded above, the malformed non-empty one was
+        // not. A malformed hash can never authenticate: treat the throw as a failed
+        // verification and return the same 401 as a bad password, logging the userKey
+        // best-effort (like the LastLoginDate stamp) so ops can find the bad row.
+        PasswordVerificationResult verification;
+        try
+        {
+            verification = PasswordHasher.VerifyHashedPassword(new object(), storedHash, request.Password);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex,
+                "Malformed stored password hash for user {UserKey}; treating as failed verification", userKey);
+            // The throw lands before any KDF runs, so without this the malformed path would
+            // return measurably faster than a real wrong password and mark scrubbed accounts
+            // by timing. Same equalization as the no-account and no-hash paths.
+            _ = PasswordHasher.VerifyHashedPassword(new object(), DummyPasswordHash, request.Password);
+            return Unauthorized(new { message = "Invalid credentials." });
+        }
         if (verification == PasswordVerificationResult.Failed)
             return Unauthorized(new { message = "Invalid credentials." });
 

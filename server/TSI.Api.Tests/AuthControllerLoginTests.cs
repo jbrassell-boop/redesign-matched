@@ -230,6 +230,63 @@ public sealed class AuthControllerLoginTests
             Assert.DoesNotContain(forbidden, AuthController.LoginSql, StringComparison.OrdinalIgnoreCase);
     }
 
+    // ─── Test K — a malformed stored hash must 401, not 500 ──────────────────
+
+    [Fact]
+    public async Task Login_MalformedStoredHash_Returns401_DoesNotThrow()
+    {
+        // Live has scrubbed accounts whose PasswordHash holds a non-empty, non-Identity
+        // string. VerifyHashedPassword base64-decodes the stored hash as its first step,
+        // so 'not-a-valid-identity-hash' makes it THROW (FormatException) rather than
+        // return Failed — the exact 500 this branch exists to remove. It must fail closed
+        // as a plain 401, never a 500 and never an authentication. Pre-fix, the unguarded
+        // verify throws and this call never returns a result at all.
+        var user = await CreateUserFixtureAsync(passwordHashOverride: "not-a-valid-identity-hash");
+        try
+        {
+            var result = await CreateController().Login(new LoginRequest(user.Email, user.Password));
+            Assert.IsType<UnauthorizedObjectResult>(result);
+        }
+        finally
+        {
+            await DeleteUserAsync(user.Id);
+        }
+    }
+
+    // ─── Test L — an ambiguous identifier must fail closed ───────────────────
+
+    [Fact]
+    public async Task Login_IdentifierMatchingTwoActiveAccounts_FailsClosed_IssuesNoToken()
+    {
+        // If scrubbed data breaks Email uniqueness, one active account can match by
+        // UserName while a DIFFERENT active account matches by Email. Both fixtures share
+        // one password, so pre-fix — which reads only the first row — verifies and mints
+        // a token for whichever identity SQL Server happens to return first (either order
+        // is RED). Ambiguity must authenticate no one: the fix returns the same 401 and
+        // issues no token regardless of row order.
+        var tag = "zzt-" + Guid.NewGuid().ToString("N")[..8];
+        var shared = tag + "-shared";
+        var sharedPassword = "Zzt!Shared#" + Guid.NewGuid().ToString("N")[..8];
+
+        var userA = await CreateUserFixtureAsync(
+            userNameOverride: shared, emailOverride: tag + "-a@test.local", passwordOverride: sharedPassword);
+        var userB = await CreateUserFixtureAsync(
+            userNameOverride: tag + "-b", emailOverride: shared, passwordOverride: sharedPassword);
+        try
+        {
+            // shared is userA's UserName and userB's Email — two distinct active rows match.
+            var result = await CreateController().Login(new LoginRequest(shared, sharedPassword));
+
+            var unauthorized = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.IsNotType<LoginResponse>(unauthorized.Value); // no token body of any kind
+        }
+        finally
+        {
+            await DeleteUserAsync(userA.Id);
+            await DeleteUserAsync(userB.Id);
+        }
+    }
+
     // ─── Fixtures ────────────────────────────────────────────────────────────
 
     private sealed record UserFixture(int Id, string UserName, string Email, string Password);
@@ -254,13 +311,20 @@ public sealed class AuthControllerLoginTests
     /// real format (AQAAAA…) round-trips rather than asserting on a hand-rolled scheme.
     /// Every non-nullable column not listed here carries a database default.
     /// </summary>
-    private static async Task<UserFixture> CreateUserFixtureAsync(bool isActive = true)
+    private static async Task<UserFixture> CreateUserFixtureAsync(
+        bool isActive = true,
+        string? userNameOverride = null,
+        string? emailOverride = null,
+        string? passwordOverride = null,
+        string? passwordHashOverride = null)
     {
         var tag = "zzt-" + Guid.NewGuid().ToString("N")[..8];
-        var userName = tag + "-user";
-        var email = tag + "@test.local";
-        var password = "Zzt!Fixture#" + Guid.NewGuid().ToString("N")[..8];
-        var hash = new PasswordHasher<object>().HashPassword(new object(), password);
+        var userName = userNameOverride ?? tag + "-user";
+        var email = emailOverride ?? tag + "@test.local";
+        var password = passwordOverride ?? "Zzt!Fixture#" + Guid.NewGuid().ToString("N")[..8];
+        // passwordHashOverride lets a test store a non-Identity string (e.g. a scrubbed
+        // account's garbage hash); otherwise the real hasher produces an AQAAAA… hash.
+        var hash = passwordHashOverride ?? new PasswordHasher<object>().HashPassword(new object(), password);
 
         await using var conn = new SqlConnection(ConnectionString);
         await conn.OpenAsync();
